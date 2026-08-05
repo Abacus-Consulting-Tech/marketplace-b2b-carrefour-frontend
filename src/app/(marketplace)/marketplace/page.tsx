@@ -1,0 +1,167 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
+import { apiClient } from "@/lib/api/client";
+import { Product } from "@/types";
+import { Search, ShoppingCart } from "lucide-react";
+import { useCartStore } from "@/lib/store/cart";
+import { useToast } from "@/hooks/use-toast";
+
+export default function MarketplacePage() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const addItem = useCartStore((state) => state.addItem);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
+    try {
+      // Check if mock mode is enabled
+      const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true";
+      
+      let response;
+      if (isMockMode) {
+        const { mockApi } = await import("@/lib/api/mock");
+        response = await mockApi.products.list();
+      } else {
+        response = await apiClient.get("/products");
+      }
+      
+      setProducts(response.data);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast({
+        title: "Error",
+        description: "No se pudieron cargar los productos",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    product.description?.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleAddToCart = (product: Product) => {
+    addItem({
+      productId: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: 1,
+      image: product.images?.[0],
+    });
+    toast({
+      title: "Producto agregado",
+      description: `${product.name} se agregó al carrito`,
+    });
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+          Catálogo de Productos
+        </h1>
+        <p className="text-gray-600 dark:text-gray-400 mt-2">
+          Explora y ordena productos de nuestros proveedores
+        </p>
+      </div>
+
+      {/* Search */}
+      <div className="relative max-w-md">
+        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <Input
+          type="search"
+          placeholder="Buscar productos..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="pl-10"
+        />
+      </div>
+
+      {/* Products Grid */}
+      {loading ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {[...Array(8)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-48 w-full" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-4 w-3/4 mb-2" />
+                <Skeleton className="h-4 w-1/2" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : filteredProducts.length === 0 ? (
+        <div className="text-center py-12">
+          <p className="text-gray-500 dark:text-gray-400">
+            {searchQuery ? "No se encontraron productos" : "No hay productos disponibles"}
+          </p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {filteredProducts.map((product) => (
+            <Card key={product.id} className="flex flex-col">
+              <CardHeader className="p-0">
+                {product.images && product.images.length > 0 ? (
+                  <img
+                    src={product.images[0]}
+                    alt={product.name}
+                    className="w-full h-48 object-cover rounded-t-lg"
+                  />
+                ) : (
+                  <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded-t-lg flex items-center justify-center">
+                    <span className="text-gray-400">Sin imagen</span>
+                  </div>
+                )}
+              </CardHeader>
+              <CardContent className="flex-1 p-4">
+                <CardTitle className="text-lg mb-2">{product.name}</CardTitle>
+                <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                  {product.description}
+                </p>
+                <div className="mt-4 flex items-center justify-between">
+                  <span className="text-2xl font-bold text-blue-600">
+                    €{product.price.toFixed(2)}
+                  </span>
+                  {product.supplier && (
+                    <Badge variant="outline" className="text-xs">
+                      {product.supplier.name}
+                    </Badge>
+                  )}
+                </div>
+              </CardContent>
+              <CardFooter className="p-4 pt-0 flex gap-2">
+                <Link href={`/marketplace/products/${product.id}`} className="flex-1">
+                  <Button variant="outline" className="w-full">
+                    Ver Detalle
+                  </Button>
+                </Link>
+                <Button onClick={() => handleAddToCart(product)} className="flex-1">
+                  <ShoppingCart className="h-4 w-4 mr-2" />
+                  Agregar
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
