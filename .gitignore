@@ -67,7 +67,10 @@ web_modules/
 
 # dotenv environment variable files
 .env
-.env.*
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 !.env.example
 
 # parcel-bundler cache (https://parceljs.org/)
@@ -141,3 +144,22 @@ dist
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Microsoft Office temporary files
+~$*
+
+# Vercel
+.vercel
+
+# Playwright
+/test-results/
+/playwright-report/
+/playwright/.cache/
+
+# Vitest
+/coverage/
