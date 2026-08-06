@@ -98,6 +98,45 @@ export interface Address {
 // Cart types
 export interface CartItem {
   productId: string
+  name: string
   quantity: number
   price: number
+  image?: string
+}
+
+// Supplier types
+export type SupplierStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
+
+export interface Supplier {
+  id: string
+  companyName: string
+  legalName: string
+  cif: string
+  email: string
+  phone: string
+  address: string
+  city: string
+  province: string
+  postalCode: string
+  country: string
+  status: SupplierStatus
+  contactPerson: {
+    name: string
+    email: string
+    phone: string
+  }
+  bankAccount?: string
+  taxId: string
+  productCategories: string[]
+  website?: string
+  description?: string
+  logo?: string
+  rating?: number
+  totalProducts?: number
+  totalOrders?: number
+  createdAt: string
+  updatedAt: string
+  approvedAt?: string
+  approvedBy?: string
+  rejectedReason?: string
 }

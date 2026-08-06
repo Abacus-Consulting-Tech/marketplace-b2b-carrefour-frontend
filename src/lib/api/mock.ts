@@ -140,6 +140,298 @@ const MOCK_PRODUCTS = [
     createdAt: "2024-01-01T00:00:00.000Z",
     updatedAt: "2024-01-01T00:00:00.000Z",
   },
+  {
+    id: "5",
+    name: "Café Premium Colombia",
+    description: "Café 100% arábica de Colombia, tueste natural",
+    sku: "CAF-005",
+    categoryId: "2",
+    supplierId: "3",
+    price: 15.99,
+    currency: "EUR",
+    stock: 120,
+    images: ["https://images.unsplash.com/photo-1447933601403-0c6688de566e?w=400"],
+    rating: 4.7,
+    reviewCount: 28,
+    specifications: { weight: "500g", origin: "Colombia" },
+    category: "Bebidas",
+    supplier: { id: "3", name: "Cafés del Mundo" },
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+  },
+  {
+    id: "6",
+    name: "Pasta Italiana Artesanal",
+    description: "Pasta artesanal de trigo duro, elaboración tradicional",
+    sku: "PAS-006",
+    categoryId: "1",
+    supplierId: "3",
+    price: 6.50,
+    currency: "EUR",
+    stock: 15,
+    images: ["https://images.unsplash.com/photo-1621996346565-e3dbc646d9a9?w=400"],
+    rating: 4.5,
+    reviewCount: 12,
+    specifications: { weight: "500g", origin: "Italia" },
+    category: "Alimentación",
+    supplier: { id: "3", name: "Pasta Fresca" },
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+  },
+  {
+    id: "7",
+    name: "Cerveza Artesana IPA",
+    description: "Cerveza IPA artesana con lúpulos americanos",
+    sku: "CER-007",
+    categoryId: "2",
+    supplierId: "3",
+    price: 3.99,
+    currency: "EUR",
+    stock: 200,
+    images: ["https://images.unsplash.com/photo-1535958636474-b021ee887b13?w=400"],
+    rating: 4.6,
+    reviewCount: 35,
+    specifications: { volume: "330ml", alcohol: "6.5%" },
+    category: "Bebidas",
+    supplier: { id: "3", name: "Cervezas Artesanas" },
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+  },
+  {
+    id: "8",
+    name: "Miel de Azahar",
+    description: "Miel pura de azahar, producción local ecológica",
+    sku: "MIE-008",
+    categoryId: "1",
+    supplierId: "3",
+    price: 9.99,
+    currency: "EUR",
+    stock: 8,
+    images: ["https://images.unsplash.com/photo-1587049352846-4a222e784422?w=400"],
+    rating: 4.9,
+    reviewCount: 22,
+    specifications: { weight: "500g", origin: "España" },
+    category: "Alimentación",
+    supplier: { id: "3", name: "Mieles del Campo" },
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+  },
+  {
+    id: "9",
+    name: "Chocolate Negro 85%",
+    description: "Chocolate negro premium 85% cacao, sin azúcares añadidos",
+    sku: "CHO-009",
+    categoryId: "1",
+    supplierId: "3",
+    price: 4.50,
+    currency: "EUR",
+    stock: 95,
+    images: ["https://images.unsplash.com/photo-1511381939415-e44015466834?w=400"],
+    rating: 4.8,
+    reviewCount: 19,
+    specifications: { weight: "100g", origin: "Ecuador" },
+    category: "Alimentación",
+    supplier: { id: "3", name: "Chocolates Gourmet" },
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+  },
+  {
+    id: "10",
+    name: "Zumo Natural Naranja",
+    description: "Zumo de naranja recién exprimido, sin conservantes",
+    sku: "ZUM-010",
+    categoryId: "2",
+    supplierId: "3",
+    price: 5.75,
+    currency: "EUR",
+    stock: 12,
+    images: ["https://images.unsplash.com/photo-1600271886742-f049cd451bba?w=400"],
+    rating: 4.4,
+    reviewCount: 16,
+    specifications: { volume: "1L", origin: "España" },
+    category: "Bebidas",
+    supplier: { id: "3", name: "Zumos Naturales" },
+    createdAt: "2024-01-01T00:00:00.000Z",
+    updatedAt: "2024-01-01T00:00:00.000Z",
+  },
+];
+
+// Mock suppliers database
+const MOCK_SUPPLIERS = [
+  {
+    id: "1",
+    companyName: "Aceites del Sur S.L.",
+    legalName: "Aceites del Sur Sociedad Limitada",
+    cif: "B12345678",
+    email: "info@aceitesdelsur.com",
+    phone: "+34 950 123 456",
+    address: "Polígono Industrial Las Salinas, Nave 5",
+    city: "Almería",
+    province: "Almería",
+    postalCode: "04006",
+    country: "España",
+    status: "approved" as const,
+    contactPerson: {
+      name: "María González",
+      email: "maria@aceitesdelsur.com",
+      phone: "+34 950 123 457",
+    },
+    taxId: "B12345678",
+    productCategories: ["Alimentación", "Aceites y Condimentos"],
+    website: "https://aceitesdelsur.com",
+    description: "Productores de aceite de oliva virgen extra desde 1985. Certificación ecológica.",
+    rating: 4.8,
+    totalProducts: 12,
+    totalOrders: 245,
+    createdAt: "2023-06-15T10:00:00.000Z",
+    updatedAt: "2024-01-10T15:30:00.000Z",
+    approvedAt: "2023-06-20T09:00:00.000Z",
+    approvedBy: "1",
+  },
+  {
+    id: "2",
+    companyName: "Ibéricos Premium S.A.",
+    legalName: "Ibéricos Premium Sociedad Anónima",
+    cif: "A87654321",
+    email: "contacto@ibericospremium.com",
+    phone: "+34 924 654 321",
+    address: "Finca La Dehesa, Km 23",
+    city: "Badajoz",
+    province: "Badajoz",
+    postalCode: "06001",
+    country: "España",
+    status: "approved" as const,
+    contactPerson: {
+      name: "Carlos Martínez",
+      email: "carlos@ibericospremium.com",
+      phone: "+34 924 654 322",
+    },
+    taxId: "A87654321",
+    productCategories: ["Alimentación", "Carnes y Embutidos"],
+    website: "https://ibericospremium.com",
+    description: "Jamones y embutidos ibéricos de bellota. D.O. Dehesa de Extremadura.",
+    rating: 4.9,
+    totalProducts: 24,
+    totalOrders: 389,
+    createdAt: "2023-05-10T08:00:00.000Z",
+    updatedAt: "2024-01-15T11:20:00.000Z",
+    approvedAt: "2023-05-15T10:30:00.000Z",
+    approvedBy: "1",
+  },
+  {
+    id: "3",
+    companyName: "Bodegas del Valle",
+    legalName: "Bodegas del Valle S.L.",
+    cif: "B45678912",
+    email: "ventas@bodegasdelvalle.com",
+    phone: "+34 941 555 789",
+    address: "Carretera de Logroño, Km 5",
+    city: "Haro",
+    province: "La Rioja",
+    postalCode: "26200",
+    country: "España",
+    status: "approved" as const,
+    contactPerson: {
+      name: "Ana Ruiz",
+      email: "ana@bodegasdelvalle.com",
+      phone: "+34 941 555 790",
+    },
+    taxId: "B45678912",
+    productCategories: ["Bebidas", "Vinos y Espumosos"],
+    website: "https://bodegasdelvalle.com",
+    description: "Vinos D.O. Rioja con más de 100 años de tradición familiar.",
+    rating: 4.7,
+    totalProducts: 18,
+    totalOrders: 312,
+    createdAt: "2023-07-01T12:00:00.000Z",
+    updatedAt: "2024-01-12T16:45:00.000Z",
+    approvedAt: "2023-07-10T14:00:00.000Z",
+    approvedBy: "1",
+  },
+  {
+    id: "4",
+    companyName: "Fresh Produce Andalucía",
+    legalName: "Fresh Produce Andalucía S.L.",
+    cif: "B98765432",
+    email: "info@freshproduce.es",
+    phone: "+34 955 321 654",
+    address: "Mercado Central, Nave 12",
+    city: "Sevilla",
+    province: "Sevilla",
+    postalCode: "41001",
+    country: "España",
+    status: "pending" as const,
+    contactPerson: {
+      name: "Pedro López",
+      email: "pedro@freshproduce.es",
+      phone: "+34 955 321 655",
+    },
+    taxId: "B98765432",
+    productCategories: ["Alimentación", "Frutas y Verduras"],
+    website: "https://freshproduce.es",
+    description: "Distribución de frutas y verduras frescas. Producto local y de temporada.",
+    totalProducts: 0,
+    totalOrders: 0,
+    createdAt: "2024-01-20T09:30:00.000Z",
+    updatedAt: "2024-01-20T09:30:00.000Z",
+  },
+  {
+    id: "5",
+    companyName: "Lácteos La Granja",
+    legalName: "Lácteos La Granja S.A.",
+    cif: "A11223344",
+    email: "ventas@lacteoslagranja.com",
+    phone: "+34 987 456 123",
+    address: "Polígono Ganadero, Parcela 15",
+    city: "León",
+    province: "León",
+    postalCode: "24001",
+    country: "España",
+    status: "rejected" as const,
+    contactPerson: {
+      name: "Laura Fernández",
+      email: "laura@lacteoslagranja.com",
+      phone: "+34 987 456 124",
+    },
+    taxId: "A11223344",
+    productCategories: ["Alimentación", "Lácteos"],
+    description: "Productos lácteos artesanales.",
+    totalProducts: 0,
+    totalOrders: 0,
+    createdAt: "2024-01-05T11:00:00.000Z",
+    updatedAt: "2024-01-08T14:20:00.000Z",
+    rejectedReason: "Documentación incompleta. Falta certificado sanitario.",
+  },
+  {
+    id: "6",
+    companyName: "Distribuciones MarySol",
+    legalName: "Distribuciones MarySol S.L.",
+    cif: "B55443322",
+    email: "admin@marysol.com",
+    phone: "+34 958 741 852",
+    address: "Calle Comercio, 45",
+    city: "Granada",
+    province: "Granada",
+    postalCode: "18001",
+    country: "España",
+    status: "suspended" as const,
+    contactPerson: {
+      name: "Sofía Ramírez",
+      email: "sofia@marysol.com",
+      phone: "+34 958 741 853",
+    },
+    taxId: "B55443322",
+    productCategories: ["Alimentación", "Varios"],
+    website: "https://marysol.com",
+    description: "Distribuidor mayorista de productos alimentarios.",
+    rating: 3.5,
+    totalProducts: 8,
+    totalOrders: 45,
+    createdAt: "2023-11-01T10:00:00.000Z",
+    updatedAt: "2024-01-18T17:00:00.000Z",
+    approvedAt: "2023-11-05T12:00:00.000Z",
+    approvedBy: "1",
+  },
 ];
 
 // Mock API delay
@@ -234,6 +526,101 @@ export const mockApi = {
 
       return {
         data: product,
+      };
+    },
+  },
+
+  // Suppliers endpoints
+  suppliers: {
+    list: async () => {
+      await delay();
+      return {
+        data: MOCK_SUPPLIERS,
+      };
+    },
+
+    getById: async (id: string) => {
+      await delay();
+      const supplier = MOCK_SUPPLIERS.find((s) => s.id === id);
+      
+      if (!supplier) {
+        throw new Error("Proveedor no encontrado");
+      }
+
+      return {
+        data: supplier,
+      };
+    },
+
+    approve: async (id: string) => {
+      await delay();
+      const supplier = MOCK_SUPPLIERS.find((s) => s.id === id);
+      
+      if (!supplier) {
+        throw new Error("Proveedor no encontrado");
+      }
+
+      // Update supplier status
+      supplier.status = 'approved';
+      supplier.approvedAt = new Date().toISOString();
+      supplier.approvedBy = "1"; // Admin ID
+
+      return {
+        data: supplier,
+        message: "Proveedor aprobado exitosamente",
+      };
+    },
+
+    reject: async (id: string, reason: string) => {
+      await delay();
+      const supplier = MOCK_SUPPLIERS.find((s) => s.id === id);
+      
+      if (!supplier) {
+        throw new Error("Proveedor no encontrado");
+      }
+
+      // Update supplier status
+      supplier.status = 'rejected';
+      supplier.rejectedReason = reason;
+      supplier.updatedAt = new Date().toISOString();
+
+      return {
+        data: supplier,
+        message: "Proveedor rechazado",
+      };
+    },
+
+    suspend: async (id: string) => {
+      await delay();
+      const supplier = MOCK_SUPPLIERS.find((s) => s.id === id);
+      
+      if (!supplier) {
+        throw new Error("Proveedor no encontrado");
+      }
+
+      supplier.status = 'suspended';
+      supplier.updatedAt = new Date().toISOString();
+
+      return {
+        data: supplier,
+        message: "Proveedor suspendido",
+      };
+    },
+
+    activate: async (id: string) => {
+      await delay();
+      const supplier = MOCK_SUPPLIERS.find((s) => s.id === id);
+      
+      if (!supplier) {
+        throw new Error("Proveedor no encontrado");
+      }
+
+      supplier.status = 'approved';
+      supplier.updatedAt = new Date().toISOString();
+
+      return {
+        data: supplier,
+        message: "Proveedor activado",
       };
     },
   },

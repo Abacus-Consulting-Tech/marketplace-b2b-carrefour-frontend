@@ -86,7 +86,7 @@ export function Header() {
               <>
                 {/* Cart (only for franchisees) */}
                 {user?.role === "franchisee" && (
-                  <Link href="/cart">
+                  <Link href="/marketplace/cart">
                     <Button variant="ghost" size="icon" className="relative">
                       <ShoppingCart className="h-5 w-5" />
                       {itemCount > 0 && (
