@@ -654,15 +654,41 @@ The application uses a **mock API system** for development and testing without r
 
 ### **Test 6.3: Authentication Persists**
 
-**Steps**:
-1. Login as any user
-2. **Close browser and reopen**
-3. Navigate to http://localhost:3000
+**⚠️ Important**: This test behavior depends on your browser settings and mode.
 
-✅ **Expected Result**:
-- Still logged in
+**Steps**:
+1. Login as any user (e.g., `franchisee@test.com` / `franchisee123`)
+2. Verify you're logged in (check header for user icon)
+3. **Close only the browser tab** (not the entire browser)
+4. Open a new tab and navigate to http://localhost:3000
+
+✅ **Expected Result (Tab Close/Reopen)**:
+- Still logged in ✓
 - Redirects to appropriate dashboard
-- JWT token persisted in localStorage
+- Auth state persisted in localStorage
+
+**Alternative Test - Close Entire Browser**:
+1. Login as any user
+2. **Close the entire browser application**
+3. Reopen browser and navigate to http://localhost:3000
+
+⚠️ **Expected Result (Browser Close/Reopen)**:
+- **May vary based on browser settings**:
+  - ✅ **Chrome/Edge (Normal Mode)**: Usually persists, stays logged in
+  - ❌ **Safari**: May clear localStorage on quit, redirects to login
+  - ❌ **Firefox (Privacy Mode)**: May clear data, redirects to login
+  - ❌ **Incognito/Private Mode**: Always clears localStorage, redirects to login
+
+**Why This Happens**:
+- localStorage persistence depends on browser privacy settings
+- Some browsers clear "session" data when completely closed
+- Incognito/Private browsing modes always clear data
+- Mock API mode uses localStorage for both auth token and user data
+
+**Recommended Test**:
+- Test with **tab close/reopen** for reliable results
+- Or test with **page refresh** (Cmd+R / Ctrl+R)
+- Both should maintain authentication state
 
 ---
 
@@ -710,6 +736,32 @@ npm run dev
   - Clear browser cache and localStorage: `localStorage.clear()` in console
   - Logout and login again
   - Hard refresh the page (Cmd+Shift+R on Mac, Ctrl+Shift+R on Windows)
+
+### Issue 7: Authentication doesn't persist after closing browser
+**Symptoms**:
+- Login works fine
+- Refreshing page keeps you logged in
+- But closing browser and reopening redirects to login
+
+**Explanation**:
+- This is **expected behavior** in some browsers and modes
+- Not a bug, but browser privacy settings
+
+**Solutions**:
+- **Use tab close/reopen instead** - authentication persists ✓
+- **Check browser mode**: Incognito/Private mode always clears data
+- **Chrome/Edge users**: Should persist normally
+- **Safari users**: Check "Prevent cross-site tracking" settings
+- **Firefox users**: Check "Delete cookies and site data when Firefox is closed"
+- **For production**: Real backend with refresh tokens handles this better
+
+**To verify localStorage is working**:
+1. Login to the app
+2. Open browser console (F12)
+3. Type: `localStorage.getItem('auth-storage')`
+4. You should see stored auth data
+5. Close tab and reopen
+6. Check localStorage again - data should still be there
 
 ---
 
