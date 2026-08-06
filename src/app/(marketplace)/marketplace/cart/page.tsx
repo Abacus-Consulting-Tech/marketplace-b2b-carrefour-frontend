@@ -45,10 +45,8 @@ export default function CartPage() {
       return;
     }
     
-    toast({
-      title: "Función no disponible",
-      description: "El proceso de pago se implementará en la próxima fase",
-    });
+    // Redirigir al checkout
+    router.push('/marketplace/checkout');
   };
 
   if (items.length === 0) {

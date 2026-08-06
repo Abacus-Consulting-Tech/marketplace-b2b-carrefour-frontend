@@ -434,6 +434,105 @@ const MOCK_SUPPLIERS = [
   },
 ];
 
+// Mock orders database
+const MOCK_ORDERS = [
+  {
+    id: "1",
+    orderNumber: "CF-10001",
+    franchiseeId: "2",
+    franchiseeName: "Juan Pérez",
+    status: "delivered" as const,
+    items: [
+      {
+        id: "1",
+        productId: "1",
+        productName: "Aceite de Oliva Virgen Extra",
+        productImage: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400",
+        supplierId: "3",
+        supplierName: "Aceites del Sur",
+        quantity: 12,
+        unitPrice: 12.99,
+        subtotal: 155.88,
+        tax: 32.73,
+      },
+      {
+        id: "2",
+        productId: "2",
+        productName: "Jamón Ibérico",
+        productImage: "https://images.unsplash.com/photo-1608797178974-15b35a64ede9?w=400",
+        supplierId: "4",
+        supplierName: "Ibéricos Premium",
+        quantity: 2,
+        unitPrice: 89.99,
+        subtotal: 179.98,
+        tax: 37.80,
+      },
+    ],
+    subtotal: 335.86,
+    tax: 70.53,
+    shippingCost: 0,
+    total: 406.39,
+    currency: "EUR",
+    shippingAddress: {
+      fullName: "Juan Pérez",
+      phone: "+34 666 123 456",
+      address: "Calle Mayor 123, 2º A",
+      city: "Madrid",
+      province: "Madrid",
+      postalCode: "28001",
+      country: "España",
+    },
+    paymentMethod: "tarjeta" as const,
+    paymentStatus: "paid" as const,
+    trackingNumber: "ES1234567890123456",
+    estimatedDelivery: "2024-01-20",
+    createdAt: "2024-01-15T10:30:00.000Z",
+    updatedAt: "2024-01-18T14:20:00.000Z",
+    deliveredAt: "2024-01-18T14:20:00.000Z",
+  },
+  {
+    id: "2",
+    orderNumber: "CF-10002",
+    franchiseeId: "2",
+    franchiseeName: "Juan Pérez",
+    status: "shipped" as const,
+    items: [
+      {
+        id: "3",
+        productId: "3",
+        productName: "Queso Manchego",
+        productImage: "https://images.unsplash.com/photo-1486297678162-eb2a19b0a32d?w=400",
+        supplierId: "3",
+        supplierName: "Aceites del Sur",
+        quantity: 6,
+        unitPrice: 18.50,
+        subtotal: 111.00,
+        tax: 23.31,
+      },
+    ],
+    subtotal: 111.00,
+    tax: 23.31,
+    shippingCost: 0,
+    total: 134.31,
+    currency: "EUR",
+    shippingAddress: {
+      fullName: "Juan Pérez",
+      phone: "+34 666 123 456",
+      address: "Calle Mayor 123, 2º A",
+      city: "Madrid",
+      province: "Madrid",
+      postalCode: "28001",
+      country: "España",
+    },
+    paymentMethod: "tarjeta" as const,
+    paymentStatus: "paid" as const,
+    trackingNumber: "ES9876543210987654",
+    estimatedDelivery: "2024-01-25",
+    createdAt: "2024-01-20T09:15:00.000Z",
+    updatedAt: "2024-01-22T16:45:00.000Z",
+  },
+];
+
 // Mock API delay
 const delay = (ms: number = 500) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -621,6 +720,76 @@ export const mockApi = {
       return {
         data: supplier,
         message: "Proveedor activado",
+      };
+    },
+  },
+
+  // Orders endpoints
+  orders: {
+    list: async (userId?: string) => {
+      await delay();
+      // Si se proporciona userId, filtrar órdenes por franquiciado
+      const orders = userId 
+        ? MOCK_ORDERS.filter(o => o.franchiseeId === userId)
+        : MOCK_ORDERS;
+      
+      return {
+        data: orders,
+      };
+    },
+
+    getById: async (id: string) => {
+      await delay();
+      const order = MOCK_ORDERS.find((o) => o.id === id);
+      
+      if (!order) {
+        throw new Error("Pedido no encontrado");
+      }
+
+      return {
+        data: order,
+      };
+    },
+
+    create: async (orderData: any) => {
+      await delay();
+      
+      const newOrder = {
+        id: String(MOCK_ORDERS.length + 1),
+        orderNumber: `CF-${10000 + MOCK_ORDERS.length + 1}`,
+        ...orderData,
+        status: 'pending' as const,
+        paymentStatus: 'paid' as const,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      MOCK_ORDERS.push(newOrder);
+
+      return {
+        data: newOrder,
+        message: "Pedido creado exitosamente",
+      };
+    },
+
+    cancel: async (id: string) => {
+      await delay();
+      const order = MOCK_ORDERS.find((o) => o.id === id);
+      
+      if (!order) {
+        throw new Error("Pedido no encontrado");
+      }
+
+      if (order.status === 'delivered' || order.status === 'shipped') {
+        throw new Error("No se puede cancelar un pedido que ya ha sido enviado o entregado");
+      }
+
+      order.status = 'cancelled';
+      order.updatedAt = new Date().toISOString();
+
+      return {
+        data: order,
+        message: "Pedido cancelado",
       };
     },
   },

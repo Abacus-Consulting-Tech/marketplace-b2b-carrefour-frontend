@@ -60,11 +60,17 @@ export type OrderStatus =
   | 'delivered'
   | 'cancelled'
 
+export type PaymentStatus = 
+  | 'pending'
+  | 'paid'
+  | 'failed'
+  | 'refunded'
+
 export interface Order {
   id: string
   orderNumber: string
   franchiseeId: string
-  supplierId: string
+  franchiseeName: string
   status: OrderStatus
   items: OrderItem[]
   subtotal: number
@@ -72,21 +78,42 @@ export interface Order {
   shippingCost: number
   total: number
   currency: string
-  shippingAddress: Address
-  paymentMethod: string
-  paymentStatus: string
+  shippingAddress: DeliveryAddress
+  paymentMethod: 'tarjeta' | 'transferencia'
+  paymentStatus: PaymentStatus
+  notes?: string
+  trackingNumber?: string
+  estimatedDelivery?: string
   createdAt: string
   updatedAt: string
+  deliveredAt?: string
 }
 
 export interface OrderItem {
   id: string
   productId: string
+  productName: string
+  productImage?: string
+  supplierId: string
+  supplierName: string
   quantity: number
   unitPrice: number
   subtotal: number
+  tax: number
 }
 
+export interface DeliveryAddress {
+  fullName: string
+  phone: string
+  address: string
+  city: string
+  province: string
+  postalCode: string
+  country: string
+  additionalInfo?: string
+}
+
+// Legacy Address type for compatibility
 export interface Address {
   street: string
   city: string
