@@ -419,15 +419,16 @@ The application uses a **mock API system** for development and testing without r
 1. Click "Gestión de Proveedores" card
 2. Or go to http://localhost:3000/admin/suppliers
 3. Review the page:
-   - 4 stats cards at top
+   - 5 stats cards at top (Total, Pendientes, Aprobados, Rechazados, Suspendidos)
    - Search bar
    - Status tabs (Todos, Pendientes, Aprobados, Rechazados, Suspendidos)
-   - Suppliers table
+   - Suppliers table with fixed-width columns
 
 ✅ **Expected Result**:
 - Shows all 6 suppliers
 - Stats: Total 6, Pendientes 1, Aprobados 3, Rechazados 1, Suspendidos 1
-- Table columns: Proveedor, CIF, Email, Teléfono, Productos, Estado, Acciones
+- Table columns: Empresa, CIF, Contacto, Categorías, Estado, Productos, Pedidos, Acciones
+- Page width remains stable when switching between status tabs
 
 ---
 
@@ -464,15 +465,16 @@ The application uses a **mock API system** for development and testing without r
 1. Go back to "Pendientes" tab
 2. Click "Ver" button on "Fresh Produce Andalucía"
 3. Review detail page:
-   - Supplier info card
-   - Stats (15 productos, 0 pedidos, 0.0★)
-   - Contact information
-   - Status badge: "Pendiente de Aprobación"
-4. Action buttons visible: "Aprobar Proveedor" and "Rechazar"
+   - Company name and legal name at top
+   - Yellow "Pendiente" status badge below company name
+   - 4 stats cards: Productos (0), Pedidos (0), Valoración (N/A), Registro (20/1/2024)
+   - Contact information and company details cards
+4. Action buttons visible: "Aprobar" (green) and "Rechazar" (red)
 
 ✅ **Expected Result**:
 - All supplier data displays correctly
-- Two action buttons available for pending supplier
+- Status badge visible below company name
+- Two action buttons available for pending supplier (Aprobar and Rechazar)
 
 ---
 
@@ -480,14 +482,14 @@ The application uses a **mock API system** for development and testing without r
 
 **Steps**:
 1. On "Fresh Produce Andalucía" detail page
-2. Click "Aprobar Proveedor" button
+2. Click "Aprobar" button (green button with checkmark)
 3. Click "Sí, aprobar" in confirmation dialog
 
 ✅ **Expected Result**:
-- Success toast: "Proveedor aprobado correctamente"
-- Status badge changes to green "Aprobado"
-- Action buttons change to "Suspender Proveedor"
-- Stats update
+- Success toast: "Proveedor aprobado" with message "Fresh Produce Andalucía ha sido aprobado correctamente"
+- Status badge changes from yellow "Pendiente" to green "Aprobado"
+- Action buttons change from "Aprobar"/"Rechazar" to "Suspender"
+- Stats remain: 0 products, 0 pedidos, Valoración N/A
 
 ---
 
@@ -497,47 +499,66 @@ The application uses a **mock API system** for development and testing without r
 1. Go to http://localhost:3000/admin/suppliers
 2. Click "Aprobados" tab
 3. Click "Ver" on "Aceites del Sur"
-4. Review stats: 23 productos, 145 pedidos, 4.8★
-5. Click "Suspender Proveedor"
+4. Review detail page:
+   - Company: "Aceites del Sur S.L." with green "Aprobado" badge
+   - Stats: 12 productos, 245 pedidos, 4.8★, Registro 15/6/2023
+   - Location: Almería, Almería
+5. Click "Suspender" button
 6. Click "Sí, suspender" in confirmation
 
 ✅ **Expected Result**:
-- Success toast: "Proveedor suspendido correctamente"
-- Status badge changes to gray "Suspendido"
-- Action button changes to "Activar Proveedor"
+- Success toast: "Proveedor suspendido" with message "Aceites del Sur S.L. ha sido suspendido"
+- Status badge changes from green "Aprobado" to gray "Suspendido"
+- Action button changes from "Suspender" to "Activar" (green)
 
 ---
 
 ### **Test 4.8: Reactivate Suspended Supplier**
 
 **Steps**:
-1. Still on "Aceites del Sur" detail page
-2. Click "Activar Proveedor"
-3. Click "Sí, activar" in confirmation
+1. Still on "Aceites del Sur" detail page (should show gray "Suspendido" badge)
+2. Click "Activar" button (green with checkmark)
+3. Click "Sí, activar" in confirmation dialog
 
 ✅ **Expected Result**:
-- Success toast: "Proveedor activado correctamente"
-- Status badge changes back to green "Aprobado"
+- Success toast: "Proveedor activado" with message "Aceites del Sur S.L. ha sido activado"
+- Status badge changes back from gray "Suspendido" to green "Aprobado"
+- Action button changes from "Activar" to "Suspender"
 - Returns to normal approved state
 
 ---
 
 ### **Test 4.9: Reject Supplier with Reason**
 
-**Steps**:
-1. Go back to suppliers list
-2. Find a pending supplier (or unapprove one)
-3. Click "Ver" on the pending supplier
-4. Click "Rechazar" button
-5. In the dialog, enter rejection reason:
+**⚠️ Note**: After Test 4.6, there are no pending suppliers. You need to either:
+- **Option A**: Refresh the page to reset mock data (all changes are lost)
+- **Option B**: View the existing rejected supplier "Lácteos La Granja" to see rejection workflow results
+
+**Steps (Option A - Testing Rejection)**:
+1. **Refresh the page** (Cmd+R or Ctrl+R) to reset all suppliers to original state
+2. Login again as admin: `admin@carrefour.com` / `admin123`
+3. Go to http://localhost:3000/admin/suppliers
+4. Click "Pendientes" tab
+5. Click "Ver" on "Fresh Produce Andalucía"
+6. Click "Rechazar" button (red with X icon)
+7. In the dialog, enter rejection reason:
    - **Motivo**: "Documentación incompleta - falta certificado sanitario"
-6. Click "Confirmar Rechazo"
+8. Click "Confirmar Rechazo" button
 
 ✅ **Expected Result**:
-- Success toast: "Proveedor rechazado correctamente"
-- Status badge changes to red "Rechazado"
-- Rejection reason is stored
-- Only "Aprobar Proveedor" button available
+- Success toast: "Proveedor rechazado" with supplier name
+- Status badge changes from yellow "Pendiente" to red "Rechazado"
+- Red card appears showing "Motivo del Rechazo" with the reason entered
+- Only "Aprobar" button available (to reverse the rejection)
+
+**Steps (Option B - View Existing Rejection)**:
+1. Go to http://localhost:3000/admin/suppliers
+2. Click "Rechazados" tab
+3. Click "Ver" on "Lácteos La Granja"
+4. Observe:
+   - Red "Rechazado" status badge
+   - Red card with rejection reason: "Documentación incompleta. Falta certificado sanitario."
+   - "Aprobar" button available to reverse rejection
 
 ---
 

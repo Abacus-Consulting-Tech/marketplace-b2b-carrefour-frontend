@@ -174,17 +174,17 @@ export default function SuppliersPage() {
                 </div>
               ) : (
                 <div className="overflow-x-auto">
-                  <Table>
+                  <Table className="min-w-full">
                     <TableHeader>
                       <TableRow>
-                        <TableHead>Empresa</TableHead>
-                        <TableHead>CIF</TableHead>
-                        <TableHead>Contacto</TableHead>
-                        <TableHead>Categorías</TableHead>
-                        <TableHead>Estado</TableHead>
-                        <TableHead>Productos</TableHead>
-                        <TableHead>Pedidos</TableHead>
-                        <TableHead className="text-right">Acciones</TableHead>
+                        <TableHead className="min-w-[200px]">Empresa</TableHead>
+                        <TableHead className="min-w-[100px]">CIF</TableHead>
+                        <TableHead className="min-w-[150px]">Contacto</TableHead>
+                        <TableHead className="min-w-[120px]">Categorías</TableHead>
+                        <TableHead className="min-w-[120px]">Estado</TableHead>
+                        <TableHead className="min-w-[80px]">Productos</TableHead>
+                        <TableHead className="min-w-[80px]">Pedidos</TableHead>
+                        <TableHead className="min-w-[100px] text-right">Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
