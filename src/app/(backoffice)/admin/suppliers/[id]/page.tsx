@@ -260,6 +260,17 @@ export default function SupplierDetailPage() {
                 Activar
               </Button>
             )}
+
+            {supplier.status === 'rejected' && (
+              <Button
+                onClick={handleApprove}
+                disabled={actionLoading}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="mr-2 h-4 w-4" />
+                Aprobar
+              </Button>
+            )}
           </div>
         </div>
       </div>

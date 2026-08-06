@@ -562,6 +562,24 @@ The application uses a **mock API system** for development and testing without r
 
 ---
 
+### **Test 4.10: Reverse Rejection (Approve Rejected Supplier)**
+
+**Steps**:
+1. Go to http://localhost:3000/admin/suppliers
+2. Click "Rechazados" tab
+3. Click "Ver" on "Lácteos La Granja"
+4. Click "Aprobar" button (green button with checkmark)
+5. Click "Sí, aprobar" in confirmation dialog
+
+✅ **Expected Result**:
+- Success toast: "Proveedor aprobado" with message "Lácteos La Granja S.A. ha sido aprobado correctamente"
+- Status badge changes from red "Rechazado" to green "Aprobado"
+- Red rejection reason card disappears
+- Action button changes from "Aprobar" to "Suspender"
+- Supplier can now operate normally in the marketplace
+
+---
+
 ## 🔄 Test Scenario 5: Role-Based Access Control
 
 ### **Test 5.1: Franchisee Cannot Access Admin**
@@ -732,6 +750,7 @@ npm run dev
 - [ ] Suspend supplier
 - [ ] Activate supplier
 - [ ] Reject supplier with reason
+- [ ] Reverse rejection (approve rejected supplier)
 
 ### Access Control ✓
 - [ ] Franchisee blocked from admin
