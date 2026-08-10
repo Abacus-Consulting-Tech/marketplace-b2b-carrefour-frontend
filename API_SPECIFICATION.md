@@ -1,26 +1,26 @@
-# API Specification - Marketplace B2B Carrefour
-## Backend Requirements for MercuryJS 2.x / Medusa
+# Especificación de API - Marketplace B2B Carrefour
+## Requisitos Backend para MercuryJS 2.x / Medusa
 
 ---
 
-## 📋 Overview
+## 📋 Resumen General
 
-This document specifies all API endpoints required by the frontend application. The backend should be implemented using **MercuryJS 2.x** with **Medusa** framework.
+Este documento especifica todos los endpoints de API requeridos por la aplicación frontend. El backend debe implementarse usando **MercuryJS 2.x** con el framework **Medusa**.
 
-**Base URL:** `https://api.your-domain.com/api`
+**URL Base:** `https://api.tu-dominio.com/api`
 
-**Authentication:** Bearer token (JWT)
+**Autenticación:** Bearer token (JWT)
 
 ---
 
-## 🔐 Authentication Endpoints
+## 🔐 Endpoints de Autenticación
 
-### 1. Login
+### 1. Inicio de Sesión (Login)
 ```http
 POST /auth/login
 ```
 
-**Request Body:**
+**Cuerpo de la Petición:**
 ```json
 {
   "email": "franchisee@test.com",
@@ -28,7 +28,7 @@ POST /auth/login
 }
 ```
 
-**Response (200 OK):**
+**Respuesta (200 OK):**
 ```json
 {
   "success": true,
@@ -49,17 +49,17 @@ POST /auth/login
 }
 ```
 
-**Error Response (401 Unauthorized):**
+**Respuesta de Error (401 No Autorizado):**
 ```json
 {
   "success": false,
-  "message": "Invalid credentials"
+  "message": "Credenciales inválidas"
 }
 ```
 
 ---
 
-### 2. Register
+### 2. Registro
 ```http
 POST /auth/register
 ```
@@ -76,7 +76,7 @@ POST /auth/register
 }
 ```
 
-**Response (201 Created):**
+**Respuesta (201 Creado):**
 ```json
 {
   "success": true,
@@ -89,21 +89,21 @@ POST /auth/register
       "status": "pending"
     }
   },
-  "message": "Registration successful. Please check your email for verification."
+  "message": "Registro exitoso. Por favor revisa tu email para verificación."
 }
 ```
 
-**Error Response (400 Bad Request):**
+**Respuesta de Error (400 Petición Incorrecta):**
 ```json
 {
   "success": false,
-  "message": "Email already exists"
+  "message": "El email ya existe"
 }
 ```
 
 ---
 
-### 3. Forgot Password
+### 3. Recuperar Contraseña
 ```http
 POST /auth/forgot-password
 ```
@@ -115,31 +115,31 @@ POST /auth/forgot-password
 }
 ```
 
-**Response (200 OK):**
+**Respuesta (200 OK):**
 ```json
 {
   "success": true,
-  "message": "Password reset link sent to your email"
+  "message": "Enlace de recuperación enviado a tu email"
 }
 ```
 
 ---
 
-## 📦 Products Endpoints
+## 📦 Endpoints de Productos
 
-### 4. List Products
+### 4. Listar Productos
 ```http
 GET /products
 ```
 
-**Query Parameters:**
-- `page` (optional): Page number (default: 1)
-- `limit` (optional): Items per page (default: 20)
-- `category` (optional): Filter by category ID
-- `search` (optional): Search query
-- `supplierId` (optional): Filter by supplier
+**Parámetros de Consulta:**
+- `page` (opcional): Número de página (por defecto: 1)
+- `limit` (opcional): Elementos por página (por defecto: 20)
+- `category` (opcional): Filtrar por ID de categoría
+- `search` (opcional): Búsqueda de texto
+- `supplierId` (opcional): Filtrar por proveedor
 
-**Example:**
+**Ejemplo:**
 ```
 GET /products?page=1&limit=20&category=cat_123&search=aceite
 ```
@@ -190,12 +190,12 @@ GET /products?page=1&limit=20&category=cat_123&search=aceite
 
 ---
 
-### 5. Get Product by ID
+### 5. Obtener Producto por ID
 ```http
 GET /products/:id
 ```
 
-**Example:**
+**Ejemplo:**
 ```
 GET /products/prod_123abc
 ```
@@ -237,29 +237,29 @@ GET /products/prod_123abc
 }
 ```
 
-**Error Response (404 Not Found):**
+**Respuesta de Error (404 No Encontrado):**
 ```json
 {
   "success": false,
-  "message": "Product not found"
+  "message": "Producto no encontrado"
 }
 ```
 
 ---
 
-## 🛒 Orders Endpoints
+## 🛒 Endpoints de Pedidos
 
-### 6. Create Order
+### 6. Crear Pedido
 ```http
 POST /orders
 ```
 
-**Headers:**
+**Cabeceras:**
 ```
 Authorization: Bearer <token>
 ```
 
-**Request Body:**
+**Cuerpo de la Petición:**
 ```json
 {
   "items": [
@@ -324,28 +324,28 @@ Authorization: Bearer <token>
     "createdAt": "2024-01-15T10:30:00.000Z",
     "updatedAt": "2024-01-15T10:30:00.000Z"
   },
-  "message": "Order created successfully"
+  "message": "Pedido creado exitosamente"
 }
 ```
 
 ---
 
-### 7. List Orders
+### 7. Listar Pedidos
 ```http
 GET /orders
 ```
 
-**Headers:**
+**Cabeceras:**
 ```
 Authorization: Bearer <token>
 ```
 
-**Query Parameters:**
-- `page` (optional): Page number
-- `limit` (optional): Items per page
-- `status` (optional): Filter by status (pending, processing, shipped, delivered, cancelled)
-- `userId` (optional): Filter by user (admin only)
-- `supplierId` (optional): Filter orders containing supplier's products (supplier role)
+**Parámetros de Consulta:**
+- `page` (opcional): Número de página
+- `limit` (opcional): Elementos por página
+- `status` (opcional): Filtrar por estado (pending, processing, shipped, delivered, cancelled)
+- `userId` (opcional): Filtrar por usuario (solo admin)
+- `supplierId` (opcional): Filtrar pedidos que contengan productos del proveedor (rol supplier)
 
 **Response (200 OK):**
 ```json
@@ -396,12 +396,12 @@ Authorization: Bearer <token>
 
 ---
 
-### 8. Get Order by ID
+### 8. Obtener Pedido por ID
 ```http
 GET /orders/:id
 ```
 
-**Headers:**
+**Cabeceras:**
 ```
 Authorization: Bearer <token>
 ```
@@ -467,17 +467,17 @@ Authorization: Bearer <token>
 
 ---
 
-### 9. Update Order Status
+### 9. Actualizar Estado del Pedido
 ```http
 PATCH /orders/:id/status
 ```
 
-**Headers:**
+**Cabeceras:**
 ```
 Authorization: Bearer <token>
 ```
 
-**Request Body:**
+**Cuerpo de la Petición:**
 ```json
 {
   "status": "shipped",
@@ -496,13 +496,13 @@ Authorization: Bearer <token>
     "trackingNumber": "1Z999AA10123456784",
     "updatedAt": "2024-01-16T09:15:00.000Z"
   },
-  "message": "Order status updated"
+  "message": "Estado del pedido actualizado"
 }
 ```
 
 ---
 
-### 10. Cancel Order
+### 10. Cancelar Pedido
 ```http
 POST /orders/:id/cancel
 ```
@@ -527,23 +527,23 @@ Authorization: Bearer <token>
     "id": "ord_789xyz",
     "status": "cancelled"
   },
-  "message": "Order cancelled successfully"
+  "message": "Pedido cancelado exitosamente"
 }
 ```
 
-**Error Response (400 Bad Request):**
+**Respuesta de Error (400 Petición Incorrecta):**
 ```json
 {
   "success": false,
-  "message": "Cannot cancel order that has been shipped"
+  "message": "No se puede cancelar un pedido que ya ha sido enviado"
 }
 ```
 
 ---
 
-## 👥 User/Profile Endpoints
+## 👥 Endpoints de Usuario/Perfil
 
-### 11. Get Current User Profile
+### 11. Obtener Perfil del Usuario Actual
 ```http
 GET /users/me
 ```
@@ -579,17 +579,17 @@ Authorization: Bearer <token>
 
 ---
 
-### 12. Update User Profile
+### 12. Actualizar Perfil de Usuario
 ```http
 PATCH /users/me
 ```
 
-**Headers:**
+**Cabeceras:**
 ```
 Authorization: Bearer <token>
 ```
 
-**Request Body:**
+**Cuerpo de la Petición:**
 ```json
 {
   "name": "Juan Pérez García",
@@ -614,13 +614,13 @@ Authorization: Bearer <token>
     "phone": "+34 600 111 222",
     "updatedAt": "2024-01-20T15:30:00.000Z"
   },
-  "message": "Profile updated successfully"
+  "message": "Perfil actualizado exitosamente"
 }
 ```
 
 ---
 
-### 13. Change Password
+### 13. Cambiar Contraseña
 ```http
 POST /users/me/change-password
 ```
@@ -638,27 +638,27 @@ Authorization: Bearer <token>
 }
 ```
 
-**Response (200 OK):**
+**Respuesta (200 OK):**
 ```json
 {
   "success": true,
-  "message": "Password changed successfully"
+  "message": "Contraseña cambiada exitosamente"
 }
 ```
 
-**Error Response (400 Bad Request):**
+**Respuesta de Error (400 Petición Incorrecta):**
 ```json
 {
   "success": false,
-  "message": "Current password is incorrect"
+  "message": "La contraseña actual es incorrecta"
 }
 ```
 
 ---
 
-## 📊 Dashboard/Statistics Endpoints
+## 📊 Endpoints de Dashboard/Estadísticas
 
-### 14. Get Franchisee Dashboard Stats
+### 14. Obtener Estadísticas del Dashboard de Franquiciado
 ```http
 GET /dashboard/franchisee
 ```
@@ -702,7 +702,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 15. Get Supplier Dashboard Stats
+### 15. Obtener Estadísticas del Dashboard de Proveedor
 ```http
 GET /dashboard/supplier
 ```
@@ -754,7 +754,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 16. Get Admin Dashboard Stats
+### 16. Obtener Estadísticas del Dashboard de Administrador
 ```http
 GET /dashboard/admin
 ```
@@ -810,9 +810,9 @@ Authorization: Bearer <token>
 
 ---
 
-## 🏢 Suppliers Endpoints (Admin Only)
+## 🏢 Endpoints de Proveedores (Solo Admin)
 
-### 17. List Suppliers
+### 17. Listar Proveedores
 ```http
 GET /suppliers
 ```
@@ -866,7 +866,7 @@ Authorization: Bearer <token>
 
 ---
 
-### 18. Get Supplier by ID
+### 18. Obtener Proveedor por ID
 ```http
 GET /suppliers/:id
 ```
@@ -926,17 +926,17 @@ Authorization: Bearer <token>
 
 ---
 
-### 19. Update Supplier Status
+### 19. Actualizar Estado del Proveedor
 ```http
 PATCH /suppliers/:id/status
 ```
 
-**Headers:**
+**Cabeceras:**
 ```
 Authorization: Bearer <token>
 ```
 
-**Request Body:**
+**Cuerpo de la Petición:**
 ```json
 {
   "status": "active",
@@ -953,15 +953,15 @@ Authorization: Bearer <token>
     "status": "active",
     "updatedAt": "2024-01-20T10:00:00.000Z"
   },
-  "message": "Supplier status updated"
+  "message": "Estado del proveedor actualizado"
 }
 ```
 
 ---
 
-## 🔧 Additional Endpoints
+## 🔧 Endpoints Adicionales
 
-### 20. Get Categories
+### 20. Obtener Categorías
 ```http
 GET /categories
 ```
@@ -991,38 +991,38 @@ GET /categories
 
 ---
 
-## 🔒 Authorization Rules
+## 🔒 Reglas de Autorización
 
-### Role Permissions:
+### Permisos por Rol:
 
-**Franchisee:**
-- ✅ View products
-- ✅ Create orders
-- ✅ View own orders
-- ✅ Update own profile
-- ❌ View other users' orders
-- ❌ Access admin endpoints
+**Franquiciado:**
+- ✅ Ver productos
+- ✅ Crear pedidos
+- ✅ Ver sus propios pedidos
+- ✅ Actualizar su propio perfil
+- ❌ Ver pedidos de otros usuarios
+- ❌ Acceder a endpoints de admin
 
-**Supplier:**
-- ✅ View products
-- ✅ View orders containing their products
-- ✅ Update own products
-- ✅ Update own profile
-- ❌ View all orders
-- ❌ Access admin endpoints
+**Proveedor:**
+- ✅ Ver productos
+- ✅ Ver pedidos que contengan sus productos
+- ✅ Actualizar sus propios productos
+- ✅ Actualizar su propio perfil
+- ❌ Ver todos los pedidos
+- ❌ Acceder a endpoints de admin
 
-**Admin:**
-- ✅ Full access to all endpoints
-- ✅ Manage suppliers
-- ✅ View all orders
-- ✅ View all users
-- ✅ Platform statistics
+**Administrador:**
+- ✅ Acceso completo a todos los endpoints
+- ✅ Gestionar proveedores
+- ✅ Ver todos los pedidos
+- ✅ Ver todos los usuarios
+- ✅ Estadísticas de la plataforma
 
 ---
 
-## 📝 Data Types
+## 📝 Tipos de Datos
 
-### User
+### Usuario (User)
 ```typescript
 interface User {
   id: string;
@@ -1038,7 +1038,7 @@ interface User {
 }
 ```
 
-### Product
+### Producto (Product)
 ```typescript
 interface Product {
   id: string;
@@ -1089,7 +1089,7 @@ interface Order {
 }
 ```
 
-### OrderItem
+### Item del Pedido (OrderItem)
 ```typescript
 interface OrderItem {
   id: string;
@@ -1105,7 +1105,7 @@ interface OrderItem {
 }
 ```
 
-### Address
+### Dirección (Address)
 ```typescript
 interface Address {
   street: string;
@@ -1118,81 +1118,81 @@ interface Address {
 
 ---
 
-## 🚀 Implementation Notes for MercuryJS/Medusa
+## 🚀 Notas de Implementación para MercuryJS/Medusa
 
-### 1. Authentication
-- Use JWT tokens for authentication
-- Token should expire after 24 hours
-- Implement refresh token mechanism
-- Hash passwords with bcrypt (min 10 rounds)
+### 1. Autenticación
+- Usar tokens JWT para autenticación
+- El token debe expirar después de 24 horas
+- Implementar mecanismo de refresh token
+- Hashear contraseñas con bcrypt (mínimo 10 rondas)
 
-### 2. Validation
-- Validate all request bodies with JSON schema
-- Sanitize inputs to prevent XSS/SQL injection
-- Return 400 Bad Request for validation errors
+### 2. Validación
+- Validar todos los cuerpos de petición con esquema JSON
+- Sanitizar inputs para prevenir XSS/SQL injection
+- Retornar 400 Bad Request para errores de validación
 
-### 3. Error Handling
-- Use consistent error response format
-- Include error codes for client handling
-- Log errors server-side
+### 3. Manejo de Errores
+- Usar formato consistente de respuesta de error
+- Incluir códigos de error para manejo en cliente
+- Registrar errores del lado del servidor
 
-### 4. Rate Limiting
-- Implement rate limiting per endpoint
-- Auth endpoints: 5 requests/minute
-- Other endpoints: 100 requests/minute
+### 4. Rate Limiting (Límite de Tasa)
+- Implementar rate limiting por endpoint
+- Endpoints de auth: 5 peticiones/minuto
+- Otros endpoints: 100 peticiones/minuto
 
 ### 5. CORS
-- Enable CORS for frontend domain
-- Allow credentials
-- Whitelist specific origins in production
+- Habilitar CORS para el dominio del frontend
+- Permitir credenciales
+- Whitelist de orígenes específicos en producción
 
-### 6. Database
-- Use Medusa's built-in PostgreSQL integration
-- Add indexes on frequently queried fields (userId, status, createdAt)
-- Implement soft deletes for orders and users
+### 6. Base de Datos
+- Usar la integración PostgreSQL integrada de Medusa
+- Agregar índices en campos consultados frecuentemente (userId, status, createdAt)
+- Implementar soft deletes para pedidos y usuarios
 
-### 7. File Upload (for supplier documents)
-- Use Medusa's file service
-- Support PDF, JPG, PNG formats
-- Max file size: 10MB
-- Store in S3 or similar
+### 7. Subida de Archivos (para documentos de proveedores)
+- Usar el servicio de archivos de Medusa
+- Soportar formatos PDF, JPG, PNG
+- Tamaño máximo de archivo: 10MB
+- Almacenar en S3 o similar
 
-### 8. Webhooks (Future)
-- Implement webhooks for order status changes
-- Notify suppliers when order is placed
-- Notify franchisees when order is shipped
-
----
-
-## 📊 Priority Implementation Order
-
-### Phase 1 (MVP - Week 1-2):
-1. ✅ Authentication (login, register)
-2. ✅ Products (list, get by ID)
-3. ✅ User profile (get, update)
-
-### Phase 2 (Orders - Week 3):
-4. ✅ Orders (create, list, get by ID)
-5. ✅ Order status updates
-6. ✅ Order cancellation
-
-### Phase 3 (Dashboard - Week 4):
-7. ✅ Dashboard statistics (franchisee, supplier, admin)
-8. ✅ Suppliers management (admin)
-9. ✅ Password change
+### 8. Webhooks (Futuro)
+- Implementar webhooks para cambios de estado de pedidos
+- Notificar a proveedores cuando se realiza un pedido
+- Notificar a franquiciados cuando el pedido es enviado
 
 ---
 
-## 🧪 Testing Requirements
+## 📊 Orden de Implementación Prioritario
 
-For each endpoint, provide:
-- Unit tests for business logic
-- Integration tests for API routes
-- Test fixtures with sample data
-- Postman/Insomnia collection
+### Fase 1 (MVP - Semana 1-2):
+1. ✅ Autenticación (login, registro)
+2. ✅ Productos (listar, obtener por ID)
+3. ✅ Perfil de usuario (obtener, actualizar)
+
+### Fase 2 (Pedidos - Semana 3):
+4. ✅ Pedidos (crear, listar, obtener por ID)
+5. ✅ Actualizar estado de pedidos
+6. ✅ Cancelación de pedidos
+
+### Fase 3 (Dashboard - Semana 4):
+7. ✅ Estadísticas de dashboard (franquiciado, proveedor, admin)
+8. ✅ Gestión de proveedores (admin)
+9. ✅ Cambio de contraseña
 
 ---
 
-**Last Updated:** August 2026  
-**Version:** 1.0.0  
-**Frontend Repository:** [marketplace-b2b-carrefour-frontend](https://github.com/Abacus-Consulting-Tech/marketplace-b2b-carrefour-frontend)
+## 🧪 Requisitos de Testing
+
+Para cada endpoint, proporcionar:
+- Tests unitarios para lógica de negocio
+- Tests de integración para rutas de API
+- Test fixtures con datos de ejemplo
+- Colección Postman/Insomnia
+
+---
+
+**Última Actualización:** Agosto 2026  
+**Versión:** 1.0.0  
+**Repositorio Frontend:** [marketplace-b2b-carrefour-frontend](https://github.com/Abacus-Consulting-Tech/marketplace-b2b-carrefour-frontend)
