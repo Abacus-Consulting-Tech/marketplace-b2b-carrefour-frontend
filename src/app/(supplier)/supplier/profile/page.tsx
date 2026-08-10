@@ -31,7 +31,7 @@ export default function SupplierProfilePage() {
       name: user?.name || '',
       email: user?.email || '',
       phone: user?.phone || '+34 600 000 000',
-      company: user?.companyName || 'Productos Gourmet S.L.',
+      company: 'Productos Gourmet S.L.',
       businessName: 'Productos Gourmet Sociedad Limitada',
       cif: 'B12345678',
       address: 'Polígono Industrial Norte, Nave 5',
