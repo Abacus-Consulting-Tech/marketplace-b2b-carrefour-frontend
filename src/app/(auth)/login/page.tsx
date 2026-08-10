@@ -21,8 +21,8 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showMockInfo, setShowMockInfo] = useState(false);
 
-  // Check if mock mode is enabled
-  const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true";
+  // Use mock API if NEXT_PUBLIC_MOCK_AUTH is true OR if no API URL is configured
+  const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true" || !process.env.NEXT_PUBLIC_API_URL;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -27,8 +27,8 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
   const fetchProduct = async () => {
     try {
-      // Check if mock mode is enabled
-      const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true";
+      // Use mock API if NEXT_PUBLIC_MOCK_AUTH is true OR if no API URL is configured
+      const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true" || !process.env.NEXT_PUBLIC_API_URL;
       
       let response;
       if (isMockMode) {
