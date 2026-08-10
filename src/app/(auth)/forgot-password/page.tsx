@@ -21,10 +21,21 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      await apiClient.post("/auth/forgot-password", { email });
+      // Check if mock mode is enabled
+      const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true";
+      
+      if (isMockMode) {
+        // Use mock API
+        const { mockApi } = await import("@/lib/api/mock");
+        await mockApi.auth.forgotPassword(email);
+      } else {
+        // Use real API
+        await apiClient.post("/auth/forgot-password", { email });
+      }
+      
       setSuccess(true);
     } catch (err: any) {
-      setError(err.response?.data?.message || "Error al enviar el email");
+      setError(err.response?.data?.message || err.message || "Error al enviar el email");
     } finally {
       setLoading(false);
     }

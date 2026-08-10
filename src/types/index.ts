@@ -60,11 +60,17 @@ export type OrderStatus =
   | 'delivered'
   | 'cancelled'
 
+export type PaymentStatus = 
+  | 'pending'
+  | 'paid'
+  | 'failed'
+  | 'refunded'
+
 export interface Order {
   id: string
   orderNumber: string
   franchiseeId: string
-  supplierId: string
+  franchiseeName: string
   status: OrderStatus
   items: OrderItem[]
   subtotal: number
@@ -72,21 +78,42 @@ export interface Order {
   shippingCost: number
   total: number
   currency: string
-  shippingAddress: Address
-  paymentMethod: string
-  paymentStatus: string
+  shippingAddress: DeliveryAddress
+  paymentMethod: 'tarjeta' | 'transferencia'
+  paymentStatus: PaymentStatus
+  notes?: string
+  trackingNumber?: string
+  estimatedDelivery?: string
   createdAt: string
   updatedAt: string
+  deliveredAt?: string
 }
 
 export interface OrderItem {
   id: string
   productId: string
+  productName: string
+  productImage?: string
+  supplierId: string
+  supplierName: string
   quantity: number
   unitPrice: number
   subtotal: number
+  tax: number
 }
 
+export interface DeliveryAddress {
+  fullName: string
+  phone: string
+  address: string
+  city: string
+  province: string
+  postalCode: string
+  country: string
+  additionalInfo?: string
+}
+
+// Legacy Address type for compatibility
 export interface Address {
   street: string
   city: string
@@ -98,6 +125,45 @@ export interface Address {
 // Cart types
 export interface CartItem {
   productId: string
+  name: string
   quantity: number
   price: number
+  image?: string
+}
+
+// Supplier types
+export type SupplierStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
+
+export interface Supplier {
+  id: string
+  companyName: string
+  legalName: string
+  cif: string
+  email: string
+  phone: string
+  address: string
+  city: string
+  province: string
+  postalCode: string
+  country: string
+  status: SupplierStatus
+  contactPerson: {
+    name: string
+    email: string
+    phone: string
+  }
+  bankAccount?: string
+  taxId: string
+  productCategories: string[]
+  website?: string
+  description?: string
+  logo?: string
+  rating?: number
+  totalProducts?: number
+  totalOrders?: number
+  createdAt: string
+  updatedAt: string
+  approvedAt?: string
+  approvedBy?: string
+  rejectedReason?: string
 }

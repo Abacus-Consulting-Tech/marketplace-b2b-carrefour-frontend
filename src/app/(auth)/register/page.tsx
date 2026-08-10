@@ -44,18 +44,35 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      await apiClient.post("/auth/register", {
-        name: formData.name,
-        email: formData.email,
-        password: formData.password,
-        role: formData.role,
-        company: formData.company,
-        phone: formData.phone,
-      });
+      // Check if mock mode is enabled
+      const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true";
+      
+      if (isMockMode) {
+        // Use mock API
+        const { mockApi } = await import("@/lib/api/mock");
+        await mockApi.auth.register({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+          company: formData.company,
+          phone: formData.phone,
+        });
+      } else {
+        // Use real API
+        await apiClient.post("/auth/register", {
+          name: formData.name,
+          email: formData.email,
+          password: formData.password,
+          role: formData.role,
+          company: formData.company,
+          phone: formData.phone,
+        });
+      }
       
       router.push("/login?registered=true");
     } catch (err: any) {
-      setError(err.response?.data?.message || "Error al registrar la cuenta");
+      setError(err.response?.data?.message || err.message || "Error al registrar la cuenta");
     } finally {
       setLoading(false);
     }

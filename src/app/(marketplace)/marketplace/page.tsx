@@ -7,6 +7,13 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { apiClient } from "@/lib/api/client";
 import { Product } from "@/types";
 import { Search, ShoppingCart } from "lucide-react";
@@ -17,6 +24,7 @@ export default function MarketplacePage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const addItem = useCartStore((state) => state.addItem);
   const { toast } = useToast();
 
@@ -50,10 +58,16 @@ export default function MarketplacePage() {
     }
   };
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    product.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredProducts = products.filter((product) => {
+    const matchesSearch =
+      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    const matchesCategory =
+      selectedCategory === "all" || product.category === selectedCategory;
+    
+    return matchesSearch && matchesCategory;
+  });
 
   const handleAddToCart = (product: Product) => {
     addItem({
@@ -82,15 +96,28 @@ export default function MarketplacePage() {
       </div>
 
       {/* Search */}
-      <div className="relative max-w-md">
-        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-        <Input
-          type="search"
-          placeholder="Buscar productos..."
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
-        />
+      <div className="flex gap-4 flex-wrap">
+        <div className="relative flex-1 min-w-[250px] max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <Input
+            type="search"
+            placeholder="Buscar productos..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        
+        <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+          <SelectTrigger className="w-[200px]">
+            <SelectValue placeholder="Categoría" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Todas las categorías</SelectItem>
+            <SelectItem value="Alimentación">Alimentación</SelectItem>
+            <SelectItem value="Bebidas">Bebidas</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {/* Products Grid */}
@@ -140,11 +167,25 @@ export default function MarketplacePage() {
                   <span className="text-2xl font-bold text-blue-600">
                     €{product.price.toFixed(2)}
                   </span>
-                  {product.supplier && (
-                    <Badge variant="outline" className="text-xs">
-                      {product.supplier.name}
-                    </Badge>
-                  )}
+                  <div className="flex gap-2 flex-wrap justify-end">
+                    {product.supplier && (
+                      <Badge variant="outline" className="text-xs">
+                        {product.supplier.name}
+                      </Badge>
+                    )}
+                    {product.stock !== undefined && (
+                      <Badge
+                        variant={product.stock > 20 ? "default" : "secondary"}
+                        className={
+                          product.stock > 20
+                            ? "bg-green-500 hover:bg-green-600 text-white"
+                            : "bg-yellow-500 hover:bg-yellow-600 text-white"
+                        }
+                      >
+                        {product.stock > 20 ? "En Stock" : "Stock Bajo"}
+                      </Badge>
+                    )}
+                  </div>
                 </div>
               </CardContent>
               <CardFooter className="p-4 pt-0 flex gap-2">

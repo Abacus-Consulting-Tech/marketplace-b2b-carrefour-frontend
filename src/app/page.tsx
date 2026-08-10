@@ -1,3 +1,7 @@
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
+import { LogIn } from 'lucide-react';
+
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-24">
@@ -8,6 +12,17 @@ export default function Home() {
         <p className="text-center text-muted-foreground">
           Plataforma privada para franquiciados y proveedores
         </p>
+        
+        {/* Login Button */}
+        <div className="flex justify-center mt-8">
+          <Link href="/login">
+            <Button size="lg" className="gap-2">
+              <LogIn className="w-4 h-4" />
+              Iniciar Sesión
+            </Button>
+          </Link>
+        </div>
+
         <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
           <div className="p-6 border rounded-lg">
             <h2 className="text-xl font-semibold mb-2">Franquiciados</h2>
