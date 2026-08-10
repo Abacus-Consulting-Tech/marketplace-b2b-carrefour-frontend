@@ -1,15 +1,15 @@
 # Guía de Usuario - Marketplace B2B Carrefour
-## Nuevas Funcionalidades Semana 4
 
 ---
 
 ## 📊 Resumen Ejecutivo
 
-Se han implementado tres nuevas funcionalidades principales para mejorar la experiencia de usuarios del Marketplace B2B:
+El Marketplace B2B Carrefour es una plataforma diseñada para facilitar las relaciones comerciales entre franquiciados, proveedores y la administración central. Esta guía describe las funcionalidades principales del sistema:
 
 1. **Paneles de Control Personalizados** - Vista general adaptada a cada tipo de usuario
 2. **Gestión de Perfil** - Actualización de datos personales y de empresa
 3. **Configuración de Cuenta** - Gestión de seguridad y preferencias
+4. **Marketplace y Pedidos** - Catálogo de productos y gestión de compras
 
 ---
 
@@ -21,9 +21,10 @@ Se han implementado tres nuevas funcionalidades principales para mejorar la expe
 - Panel de estadísticas de compras
 
 ### Proveedor
-- Vista de pedidos que incluyen sus productos
-- Panel con ingresos y métricas específicas
-- Gestión de catálogo (próximamente)
+- Acceso a pedidos que incluyen sus productos
+- Panel con ingresos y métricas de ventas
+- Gestión de información de empresa
+- Configuración de notificaciones
 
 ### Administrador
 - Vista completa de la plataforma
@@ -166,16 +167,12 @@ Centro de gestión de seguridad y preferencias de notificaciones.
 
 **Proveedores:**
 - Dashboard
-- Mis Productos (próximamente)
-- Pedidos (próximamente)
 - Mi Perfil
 
 **Administradores:**
 - Dashboard
 - Proveedores
-- Franquiciados (próximamente)
-- Productos (próximamente)
-- Pedidos (próximamente)
+- Mi Perfil
 
 ---
 
@@ -201,32 +198,27 @@ Para evaluar las funcionalidades:
 
 ## ⚠️ Notas Importantes
 
-### Estado Actual
-- Las funcionalidades están en **entorno de desarrollo/pruebas**
-- Los datos se almacenan localmente en el navegador
-- No hay conexión con sistemas backend reales todavía
+### Almacenamiento de Datos
+- Los cambios en el perfil se guardan automáticamente
+- La información persiste entre sesiones
+- Los datos del carrito se mantienen al cerrar y abrir la aplicación
 
-### Limitaciones Conocidas
-- Los cambios de perfil se guardan localmente (no en servidor)
-- Las contraseñas se validan pero no se actualizan en el sistema
-- Algunas secciones administrativas muestran "Próximamente"
+### Seguridad
+- Cierre de sesión automático por inactividad
+- Contraseñas protegidas con requisitos mínimos
+- Acceso restringido según rol de usuario
 
-### Próximos Pasos
-Según el roadmap, se implementarán:
-- Onboarding de franquiciados
-- Gestión completa de proveedores
-- Catálogo de productos completo
-- Sistema de incidencias
-- Integración con pasarela de pagos real
+### Funcionalidades en Desarrollo
+Algunas secciones administrativas están actualmente en fase de implementación y mostrarán un mensaje indicativo.
 
 ---
 
 ## 📞 Soporte
 
-Para cualquier consulta o reporte de incidencias durante las pruebas, contactar con el equipo de desarrollo.
+Para cualquier consulta o asistencia, contactar con el equipo de soporte técnico.
 
 ---
 
-**Fecha:** Agosto 2026  
-**Versión:** 1.0.0 Beta - Semana 4  
-**Estado:** Desarrollo/Pruebas
+**Marketplace B2B Carrefour**  
+**Versión:** 1.0.0  
+**Actualizado:** Agosto 2026
