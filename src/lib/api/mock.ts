@@ -1,6 +1,8 @@
 // Mock authentication for development/testing
 // Enable by setting NEXT_PUBLIC_MOCK_AUTH=true in .env.local
 
+import type { Order } from '@/types';
+
 interface MockUser {
   email: string;
   password: string;
@@ -822,7 +824,7 @@ export const mockApi = {
       
       // Si es un pedido almacenado, actualizar localStorage
       if (!MOCK_ORDERS.find(o => o.id === id)) {
-        const updatedStoredOrders = storedOrders.map(o => 
+        const updatedStoredOrders = storedOrders.map((o: Order) => 
           o.id === id ? order : o
         );
         saveStoredOrders(updatedStoredOrders);
