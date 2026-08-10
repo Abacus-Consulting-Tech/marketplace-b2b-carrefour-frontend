@@ -1,14 +1,22 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { CheckCircle2, Package, Home, FileText, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Package, Home, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCartStore } from '@/lib/store/cart';
+import { useCheckoutStore } from '@/lib/store/checkout';
+import { useAuthStore } from '@/lib/store/auth';
+import { mockApi } from '@/lib/api/mock';
 
 export default function CheckoutSuccessPage() {
   const router = useRouter();
-  const [orderNumber] = useState(() => `CF-${Date.now().toString().slice(-8)}`);
+  const { items, clearCart } = useCartStore();
+  const { deliveryAddress, paymentMethod, resetCheckout } = useCheckoutStore();
+  const { user } = useAuthStore();
+  const [orderNumber, setOrderNumber] = useState<string>('');
+  const orderCreated = useRef(false);
   const [estimatedDelivery] = useState(() => {
     const date = new Date();
     date.setDate(date.getDate() + 3); // 3 días hábiles
@@ -18,7 +26,72 @@ export default function CheckoutSuccessPage() {
   useEffect(() => {
     // Scroll al inicio
     window.scrollTo(0, 0);
-  }, []);
+    
+    // Solo crear el pedido una vez
+    if (orderCreated.current) return;
+    orderCreated.current = true;
+    
+    // Crear el pedido antes de limpiar el carrito
+    const createOrder = async () => {
+      // Verificar que tenemos todos los datos necesarios
+      if (!items.length || !deliveryAddress || !paymentMethod || !user) {
+        console.error('Missing data for order creation');
+        return;
+      }
+
+      try {
+        // Preparar los items del pedido
+        const orderItems = items.map((item, index) => ({
+          id: String(index + 1),
+          productId: item.productId,
+          productName: item.name,
+          productImage: item.image || 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=400',
+          supplierId: '3', // Mock supplier ID
+          supplierName: 'Proveedor', // Mock supplier name
+          quantity: item.quantity,
+          unitPrice: item.price,
+          subtotal: item.price * item.quantity,
+          tax: item.price * item.quantity * 0.21,
+        }));
+
+        // Calcular totales
+        const subtotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0);
+        const tax = orderItems.reduce((sum, item) => sum + item.tax, 0);
+        const total = subtotal + tax;
+
+        // Crear el pedido
+        const orderData = {
+          franchiseeId: user.id,
+          franchiseeName: user.name,
+          items: orderItems,
+          subtotal,
+          tax,
+          shippingCost: 0,
+          total,
+          currency: 'EUR',
+          shippingAddress: deliveryAddress,
+          paymentMethod,
+          estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        };
+
+        const response = await mockApi.orders.create(orderData);
+        
+        if (response.data?.orderNumber) {
+          setOrderNumber(response.data.orderNumber);
+        }
+      } catch (error) {
+        console.error('Error creating order:', error);
+      }
+    };
+
+    // Crear pedido y luego limpiar
+    createOrder().then(() => {
+      setTimeout(() => {
+        clearCart();
+        resetCheckout();
+      }, 100);
+    });
+  }, [items, deliveryAddress, paymentMethod, user, clearCart, resetCheckout]);
 
   return (
     <div className="container mx-auto px-4 py-12 max-w-4xl">
@@ -43,7 +116,9 @@ export default function CheckoutSuccessPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-2xl font-bold text-blue-600">{orderNumber}</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {orderNumber || 'Procesando...'}
+            </p>
             <p className="text-sm text-gray-500 mt-1">
               Guarda este número para hacer seguimiento de tu pedido
             </p>

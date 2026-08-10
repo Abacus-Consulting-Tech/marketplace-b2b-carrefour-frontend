@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['localhost', 'cdn.carrefour-b2b.com'],
+    domains: ['localhost', 'cdn.carrefour-b2b.com', 'images.unsplash.com'],
     remotePatterns: [
       {
         protocol: 'https',

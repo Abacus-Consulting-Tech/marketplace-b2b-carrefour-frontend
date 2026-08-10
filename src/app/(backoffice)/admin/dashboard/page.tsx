@@ -1,216 +1,240 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useEffect, useState } from 'react';
+import { StatCard } from '@/components/dashboard/StatCard';
+import { useAuthStore } from '@/lib/store/auth';
+import { mockApi } from '@/lib/api/mock';
+import { 
+  Users, 
+  ShoppingBag, 
+  TrendingUp, 
+  AlertCircle,
+  Package,
+  CheckCircle2
+} from 'lucide-react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building2, Package, ShoppingCart, Users, Settings, TrendingUp } from 'lucide-react';
-
-const ADMIN_SECTIONS = [
-  {
-    title: 'Gestión de Proveedores',
-    description: 'Aprobar, rechazar y gestionar proveedores del marketplace',
-    icon: Building2,
-    href: '/admin/suppliers',
-    color: 'bg-blue-500',
-    stats: 'Pendientes de aprobar: 1',
-  },
-  {
-    title: 'Productos',
-    description: 'Administrar el catálogo de productos',
-    icon: Package,
-    href: '/admin/products',
-    color: 'bg-green-500',
-    stats: 'Total: 62 productos',
-    disabled: true,
-  },
-  {
-    title: 'Pedidos',
-    description: 'Supervisar todos los pedidos del marketplace',
-    icon: ShoppingCart,
-    href: '/admin/orders',
-    color: 'bg-purple-500',
-    stats: 'Activos: 245',
-    disabled: true,
-  },
-  {
-    title: 'Franquiciados',
-    description: 'Gestionar franquiciados y sus tiendas',
-    icon: Users,
-    href: '/admin/franchisees',
-    color: 'bg-orange-500',
-    stats: 'Registrados: 28',
-    disabled: true,
-  },
-  {
-    title: 'Reportes',
-    description: 'Analíticas y estadísticas del marketplace',
-    icon: TrendingUp,
-    href: '/admin/reports',
-    color: 'bg-pink-500',
-    stats: 'Ver dashboard',
-    disabled: true,
-  },
-  {
-    title: 'Configuración',
-    description: 'Ajustes generales del sistema',
-    icon: Settings,
-    href: '/admin/settings',
-    color: 'bg-gray-500',
-    stats: 'Sistema',
-    disabled: true,
-  },
-];
+import Link from 'next/link';
 
 export default function AdminDashboardPage() {
-  const router = useRouter();
+  const { user } = useAuthStore();
+  const [orders, setOrders] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await mockApi.orders.list();
+        setOrders(response.data || []);
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Calculate statistics
+  const totalOrders = orders.length;
+  const totalRevenue = orders.reduce((sum, order) => sum + (order.total || 0), 0);
+  const activeSuppliers = 3; // Mock data - would come from API
+  const pendingApprovals = 1; // Mock data - would come from API
+
+  // Recent activity
+  const recentOrders = orders
+    .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+    .slice(0, 10);
 
   return (
-    <div className="container mx-auto py-8 px-4">
+    <div className="space-y-8">
       {/* Header */}
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Panel de Administración</h1>
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">
+          Panel de Administración
+        </h1>
         <p className="text-gray-600 mt-1">
-          Gestiona todos los aspectos del Marketplace B2B Carrefour
+          Vista general de la plataforma Marketplace B2B
         </p>
       </div>
 
-      {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Proveedores</p>
-                <p className="text-2xl font-bold">6</p>
-                <p className="text-xs text-yellow-600 mt-1">1 pendiente</p>
-              </div>
-              <Building2 className="h-10 w-10 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Productos</p>
-                <p className="text-2xl font-bold">62</p>
-                <p className="text-xs text-green-600 mt-1">+8 esta semana</p>
-              </div>
-              <Package className="h-10 w-10 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Pedidos</p>
-                <p className="text-2xl font-bold">245</p>
-                <p className="text-xs text-purple-600 mt-1">€45,230 total</p>
-              </div>
-              <ShoppingCart className="h-10 w-10 text-purple-500" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Franquiciados</p>
-                <p className="text-2xl font-bold">28</p>
-                <p className="text-xs text-orange-600 mt-1">89 tiendas</p>
-              </div>
-              <Users className="h-10 w-10 text-orange-500" />
-            </div>
-          </CardContent>
-        </Card>
+      {/* KPI Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <StatCard
+          title="Ingresos Totales"
+          value={`${totalRevenue.toFixed(2)} €`}
+          description="Facturación del mes"
+          icon={TrendingUp}
+          iconBgColor="bg-green-100"
+          iconColor="text-green-600"
+          trend={{ value: 12, isPositive: true }}
+        />
+        <StatCard
+          title="Total Pedidos"
+          value={totalOrders}
+          description="Pedidos procesados"
+          icon={ShoppingBag}
+          iconBgColor="bg-blue-100"
+          iconColor="text-blue-600"
+        />
+        <StatCard
+          title="Proveedores Activos"
+          value={activeSuppliers}
+          description="Proveedores verificados"
+          icon={Users}
+          iconBgColor="bg-purple-100"
+          iconColor="text-purple-600"
+        />
+        <StatCard
+          title="Pendientes Aprobación"
+          value={pendingApprovals}
+          description="Requieren revisión"
+          icon={AlertCircle}
+          iconBgColor="bg-yellow-100"
+          iconColor="text-yellow-600"
+        />
       </div>
 
-      {/* Admin Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {ADMIN_SECTIONS.map((section) => {
-          const Icon = section.icon;
-          return (
-            <Card
-              key={section.href}
-              className={`hover:shadow-lg transition-shadow ${
-                section.disabled ? 'opacity-60' : 'cursor-pointer'
-              }`}
-              onClick={() => !section.disabled && router.push(section.href)}
-            >
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div className={`${section.color} p-3 rounded-lg`}>
-                    <Icon className="h-6 w-6 text-white" />
-                  </div>
-                  {section.disabled && (
-                    <span className="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded">
-                      Próximamente
-                    </span>
-                  )}
+      {/* Main Content Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Recent Activity - Takes 2 columns */}
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Package className="h-5 w-5" />
+                Actividad Reciente
+              </CardTitle>
+              <Link href="/admin/orders">
+                <Button variant="ghost" size="sm">
+                  Ver Todo
+                </Button>
+              </Link>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="animate-pulse space-y-3">
+                  {[...Array(5)].map((_, i) => (
+                    <div key={i} className="h-16 bg-gray-200 rounded"></div>
+                  ))}
                 </div>
-                <CardTitle className="mt-4">{section.title}</CardTitle>
-                <CardDescription>{section.description}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{section.stats}</span>
-                  {!section.disabled && (
-                    <Button variant="ghost" size="sm">
-                      Acceder →
-                    </Button>
-                  )}
+              ) : recentOrders.length === 0 ? (
+                <div className="text-center py-8">
+                  <Package className="h-12 w-12 text-gray-400 mx-auto mb-3" />
+                  <p className="text-sm text-gray-500">No hay actividad reciente</p>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
+              ) : (
+                <div className="space-y-3">
+                  {recentOrders.map((order) => (
+                    <div
+                      key={order.id}
+                      className="flex items-center justify-between p-3 rounded-lg border hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-blue-100 rounded">
+                          <ShoppingBag className="h-4 w-4 text-blue-600" />
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium">{order.orderNumber}</p>
+                          <p className="text-xs text-gray-500">
+                            {order.franchiseeName} • {new Date(order.createdAt).toLocaleDateString('es-ES')}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <Badge
+                          variant="secondary"
+                          className={
+                            order.status === 'delivered'
+                              ? 'bg-green-100 text-green-800'
+                              : order.status === 'shipped'
+                              ? 'bg-indigo-100 text-indigo-800'
+                              : 'bg-yellow-100 text-yellow-800'
+                          }
+                        >
+                          {order.status === 'delivered' && 'Entregado'}
+                          {order.status === 'shipped' && 'Enviado'}
+                          {order.status === 'pending' && 'Pendiente'}
+                          {!['delivered', 'shipped', 'pending'].includes(order.status) && order.status}
+                        </Badge>
+                        <p className="text-sm font-semibold text-gray-900">
+                          {order.total.toFixed(2)} €
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="space-y-6">
+          {/* Platform Health */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Estado de la Plataforma</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-gray-600">Sistema</span>
+                </div>
+                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  Operativo
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-gray-600">Pagos</span>
+                </div>
+                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  Activo
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-4 w-4 text-green-600" />
+                  <span className="text-sm text-gray-600">API</span>
+                </div>
+                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  Mock Mode
+                </Badge>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Pending Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Acciones Pendientes</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Link href="/admin/suppliers">
+                <Button variant="outline" className="w-full justify-between">
+                  <span className="text-sm">Aprobar Proveedores</span>
+                  <Badge variant="secondary" className="bg-yellow-100 text-yellow-800">
+                    {pendingApprovals}
+                  </Badge>
+                </Button>
+              </Link>
+              <Link href="/admin/orders">
+                <Button variant="outline" className="w-full justify-between">
+                  <span className="text-sm">Pedidos Pendientes</span>
+                  <Badge variant="secondary" className="bg-blue-100 text-blue-800">
+                    {orders.filter(o => o.status === 'pending').length}
+                  </Badge>
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </div>
-
-      {/* Quick Actions */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle>Acciones Rápidas</CardTitle>
-          <CardDescription>Tareas pendientes y notificaciones importantes</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
-              <div className="flex items-center gap-4">
-                <div className="bg-yellow-100 p-2 rounded-full">
-                  <Building2 className="h-5 w-5 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="font-medium">1 proveedor pendiente de aprobación</p>
-                  <p className="text-sm text-gray-600">Fresh Produce Andalucía requiere revisión</p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => router.push('/admin/suppliers?status=pending')}
-              >
-                Revisar
-              </Button>
-            </div>
-
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-gray-50">
-              <div className="flex items-center gap-4">
-                <div className="bg-gray-200 p-2 rounded-full">
-                  <Package className="h-5 w-5 text-gray-600" />
-                </div>
-                <div>
-                  <p className="font-medium text-gray-600">No hay productos pendientes</p>
-                  <p className="text-sm text-gray-500">Todos los productos están aprobados</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
     </div>
   );
 }

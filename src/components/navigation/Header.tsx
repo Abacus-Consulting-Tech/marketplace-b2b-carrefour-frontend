@@ -44,10 +44,13 @@ export function Header() {
             <nav className="hidden md:flex items-center space-x-6">
               {user?.role === "franchisee" && (
                 <>
+                  <Link href="/marketplace/dashboard" className="text-sm font-medium hover:text-blue-600">
+                    Dashboard
+                  </Link>
                   <Link href="/marketplace" className="text-sm font-medium hover:text-blue-600">
                     Catálogo
                   </Link>
-                  <Link href="/orders" className="text-sm font-medium hover:text-blue-600">
+                  <Link href="/marketplace/orders" className="text-sm font-medium hover:text-blue-600">
                     Mis Pedidos
                   </Link>
                 </>
@@ -55,6 +58,9 @@ export function Header() {
               
               {user?.role === "supplier" && (
                 <>
+                  <Link href="/supplier/dashboard" className="text-sm font-medium hover:text-blue-600">
+                    Dashboard
+                  </Link>
                   <Link href="/supplier/products" className="text-sm font-medium hover:text-blue-600">
                     Mis Productos
                   </Link>
@@ -103,15 +109,34 @@ export function Header() {
 
                 {/* User menu */}
                 <div className="flex items-center space-x-2">
-                  <Link href="/profile">
-                    <Button variant="ghost" size="icon">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback>{getUserInitials()}</AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </Link>
+                  <div className="flex items-center space-x-1 border rounded-md">
+                    <Link 
+                      href={
+                        user?.role === 'franchisee' ? '/marketplace/profile' :
+                        user?.role === 'supplier' ? '/supplier/profile' :
+                        '/admin/profile'
+                      }
+                    >
+                      <Button variant="ghost" size="icon" title="Mi Perfil">
+                        <Avatar className="h-8 w-8">
+                          <AvatarFallback>{getUserInitials()}</AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </Link>
+                    <Link 
+                      href={
+                        user?.role === 'franchisee' ? '/marketplace/settings' :
+                        user?.role === 'supplier' ? '/supplier/settings' :
+                        '/admin/settings'
+                      }
+                    >
+                      <Button variant="ghost" size="icon" title="Configuración">
+                        <User className="h-5 w-5" />
+                      </Button>
+                    </Link>
+                  </div>
                   
-                  <Button variant="ghost" size="icon" onClick={handleLogout}>
+                  <Button variant="ghost" size="icon" onClick={handleLogout} title="Cerrar Sesión">
                     <LogOut className="h-5 w-5" />
                   </Button>
                 </div>

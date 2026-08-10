@@ -222,11 +222,12 @@
 
 1. Añadir productos al carrito
 2. Ir a `/marketplace/checkout` (Paso 1)
-3. **Abrir otra pestaña** del navegador
-4. Ir a `/marketplace/cart`
-5. Vaciar el carrito
-6. **Volver a la pestaña del checkout**
-7. Intentar continuar
+3. **Duplicar la pestaña** (Cmd+D en Mac, Ctrl+D en Windows) o hacer clic derecho → "Duplicar pestaña"
+   - **Nota**: No usar "Nueva pestaña" ya que puede causar problemas de hidratación del estado
+4. En la pestaña duplicada, hacer clic en el icono del carrito en el header
+5. Vaciar el carrito (eliminar todos los productos)
+6. **Volver a la pestaña original del checkout**
+7. Intentar hacer clic en "Continuar"
 8. ✅ Verificar redirección automática al carrito cuando se detecta que está vacío
 
 ---
@@ -291,6 +292,11 @@
    - ✅ Verificar que CVV solo acepta 3 dígitos
    - ✅ Verificar que nombre se convierte a mayúsculas automáticamente
    - ✅ Verificar formateo de fecha (MM/AA)
+   - **Validaciones de fecha de expiración**:
+     - Mes inválido (00, 13, 99) → ✅ Error: "Mes inválido. Debe estar entre 01 y 12"
+     - Fecha vencida (08/24) → ✅ Error: "La tarjeta está vencida"
+     - Menos de 3 meses de validez → ✅ Error: "La tarjeta debe tener al menos 3 meses de validez"
+     - Fecha válida (12/28) → ✅ Procesamiento exitoso
 
 ---
 
@@ -364,9 +370,15 @@ País: España
 ```
 Número: 1234 5678 9012 3456
 Titular: JUAN PEREZ
-Expiración: 12/28
+Expiración: 12/28 (válida - más de 3 meses)
 CVV: 123
 ```
+
+**Fechas para probar validaciones:**
+- ✅ Válida: 12/28, 06/27, 03/27 (más de 3 meses de validez)
+- ❌ Vencida: 08/24, 01/25 (fechas pasadas)
+- ❌ Poca validez: 11/26, 12/26 (menos de 3 meses desde hoy)
+- ❌ Mes inválido: 00/28, 13/28, 99/99
 
 ### Pedidos Mock Existentes
 - **CF-10001**: Entregado (2 productos, total: 406.39 €)

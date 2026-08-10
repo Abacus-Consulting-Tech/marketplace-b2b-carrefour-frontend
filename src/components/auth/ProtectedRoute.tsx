@@ -73,6 +73,6 @@ function redirectToRoleDashboard(role: string | undefined, router: ReturnType<ty
   } else if (role === "supplier") {
     router.push("/supplier/dashboard");
   } else {
-    router.push("/marketplace");
+    router.push("/marketplace/dashboard");
   }
 }

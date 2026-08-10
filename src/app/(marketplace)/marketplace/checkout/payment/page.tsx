@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { CreditCard, Loader2, CheckCircle2 } from 'lucide-react';
 import { useCartStore } from '@/lib/store/cart';
 import { useCheckoutStore } from '@/lib/store/checkout';
-import { useAuthStore } from '@/lib/store/auth';
 import { CheckoutStepIndicator } from '@/components/checkout/CheckoutStepIndicator';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -16,9 +15,8 @@ import { useToast } from '@/hooks/use-toast';
 export default function CheckoutPaymentPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { items, clearCart } = useCartStore();
-  const { deliveryAddress, paymentMethod, resetCheckout, setCurrentStep } = useCheckoutStore();
-  const { user } = useAuthStore();
+  const { items } = useCartStore();
+  const { deliveryAddress, paymentMethod, setCurrentStep } = useCheckoutStore();
   const [isClient, setIsClient] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [paymentSuccess, setPaymentSuccess] = useState(false);
@@ -39,6 +37,7 @@ export default function CheckoutPaymentPage() {
       return;
     }
 
+    // Redirigir al carrito si está vacío (solo en casos anormales, no durante el flujo normal)
     if (items.length === 0) {
       router.push('/marketplace/cart');
     }
@@ -62,6 +61,43 @@ export default function CheckoutPaymentPage() {
     return cleaned;
   };
 
+  const validateExpiryDate = (expiry: string): { isValid: boolean; message?: string } => {
+    // Formato esperado: MM/YY
+    if (!expiry || expiry.length !== 5) {
+      return { isValid: false, message: 'Formato inválido. Use MM/AA' };
+    }
+
+    const [monthStr, yearStr] = expiry.split('/');
+    const month = parseInt(monthStr, 10);
+    const year = parseInt(yearStr, 10);
+
+    // Validar mes (01-12)
+    if (month < 1 || month > 12) {
+      return { isValid: false, message: 'Mes inválido. Debe estar entre 01 y 12' };
+    }
+
+    // Obtener fecha actual
+    const now = new Date();
+    const currentYear = now.getFullYear() % 100; // Últimos 2 dígitos del año
+    const currentMonth = now.getMonth() + 1; // Mes actual (1-12)
+
+    // Validar que la tarjeta no esté vencida
+    if (year < currentYear || (year === currentYear && month < currentMonth)) {
+      return { isValid: false, message: 'La tarjeta está vencida' };
+    }
+
+    // Validar que tenga al menos 3 meses de validez
+    const expiryDate = new Date(2000 + year, month - 1); // Último día del mes de vencimiento
+    const threeMonthsFromNow = new Date();
+    threeMonthsFromNow.setMonth(threeMonthsFromNow.getMonth() + 3);
+
+    if (expiryDate < threeMonthsFromNow) {
+      return { isValid: false, message: 'La tarjeta debe tener al menos 3 meses de validez' };
+    }
+
+    return { isValid: true };
+  };
+
   const handleProcessPayment = async () => {
     // Validar campos si es pago con tarjeta
     if (paymentMethod === 'tarjeta') {
@@ -82,6 +118,26 @@ export default function CheckoutPaymentPage() {
         });
         return;
       }
+
+      // Validar fecha de expiración
+      const expiryValidation = validateExpiryDate(cardExpiry);
+      if (!expiryValidation.isValid) {
+        toast({
+          title: 'Fecha de expiración inválida',
+          description: expiryValidation.message,
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      if (cardCvv.length !== 3) {
+        toast({
+          title: 'CVV inválido',
+          description: 'El CVV debe tener 3 dígitos',
+          variant: 'destructive',
+        });
+        return;
+      }
     }
 
     setIsProcessing(true);
@@ -91,10 +147,9 @@ export default function CheckoutPaymentPage() {
       setIsProcessing(false);
       setPaymentSuccess(true);
 
-      // Crear pedido mock y limpiar carrito
+      // Mostrar mensaje de éxito y redirigir
       setTimeout(() => {
-        clearCart();
-        resetCheckout();
+        // Solo redirigir - el success page se encargará de limpiar
         router.push('/marketplace/checkout/success');
       }, 1500);
     }, 2000);
@@ -179,6 +234,9 @@ export default function CheckoutPaymentPage() {
                         maxLength={5}
                         disabled={isProcessing || paymentSuccess}
                       />
+                      <p className="text-xs text-gray-500 mt-1">
+                        Debe tener al menos 3 meses de validez
+                      </p>
                     </div>
                     <div>
                       <Label htmlFor="cardCvv">CVV</Label>

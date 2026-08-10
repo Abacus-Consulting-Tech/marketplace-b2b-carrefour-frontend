@@ -536,6 +536,26 @@ const MOCK_ORDERS = [
 // Mock API delay
 const delay = (ms: number = 500) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Helper to manage orders in localStorage
+const getStoredOrders = () => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const stored = localStorage.getItem('mock-orders');
+    return stored ? JSON.parse(stored) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveStoredOrders = (orders: any[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('mock-orders', JSON.stringify(orders));
+  } catch (e) {
+    console.error('Error saving orders to localStorage:', e);
+  }
+};
+
 export const mockApi = {
   // Check if mock mode is enabled
   isMockMode: () => {
@@ -728,10 +748,14 @@ export const mockApi = {
   orders: {
     list: async (userId?: string) => {
       await delay();
+      // Combinar órdenes mock con las guardadas en localStorage
+      const storedOrders = getStoredOrders();
+      const allOrders = [...MOCK_ORDERS, ...storedOrders];
+      
       // Si se proporciona userId, filtrar órdenes por franquiciado
       const orders = userId 
-        ? MOCK_ORDERS.filter(o => o.franchiseeId === userId)
-        : MOCK_ORDERS;
+        ? allOrders.filter(o => o.franchiseeId === userId)
+        : allOrders;
       
       return {
         data: orders,
@@ -740,7 +764,9 @@ export const mockApi = {
 
     getById: async (id: string) => {
       await delay();
-      const order = MOCK_ORDERS.find((o) => o.id === id);
+      const storedOrders = getStoredOrders();
+      const allOrders = [...MOCK_ORDERS, ...storedOrders];
+      const order = allOrders.find((o) => o.id === id);
       
       if (!order) {
         throw new Error("Pedido no encontrado");
@@ -754,9 +780,12 @@ export const mockApi = {
     create: async (orderData: any) => {
       await delay();
       
+      const storedOrders = getStoredOrders();
+      const allOrders = [...MOCK_ORDERS, ...storedOrders];
+      
       const newOrder = {
-        id: String(MOCK_ORDERS.length + 1),
-        orderNumber: `CF-${10000 + MOCK_ORDERS.length + 1}`,
+        id: String(allOrders.length + 1),
+        orderNumber: `CF-${10000 + allOrders.length + 1}`,
         ...orderData,
         status: 'pending' as const,
         paymentStatus: 'paid' as const,
@@ -764,7 +793,9 @@ export const mockApi = {
         updatedAt: new Date().toISOString(),
       };
 
-      MOCK_ORDERS.push(newOrder);
+      // Guardar en localStorage en lugar de array en memoria
+      const updatedStoredOrders = [...storedOrders, newOrder];
+      saveStoredOrders(updatedStoredOrders);
 
       return {
         data: newOrder,
@@ -774,7 +805,9 @@ export const mockApi = {
 
     cancel: async (id: string) => {
       await delay();
-      const order = MOCK_ORDERS.find((o) => o.id === id);
+      const storedOrders = getStoredOrders();
+      const allOrders = [...MOCK_ORDERS, ...storedOrders];
+      const order = allOrders.find((o) => o.id === id);
       
       if (!order) {
         throw new Error("Pedido no encontrado");
@@ -786,6 +819,14 @@ export const mockApi = {
 
       order.status = 'cancelled';
       order.updatedAt = new Date().toISOString();
+      
+      // Si es un pedido almacenado, actualizar localStorage
+      if (!MOCK_ORDERS.find(o => o.id === id)) {
+        const updatedStoredOrders = storedOrders.map(o => 
+          o.id === id ? order : o
+        );
+        saveStoredOrders(updatedStoredOrders);
+      }
 
       return {
         data: order,
