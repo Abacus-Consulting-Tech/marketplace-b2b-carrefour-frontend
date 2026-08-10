@@ -21,11 +21,11 @@ interface MockUser {
 // Mock users database
 const MOCK_USERS: MockUser[] = [
   {
-    email: "admin@carrefour.com",
+    email: "admin@test.com",
     password: "admin123",
     user: {
       id: "1",
-      email: "admin@carrefour.com",
+      email: "admin@test.com",
       name: "Admin Carrefour",
       role: "admin",
       phone: "+34 900 000 001",
