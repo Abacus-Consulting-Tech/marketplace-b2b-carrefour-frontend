@@ -13,29 +13,29 @@ export default function AdminProductsPage() {
   const mockProducts = [
     { 
       id: '1', 
-      name: 'Aceite de Oliva Virgen Extra', 
-      category: 'Alimentación', 
-      supplier: 'Alimentos Frescos S.L.',
-      stock: 150,
-      price: 12.50,
+      name: 'Polo Corporativo Carrefour', 
+      category: 'Uniformes', 
+      supplier: 'Uniformes Corporativos S.L.',
+      stock: 500,
+      price: 18.50,
       status: 'active' 
     },
     { 
       id: '2', 
-      name: 'Arroz Integral 1kg', 
-      category: 'Alimentación', 
-      supplier: 'Distribuciones Norte',
+      name: 'Folleto Promocional A5 (Pack 1.000 uds)', 
+      category: 'Folletos', 
+      supplier: 'Imprenta Corporativa S.L.',
       stock: 8,
-      price: 3.20,
+      price: 89.00,
       status: 'low_stock' 
     },
     { 
       id: '3', 
-      name: 'Detergente Ecológico', 
-      category: 'Limpieza', 
-      supplier: 'Productos de Calidad',
+      name: 'Tótem Expositivo de Pie', 
+      category: 'Señalización en tienda', 
+      supplier: 'Visual Retail S.L.',
       stock: 0,
-      price: 8.99,
+      price: 125.00,
       status: 'out_of_stock' 
     },
   ];

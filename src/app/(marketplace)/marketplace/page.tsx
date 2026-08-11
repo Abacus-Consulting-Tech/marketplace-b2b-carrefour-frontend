@@ -114,8 +114,11 @@ export default function MarketplacePage() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todas las categorías</SelectItem>
-            <SelectItem value="Alimentación">Alimentación</SelectItem>
-            <SelectItem value="Bebidas">Bebidas</SelectItem>
+            <SelectItem value="Uniformes">Uniformes</SelectItem>
+            <SelectItem value="Folletos">Folletos</SelectItem>
+            <SelectItem value="Señalización en tienda">Señalización en tienda</SelectItem>
+            <SelectItem value="Equipamientos">Equipamientos</SelectItem>
+            <SelectItem value="Merchandising">Merchandising</SelectItem>
           </SelectContent>
         </Select>
       </div>

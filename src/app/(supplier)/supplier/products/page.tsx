@@ -103,11 +103,11 @@ export default function SupplierProductsPage() {
                   <Package className="h-8 w-8 text-gray-400" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium">Aceite de Oliva Virgen Extra</p>
-                  <p className="text-sm text-gray-600">SKU: AO-001 • Stock: 245 unidades</p>
+                  <p className="font-medium">Polo Corporativo Carrefour</p>
+                  <p className="text-sm text-gray-600">SKU: UNI-001 • Stock: 500 unidades</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-lg">€12.50</p>
+                  <p className="font-semibold text-lg">€18.50</p>
                   <p className="text-xs text-green-600 font-medium">Activo</p>
                 </div>
               </div>
@@ -118,11 +118,11 @@ export default function SupplierProductsPage() {
                   <Package className="h-8 w-8 text-gray-400" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium">Jamón Ibérico de Bellota</p>
-                  <p className="text-sm text-gray-600">SKU: JI-002 • Stock: 87 unidades</p>
+                  <p className="font-medium">Bolsa Reutilizable Carrefour (Pack 100 uds)</p>
+                  <p className="text-sm text-gray-600">SKU: MER-001 • Stock: 300 unidades</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-lg">€89.00</p>
+                  <p className="font-semibold text-lg">€65.00</p>
                   <p className="text-xs text-green-600 font-medium">Activo</p>
                 </div>
               </div>
@@ -133,11 +133,11 @@ export default function SupplierProductsPage() {
                   <Package className="h-8 w-8 text-gray-400" />
                 </div>
                 <div className="flex-1">
-                  <p className="font-medium">Vino Tinto Reserva</p>
-                  <p className="text-sm text-gray-600">SKU: VT-003 • Stock: 0 unidades</p>
+                  <p className="font-medium">Tótem Expositivo de Pie</p>
+                  <p className="text-sm text-gray-600">SKU: SEÑ-003 • Stock: 0 unidades</p>
                 </div>
                 <div className="text-right">
-                  <p className="font-semibold text-lg">€24.90</p>
+                  <p className="font-semibold text-lg">€125.00</p>
                   <p className="text-xs text-red-600 font-medium">Agotado</p>
                 </div>
               </div>
