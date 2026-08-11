@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
@@ -34,9 +35,15 @@ export function Header() {
       <div className="container mx-auto px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
-            <span className="text-2xl font-bold text-blue-600">Carrefour</span>
-            <span className="text-sm text-gray-600 dark:text-gray-400">B2B</span>
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/images/logo-express-franquicias-inicio_20180820_tcm5-49264.png.webp"
+              alt="Carrefour Express"
+              width={140}
+              height={50}
+              className="object-contain"
+              priority
+            />
           </Link>
 
           {/* Navigation */}
