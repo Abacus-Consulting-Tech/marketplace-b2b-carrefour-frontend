@@ -266,13 +266,6 @@ export default function Home() {
   );
 }
 
-
-export default function Home() {
-  return (
-    <main className="min-h-screen bg-white flex flex-col">
-
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-blue-600 to-blue-800 text-white">
         <div className="container mx-auto px-6 py-20 flex flex-col items-center text-center gap-8">
           <Image
             src="/images/logo-express-franquicias-inicio_20180820_tcm5-49264.png.webp"
