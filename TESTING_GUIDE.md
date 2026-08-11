@@ -73,7 +73,7 @@ The application uses a **mock API system** for development and testing without r
   - Top-right icons: Shopping cart (basket), user profile icon, and logout button
 
 **Alternative Credentials to Test**:
-- Admin: `admin@carrefour.com` / `admin123` → Redirects to `/admin/dashboard`
+- Admin: `admin@test.com` / `admin123` → Redirects to `/admin/dashboard`
 - Supplier: `supplier@test.com` / `supplier123` → Redirects to `/supplier/dashboard`
 
 ---
@@ -394,7 +394,7 @@ The application uses a **mock API system** for development and testing without r
 
 ## 👔 Test Scenario 4: Admin - Supplier Management
 
-**Login Required**: Use `admin@carrefour.com` / `admin123`
+**Login Required**: Use `admin@test.com` / `admin123`
 
 ### **Test 4.1: Admin Dashboard**
 
@@ -536,7 +536,7 @@ The application uses a **mock API system** for development and testing without r
 
 **Steps (Option A - Testing Rejection)**:
 1. **Refresh the page** (Cmd+R or Ctrl+R) to reset all suppliers to original state
-2. Login again as admin: `admin@carrefour.com` / `admin123`
+2. Login again as admin: `admin@test.com` / `admin123`
 3. Go to http://localhost:3000/admin/suppliers
 4. Click "Pendientes" tab
 5. Click "Ver" on "Fresh Produce Andalucía"
@@ -597,7 +597,7 @@ The application uses a **mock API system** for development and testing without r
 ### **Test 5.2: Admin Cannot Access Supplier Area**
 
 **Steps**:
-1. Login as: `admin@carrefour.com` / `admin123`
+1. Login as: `admin@test.com` / `admin123`
 2. Try to access: http://localhost:3000/supplier/dashboard
 
 ✅ **Expected Result**:
@@ -825,7 +825,7 @@ npm run dev
 **Test Credentials**:
 ```
 Admin:
-  Email: admin@carrefour.com
+  Email: admin@test.com
   Password: admin123
   Redirects to: /admin/dashboard
 

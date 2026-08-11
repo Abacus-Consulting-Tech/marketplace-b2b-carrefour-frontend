@@ -82,7 +82,7 @@ export default function LoginPage() {
               {showMockInfo && (
                 <div className="mt-3 space-y-2 text-xs">
                   <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                    <strong>Admin:</strong> admin@carrefour.com / admin123
+                    <strong>Admin:</strong> admin@test.com / admin123
                   </div>
                   <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
                     <strong>Franchisee:</strong> franchisee@test.com / franchisee123

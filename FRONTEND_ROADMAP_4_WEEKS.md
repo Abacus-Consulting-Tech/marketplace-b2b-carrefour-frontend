@@ -699,7 +699,7 @@ npm install @tanstack/react-query-devtools --save-dev
 14. ✅ Fixed toaster import path bug
 
 **Test Credentials Available:**
-- Admin: `admin@carrefour.com` / `admin123`
+- Admin: `admin@test.com` / `admin123`
 - Franchisee: `franchisee@test.com` / `franchisee123`
 - Supplier: `supplier@test.com` / `supplier123`
 
