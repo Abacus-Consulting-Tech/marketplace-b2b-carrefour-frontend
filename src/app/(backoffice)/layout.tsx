@@ -1,6 +1,7 @@
 "use client";
 
 import { Header } from "@/components/navigation/Header";
+import { Footer } from "@/components/navigation/Footer";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function BackofficeLayout({
@@ -39,6 +40,7 @@ export default function BackofficeLayout({
             {children}
           </main>
         </div>
+        <Footer />
       </div>
     </ProtectedRoute>
   );

@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
+import { Footer } from '@/components/navigation/Footer';
 import { LogIn, Clock, Zap, ClipboardList, ShoppingBag, Users, ShieldCheck } from 'lucide-react';
 
 export default function Home() {
@@ -156,10 +157,7 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Footer mínimo */}
-      <footer className="border-t py-6 text-center text-sm text-gray-400">
-        © {new Date().getFullYear()} Carrefour Express · Marketplace B2B · Todos los derechos reservados
-      </footer>
+      <Footer />
 
     </main>
   );

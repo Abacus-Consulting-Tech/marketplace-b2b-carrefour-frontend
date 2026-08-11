@@ -1,6 +1,7 @@
 "use client";
 
 import { Header } from "@/components/navigation/Header";
+import { Footer } from "@/components/navigation/Footer";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
 export default function SupplierLayout({
@@ -36,6 +37,7 @@ export default function SupplierLayout({
             {children}
           </main>
         </div>
+        <Footer />
       </div>
     </ProtectedRoute>
   );
