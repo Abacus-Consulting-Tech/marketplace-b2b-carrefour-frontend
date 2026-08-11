@@ -32,7 +32,7 @@ export default function Home() {
               </Button>
             </Link>
             <Link href="/register">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-blue-700 gap-2 font-semibold px-8">
+              <Button size="lg" variant="outline" className="border-white text-blue-700 bg-white hover:bg-blue-50 gap-2 font-semibold px-8">
                 Registrarse
               </Button>
             </Link>
