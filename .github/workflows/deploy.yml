@@ -1,0 +1,62 @@
+# Despliega una imagen ya construida en la maquina del entorno elegido.
+#
+# Secrets POR ENVIRONMENT (pre y prod son maquinas distintas):
+#   VPS_HOST, VPS_SSH_KEY (usuario deploy), GHCR_PAT (read:packages).
+#
+# En la maquina debe existir /opt/projects/marketplace-b2b-carrefour-frontend/
+# con docker-compose.yml (copia de docker/compose.yml) y .env completo.
+#
+# Rollback = relanzar este workflow con el tag inmutable anterior (pre-<sha7>).
+
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Entorno destino
+        type: choice
+        options: [pre, prod]
+        required: true
+      tag:
+        description: "Tag de imagen (p.ej. pre-a1b2c3d). Vacio = tag movil del entorno"
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target }}
+    steps:
+      - name: Resolver imagen
+        id: image
+        # inputs.tag entra por env (nunca interpolado en el script): es texto
+        # libre y dentro de `run:` permitiria inyectar shell a quien despacha.
+        env:
+          TAG_INPUT: ${{ inputs.tag }}
+          TARGET: ${{ inputs.target }}
+        run: |
+          TAG="${TAG_INPUT:-$TARGET}"
+          echo "ref=$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]'):${TAG}" >> "$GITHUB_OUTPUT"
+
+      - uses: appleboy/ssh-action@v1
+        env:
+          IMAGE: ${{ steps.image.outputs.ref }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: deploy
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: IMAGE
+          script: |
+            set -e
+            echo '${{ secrets.GHCR_PAT }}' | docker login ghcr.io -u '${{ github.actor }}' --password-stdin
+            cd /opt/projects/marketplace-b2b-carrefour-frontend
+            grep -q '^IMAGE_FRONT=' .env && sed -i "s|^IMAGE_FRONT=.*|IMAGE_FRONT=${IMAGE}|" .env || echo "IMAGE_FRONT=${IMAGE}" >> .env
+            docker compose pull
+            docker compose up -d --remove-orphans
+            docker compose ps
+            docker image prune -f

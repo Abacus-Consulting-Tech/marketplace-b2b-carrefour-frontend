@@ -1,0 +1,72 @@
+# Construye y publica la imagen del front en GHCR.
+#
+# La imagen es POR ENTORNO: NEXT_PUBLIC_* se inlinea en `next build`
+# (docs/feature/02 eliminara esta limitacion). El job usa GitHub Environments
+# (pre/prod) y lee vars.NEXT_PUBLIC_API_URL del environment.
+#
+# Tags: :<target>-<sha7> (inmutable) y :<target> (movil).
+#
+# Gate = `next build` dentro del Dockerfile. No hay tests que ejecutar: los
+# scripts test/test:e2e apuntan a vitest/playwright sin config ni specs
+# (docs/fix/01_tests-inexistentes.md).
+
+name: Build image
+
+on:
+  push:
+    branches: [main]        # push a main -> imagen de pre
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Entorno de la imagen
+        type: choice
+        options: [pre, prod]
+        default: pre
+
+concurrency:
+  group: build-${{ github.ref }}-${{ inputs.target || 'pre' }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target || 'pre' }}
+    permissions:
+      contents: read
+      packages: write
+    env:
+      TARGET: ${{ inputs.target || 'pre' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Imagen y tag (ghcr exige minusculas)
+        run: |
+          echo "IMAGE=$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+          echo "SHA7=${GITHUB_SHA::7}" >> "$GITHUB_ENV"
+
+      - name: Comprobar vars del environment
+        run: |
+          test -n "${{ vars.NEXT_PUBLIC_API_URL }}" || { echo "Falta vars.NEXT_PUBLIC_API_URL en el environment ${TARGET}"; exit 1; }
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_API_TIMEOUT=${{ vars.NEXT_PUBLIC_API_TIMEOUT || '10000' }}
+            NEXT_PUBLIC_MOCK_AUTH=${{ vars.NEXT_PUBLIC_MOCK_AUTH || 'false' }}
+          tags: |
+            ${{ env.IMAGE }}:${{ env.TARGET }}-${{ env.SHA7 }}
+            ${{ env.IMAGE }}:${{ env.TARGET }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
