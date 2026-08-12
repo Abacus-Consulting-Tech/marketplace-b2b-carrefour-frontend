@@ -1,0 +1,36 @@
+# Front custom en pre y prod (mismo fichero, distinto .env). En local NO se usa
+# Docker para el front: `npm run dev -- -p 3100` en el host.
+#
+# En la maquina: /opt/projects/marketplace-b2b-carrefour-frontend/
+#   docker-compose.yml   <- copia de este fichero
+#   .env                 <- a partir de docker/.env.example
+#
+# El proxy inverso del host reenvia a 127.0.0.1:${FRONT_PUBLISH_PORT}.
+# RECORDATORIO cross-repo: el backend debe listar el origen publico de este
+# front en STORE_CORS y AUTH_CORS, o el navegador bloqueara sus llamadas.
+
+name: marketplace-b2b-carrefour-frontend
+
+services:
+  app:
+    image: ${IMAGE_FRONT:-marketplace-b2b-carrefour-frontend:local}
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+      args:
+        # Horneadas en next build: cambiarlas exige reconstruir la imagen.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:?NEXT_PUBLIC_API_URL sin definir en .env}
+        NEXT_PUBLIC_API_TIMEOUT: ${NEXT_PUBLIC_API_TIMEOUT:-10000}
+        NEXT_PUBLIC_MOCK_AUTH: ${NEXT_PUBLIC_MOCK_AUTH:-false}
+    container_name: marketplace-b2b-carrefour-frontend-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${FRONT_PUBLISH_PORT:-3100}:3000"
+    labels:
+      com.project.stack: marketplace-b2b-carrefour-frontend
+      com.project.role: app
+    deploy:
+      resources:
+        limits:
+          # Holgura para squoosh (optimizacion de imagenes sin sharp).
+          memory: 1G
