@@ -44,21 +44,29 @@ Now you can login with backend credentials:
 
 ### Permanent Fix (Backend Team)
 
-The proper solution is to configure the Medusa backend to allow `http://localhost:3000` in CORS origins.
+El backend Medusa usa variables de entorno separadas para cada tipo de endpoint:
 
-In the backend Medusa configuration, add:
+**Variables CORS en medusa-config.ts:**
+- `STORE_CORS` - Para endpoints /store/*
+- `AUTH_CORS` - Para endpoints /auth/*
+- `ADMIN_CORS` - Para endpoints /admin/*
+- `VENDOR_CORS` - Para endpoints /vendor/*
 
-```javascript
-// medusa-config.js or similar
-module.exports = {
-  projectConfig: {
-    http: {
-      cors: "http://localhost:3000,https://your-production-domain.com",
-      // or for development:
-      cors: /localhost:\d+/
-    }
-  }
-}
+**Configuración recomendada para DEV:**
+
+```bash
+STORE_CORS=http://localhost:3000,https://marketplace-b2b-backend-dev.onrender.com
+AUTH_CORS=http://localhost:3000,https://marketplace-b2b-backend-dev.onrender.com
+ADMIN_CORS=http://localhost:3000,https://marketplace-b2b-backend-dev.onrender.com
+VENDOR_CORS=http://localhost:3000,https://marketplace-b2b-backend-dev.onrender.com
+```
+
+**Para producción:**
+
+```bash
+STORE_CORS=https://tu-dominio-frontend.com,https://marketplace-b2b-backend-dev.onrender.com
+AUTH_CORS=https://tu-dominio-frontend.com,https://marketplace-b2b-backend-dev.onrender.com
+# etc...
 ```
 
 Once backend CORS is fixed, the proxy can be removed and the frontend can call Medusa directly.

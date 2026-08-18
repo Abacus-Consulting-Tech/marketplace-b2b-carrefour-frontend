@@ -74,10 +74,43 @@ See [docs/medusa/CREDENTIALS.md](../medusa/CREDENTIALS.md) for available test us
 ### Integration Flow
 
 1. User submits login form
-2. Frontend calls `medusaLogin({ email, password })`
-3. Backend validates and returns user object
-4. Frontend stores user in Zustand store
-5. Session cookie is managed by Medusa (httpOnly)
+2. Frontend calls `POST /auth/user/emailpass` → receives JWT token
+3. Frontend calls `GET /admin/users/me` with Bearer token → receives user profile
+4. Frontend stores user + token in Zustand store
+5. Session managed via JWT token in Authorization header
+
+### Current Workaround (Temporary)
+
+Mientras se confirma CORS y se integra GET /admin/users/me:
+
+1. Login via Next.js proxy (`/api/auth/login`) para evitar CORS
+2. Detección de rol por patrón de email (temporal)
+3. Token almacenado para futuras llamadas
+
+### Production Flow (Pending CORS fix)
+
+Una vez configurado CORS en backend:
+
+```typescript
+// 1. Login
+const { token } = await fetch(`${BACKEND_URL}/auth/user/emailpass`, {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ email, password })
+}).then(r => r.json())
+
+// 2. Get user profile
+const { user } = await fetch(`${BACKEND_URL}/admin/users/me`, {
+  method: 'GET',
+  headers: { 
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json' 
+  }
+}).then(r => r.json())
+
+// 3. Store session
+login(user, token)
+```
 
 ### Updating Login Page
 

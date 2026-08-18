@@ -1,111 +1,91 @@
-# Configuración Pendiente - Backend Medusa
+# Configuración Pendiente - Backend Medusa (estado real)
 
 ## Resumen
 
-El frontend está funcionando con workarounds temporales. Se necesitan 2 ajustes en el backend para la integración completa.
+El backend ya está desplegado y operativo en Render DEV. Hay dos puntos de integración a alinear entre backend y frontend.
 
 ---
 
-## 1️⃣ CORS - Permitir Frontend Local
+## 1) CORS para frontend local
 
-**Problema:**
-```
-Origin http://localhost:3000 is not allowed by Access-Control-Allow-Origin
-```
+### Estado técnico
 
-**Solución:**
+La configuración actual no usa un campo único `cors`; usa variables separadas en la configuración HTTP:
 
-En `medusa-config.js` (o configuración equivalente), añadir el origen del frontend:
+- `STORE_CORS`
+- `ADMIN_CORS`
+- `VENDOR_CORS`
+- `AUTH_CORS`
 
-```javascript
-module.exports = {
-  projectConfig: {
-    http: {
-      cors: "http://localhost:3000,https://tu-dominio-produccion.com"
-      // O para desarrollo:
-      // cors: /localhost:\d+/
-    }
-  }
-}
-```
+Definido en [packages/api/medusa-config.ts](packages/api/medusa-config.ts).
 
-**Workaround actual en frontend:** Proxy API de Next.js
+### Acción backend
 
----
+Incluir `http://localhost:3000` en las variables CORS que use el flujo frontend.
 
-## 2️⃣ Endpoint de Usuario Autenticado
+Ejemplo recomendado para DEV:
 
-**Problema:**
+- `STORE_CORS=http://localhost:3000,https://marketplace-b2b-backend-dev.onrender.com`
+- `AUTH_CORS=http://localhost:3000,https://marketplace-b2b-backend-dev.onrender.com`
 
-`POST /auth/user/emailpass` solo retorna:
-```json
-{
-  "token": "eyJhbGci..."
-}
-```
+Si el front usa rutas admin/vendedor desde local, añadir también localhost en `ADMIN_CORS` y/o `VENDOR_CORS`.
 
-No incluye datos del usuario (id, email, nombre, rol).
+### Acción frontend
 
-**Solución requerida:**
-
-Una de estas opciones:
-
-### Opción A: Incluir usuario en login
-```json
-{
-  "token": "eyJhbGci...",
-  "user": {
-    "id": "user_xxx",
-    "email": "admin@carrefour.dev",
-    "first_name": "Admin",
-    "last_name": "User",
-    "metadata": {
-      "role": "admin",
-      "company_name": "Carrefour"
-    }
-  }
-}
-```
-
-### Opción B: Endpoint GET para datos del usuario
-```bash
-GET /auth/session
-GET /store/auth/me
-```
-
-Con header: `Authorization: Bearer {token}`
-
-Retornando el objeto `user` con los campos mínimos necesarios.
-
-**Workaround actual en frontend:** Se crea usuario mock usando el email ingresado
+Configurar su entorno local (variables de front) para apuntar al backend DEV. Esto es responsabilidad del equipo frontend.
 
 ---
 
-## Estado Actual
+## 2) Datos de usuario tras login
 
-✅ **Funcionando:**
-- Health check
-- Store endpoints (regions, products)
-- Cart operations
-- Login con workarounds
+### Estado técnico
 
-🚧 **Necesita backend:**
-- CORS para localhost:3000
-- Datos de usuario en auth
+`POST /auth/user/emailpass` devuelve token (comportamiento estándar en este flujo).
+
+Para obtener usuario autenticado, usar endpoint de lectura posterior con bearer token:
+
+- `GET /admin/users/me` para flujo admin
+
+### Acción backend
+
+No es obligatorio cambiar contrato de login para avanzar.
+
+Si frontend requiere un formato unificado, se puede añadir endpoint wrapper dedicado (por ejemplo `/auth/session`) que devuelva `{ token, user }`.
+
+### Acción frontend
+
+Después del login, llamar a `GET /admin/users/me` (u otro endpoint de perfil equivalente según actor) y construir sesión con ese payload.
 
 ---
 
-## Prioridad
+## Estado actual de integración
 
-**Media-Alta**: Ambos ajustes son necesarios antes de desplegar a producción.
+✅ Backend operativo:
 
-El frontend funciona actualmente con soluciones temporales, pero para un entorno productivo se requieren estas configuraciones en el backend.
+- `GET /health` responde `200`
+- Endpoints Store con publishable key responden correctamente
+- Flujo auth operativo con cuentas DEV replicadas
+
+🚧 Pendiente de alineación backend/front:
+
+- Confirmar matriz CORS final para localhost del frontend
+- Definir contrato de sesión que usará front (token-only + me, o wrapper)
 
 ---
 
-## Contacto
+## Referencias válidas
 
-Para dudas sobre la integración frontend, revisar:
-- `docs/medusa/README-front-usage.md`
-- `docs/CORS_WORKAROUND.md`
-- `docs/AUTH_INTEGRATION.md`
+- [docs/medusa/README-front-usage.md](medusa/README-front-usage.md)
+- [docs/medusa/smoke-test-checklist.md](medusa/smoke-test-checklist.md)
+- [docs/postman/](postman/)
+
+---
+
+## Workarounds actuales en frontend
+
+Mientras se confirma CORS y endpoint de perfil:
+
+1. **Proxy API de Next.js** para evitar CORS (`/api/auth/login`)
+2. **Detección de rol por email** (temporal hasta GET /admin/users/me)
+
+Ver: [docs/CORS_WORKAROUND.md](CORS_WORKAROUND.md) y [docs/ROLES_Y_REDIRECCIONES.md](ROLES_Y_REDIRECCIONES.md)
