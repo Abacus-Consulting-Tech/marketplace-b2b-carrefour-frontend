@@ -67,6 +67,8 @@ export default function LoginPage() {
         router.push("/admin/dashboard");
       } else if (user.role === "supplier") {
         router.push("/supplier/dashboard");
+      } else if (user.role === "franchisee") {
+        router.push("/marketplace/dashboard");
       } else {
         router.push("/marketplace");
       }

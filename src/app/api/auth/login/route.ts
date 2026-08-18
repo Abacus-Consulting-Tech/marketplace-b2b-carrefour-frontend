@@ -32,11 +32,12 @@ export async function POST(request: NextRequest) {
 
     // Medusa only returns { token: "..." }, no user object
     // Create a minimal user object from the email
+    // Set role as "franchisee" by default for marketplace access
     const user = {
       id: email, // Use email as ID until we have a proper user endpoint
       email: email,
       name: email.split('@')[0], // Use email prefix as name
-      role: 'customer', // Default role, can be updated from token claims if needed
+      role: 'franchisee', // Default to franchisee for marketplace access
     }
 
     return NextResponse.json({
