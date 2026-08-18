@@ -96,7 +96,7 @@ export const mapMercurProductToProduct = (product: MercurStoreProduct): Product 
     images,
     rating: 0,
     reviewCount: 0,
-    specifications: product.metadata ?? {},
+    specifications: {},
     category: categoryName ?? category?.name ?? 'Sin categoría',
     supplier: {
       id: supplierId,
@@ -104,6 +104,11 @@ export const mapMercurProductToProduct = (product: MercurStoreProduct): Product 
     },
     offerId: primaryVariant?.offer_id ?? undefined,
     variantId: primaryVariant?.id,
+    metadata: product.metadata ? {
+      pack_label: getStringMetadata(product.metadata, 'pack_label'),
+      units_per_pack: getNumberMetadata(product.metadata, 'units_per_pack'),
+      sell_unit: getStringMetadata(product.metadata, 'sell_unit'),
+    } : undefined,
     createdAt: product.created_at ?? new Date(0).toISOString(),
     updatedAt: product.updated_at ?? product.created_at ?? new Date(0).toISOString(),
   }
