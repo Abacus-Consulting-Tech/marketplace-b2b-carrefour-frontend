@@ -40,7 +40,7 @@ export default function AdminDashboardPage() {
           const response = await apiClient.get('/admin/orders');
           console.log('[Admin Dashboard] Orders response:', response);
           // Medusa returns { orders: [...] }
-          setOrders(response.orders || response || []);
+          setOrders(response.data?.orders || response.data || []);
         }
       } catch (error) {
         console.error('Error fetching data:', error);
