@@ -83,11 +83,19 @@ export default function LoginPage() {
   return (
     <Card>
       <CardHeader>
-        {isMockMode && (
+        <CardTitle>Iniciar Sesión</CardTitle>
+        <CardDescription>
+          Accede a tu cuenta de franquiciado o proveedor
+        </CardDescription>
+        
+        {/* Development credentials helper */}
+        {process.env.NODE_ENV === 'development' && (
           <Alert className="mt-4">
             <AlertDescription>
               <div className="flex items-center justify-between">
-                <span className="text-sm">🧪 Modo de prueba activado</span>
+                <span className="text-sm">
+                  {isMockMode ? "🧪 Modo Mock" : "🔌 Backend Real (DEV)"}
+                </span>
                 <Button
                   variant="ghost"
                   size="sm"
@@ -99,24 +107,36 @@ export default function LoginPage() {
               </div>
               {showMockInfo && (
                 <div className="mt-3 space-y-2 text-xs">
-                  <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                    <strong>Admin:</strong> admin@test.com / admin123
-                  </div>
-                  <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                    <strong>Franchisee:</strong> franchisee@test.com / franchisee123
-                  </div>
-                  <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                    <strong>Supplier:</strong> supplier@test.com / supplier123
-                  </div>
+                  {isMockMode ? (
+                    <>
+                      <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                        <strong>Admin:</strong> admin@test.com / admin123
+                      </div>
+                      <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                        <strong>Franchisee:</strong> franchisee@test.com / franchisee123
+                      </div>
+                      <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                        <strong>Supplier:</strong> supplier@test.com / supplier123
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                        <strong>Admin:</strong> admin@carrefour.dev / supersecret
+                      </div>
+                      <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                        <strong>Seller:</strong> seller@mercur.dev / supersecret
+                      </div>
+                      <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                        <strong>Franchisee:</strong> franchisee@test.com / supersecret <span className="text-gray-500">(3 tiendas)</span>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </AlertDescription>
           </Alert>
         )}
-        <CardTitle>Iniciar Sesión</CardTitle>
-        <CardDescription>
-          Accede a tu cuenta de franquiciado o proveedor
-        </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
