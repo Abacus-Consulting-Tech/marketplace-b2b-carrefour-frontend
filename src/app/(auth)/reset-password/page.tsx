@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { apiClient } from "@/lib/api/client";
 import { CheckCircle2 } from "lucide-react";
 
-export default function ResetPasswordPage() {
+function ResetPasswordForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token");
@@ -156,5 +156,22 @@ export default function ResetPasswordPage() {
         </CardFooter>
       </form>
     </Card>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={
+      <Card>
+        <CardHeader>
+          <CardTitle>Restablecer Contraseña</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-center text-gray-600">Cargando...</p>
+        </CardContent>
+      </Card>
+    }>
+      <ResetPasswordForm />
+    </Suspense>
   );
 }
