@@ -31,13 +31,22 @@ export async function POST(request: NextRequest) {
     const data = await response.json()
 
     // Medusa only returns { token: "..." }, no user object
-    // Create a minimal user object from the email
-    // Set role as "franchisee" by default for marketplace access
+    // Deduce role from email until backend provides proper user data
+    let role: 'admin' | 'supplier' | 'franchisee' = 'franchisee'
+    
+    const emailLower = email.toLowerCase()
+    if (emailLower.includes('admin') || emailLower.includes('acano')) {
+      role = 'admin'
+    } else if (emailLower.includes('seller') || emailLower.includes('mercur') || 
+               emailLower.includes('kickz') || emailLower.includes('trailhead')) {
+      role = 'supplier'
+    }
+
     const user = {
-      id: email, // Use email as ID until we have a proper user endpoint
+      id: email,
       email: email,
-      name: email.split('@')[0], // Use email prefix as name
-      role: 'franchisee', // Default to franchisee for marketplace access
+      name: email.split('@')[0],
+      role: role,
     }
 
     return NextResponse.json({
