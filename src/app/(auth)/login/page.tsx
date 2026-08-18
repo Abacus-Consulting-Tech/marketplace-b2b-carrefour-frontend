@@ -181,8 +181,25 @@ export default function LoginPage() {
         
         <CardFooter className="flex flex-col space-y-4">
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
+            {loading ? (
+              <span className="flex items-center gap-2">
+                <span className="animate-spin">⏳</span>
+                {isMockMode ? "Iniciando sesión..." : "Conectando con backend..."}
+              </span>
+            ) : (
+              "Iniciar Sesión"
+            )}
           </Button>
+          
+          {/* Backend loading warning */}
+          {loading && !isMockMode && (
+            <Alert className="text-xs">
+              <AlertDescription>
+                El backend en Render puede tardar hasta 30s en despertar si estaba inactivo.
+                Para desarrollo rápido, considera activar NEXT_PUBLIC_MOCK_AUTH=true en .env.local
+              </AlertDescription>
+            </Alert>
+          )}
           
           <p className="text-sm text-center text-gray-600 dark:text-gray-400">
             ¿No tienes cuenta?{" "}

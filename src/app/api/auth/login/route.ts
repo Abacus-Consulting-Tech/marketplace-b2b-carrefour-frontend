@@ -15,53 +15,72 @@ export async function POST(request: NextRequest) {
     
     console.log('[Auth Login API] Calling backend:', backendUrl)
     
-    const response = await fetch(backendUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-    })
+    // Add timeout to prevent hanging on slow backend (Render free tier may be sleeping)
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
     
-    console.log('[Auth Login API] Response status:', response.status)
+    try {
+      const response = await fetch(backendUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+        signal: controller.signal,
+      })
+      
+      clearTimeout(timeoutId)
+      
+      console.log('[Auth Login API] Response status:', response.status)
 
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Authentication failed' }))
-      console.error('[Auth Login API] Error response:', error)
-      return NextResponse.json(
-        { message: error.message || 'Authentication failed' },
-        { status: response.status }
-      )
+      if (!response.ok) {
+        const error = await response.json().catch(() => ({ message: 'Authentication failed' }))
+        console.error('[Auth Login API] Error response:', error)
+        return NextResponse.json(
+          { message: error.message || 'Authentication failed' },
+          { status: response.status }
+        )
+      }
+
+      const data = await response.json()
+      console.log('[Auth Login API] Success, received token:', data.token ? 'yes' : 'no')
+
+      // Medusa only returns { token: "..." }, no user object
+      // Deduce role from email until backend provides proper user data
+      let role: 'admin' | 'supplier' | 'franchisee' = 'franchisee'
+      
+      const emailLower = email.toLowerCase()
+      if (emailLower.includes('admin') || emailLower.includes('acano')) {
+        role = 'admin'
+      } else if (emailLower.includes('seller') || emailLower.includes('mercur') || 
+                 emailLower.includes('kickz') || emailLower.includes('trailhead')) {
+        role = 'supplier'
+      }
+
+      const user = {
+        id: email,
+        email: email,
+        name: email.split('@')[0],
+        role: role,
+      }
+
+      console.log('[Auth Login API] Created user object:', { email, role })
+
+      return NextResponse.json({
+        user,
+        token: data.token,
+      })
+    } catch (fetchError) {
+      clearTimeout(timeoutId)
+      if ((fetchError as Error).name === 'AbortError') {
+        console.error('[Auth Login API] Request timeout - backend may be sleeping')
+        return NextResponse.json(
+          { message: 'Backend timeout - el servidor está arrancando (30s). Intenta de nuevo o activa MOCK MODE.' },
+          { status: 504 }
+        )
+      }
+      throw fetchError
     }
-
-    const data = await response.json()
-    console.log('[Auth Login API] Success, received token:', data.token ? 'yes' : 'no')
-
-    // Medusa only returns { token: "..." }, no user object
-    // Deduce role from email until backend provides proper user data
-    let role: 'admin' | 'supplier' | 'franchisee' = 'franchisee'
-    
-    const emailLower = email.toLowerCase()
-    if (emailLower.includes('admin') || emailLower.includes('acano')) {
-      role = 'admin'
-    } else if (emailLower.includes('seller') || emailLower.includes('mercur') || 
-               emailLower.includes('kickz') || emailLower.includes('trailhead')) {
-      role = 'supplier'
-    }
-
-    const user = {
-      id: email,
-      email: email,
-      name: email.split('@')[0],
-      role: role,
-    }
-
-    console.log('[Auth Login API] Created user object:', { email, role })
-
-    return NextResponse.json({
-      user,
-      token: data.token,
-    })
   } catch (error) {
     const err = error as { message?: string };
     console.error('Auth proxy error:', err)
