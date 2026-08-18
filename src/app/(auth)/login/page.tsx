@@ -33,17 +33,32 @@ export default function LoginPage() {
       // Use mock API if NEXT_PUBLIC_MOCK_AUTH is true OR if no API URL is configured
       const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true" || !process.env.NEXT_PUBLIC_API_URL;
       
-      let response;
+      let user, token;
       if (isMockMode) {
         // Use mock API
         const { mockApi } = await import("@/lib/api/mock");
-        response = await mockApi.auth.login(email, password);
+        const response = await mockApi.auth.login(email, password);
+        user = response.data.user;
+        token = response.data.token;
       } else {
-        // Use real API
-        response = await apiClient.post("/auth/login", { email, password });
+        // Use Next.js API proxy to avoid CORS issues
+        const response = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.message || 'Authentication failed');
+        }
+
+        const data = await response.json();
+        user = data.user;
+        token = data.token;
       }
-      
-      const { token, user } = response.data;
       
       login(user, token);
       
