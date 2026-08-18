@@ -72,8 +72,9 @@ export default function LoginPage() {
       } else {
         router.push("/marketplace");
       }
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Error al iniciar sesión");
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      setError(error.response?.data?.message || error.message || "Error al iniciar sesión");
     } finally {
       setLoading(false);
     }

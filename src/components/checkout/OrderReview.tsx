@@ -65,10 +65,11 @@ export default function OrderReview({
       } else {
         setError("No se pudo completar el pedido. Por favor, intenta de nuevo.");
       }
-    } catch (err: any) {
-      console.error("Error completing order:", err);
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      console.error("Error completing order:", error);
       setError(
-        err.response?.data?.message || 
+        error.response?.data?.message || 
         "Error al completar el pedido. Por favor, intenta de nuevo."
       );
     } finally {

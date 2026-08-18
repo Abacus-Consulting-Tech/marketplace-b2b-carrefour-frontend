@@ -61,11 +61,12 @@ export default function ResetPasswordPage() {
       setTimeout(() => {
         router.push("/login?password_reset=true");
       }, 3000);
-    } catch (err: any) {
-      if (err.response?.data?.message?.includes("Invalid or expired")) {
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      if (error.response?.data?.message?.includes("Invalid or expired")) {
         setError("El token de reset es inválido o ha expirado. Solicita un nuevo enlace.");
       } else {
-        setError(err.response?.data?.message || err.message || "Error al resetear la contraseña");
+        setError(error.response?.data?.message || error.message || "Error al resetear la contraseña");
       }
     } finally {
       setLoading(false);

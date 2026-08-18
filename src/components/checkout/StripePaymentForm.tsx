@@ -83,9 +83,10 @@ function StripePaymentFormContent({
       } else {
         setError("El pago no se pudo completar. Por favor, intenta de nuevo.");
       }
-    } catch (err: any) {
-      console.error("Error processing payment:", err);
-      setError(err.message || "Error al procesar el pago");
+    } catch (err) {
+      const error = err as { message?: string };
+      console.error("Error processing payment:", error);
+      setError(error.message || "Error al procesar el pago");
     } finally {
       setProcessing(false);
     }

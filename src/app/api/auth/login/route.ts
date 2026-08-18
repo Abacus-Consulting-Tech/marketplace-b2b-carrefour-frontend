@@ -62,10 +62,11 @@ export async function POST(request: NextRequest) {
       user,
       token: data.token,
     })
-  } catch (error: any) {
-    console.error('Auth proxy error:', error)
+  } catch (error) {
+    const err = error as { message?: string };
+    console.error('Auth proxy error:', err)
     return NextResponse.json(
-      { message: error.message || 'Internal server error' },
+      { message: err.message || 'Internal server error' },
       { status: 500 }
     )
   }

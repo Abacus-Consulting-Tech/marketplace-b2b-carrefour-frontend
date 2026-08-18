@@ -40,19 +40,20 @@ export default function RegisterPage() {
 
     try {
       // Use real API (nuevo endpoint POST /auth/register)
-      const response = await apiClient.post("/auth/register", {
+      await apiClient.post("/auth/register", {
         email: formData.email,
         password: formData.password,
       });
       
       // Success - redirect to login
       router.push("/login?registered=true");
-    } catch (err: any) {
+    } catch (err) {
+      const error = err as { response?: { data?: { type?: string; message?: string } }; message?: string };
       // Handle duplicate email error
-      if (err.response?.data?.type === "duplicate_error") {
+      if (error.response?.data?.type === "duplicate_error") {
         setError("Este email ya está registrado. ¿Quieres iniciar sesión?");
       } else {
-        setError(err.response?.data?.message || err.message || "Error al registrar la cuenta");
+        setError(error.response?.data?.message || error.message || "Error al registrar la cuenta");
       }
     } finally {
       setLoading(false);

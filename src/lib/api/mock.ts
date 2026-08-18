@@ -630,7 +630,7 @@ const getStoredOrders = () => {
   }
 };
 
-const saveStoredOrders = (orders: any[]) => {
+const saveStoredOrders = (orders: Order[]) => {
   if (typeof window === 'undefined') return;
   try {
     localStorage.setItem('mock-orders', JSON.stringify(orders));
@@ -666,7 +666,7 @@ export const mockApi = {
       };
     },
 
-    register: async (data: any) => {
+    register: async (data: { email: string; name: string; role: string; company?: string; phone?: string }) => {
       await delay();
       
       // Check if email already exists
@@ -860,7 +860,7 @@ export const mockApi = {
       };
     },
 
-    create: async (orderData: any) => {
+    create: async (orderData: Partial<Order>) => {
       await delay();
       
       const storedOrders = getStoredOrders();

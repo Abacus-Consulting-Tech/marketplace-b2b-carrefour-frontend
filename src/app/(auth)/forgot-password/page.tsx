@@ -34,8 +34,9 @@ export default function ForgotPasswordPage() {
       }
       
       setSuccess(true);
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Error al enviar el email");
+    } catch (err) {
+      const error = err as { response?: { data?: { message?: string } }; message?: string };
+      setError(error.response?.data?.message || error.message || "Error al enviar el email");
     } finally {
       setLoading(false);
     }

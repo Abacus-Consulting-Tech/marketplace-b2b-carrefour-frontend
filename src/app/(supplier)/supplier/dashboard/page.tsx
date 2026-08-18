@@ -14,9 +14,22 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
+interface OrderItem {
+  supplierId?: string;
+  subtotal?: number;
+}
+
+interface Order {
+  id: string;
+  orderNumber: string;
+  status: string;
+  createdAt: string;
+  items?: OrderItem[];
+}
+
 export default function SupplierDashboardPage() {
   const { user } = useAuthStore();
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -28,7 +41,7 @@ export default function SupplierDashboardPage() {
         
         // Filter orders that contain items from this supplier
         const supplierOrders = allOrders.filter(order => 
-          order.items?.some((item: any) => item.supplierId === user?.id || item.supplierId === '3')
+          order.items?.some((item: OrderItem) => item.supplierId === user?.id || item.supplierId === '3')
         );
         
         setOrders(supplierOrders);
@@ -51,10 +64,10 @@ export default function SupplierDashboardPage() {
   
   // Calculate revenue (sum of items from this supplier)
   const totalRevenue = orders.reduce((sum, order) => {
-    const supplierItems = order.items?.filter((item: any) => 
+    const supplierItems = order.items?.filter((item: OrderItem) => 
       item.supplierId === user?.id || item.supplierId === '3'
     ) || [];
-    const orderRevenue = supplierItems.reduce((itemSum: number, item: any) => 
+    const orderRevenue = supplierItems.reduce((itemSum: number, item: OrderItem) => 
       itemSum + (item.subtotal || 0), 0
     );
     return sum + orderRevenue;
@@ -69,10 +82,10 @@ export default function SupplierDashboardPage() {
       orderNumber: order.orderNumber,
       status: order.status,
       total: order.items
-        ?.filter((item: any) => item.supplierId === user?.id || item.supplierId === '3')
-        .reduce((sum: number, item: any) => sum + (item.subtotal || 0), 0) || 0,
+        ?.filter((item: OrderItem) => item.supplierId === user?.id || item.supplierId === '3')
+        .reduce((sum: number, item: OrderItem) => sum + (item.subtotal || 0), 0) || 0,
       createdAt: order.createdAt,
-      itemCount: order.items?.filter((item: any) => 
+      itemCount: order.items?.filter((item: OrderItem) => 
         item.supplierId === user?.id || item.supplierId === '3'
       ).length || 0,
     }));
