@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { apiClient } from "@/lib/api/client";
 import { mercurStoreClient } from "@/lib/api/mercur-store-client";
 import { addProductToMercurCart, isMercurCartEnabled } from "@/lib/api/mercur-cart";
 import { mapMercurProductToProduct, MercurStoreProduct } from "@/lib/api/mercur-mappers";
