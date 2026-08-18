@@ -17,6 +17,8 @@ Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carref
 - **[API Specification](./technical/API_SPEC.md)** - Especificación completa de la API
 
 ### 🔄 Backend Integration (Medusa)
+- **[Stripe Payment Integration](./STRIPE_PAYMENT_INTEGRATION.md)** - 💳 Guía completa de integración de pagos (NUEVO - 18/08/2026)
+- **[Regions Update](./REGIONS_UPDATE_18_AUG.md)** - 🌍 Actualización de regiones - checkout desbloqueado
 - **[Backend Status Report](./BACKEND_STATUS_18_AUG.md)** - 🔥 Estado actual con datos de verificación (18/08/2026)
 - **[Backend Pendiente](./BACKEND_PENDIENTE.md)** - Estado de integración con Medusa backend
 - **[Auth Integration](./AUTH_INTEGRATION.md)** - Integración de autenticación

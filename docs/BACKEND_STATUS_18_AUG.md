@@ -37,11 +37,11 @@ El backend ha confirmado que los datos están cargados:
 - **Categoría:** Uniformes
 - **Variants:** 1
 
-### ⚠️ Endpoints con Limitaciones
+### ✅ Regiones Creadas
 
-| Endpoint | Método | Estado | Issue |
-|----------|--------|--------|-------|
-| `/store/regions` | GET | ⚠️ Vacío | `{regions: [], count: 0}` |
+| Endpoint | Método | Estado | Resultado |
+|----------|--------|--------|----------|
+| `/store/regions` | GET | ✅ OK | 5 regiones disponibles |
 | `/admin/users/me` | GET | ❌ 401 | `{message: "Unauthorized"}` |
 | `/admin/orders` | GET | ❌ 401 | `{message: "Unauthorized"}` |
 | `/auth/forgot-password` | POST | ❌ 404 | Not implemented |
