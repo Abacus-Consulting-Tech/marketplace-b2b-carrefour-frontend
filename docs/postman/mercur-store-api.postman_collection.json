@@ -1,0 +1,319 @@
+{
+  "info": {
+    "name": "Carrefour B2B - Mercur Store API",
+    "description": "Postman collection for the local Mercur/Medusa Store API used by the Next.js storefront. Calls go through the API layer, not directly to Postgres.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "pm.test('Response is JSON when body is present', function () {",
+          "  if (pm.response.text()) {",
+          "    pm.response.to.have.header('Content-Type');",
+          "  }",
+          "});"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "item": [
+        {
+          "name": "API Health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/health",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "health"
+              ]
+            },
+            "description": "Checks that the Mercur/Medusa API process is alive."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Catalog",
+      "item": [
+        {
+          "name": "List Regions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishable_api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{store_api_url}}/regions",
+              "host": [
+                "{{store_api_url}}"
+              ],
+              "path": [
+                "regions"
+              ]
+            },
+            "description": "Lists Store API regions. Use this to confirm or update {{region_id}}."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Regions loaded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.regions).to.be.an('array');",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (body.regions && body.regions[0]) {",
+                  "  pm.environment.set('region_id', body.regions[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "List Products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishable_api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{store_api_url}}/products?limit=10&region_id={{region_id}}",
+              "host": [
+                "{{store_api_url}}"
+              ],
+              "path": [
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "region_id",
+                  "value": "{{region_id}}"
+                }
+              ]
+            },
+            "description": "Lists seeded Carrefour B2B products with calculated offer prices. Saves product_id and offer_id for later requests."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Products loaded', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.products).to.be.an('array');",
+                  "});",
+                  "const body = pm.response.json();",
+                  "const product = body.products && body.products[0];",
+                  "const variant = product && product.variants && product.variants[0];",
+                  "if (product) { pm.environment.set('product_id', product.id); }",
+                  "if (variant) { pm.environment.set('variant_id', variant.id); }",
+                  "if (variant && variant.offer_id) { pm.environment.set('offer_id', variant.offer_id); }"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Retrieve Product",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishable_api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{store_api_url}}/products/{{product_id}}?region_id={{region_id}}",
+              "host": [
+                "{{store_api_url}}"
+              ],
+              "path": [
+                "products",
+                "{{product_id}}"
+              ],
+              "query": [
+                {
+                  "key": "region_id",
+                  "value": "{{region_id}}"
+                }
+              ]
+            },
+            "description": "Retrieves one product with calculated price context. Run List Products first to populate product_id."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Cart",
+      "item": [
+        {
+          "name": "Create Cart",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishable_api_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"region_id\": \"{{region_id}}\"\n}"
+            },
+            "url": {
+              "raw": "{{store_api_url}}/carts",
+              "host": [
+                "{{store_api_url}}"
+              ],
+              "path": [
+                "carts"
+              ]
+            },
+            "description": "Creates a Store API cart in the configured region. Saves cart_id."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Cart created', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.cart.id).to.be.a('string');",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (body.cart && body.cart.id) { pm.environment.set('cart_id', body.cart.id); }"
+                ]
+              }
+            }
+          ],
+          "response": []
+        },
+        {
+          "name": "Retrieve Cart",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishable_api_key}}"
+              }
+            ],
+            "url": {
+              "raw": "{{store_api_url}}/carts/{{cart_id}}",
+              "host": [
+                "{{store_api_url}}"
+              ],
+              "path": [
+                "carts",
+                "{{cart_id}}"
+              ]
+            },
+            "description": "Retrieves the current cart. Run Create Cart first to populate cart_id."
+          },
+          "response": []
+        },
+        {
+          "name": "Add Line Item",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishable_api_key}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"offer_id\": \"{{offer_id}}\",\n  \"quantity\": 1\n}"
+            },
+            "url": {
+              "raw": "{{store_api_url}}/carts/{{cart_id}}/line-items",
+              "host": [
+                "{{store_api_url}}"
+              ],
+              "path": [
+                "carts",
+                "{{cart_id}}",
+                "line-items"
+              ]
+            },
+            "description": "Adds an item to a Mercur cart. Mercur requires offer_id, not variant_id. Run List Products and Create Cart first."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Line item added', function () {",
+                  "  pm.response.to.have.status(200);",
+                  "  const body = pm.response.json();",
+                  "  pm.expect(body.cart.items.length).to.be.above(0);",
+                  "});",
+                  "const body = pm.response.json();",
+                  "if (body.cart && body.cart.items && body.cart.items[0]) {",
+                  "  pm.environment.set('line_item_id', body.cart.items[0].id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "response": []
+        }
+      ]
+    }
+  ]
+}

@@ -47,6 +47,8 @@ export interface Product {
     id: string
     name: string
   }
+  offerId?: string
+  variantId?: string
   createdAt: string
   updatedAt: string
 }
@@ -129,6 +131,18 @@ export interface CartItem {
   quantity: number
   price: number
   image?: string
+  backendLineItemId?: string
+  offerId?: string
+  variantId?: string
+}
+
+export interface CartSummary {
+  subtotal: number
+  tax: number
+  shipping: number
+  discount: number
+  total: number
+  currency: string
 }
 
 // Supplier types

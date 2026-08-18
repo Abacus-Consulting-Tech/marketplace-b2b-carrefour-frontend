@@ -1,9 +1,13 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { CartItem } from '@/types'
+import type { CartItem, CartSummary } from '@/types'
 
 interface CartStore {
+  cartId?: string
   items: CartItem[]
+  summary?: CartSummary
+  setCartId: (cartId: string) => void
+  syncMercurCart: (cart: { cartId: string; items: CartItem[]; summary: CartSummary }) => void
   addItem: (item: CartItem) => void
   removeItem: (productId: string) => void
   updateQuantity: (productId: string, quantity: number) => void
@@ -15,7 +19,18 @@ interface CartStore {
 export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
+      cartId: undefined,
       items: [],
+      summary: undefined,
+
+      setCartId: (cartId: string) => set({ cartId }),
+
+      syncMercurCart: cart =>
+        set({
+          cartId: cart.cartId,
+          items: cart.items,
+          summary: cart.summary,
+        }),
       
       addItem: (item: CartItem) =>
         set(state => {
@@ -44,7 +59,7 @@ export const useCartStore = create<CartStore>()(
           ),
         })),
 
-      clearCart: () => set({ items: [] }),
+      clearCart: () => set({ cartId: undefined, items: [], summary: undefined }),
 
       getTotal: () => {
         const items = get().items

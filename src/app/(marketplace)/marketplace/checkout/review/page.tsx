@@ -18,7 +18,7 @@ import Image from 'next/image';
 export default function CheckoutReviewPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { items } = useCartStore();
+  const { items, summary } = useCartStore();
   const { deliveryAddress, paymentMethod, setPaymentMethod, termsAccepted, setTermsAccepted, setCurrentStep } = useCheckoutStore();
   const { user } = useAuthStore();
   const [isClient, setIsClient] = useState(false);
@@ -40,10 +40,10 @@ export default function CheckoutReviewPage() {
     }
   }, [deliveryAddress, items.length, router, setCurrentStep]);
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const tax = subtotal * 0.21;
-  const shipping = 0;
-  const total = subtotal + tax + shipping;
+  const subtotal = summary?.subtotal ?? items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const tax = summary?.tax ?? subtotal * 0.21;
+  const shipping = summary?.shipping ?? 0;
+  const total = summary?.total ?? subtotal + tax + shipping;
 
   // Agrupar items por proveedor (usando el primer carácter del productId como mock)
   const itemsBySupplier = items.reduce((acc, item) => {
@@ -269,7 +269,9 @@ export default function CheckoutReviewPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Envío</span>
-                  <span className="font-medium text-green-600">Gratis</span>
+                  <span className={shipping > 0 ? 'font-medium' : 'font-medium text-green-600'}>
+                    {shipping > 0 ? `${shipping.toFixed(2)} €` : 'Gratis'}
+                  </span>
                 </div>
               </div>
               <div className="pt-4 border-t">

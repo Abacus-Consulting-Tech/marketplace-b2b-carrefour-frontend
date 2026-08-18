@@ -15,7 +15,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function CheckoutPaymentPage() {
   const router = useRouter();
   const { toast } = useToast();
-  const { items } = useCartStore();
+  const { items, summary } = useCartStore();
   const { deliveryAddress, paymentMethod, setCurrentStep } = useCheckoutStore();
   const [isClient, setIsClient] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -43,9 +43,10 @@ export default function CheckoutPaymentPage() {
     }
   }, [deliveryAddress, paymentMethod, items.length, router, setCurrentStep]);
 
-  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
-  const tax = subtotal * 0.21;
-  const total = subtotal + tax;
+  const subtotal = summary?.subtotal ?? items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const tax = summary?.tax ?? subtotal * 0.21;
+  const shipping = summary?.shipping ?? 0;
+  const total = summary?.total ?? subtotal + tax + shipping;
 
   const formatCardNumber = (value: string) => {
     const cleaned = value.replace(/\s/g, '');
@@ -346,7 +347,9 @@ export default function CheckoutPaymentPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Envío</span>
-                  <span className="font-medium text-green-600">Gratis</span>
+                  <span className={shipping > 0 ? 'font-medium' : 'font-medium text-green-600'}>
+                    {shipping > 0 ? `${shipping.toFixed(2)} €` : 'Gratis'}
+                  </span>
                 </div>
               </div>
               <div className="pt-4 border-t">

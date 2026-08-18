@@ -6,6 +6,11 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { ArrowLeft, ArrowRight, ShoppingCart } from 'lucide-react';
+import {
+  applyFirstMercurShippingOption,
+  isMercurCartEnabled,
+  updateMercurCartShippingAddress,
+} from '@/lib/api/mercur-cart';
 import { useCartStore } from '@/lib/store/cart';
 import { useCheckoutStore, DeliveryAddress } from '@/lib/store/checkout';
 import { CheckoutStepIndicator } from '@/components/checkout/CheckoutStepIndicator';
@@ -27,9 +32,10 @@ const addressSchema = z.object({
 
 export default function CheckoutPage() {
   const router = useRouter();
-  const { items } = useCartStore();
+  const { cartId, items, summary, syncMercurCart } = useCartStore();
   const { deliveryAddress, setDeliveryAddress, setCurrentStep } = useCheckoutStore();
   const [isClient, setIsClient] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const {
     register,
@@ -67,10 +73,52 @@ export default function CheckoutPage() {
     }
   }, [items.length, router, setCurrentStep, deliveryAddress, setValue]);
 
-  const onSubmit = (data: DeliveryAddress) => {
+  const onSubmit = async (data: DeliveryAddress) => {
     setDeliveryAddress(data);
+
+    if (isMercurCartEnabled()) {
+      if (!cartId) {
+        router.push('/marketplace/cart');
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      try {
+        const [firstName, ...lastNameParts] = data.fullName.trim().split(/\s+/);
+        const mappedCart = await updateMercurCartShippingAddress({
+          cartId,
+          shippingAddress: {
+            first_name: firstName,
+            last_name: lastNameParts.join(' ') || undefined,
+            address_1: data.address,
+            address_2: data.additionalInfo,
+            city: data.city,
+            province: data.province,
+            postal_code: data.postalCode,
+            country_code: 'es',
+            phone: data.phone,
+          },
+        });
+
+        syncMercurCart(mappedCart);
+
+        const mappedCartWithShipping = await applyFirstMercurShippingOption(cartId);
+        if (mappedCartWithShipping) {
+          syncMercurCart(mappedCartWithShipping);
+        }
+      } finally {
+        setIsSubmitting(false);
+      }
+    }
+
     router.push('/marketplace/checkout/review');
   };
+
+  const subtotal = summary?.subtotal ?? items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const iva = summary?.tax ?? subtotal * 0.21;
+  const shipping = summary?.shipping ?? 0;
+  const total = summary?.total ?? subtotal + iva + shipping;
 
   if (!isClient) {
     return (
@@ -220,8 +268,8 @@ export default function CheckoutPage() {
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     Volver al Carrito
                   </Button>
-                  <Button type="submit">
-                    Continuar
+                  <Button type="submit" disabled={isSubmitting}>
+                    {isSubmitting ? 'Guardando...' : 'Continuar'}
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>
@@ -248,25 +296,27 @@ export default function CheckoutPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Subtotal</span>
                   <span className="font-medium">
-                    {items.reduce((sum, item) => sum + item.price * item.quantity, 0).toFixed(2)} €
+                    {subtotal.toFixed(2)} €
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">IVA (21%)</span>
                   <span className="font-medium">
-                    {(items.reduce((sum, item) => sum + item.price * item.quantity, 0) * 0.21).toFixed(2)} €
+                    {iva.toFixed(2)} €
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-gray-600">Envío</span>
-                  <span className="font-medium text-green-600">Gratis</span>
+                  <span className={shipping > 0 ? 'font-medium' : 'font-medium text-green-600'}>
+                    {shipping > 0 ? `${shipping.toFixed(2)} €` : 'Pendiente'}
+                  </span>
                 </div>
               </div>
               <div className="pt-4 border-t">
                 <div className="flex justify-between">
                   <span className="text-lg font-bold">Total</span>
                   <span className="text-lg font-bold text-blue-600">
-                    {(items.reduce((sum, item) => sum + item.price * item.quantity, 0) * 1.21).toFixed(2)} €
+                    {total.toFixed(2)} €
                   </span>
                 </div>
               </div>

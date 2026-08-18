@@ -15,6 +15,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { apiClient } from "@/lib/api/client";
+import { mercurStoreClient } from "@/lib/api/mercur-store-client";
+import { addProductToMercurCart, isMercurCartEnabled } from "@/lib/api/mercur-cart";
+import { mapMercurProductToProduct, MercurStoreProduct } from "@/lib/api/mercur-mappers";
 import { Product } from "@/types";
 import { Search, ShoppingCart } from "lucide-react";
 import { useCartStore } from "@/lib/store/cart";
@@ -26,6 +29,8 @@ export default function MarketplacePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const addItem = useCartStore((state) => state.addItem);
+  const cartId = useCartStore((state) => state.cartId);
+  const syncMercurCart = useCartStore((state) => state.syncMercurCart);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -34,6 +39,18 @@ export default function MarketplacePage() {
 
   const fetchProducts = async () => {
     try {
+      const useMercurCatalog = process.env.NEXT_PUBLIC_CATALOG_SOURCE === "mercur";
+
+      if (useMercurCatalog) {
+        const response = await mercurStoreClient.get<unknown, { products: MercurStoreProduct[] }>("/products", {
+          params: {
+            region_id: process.env.NEXT_PUBLIC_MERCUR_REGION_ID,
+          },
+        });
+        setProducts(response.products.map(mapMercurProductToProduct));
+        return;
+      }
+
       // Use mock API if NEXT_PUBLIC_MOCK_AUTH is true OR if no API URL is configured
       const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true" || !process.env.NEXT_PUBLIC_API_URL;
       
@@ -69,13 +86,34 @@ export default function MarketplacePage() {
     return matchesSearch && matchesCategory;
   });
 
-  const handleAddToCart = (product: Product) => {
+  const handleAddToCart = async (product: Product) => {
+    if (isMercurCartEnabled()) {
+      try {
+        const mappedCart = await addProductToMercurCart({ product, quantity: 1, cartId });
+        syncMercurCart(mappedCart);
+        toast({
+          title: "Producto agregado",
+          description: `${product.name} se agregó al carrito`,
+        });
+      } catch (error) {
+        console.error("Error adding Mercur cart line item:", error);
+        toast({
+          title: "Error",
+          description: "No se pudo agregar el producto al carrito",
+          variant: "destructive",
+        });
+      }
+      return;
+    }
+
     addItem({
       productId: product.id,
       name: product.name,
       price: product.price,
       quantity: 1,
       image: product.images?.[0],
+      offerId: product.offerId,
+      variantId: product.variantId,
     });
     toast({
       title: "Producto agregado",

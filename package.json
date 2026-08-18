@@ -14,7 +14,8 @@
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:e2e": "playwright test",
-    "test:coverage": "vitest --coverage"
+    "test:coverage": "vitest --coverage",
+    "verify:mercur-cart": "node scripts/verify-mercur-cart.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.9.0",

@@ -1,0 +1,20 @@
+Compañía:
+
+Razón social
+NIF/CIF
+Dirección fiscal completa
+País 
+IBAN
+Email
+Teléfono
+Tipo de IVA que aplica en factura
+
+Contacto:
+Nombre
+Apellidos
+Teléfono
+Email
+Puesto de trabajo
+
+
+
