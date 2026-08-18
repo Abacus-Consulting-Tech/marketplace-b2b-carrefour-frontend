@@ -4,8 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:staging": "NEXT_PUBLIC_ENV=staging next dev",
+    "dev:prod": "NEXT_PUBLIC_ENV=production next dev",
     "dev:open": "concurrently \"next dev\" \"wait-on http://localhost:3000 && open-cli http://localhost:3000\"",
     "build": "next build",
+    "build:staging": "NEXT_PUBLIC_ENV=staging next build",
+    "build:prod": "NEXT_PUBLIC_ENV=production next build",
     "start": "next start",
     "start:open": "next build && concurrently \"next start\" \"wait-on http://localhost:3000 && open-cli http://localhost:3000\"",
     "lint": "next lint",

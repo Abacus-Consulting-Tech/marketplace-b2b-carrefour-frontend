@@ -1,4 +1,44 @@
 /** @type {import('next').NextConfig} */
+
+// Load proxy configuration based on environment
+const getProxyConfig = () => {
+  const env = process.env.NEXT_PUBLIC_ENV || process.env.NODE_ENV || 'development'
+  
+  let proxyConfig
+  switch (env) {
+    case 'production':
+      proxyConfig = require('./proxy.prod.conf.js')
+      break
+    case 'staging':
+      proxyConfig = require('./proxy.staging.conf.js')
+      break
+    case 'development':
+    default:
+      proxyConfig = require('./proxy.dev.conf.js')
+      break
+  }
+  
+  if (proxyConfig.verbose) {
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('🔄 Next.js Proxy Configuration')
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    console.log('📡 Environment:', env)
+    console.log('🌐 Backend URL:', proxyConfig.backendUrl)
+    console.log('🔀 Rewrites:', proxyConfig.rewrites.length, 'routes')
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    if (proxyConfig.rewrites.length > 0) {
+      proxyConfig.rewrites.forEach(({ source, description }) => {
+        console.log(`  ✓ ${source.padEnd(30)} → ${description}`)
+      })
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')
+    }
+  }
+  
+  return proxyConfig
+}
+
+const proxyConfig = getProxyConfig()
+
 const nextConfig = {
   images: {
     domains: ['localhost', 'cdn.carrefour-b2b.com', 'images.unsplash.com'],
@@ -10,48 +50,11 @@ const nextConfig = {
     ],
   },
   async rewrites() {
-    // Backend URL from environment - defaults to Render DEV
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 
-                       'https://marketplace-b2b-backend-dev.onrender.com'
-    
-    // Only enable proxy in development to avoid CORS issues
-    // In production, backend must have proper CORS configured
-    const isDevelopment = process.env.NODE_ENV === 'development'
-    
-    if (!isDevelopment) {
-      return []
-    }
-
-    console.log('🔄 Next.js Proxy enabled for development')
-    console.log('📡 Backend URL:', backendUrl)
-
-    return [
-      // Auth endpoints
-      {
-        source: '/backend/auth/:path*',
-        destination: `${backendUrl}/auth/:path*`,
-      },
-      // Store endpoints (products, cart, regions, etc.)
-      {
-        source: '/backend/store/:path*',
-        destination: `${backendUrl}/store/:path*`,
-      },
-      // Admin endpoints
-      {
-        source: '/backend/admin/:path*',
-        destination: `${backendUrl}/admin/:path*`,
-      },
-      // Vendor/Supplier endpoints
-      {
-        source: '/backend/vendor/:path*',
-        destination: `${backendUrl}/vendor/:path*`,
-      },
-      // Health check
-      {
-        source: '/backend/health',
-        destination: `${backendUrl}/health`,
-      },
-    ]
+    // Return rewrites from environment-specific config
+    return proxyConfig.rewrites.map(({ source, destination }) => ({
+      source,
+      destination,
+    }))
   },
 }
 
