@@ -51,6 +51,7 @@ Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carref
 - **[Smoke Test Checklist](./medusa/smoke-test-checklist.md)** - Checklist de tests de integración
 - **[Credentials](./medusa/CREDENTIALS.md)** - Credenciales para entornos de desarrollo
 - **[Datos Iniciales](./medusa/DATOS_INICIALES.md)** - 📦 Mock data para poblar la base de datos
+- **[API Calls Actual](./medusa/API_CALLS_ACTUAL.md)** - 🔌 Todas las llamadas API que hace el frontend
 
 ### 📮 Postman Collections
 **Carpeta: [`postman/`](./postman/)**
