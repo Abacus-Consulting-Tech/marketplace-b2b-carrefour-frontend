@@ -1,0 +1,18 @@
+Backend desplegado y operativo en Render. Health check OK. Colección Postman y environments actualizados (Render DEV + Local DEV). Credenciales de prueba replicadas desde local. URLs:
+ 
+API base: https://marketplace-b2b-backend-dev.onrender.com Health: https://marketplace-b2b-backend-dev.onrender.com/health Archivos a importar en Postman:
+	•	marketplace-b2b-carrefour.postman_collection.json
+	•	marketplace-b2b-carrefour-render-dev.postman_environment.json
+	•	marketplace-b2b-carrefour-local-dev.postman_environment.json Orden recomendado de pruebas:
+ 
+GET /health GET /store/regions (con x-publishable-api-key) GET /store/custom (con x-publishable-api-key) POST /auth/user/emailpass (admin operative) para guardar jwtToken GET /admin/custom Variables front necesarias:
+ 
+MEDUSA_BACKEND_URL=https://marketplace-b2b-backend-dev.onrender.com NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=<publishable key de DEV> (en CREDENTIALS.md y en el environtment)
+ 
+Notas importantes:
+ 
+El endpoint raíz / devuelve 404 por diseño, no es error. En plan Free de Render, lo que usamos como servidor,  puede haber cold start y tardar el primer request. Para smoke test rápido, usar: smoke-test-checklist.md Credenciales y detalles de acceso están documentados en CREDENTIALS.md (no compartir fuera del equipo).
+ 
+Con esto deberías poder conectar el front al nuevo back.
+
+El nuevo entorno DEV del Marketplace B2B Carrefour está montado con backend Medusa/MercurJS desplegado en Render (plan free) sobre Docker, usando Supabase como base de datos PostgreSQL y Upstash como Redis gestionado, mientras que el frontend se conecta por HTTP al backend público en https://marketplace-b2b-backend-dev.onrender.com mediante MEDUSA_BACKEND_URL y autentica las rutas Store con NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY (header x-publishable-api-key); el estado operativo se valida por /health, y para pruebas del equipo se han preparado colección Postman, environments (Render/Local) y credenciales replicadas de desarrollo para acelerar la integración front-to-back.
