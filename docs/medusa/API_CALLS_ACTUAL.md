@@ -92,13 +92,13 @@ Authorization: Bearer {token}
   ]
 }
 ```
-**Response actual del backend DEV (18/08/2026):**
+**Response actual del backend DEV (18/08/2026 - 14:30 UTC):**
 ```json
 {
-  "orders": []
+  "message": "Unauthorized"
 }
 ```
-**Estado:** ✅ Endpoint funcional, ⚠️ BD vacía (usar datos de [DATOS_INICIALES.md](./DATOS_INICIALES.md) para poblar)
+**Estado:** ❌ **401 Unauthorized** - Autenticación admin no funciona (JWT válido pero no autoriza)
 
 ---
 
@@ -138,16 +138,27 @@ x-publishable-api-key: pk_15f89d436badff43c2366d014c88536fa0307e92aeaeab294a2ee1
   "limit": 20
 }
 ```
-**Response actual del backend DEV (18/08/2026):**
+**Response actual del backend DEV (18/08/2026 - 14:30 UTC):**
 ```json
 {
-  "products": [],
-  "count": 0,
+  "products": [
+    {
+      "id": "prod_01M0A8ACRV1WQVEHBWXEB3H2MM",
+      "title": "Polo Corporativo Carrefour",
+      "description": "Polo manga corta con bordado corporativo...",
+      "thumbnail": "https://images.unsplash.com/photo-1586790170083...",
+      "categories": [{"name": "Uniformes", ...}],
+      "variants": [1 variant],
+      ...
+    },
+    ... (13 more products)
+  ],
+  "count": 14,
   "offset": 0,
   "limit": 50
 }
 ```
-**Estado:** ✅ Endpoint funcional, ⚠️ BD vacía (usar datos de [DATOS_INICIALES.md](./DATOS_INICIALES.md) para poblar)
+**Estado:** ✅ Endpoint funcional, ✅ **14 productos cargados**
 
 ---
 
@@ -174,7 +185,18 @@ x-publishable-api-key: pk_15f89d436badff43c2366d014c88536fa0307e92aeaeab294a2ee1
   }
 }
 ```
-**Estado:** ✅ Endpoint funcional, ⚠️ BD vacía (requiere productos insertados primero)
+**Response actual del backend DEV (18/08/2026 - 14:30 UTC):**
+```json
+{
+  "product": {
+    "id": "prod_01M0A8ACRV1WQVEHBWXEB3H2MM",
+    "title": "Polo Corporativo Carrefour",
+    "variants": [1 variant],
+    ...
+  }
+}
+```
+**Estado:** ✅ Endpoint funcional, ✅ **Productos disponibles**
 
 ---
 

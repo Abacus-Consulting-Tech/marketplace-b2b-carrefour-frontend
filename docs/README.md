@@ -17,6 +17,7 @@ Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carref
 - **[API Specification](./technical/API_SPEC.md)** - Especificación completa de la API
 
 ### 🔄 Backend Integration (Medusa)
+- **[Backend Status Report](./BACKEND_STATUS_18_AUG.md)** - 🔥 Estado actual con datos de verificación (18/08/2026)
 - **[Backend Pendiente](./BACKEND_PENDIENTE.md)** - Estado de integración con Medusa backend
 - **[Auth Integration](./AUTH_INTEGRATION.md)** - Integración de autenticación
 - **[Proxy Configuration](./PROXY_CONFIG.md)** - Sistema de proxy por entornos (patrón Angular)
