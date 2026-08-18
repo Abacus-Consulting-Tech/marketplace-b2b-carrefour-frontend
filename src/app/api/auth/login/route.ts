@@ -9,11 +9,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { email, password } = body
 
-    // Use Next.js proxy route instead of direct backend call
-    // This avoids CORS issues in development
-    const backendUrl = process.env.NODE_ENV === 'development' 
-      ? '/backend/auth/user/emailpass' // Use proxy in development
-      : `${process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com'}/auth/user/emailpass`
+    // API routes run server-side, so we always call the backend directly
+    // This API route itself IS the CORS workaround proxy
+    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com'}/auth/user/emailpass`
+    
+    console.log('[Auth Login API] Calling backend:', backendUrl)
     
     const response = await fetch(backendUrl, {
       method: 'POST',
@@ -22,9 +22,12 @@ export async function POST(request: NextRequest) {
       },
       body: JSON.stringify({ email, password }),
     })
+    
+    console.log('[Auth Login API] Response status:', response.status)
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: 'Authentication failed' }))
+      console.error('[Auth Login API] Error response:', error)
       return NextResponse.json(
         { message: error.message || 'Authentication failed' },
         { status: response.status }
@@ -32,6 +35,7 @@ export async function POST(request: NextRequest) {
     }
 
     const data = await response.json()
+    console.log('[Auth Login API] Success, received token:', data.token ? 'yes' : 'no')
 
     // Medusa only returns { token: "..." }, no user object
     // Deduce role from email until backend provides proper user data
@@ -51,6 +55,8 @@ export async function POST(request: NextRequest) {
       name: email.split('@')[0],
       role: role,
     }
+
+    console.log('[Auth Login API] Created user object:', { email, role })
 
     return NextResponse.json({
       user,

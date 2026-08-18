@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { StatCard } from '@/components/dashboard/StatCard';
 import { useAuthStore } from '@/lib/store/auth';
 import { mockApi } from '@/lib/api/mock';
+import { apiClient } from '@/lib/api/client';
 import { 
   Users, 
   ShoppingBag, 
@@ -22,20 +23,36 @@ export default function AdminDashboardPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Check if we're in mock mode
+  const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true" || !process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await mockApi.orders.list();
-        setOrders(response.data || []);
+        if (isMockMode) {
+          // Use mock data
+          console.log('[Admin Dashboard] Using mock data');
+          const response = await mockApi.orders.list();
+          setOrders(response.data || []);
+        } else {
+          // Use real Medusa backend
+          console.log('[Admin Dashboard] Fetching real orders from Medusa backend');
+          const response = await apiClient.get('/admin/orders');
+          console.log('[Admin Dashboard] Orders response:', response);
+          // Medusa returns { orders: [...] }
+          setOrders(response.orders || response || []);
+        }
       } catch (error) {
         console.error('Error fetching data:', error);
+        // If backend fails, show empty state
+        setOrders([]);
       } finally {
         setIsLoading(false);
       }
     };
 
     fetchData();
-  }, []);
+  }, [isMockMode]);
 
   // Calculate statistics
   const totalOrders = orders.length;
@@ -50,6 +67,22 @@ export default function AdminDashboardPage() {
 
   return (
     <div className="space-y-8">
+      {/* Data Source Indicator */}
+      {isMockMode && (
+        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+          <p className="text-sm text-yellow-800">
+            🧪 <strong>Modo de prueba:</strong> Mostrando datos de ejemplo (mock)
+          </p>
+        </div>
+      )}
+      {!isMockMode && orders.length === 0 && !isLoading && (
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+          <p className="text-sm text-blue-800">
+            ℹ️ <strong>Conectado al backend Medusa:</strong> No hay pedidos todavía en la base de datos
+          </p>
+        </div>
+      )}
+      
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">

@@ -99,6 +99,7 @@ Después del login, llamar a `GET /admin/users/me` (u otro endpoint de perfil eq
 
 - [docs/medusa/README-front-usage.md](medusa/README-front-usage.md)
 - [docs/medusa/smoke-test-checklist.md](medusa/smoke-test-checklist.md)
+- [docs/medusa/DATOS_INICIALES.md](medusa/DATOS_INICIALES.md) - **Datos de ejemplo para poblar la BD**
 - [docs/postman/](postman/)
 
 ---

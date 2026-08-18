@@ -1,12 +1,25 @@
 import axios from 'axios'
 
+// In development, use relative URLs that go through Next.js rewrites
+// In production, use the full backend URL (requires CORS)
+const getBaseURL = () => {
+  if (process.env.NODE_ENV === 'development') {
+    // Use Next.js proxy in development (no CORS needed)
+    return '/backend'
+  }
+  // In production, call backend directly (CORS required)
+  return process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com'
+}
+
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api',
+  baseURL: getBaseURL(),
   timeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT) || 10000,
   headers: {
     'Content-Type': 'application/json',
   },
 })
+
+console.log('[API Client] Base URL:', getBaseURL())
 
 // Request interceptor
 apiClient.interceptors.request.use(
