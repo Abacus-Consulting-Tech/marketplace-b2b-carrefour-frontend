@@ -41,7 +41,7 @@ export interface Product {
   images: string[]
   rating: number
   reviewCount: number
-  specifications: Record<string, any>
+  specifications: Record<string, string | number | boolean>
   category?: string
   supplier?: {
     id: string
@@ -49,6 +49,12 @@ export interface Product {
   }
   offerId?: string
   variantId?: string
+  metadata?: {
+    pack_label?: string
+    units_per_pack?: number
+    sell_unit?: string
+    [key: string]: string | number | boolean | undefined
+  }
   createdAt: string
   updatedAt: string
 }
