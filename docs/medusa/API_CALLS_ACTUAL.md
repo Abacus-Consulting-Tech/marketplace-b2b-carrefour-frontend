@@ -92,7 +92,13 @@ Authorization: Bearer {token}
   ]
 }
 ```
-**Estado:** ✅ Implementado en frontend, esperando datos del backend
+**Response actual del backend DEV (18/08/2026):**
+```json
+{
+  "orders": []
+}
+```
+**Estado:** ✅ Endpoint funcional, ⚠️ BD vacía (usar datos de [DATOS_INICIALES.md](./DATOS_INICIALES.md) para poblar)
 
 ---
 
@@ -132,7 +138,16 @@ x-publishable-api-key: pk_15f89d436badff43c2366d014c88536fa0307e92aeaeab294a2ee1
   "limit": 20
 }
 ```
-**Estado:** ✅ Implementado, funcionando con Mercur Store API
+**Response actual del backend DEV (18/08/2026):**
+```json
+{
+  "products": [],
+  "count": 0,
+  "offset": 0,
+  "limit": 50
+}
+```
+**Estado:** ✅ Endpoint funcional, ⚠️ BD vacía (usar datos de [DATOS_INICIALES.md](./DATOS_INICIALES.md) para poblar)
 
 ---
 
@@ -159,7 +174,7 @@ x-publishable-api-key: pk_15f89d436badff43c2366d014c88536fa0307e92aeaeab294a2ee1
   }
 }
 ```
-**Estado:** ✅ Implementado, funcionando con Mercur Store API
+**Estado:** ✅ Endpoint funcional, ⚠️ BD vacía (requiere productos insertados primero)
 
 ---
 
@@ -420,7 +435,49 @@ x-publishable-api-key: pk_...
 
 ---
 
-## 📊 Resumen por Módulo
+## � Estado Actual de la Base de Datos (Render DEV)
+
+**Verificado:** 18/08/2026
+
+El backend en Render DEV está **operativo y respondiendo correctamente**, pero la base de datos PostgreSQL está **VACÍA**:
+
+```bash
+# Verificación realizada:
+curl -X GET "https://marketplace-b2b-backend-dev.onrender.com/store/products" \
+  -H "x-publishable-api-key: pk_..."
+
+# Respuesta:
+{
+  "products": [],
+  "count": 0
+}
+```
+
+### ⚠️ Impacto en el Frontend
+
+| Página | Estado | Qué Ve el Usuario |
+|--------|--------|-------------------|
+| `/marketplace` | ✅ Funciona | Lista de productos vacía |
+| `/marketplace/products/[id]` | ❌ 404 | No hay productos para ver |
+| `/admin/dashboard` | ✅ Funciona | Banner: "No hay pedidos todavía" |
+| Login | ✅ Funciona | Autenticación operativa |
+
+### 🔧 Solución
+
+**Para poblar la base de datos:**
+1. Usar los datos de [DATOS_INICIALES.md](./DATOS_INICIALES.md)
+2. Insertar en este orden:
+   - ✅ Usuarios
+   - ✅ Categorías
+   - ✅ Proveedores
+   - ✅ Productos ← **Crítico para marketplace**
+   - ✅ Pedidos (opcional)
+
+**Backend team:** Una vez insertados los productos, el frontend mostrará el catálogo inmediatamente sin cambios de código.
+
+---
+
+## �📊 Resumen por Módulo
 
 ### Autenticación (Auth)
 - ✅ `POST /auth/user/emailpass` - Login (funcionando)
@@ -428,11 +485,11 @@ x-publishable-api-key: pk_...
 - 🚧 `POST /auth/register` - Registro (pendiente verificar)
 
 ### Admin
-- ✅ `GET /admin/orders` - Listar pedidos (implementado, esperando datos)
+- ✅ `GET /admin/orders` - Listar pedidos (funcional, BD vacía)
 
 ### Store - Productos
-- ✅ `GET /store/products` - Listar productos (funcionando)
-- ✅ `GET /store/products/{id}` - Detalle producto (funcionando)
+- ✅ `GET /store/products` - Listar productos (funcional, BD vacía)
+- ✅ `GET /store/products/{id}` - Detalle producto (funcional, requiere productos)
 
 ### Store - Carrito
 - ✅ `POST /store/carts` - Crear carrito (implementado)
