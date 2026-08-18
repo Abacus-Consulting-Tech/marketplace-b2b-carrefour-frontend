@@ -6,15 +6,13 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CreditCard, AlertCircle } from "lucide-react";
 import { createPaymentCollection } from "@/lib/api/mercur-store-client";
-
-// TODO: Uncomment after installing @stripe/stripe-js and @stripe/react-stripe-js
-// import { loadStripe, Stripe } from "@stripe/stripe-js";
-// import {
-//   Elements,
-//   CardElement,
-//   useStripe,
-//   useElements,
-// } from "@stripe/react-stripe-js";
+import { loadStripe } from "@stripe/stripe-js";
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements,
+} from "@stripe/react-stripe-js";
 
 interface StripePaymentFormProps {
   cartId: string;
@@ -22,7 +20,6 @@ interface StripePaymentFormProps {
   onBack: () => void;
 }
 
-// Placeholder component until Stripe is installed
 function StripePaymentFormContent({
   cartId,
   onComplete,
@@ -32,19 +29,12 @@ function StripePaymentFormContent({
   const [error, setError] = useState<string>("");
   const [paymentReady, setPaymentReady] = useState(false);
 
-  // TODO: Uncomment after Stripe is installed
-  // const stripe = useStripe();
-  // const elements = useElements();
+  const stripe = useStripe();
+  const elements = useElements();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // TODO: Replace with actual Stripe logic after installation
-    setError("Stripe aún no está configurado. Por favor, instala las dependencias primero.");
-    
-    /* 
-    // Actual implementation after Stripe is installed:
-    
     if (!stripe || !elements) {
       setError("Stripe no está cargado correctamente");
       return;
@@ -70,7 +60,6 @@ function StripePaymentFormContent({
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) {
         throw new Error("Card element no encontrado");
-        return;
       }
 
       // 3. Confirm payment with Stripe
@@ -100,7 +89,6 @@ function StripePaymentFormContent({
     } finally {
       setProcessing(false);
     }
-    */
   };
 
   return (
@@ -113,8 +101,6 @@ function StripePaymentFormContent({
 
         <Card>
           <CardContent className="p-6">
-            {/* TODO: Replace with actual CardElement after Stripe is installed */}
-            {/*
             <CardElement
               options={{
                 style: {
@@ -139,21 +125,6 @@ function StripePaymentFormContent({
                 }
               }}
             />
-            */}
-
-            {/* Placeholder until Stripe is installed */}
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
-              <CreditCard className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-              <p className="text-gray-600 font-medium mb-2">
-                Formulario de Pago Stripe
-              </p>
-              <p className="text-sm text-gray-500">
-                Instala las dependencias de Stripe para habilitar el pago
-              </p>
-              <code className="text-xs bg-gray-100 px-2 py-1 rounded mt-2 inline-block">
-                npm install @stripe/stripe-js @stripe/react-stripe-js
-              </code>
-            </div>
           </CardContent>
         </Card>
 
@@ -191,17 +162,13 @@ function StripePaymentFormContent({
 }
 
 export default function StripePaymentForm(props: StripePaymentFormProps) {
-  // TODO: Uncomment after installing Stripe
-  // const stripePromise = loadStripe(
-  //   process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
-  // );
+  const stripePromise = loadStripe(
+    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
+  );
 
-  // return (
-  //   <Elements stripe={stripePromise}>
-  //     <StripePaymentFormContent {...props} />
-  //   </Elements>
-  // );
-
-  // Temporary: return form directly without Elements wrapper
-  return <StripePaymentFormContent {...props} />;
+  return (
+    <Elements stripe={stripePromise}>
+      <StripePaymentFormContent {...props} />
+    </Elements>
+  );
 }
