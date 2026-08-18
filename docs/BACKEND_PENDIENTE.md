@@ -6,11 +6,11 @@ El backend ya está desplegado y operativo en Render DEV. Hay dos puntos de inte
 
 ---
 
-## 1) CORS para frontend local
+## 1) CORS para frontend
 
 ### Estado técnico
 
-La configuración actual no usa un campo único `cors`; usa variables separadas en la configuración HTTP:
+El backend usa variables separadas para cada tipo de endpoint:
 
 - `STORE_CORS`
 - `ADMIN_CORS`
@@ -21,18 +21,29 @@ Definido en [packages/api/medusa-config.ts](packages/api/medusa-config.ts).
 
 ### Acción backend
 
-Incluir `http://localhost:3000` en las variables CORS que use el flujo frontend.
+**Para desarrollo local:** ✅ No se requiere acción
+- El frontend usa Next.js rewrites como proxy
+- No hay llamadas directas cross-origin en desarrollo
 
-Ejemplo recomendado para DEV:
+**Para producción:** 🚧 Configurar CORS
+- Añadir el dominio del frontend desplegado a las variables CORS
 
-- `STORE_CORS=http://localhost:3000,https://marketplace-b2b-backend-dev.onrender.com`
-- `AUTH_CORS=http://localhost:3000,https://marketplace-b2b-backend-dev.onrender.com`
+Ejemplo para producción:
 
-Si el front usa rutas admin/vendedor desde local, añadir también localhost en `ADMIN_CORS` y/o `VENDOR_CORS`.
+```bash
+STORE_CORS=https://marketplace-frontend.carrefour.com,https://marketplace-b2b-backend-dev.onrender.com
+AUTH_CORS=https://marketplace-frontend.carrefour.com,https://marketplace-b2b-backend-dev.onrender.com
+ADMIN_CORS=https://marketplace-frontend.carrefour.com,https://marketplace-b2b-backend-dev.onrender.com
+VENDOR_CORS=https://marketplace-frontend.carrefour.com,https://marketplace-b2b-backend-dev.onrender.com
+```
 
 ### Acción frontend
 
-Configurar su entorno local (variables de front) para apuntar al backend DEV. Esto es responsabilidad del equipo frontend.
+✅ **Completado:**
+- Proxy Next.js configurado en `next.config.js`
+- Rutas `/backend/*` hacen proxy transparente al backend
+- En desarrollo: sin problemas de CORS
+- En producción: necesita CORS configurado en backend
 
 ---
 
@@ -68,8 +79,8 @@ Después del login, llamar a `GET /admin/users/me` (u otro endpoint de perfil eq
 
 🚧 Pendiente de alineación backend/front:
 
-- Confirmar matriz CORS final para localhost del frontend
-- Definir contrato de sesión que usará front (token-only + me, o wrapper)
+- Configurar CORS para dominio de producción del frontend
+- Definir contrato de sesión que usará front (token-only + GET /admin/users/me, o wrapper)
 
 ---
 
@@ -81,11 +92,39 @@ Después del login, llamar a `GET /admin/users/me` (u otro endpoint de perfil eq
 
 ---
 
-## Workarounds actuales en frontend
+## Arquitectura de integración
 
-Mientras se confirma CORS y endpoint de perfil:
+### Desarrollo (localhost)
 
-1. **Proxy API de Next.js** para evitar CORS (`/api/auth/login`)
-2. **Detección de rol por email** (temporal hasta GET /admin/users/me)
+Frontend usa Next.js rewrites como proxy:
 
-Ver: [docs/CORS_WORKAROUND.md](CORS_WORKAROUND.md) y [docs/ROLES_Y_REDIRECCIONES.md](ROLES_Y_REDIRECCIONES.md)
+```
+Frontend (localhost:3000)
+    ↓
+    /backend/auth/* → proxy Next.js
+    ↓
+    https://marketplace-b2b-backend-dev.onrender.com/auth/*
+```
+
+**Ventajas:**
+- ✅ Sin problemas de CORS en desarrollo
+- ✅ Frontend controla su configuración
+- ✅ No requiere cambios en backend para desarrollo local
+
+### Producción
+
+Frontend hace llamadas directas al backend:
+
+```
+Frontend (https://marketplace-frontend.carrefour.com)
+    ↓
+    Llamada directa HTTPS
+    ↓
+    https://marketplace-b2b-backend-dev.onrender.com
+```
+
+**Requisitos:**
+- 🚧 Backend debe tener CORS configurado con dominio del frontend
+- Variables: STORE_CORS, AUTH_CORS, ADMIN_CORS, VENDOR_CORS
+
+Ver configuración en: [next.config.js](../next.config.js)

@@ -1,7 +1,25 @@
 import axios from 'axios'
 
+// Use proxy in development to avoid CORS, direct URL in production
+const getBaseURL = () => {
+  if (typeof window === 'undefined') {
+    // Server-side: always use full backend URL
+    return process.env.NEXT_PUBLIC_MERCUR_STORE_API || 
+           'https://marketplace-b2b-backend-dev.onrender.com/store'
+  }
+  
+  // Client-side in development: use Next.js proxy
+  if (process.env.NODE_ENV === 'development') {
+    return '/backend/store'
+  }
+  
+  // Client-side in production: use full backend URL (needs CORS configured)
+  return process.env.NEXT_PUBLIC_MERCUR_STORE_API || 
+         'https://marketplace-b2b-backend-dev.onrender.com/store'
+}
+
 const mercurStoreClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_MERCUR_STORE_API || 'http://localhost:9000/store',
+  baseURL: getBaseURL(),
   timeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT) || 10000,
   headers: {
     'Content-Type': 'application/json',

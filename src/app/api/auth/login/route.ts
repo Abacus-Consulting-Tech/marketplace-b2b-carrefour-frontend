@@ -9,15 +9,18 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { email, password } = body
 
-    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com'
+    // Use Next.js proxy route instead of direct backend call
+    // This avoids CORS issues in development
+    const backendUrl = process.env.NODE_ENV === 'development' 
+      ? '/backend/auth/user/emailpass' // Use proxy in development
+      : `${process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com'}/auth/user/emailpass`
     
-    const response = await fetch(`${backendUrl}/auth/user/emailpass`, {
+    const response = await fetch(backendUrl, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ email, password }),
-      credentials: 'include',
     })
 
     if (!response.ok) {
