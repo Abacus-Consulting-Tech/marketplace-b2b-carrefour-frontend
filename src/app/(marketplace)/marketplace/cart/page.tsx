@@ -116,7 +116,7 @@ export default function CartPage() {
     }
     
     // Redirigir al checkout
-    router.push('/marketplace/checkout');
+    router.push('/checkout');
   };
 
   if (items.length === 0) {

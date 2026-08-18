@@ -130,6 +130,55 @@ export interface MercurShippingOptionsResponse {
   shipping_options: Record<string, MercurShippingOption[]>
 }
 
+export interface MercurPaymentSession {
+  id: string
+  provider_id: string
+  status: string
+  data: {
+    client_secret?: string
+    [key: string]: unknown
+  }
+}
+
+export interface MercurPaymentCollection {
+  id: string
+  status: string
+  payment_sessions: MercurPaymentSession[]
+}
+
+export interface MercurPaymentCollectionResponse {
+  payment_collection: MercurPaymentCollection
+}
+
+export interface CreatePaymentCollectionInput {
+  cart_id: string
+  provider_id?: string
+}
+
+export interface MercurOrder {
+  id: string
+  status: string
+  payment_status: string
+  fulfillment_status?: string
+  total: number
+  subtotal: number
+  tax_total: number
+  discount_total: number
+  shipping_total: number
+  currency_code: string
+  email?: string
+  items: MercurCartLineItem[]
+  shipping_address?: MercurCartAddress | null
+  billing_address?: MercurCartAddress | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CompleteCartResponse {
+  type: 'order'
+  order: MercurOrder
+}
+
 export const createCart = async (input: CreateMercurCartInput = {}) => {
   const response = await mercurStoreClient.post<unknown, MercurCartResponse>('/carts', {
     region_id: input.region_id ?? process.env.NEXT_PUBLIC_MERCUR_REGION_ID,
@@ -195,6 +244,27 @@ export const addShippingMethod = async (cartId: string, optionId: string) => {
   )
 
   return response.cart
+}
+
+export const createPaymentCollection = async (input: CreatePaymentCollectionInput) => {
+  const response = await mercurStoreClient.post<unknown, MercurPaymentCollectionResponse>(
+    '/payment-collections',
+    {
+      cart_id: input.cart_id,
+      provider_id: input.provider_id ?? 'stripe',
+    }
+  )
+
+  return response.payment_collection
+}
+
+export const completeCart = async (cartId: string) => {
+  const response = await mercurStoreClient.post<unknown, CompleteCartResponse>(
+    `/carts/${cartId}/complete`,
+    {}
+  )
+
+  return response
 }
 
 export { mercurStoreClient }
