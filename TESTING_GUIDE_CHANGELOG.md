@@ -7,8 +7,9 @@
 2. [Auth Endpoints Testing](#1-auth-endpoints-testing)
 3. [Pack Price Display Testing](#2-pack-price-display-testing)
 4. [Multi-Address Selector Testing](#3-multi-address-selector-testing)
-5. [Integration Testing](#4-integration-testing)
-6. [Troubleshooting](#troubleshooting)
+5. [Supplier Registration Testing](#4-supplier-registration-testing)
+6. [Integration Testing](#5-integration-testing)
+7. [Troubleshooting](#6-troubleshooting)
 
 ---
 
@@ -465,7 +466,436 @@ Authorization: Bearer eyJhbGc...
 
 ---
 
-## 4. Integration Testing
+## 4. Supplier Registration Testing
+
+### 4.1 Public Registration Form
+
+#### Test Case: Complete 3-Page Supplier Registration
+**URL:** `http://localhost:3000/supplier/register`
+
+**Prerequisites:**
+- No authentication required (public access)
+
+**Steps - Page 1: Datos Legales**
+1. Navigate to `/supplier/register`
+2. Verify step indicator shows "Paso 1 de 3"
+3. Fill legal data:
+   - Nombre Comercial: `Infoqus Aliado Empresarial`
+   - Razón Social: `Infoqus Aliado Empresarial, S.L.`
+   - NIF/CIF: `B12345678`
+   - Dirección Fiscal: `Calle Mayor 123, 4º B`
+   - Municipio: `Madrid`
+   - Código Postal: `28001`
+   - País: `España` (dropdown)
+   - IBAN: `ES1234567890123456789012`
+   - Email General: `info@test-supplier.com`
+   - Teléfono Principal: `+34 912345678`
+   - Sitio Web (opcional): `https://www.test-supplier.com`
+4. Click "Continuar"
+
+**Expected Result - Page 1:**
+- ✅ Form validates all required fields
+- ✅ NIF/CIF validation: `[0-9]{8}[A-Z]` or `[A-Z][0-9]{7}[0-9A-J]`
+- ✅ IBAN validation: `ES\d{22}` (no spaces)
+- ✅ Postal code: 5 digits
+- ✅ Email format validated
+- ✅ Phone format validated (international)
+- ✅ Cannot proceed without valid data
+- ✅ Advances to page 2 on success
+
+**Steps - Page 2: Contacto**
+1. Verify step indicator shows "Paso 2 de 3"
+2. Fill contact person data:
+   - Nombre: `María`
+   - Apellidos: `García López`
+   - Cargo en la Empresa: `Directora Comercial`
+   - Email de Contacto: `maria.garcia@test-supplier.com`
+   - Teléfono de Contacto: `+34 600123456`
+3. Click "Continuar"
+
+**Expected Result - Page 2:**
+- ✅ "Anterior" button returns to page 1 (data preserved)
+- ✅ All fields required
+- ✅ Email and phone validated
+- ✅ Cannot proceed without valid data
+- ✅ Advances to page 3 on success
+
+**Steps - Page 3: Productos**
+1. Verify step indicator shows "Paso 3 de 3"
+2. Upload CSV file:
+   - Drag & drop or click to upload
+   - File: Test CSV with product structure
+   - Max size: 5MB
+   - Format: `.csv` or `.xlsx`
+3. Verify CSV structure shown:
+   ```
+   PROVEEDOR,IMAGEN,NOMBRE,DESCRIPCIÓN,CARACTERISTICAS,COSTE UNITARIO,PCB,IMPORTE,IVA,PLAZO ENTREGA
+   ```
+4. Upload ZIP file:
+   - Drag & drop or click to upload
+   - File: ZIP with PNG images
+   - Max size: 50MB
+   - Format: `.zip`
+5. Verify both files show green checkmark when uploaded
+6. Click "Enviar Solicitud"
+
+**Expected Result - Page 3:**
+- ✅ "Anterior" button returns to page 2 (data preserved)
+- ✅ CSV validation: type (.csv/.xlsx) and size (max 5MB)
+- ✅ ZIP validation: type (.zip) and size (max 50MB)
+- ✅ Both files required to enable submit button
+- ✅ File preview shows name and size
+- ✅ Success message after submission
+- ✅ Note: "Pendiente de integración con API" (temporary)
+
+---
+
+#### Test Case: Form Validation Errors
+**URL:** `http://localhost:3000/supplier/register`
+
+**Test Invalid NIF/CIF:**
+- Input: `123` (too short)
+- Expected: ❌ "Introduce un NIF (12345678Z) o CIF (B12345678) válido, sin espacios"
+
+**Test Invalid IBAN:**
+- Input: `ES123` (wrong length)
+- Expected: ❌ "Formato IBAN ES: ES + 22 dígitos (sin espacios)"
+
+**Test Invalid Postal Code:**
+- Input: `280` (3 digits)
+- Expected: ❌ "El código postal debe tener 5 dígitos"
+
+**Test Invalid Email:**
+- Input: `notanemail`
+- Expected: ❌ "Email inválido"
+
+**Test File Size Limits:**
+- CSV > 5MB: ❌ "El archivo es demasiado grande. Máximo 5MB."
+- ZIP > 50MB: ❌ "El archivo es demasiado grande. Máximo 50MB."
+
+**Test Wrong File Types:**
+- Upload `.txt` as CSV: ❌ "Formato no válido. Solo se aceptan archivos CSV o XLSX."
+- Upload `.rar` as ZIP: ❌ "Formato no válido. Solo se aceptan archivos ZIP."
+
+---
+
+#### Test Case: Form Persistence
+**Steps:**
+1. Fill page 1 completely
+2. Click "Continuar" to page 2
+3. Click "Anterior" back to page 1
+
+**Expected Result:**
+- ✅ All data from page 1 still filled
+- ✅ No data loss on navigation
+
+**Steps:**
+1. Fill pages 1 and 2
+2. Close browser tab
+3. Reopen `/supplier/register`
+
+**Expected Result:**
+- ✅ Data persisted in localStorage
+- ✅ Returns to last page (step indicator correct)
+- ✅ All fields repopulated
+
+**Note:** Files (CSV/ZIP) are NOT persisted (too large for localStorage)
+
+---
+
+### 4.2 Admin Approval Workflow
+
+#### Test Case: View Pending Suppliers
+**URL:** `http://localhost:3000/admin/suppliers`
+
+**Prerequisites:**
+- Login as admin: `admin@carrefour.dev` / `supersecret`
+- At least 1 supplier registration submitted
+
+**Steps:**
+1. Navigate to admin suppliers page
+2. View dashboard statistics
+
+**Expected Display:**
+```
+Gestión de Proveedores
+Revisa y aprueba las solicitudes de registro de nuevos proveedores
+
+[Card] Pendientes: 1    [Clock icon]
+[Card] Activos: 0       [CheckCircle icon]
+[Card] Rechazados: 0    [XCircle icon]
+```
+
+**Expected Supplier Card:**
+```
+🏢 Infoqus Aliado Empresarial    [Badge: Pendiente]
+Infoqus Aliado Empresarial, S.L. · NIF/CIF: B12345678
+Calle Mayor 123, 4º B, Madrid (28001), España
+
+✉️ info@test-supplier.com        📞 +34 912345678
+🌐 https://www.test-supplier.com
+
+👤 Persona de Contacto
+María García López · Directora Comercial
+maria.garcia@test-supplier.com · +34 600123456
+
+[Download CSV]  [Download ZIP]
+
+[Aprobar]  [Rechazar]
+```
+
+**Verification:**
+- ✅ All supplier data displayed correctly
+- ✅ Company info, contact person, and files shown
+- ✅ CSV and ZIP download links functional
+- ✅ Status badge shows "Pendiente" (yellow)
+- ✅ Action buttons visible
+
+---
+
+#### Test Case: Approve Supplier
+**Steps:**
+1. Click "Aprobar" button on pending supplier
+2. Verify confirmation dialog appears
+
+**Expected Dialog:**
+```
+Aprobar Proveedor
+¿Confirmas que quieres aprobar a Infoqus Aliado Empresarial?
+
+Al aprobar este proveedor:
+• Se procesará el CSV y se crearán los productos en el catálogo
+• Las imágenes se subirán al storage
+• El proveedor recibirá un email de confirmación
+• Podrá acceder al portal del proveedor
+
+[Cancelar]  [Confirmar Aprobación]
+```
+
+3. Click "Confirmar Aprobación"
+
+**Expected Result:**
+- ✅ Dialog shows approval checklist
+- ✅ Green confirmation button
+- ✅ Alert: "Proveedor aprobado. Pendiente de integración con API."
+- ✅ Dialog closes
+- ✅ Supplier status changes to 'active'
+- ✅ Card moves to "Activos" section
+
+**Note:** Full backend integration pending:
+- CSV parsing and product creation
+- Image upload to Medusa Storage
+- Email notification
+- User account activation
+
+---
+
+#### Test Case: Reject Supplier
+**Steps:**
+1. Click "Rechazar" button on pending supplier
+2. Verify rejection dialog appears
+
+**Expected Dialog:**
+```
+Rechazar Proveedor
+Indica el motivo por el cual rechazas a Infoqus Aliado Empresarial
+
+Motivo del Rechazo *
+[Text area: "Ej: Documentación incompleta, productos no apropiados..."]
+
+[Cancelar]  [Confirmar Rechazo]
+```
+
+3. Try to submit without reason
+
+**Expected Result:**
+- ❌ Alert: "Por favor, introduce un motivo de rechazo."
+
+4. Enter rejection reason: "Documentación fiscal incompleta"
+5. Click "Confirmar Rechazo"
+
+**Expected Result:**
+- ✅ Rejection reason required
+- ✅ Alert: "Proveedor rechazado. Pendiente de integración con API."
+- ✅ Dialog closes
+- ✅ Supplier status changes to 'rejected'
+- ✅ Card moves to "Rechazados" section
+
+---
+
+### 4.3 CSV Validation Testing
+
+#### Test Case: Parse Valid CSV
+**Test Data:**
+```csv
+PROVEEDOR,IMAGEN,NOMBRE,DESCRIPCIÓN,CARACTERISTICAS,COSTE UNITARIO,PCB,IMPORTE,IVA,PLAZO ENTREGA
+Test Supplier,producto-001.png,Arroz Integral 5kg,Arroz ecológico,Origen: España,12.50,12,150.00,10,2-3 días
+Test Supplier,producto-002.png,Aceite Oliva 1L,Aceite virgen extra,AOVE Primera presión,8.50,6,51.00,10,24 horas
+```
+
+**Expected Parsing:**
+```javascript
+[
+  {
+    proveedor: "Test Supplier",
+    imagen: "producto-001.png",
+    nombre: "Arroz Integral 5kg",
+    descripcion: "Arroz ecológico",
+    caracteristicas: "Origen: España",
+    costeUnitario: 12.50,
+    pcb: 12,
+    importe: 150.00,
+    iva: 10,
+    plazoEntrega: "2-3 días"
+  },
+  // ...
+]
+```
+
+**Verification:**
+- ✅ CSV header row skipped
+- ✅ Comma-separated values parsed correctly
+- ✅ Quoted values with commas handled
+- ✅ Numbers converted to float/int
+- ✅ 10 columns per row
+
+---
+
+#### Test Case: CSV Validation Errors
+**Test Missing Required Fields:**
+```csv
+PROVEEDOR,IMAGEN,NOMBRE,DESCRIPCIÓN,CARACTERISTICAS,COSTE UNITARIO,PCB,IMPORTE,IVA,PLAZO ENTREGA
+Test Supplier,,Producto Sin Imagen,Descripción,Características,10.00,1,10.00,10,1 día
+```
+
+**Expected Error:**
+- ❌ "Línea 2: El nombre de la imagen es obligatorio"
+
+**Test Invalid Image Format:**
+```csv
+PROVEEDOR,IMAGEN,NOMBRE,DESCRIPCIÓN,CARACTERISTICAS,COSTE UNITARIO,PCB,IMPORTE,IVA,PLAZO ENTREGA
+Test Supplier,producto.jpg,Producto con JPG,Descripción,Características,10.00,1,10.00,10,1 día
+```
+
+**Expected Error:**
+- ❌ "Línea 2: La imagen debe ser un archivo PNG (producto.jpg)"
+
+**Test Invalid Numeric Values:**
+```csv
+PROVEEDOR,IMAGEN,NOMBRE,DESCRIPCIÓN,CARACTERISTICAS,COSTE UNITARIO,PCB,IMPORTE,IVA,PLAZO ENTREGA
+Test Supplier,producto.png,Producto,Descripción,Características,-5.00,0,10.00,150,1 día
+```
+
+**Expected Errors:**
+- ❌ "Línea 2: El coste unitario debe ser mayor que 0"
+- ❌ "Línea 2: El PCB debe ser mayor que 0"
+- ❌ "Línea 2: El IVA debe estar entre 0 y 100"
+
+---
+
+### 4.4 Integration Testing
+
+#### Complete Supplier Onboarding Flow
+
+**Scenario:** New supplier registers and gets approved
+
+**Steps:**
+
+1. **Supplier Registration**
+   - Go to `/supplier/register` (no auth)
+   - Complete page 1: Legal data
+   - Complete page 2: Contact person
+   - Upload CSV with 5 products
+   - Upload ZIP with 5 PNG images
+   - Submit registration
+   - ✅ Status: `pending`
+
+2. **Admin Review**
+   - Login as admin
+   - Go to `/admin/suppliers`
+   - ✅ See supplier in "Pendientes" (1)
+   - Download and verify CSV structure
+   - Download and verify ZIP contents (manual)
+   - Review all company and contact data
+
+3. **Approval Process**
+   - Click "Aprobar"
+   - Review checklist in dialog
+   - Confirm approval
+   - ✅ Status changes to `active`
+   - ✅ (Backend): CSV processed → Products created
+   - ✅ (Backend): Images uploaded to Medusa Storage
+   - ✅ (Backend): Email sent to supplier
+
+4. **Post-Approval** (Future)
+   - Supplier logs in to portal
+   - Views their products in catalog
+   - Manages orders
+
+**Verification Points:**
+- ✅ No authentication required for registration
+- ✅ Form validation works at each step
+- ✅ Data persists across pages
+- ✅ Files upload successfully
+- ✅ Admin sees complete supplier information
+- ✅ Approval workflow triggers correctly
+- ✅ Status updates reflected in UI
+
+---
+
+### 4.5 Edge Cases & Error Handling
+
+#### Test Case: Concurrent Registrations
+**Steps:**
+1. Open 2 browser tabs
+2. Start registration in both (same data)
+3. Submit from tab 1
+4. Submit from tab 2
+
+**Expected Result:**
+- ✅ Both submissions accepted (no duplicate check yet)
+- ✅ Admin sees 2 pending suppliers
+- ✅ Can approve/reject independently
+
+**Note:** Duplicate detection by NIF/CIF pending backend implementation
+
+---
+
+#### Test Case: Network Failure During Upload
+**Steps:**
+1. Fill all form data
+2. Start CSV upload
+3. Disconnect network mid-upload
+
+**Expected Result:**
+- ❌ Upload fails gracefully
+- ✅ Error message shown
+- ✅ Can retry upload
+- ✅ Form data preserved
+
+---
+
+#### Test Case: Browser Refresh During Registration
+**Steps:**
+1. Fill page 1 completely
+2. Refresh browser (F5)
+
+**Expected Result:**
+- ✅ Returns to page 1
+- ✅ Data preserved from localStorage
+- ✅ Step indicator resets to 1
+
+**Steps:**
+1. Complete page 1, move to page 2
+2. Refresh browser
+
+**Expected Result:**
+- ✅ Returns to page 2 (currentStep preserved)
+- ✅ All data from pages 1 & 2 intact
+
+---
+
+## 5. Integration Testing
 
 ### Complete Checkout Flow with Multi-Address
 
@@ -524,7 +954,7 @@ Authorization: Bearer eyJhbGc...
 
 ---
 
-## 5. Troubleshooting
+## 6. Troubleshooting
 
 ### Issue: "Cargando direcciones..." Never Ends
 
@@ -623,7 +1053,7 @@ console.log(customer.shipping_addresses);
 
 ---
 
-## 6. Test Checklist
+## 7. Test Checklist
 
 ### Auth Endpoints
 - [ ] Register with new email (success)
@@ -654,6 +1084,28 @@ console.log(customer.shipping_addresses);
 - [ ] Users with no addresses see form immediately
 - [ ] Loading state shown during API call
 
+### Supplier Registration
+- [ ] Page 1 form shows all legal fields (11)
+- [ ] NIF/CIF validation works (regex)
+- [ ] IBAN validation works (ES + 22 digits)
+- [ ] Postal code validation (5 digits)
+- [ ] Cannot proceed with invalid data
+- [ ] Page 2 shows contact fields (5)
+- [ ] "Anterior" button preserves data
+- [ ] Page 3 shows file upload areas
+- [ ] CSV upload validates type and size (max 5MB)
+- [ ] ZIP upload validates type and size (max 50MB)
+- [ ] Both files required to enable submit
+- [ ] Form data persists in localStorage
+- [ ] Files NOT persisted (expected)
+- [ ] Step indicator shows correct page
+- [ ] Admin can view pending suppliers
+- [ ] Admin sees all supplier details
+- [ ] CSV and ZIP download links work
+- [ ] Approve dialog shows checklist
+- [ ] Reject dialog requires reason
+- [ ] Status updates correctly after action
+
 ### Integration
 - [ ] Complete checkout flow works
 - [ ] Pack prices persist through cart
@@ -663,7 +1115,7 @@ console.log(customer.shipping_addresses);
 
 ---
 
-## 7. Known Limitations
+## 8. Known Limitations
 
 ⚠️ **Stripe Key:**
 - Placeholder key in `.env.local`
@@ -678,14 +1130,22 @@ console.log(customer.shipping_addresses);
 - Reset password emails may not send in DEV
 - Check backend logs for token
 
+⚠️ **Supplier Registration:**
+- Backend API endpoints not yet implemented
+- Approval/rejection shows placeholder alerts
+- CSV processing and product creation pending
+- Image upload to Medusa Storage pending
+- Email notifications not functional
+
 ---
 
-## 8. Success Criteria
+## 9. Success Criteria
 
 ✅ **All Tests Pass:**
 - Auth endpoints working (3/3)
 - Pack pricing accurate (2/2)
 - Multi-address functional (5/5)
+- Supplier registration UI complete (20/20)
 - Integration smooth (1/1)
 
 ✅ **No Console Errors:**
