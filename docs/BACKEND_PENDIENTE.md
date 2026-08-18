@@ -22,11 +22,13 @@ Definido en [packages/api/medusa-config.ts](packages/api/medusa-config.ts).
 ### Acción backend
 
 **Para desarrollo local:** ✅ No se requiere acción
-- El frontend usa Next.js rewrites como proxy
-- No hay llamadas directas cross-origin en desarrollo
+- El frontend usa sistema de proxy por entornos
+- No hay llamadas directas cross-origin en desarrollo ni staging
+- localhost no necesita estar en variables CORS
 
 **Para producción:** 🚧 Configurar CORS
-- Añadir el dominio del frontend desplegado a las variables CORS
+- Añadir **únicamente** el dominio del frontend desplegado a las variables CORS
+- No incluir localhost (se maneja con proxy en entornos no-prod)
 
 Ejemplo para producción:
 
@@ -40,10 +42,19 @@ VENDOR_CORS=https://marketplace-frontend.carrefour.com,https://marketplace-b2b-b
 ### Acción frontend
 
 ✅ **Completado:**
-- Proxy Next.js configurado en `next.config.js`
-- Rutas `/backend/*` hacen proxy transparente al backend
-- En desarrollo: sin problemas de CORS
-- En producción: necesita CORS configurado en backend
+- Sistema de proxy configurado por entornos (patrón Angular):
+  - `proxy.dev.conf.js` - Desarrollo local
+  - `proxy.staging.conf.js` - Pre-producción
+  - `proxy.prod.conf.js` - Producción (sin proxy, requiere CORS)
+- Rutas `/backend/*` hacen proxy transparente al backend en dev/staging
+- Scripts NPM por entorno: `npm run dev`, `npm run dev:staging`, `npm run dev:prod`
+- Logs detallados con banner visual mostrando rutas activas
+- En desarrollo/staging: sin problemas de CORS
+- En producción: sin proxy, requiere CORS configurado en backend
+
+📖 **Documentación:**
+- [PROXY_CONFIG.md](../PROXY_CONFIG.md) - Guía de uso del sistema de proxy
+- [PROXY_ARCHITECTURE.md](PROXY_ARCHITECTURE.md) - Arquitectura técnica detallada
 
 ---
 
@@ -79,8 +90,8 @@ Después del login, llamar a `GET /admin/users/me` (u otro endpoint de perfil eq
 
 🚧 Pendiente de alineación backend/front:
 
-- Configurar CORS para dominio de producción del frontend
-- Definir contrato de sesión que usará front (token-only + GET /admin/users/me, o wrapper)
+- Configurar CORS para dominio de producción del frontend (no necesario para dev/staging con proxy)
+- Definir contrato de sesión que usará front (token-only + me, o wrapper)
 
 ---
 
@@ -92,39 +103,19 @@ Después del login, llamar a `GET /admin/users/me` (u otro endpoint de perfil eq
 
 ---
 
-## Arquitectura de integración
+## Workarounds actuales en frontend
 
-### Desarrollo (localhost)
+Mientras se confirma CORS y endpoint de perfil:
 
-Frontend usa Next.js rewrites como proxy:
+1. **Sistema de proxy por entornos** para evitar CORS en dev/staging:
+   - Desarrollo: `npm run dev` usa `proxy.dev.conf.js`
+   - Staging: `npm run dev:staging` usa `proxy.staging.conf.js`
+   - Producción: `npm run dev:prod` usa `proxy.prod.conf.js` (sin rewrites, requiere CORS)
+   - Ver [PROXY_CONFIG.md](../PROXY_CONFIG.md) para detalles
+2. **Detección de rol por email** (temporal hasta GET /admin/users/me)
 
-```
-Frontend (localhost:3000)
-    ↓
-    /backend/auth/* → proxy Next.js
-    ↓
-    https://marketplace-b2b-backend-dev.onrender.com/auth/*
-```
-
-**Ventajas:**
-- ✅ Sin problemas de CORS en desarrollo
-- ✅ Frontend controla su configuración
-- ✅ No requiere cambios en backend para desarrollo local
-
-### Producción
-
-Frontend hace llamadas directas al backend:
-
-```
-Frontend (https://marketplace-frontend.carrefour.com)
-    ↓
-    Llamada directa HTTPS
-    ↓
-    https://marketplace-b2b-backend-dev.onrender.com
-```
-
-**Requisitos:**
-- 🚧 Backend debe tener CORS configurado con dominio del frontend
-- Variables: STORE_CORS, AUTH_CORS, ADMIN_CORS, VENDOR_CORS
-
-Ver configuración en: [next.config.js](../next.config.js)
+Ver documentación completa:
+- [PROXY_CONFIG.md](../PROXY_CONFIG.md) - Sistema de proxy por entornos
+- [PROXY_ARCHITECTURE.md](PROXY_ARCHITECTURE.md) - Arquitectura técnica del proxy
+- [CORS_WORKAROUND.md](CORS_WORKAROUND.md) - Workaround CORS original
+- [ROLES_Y_REDIRECCIONES.md](ROLES_Y_REDIRECCIONES.md) - Detección de roles

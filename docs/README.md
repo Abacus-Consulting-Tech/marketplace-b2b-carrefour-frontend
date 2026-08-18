@@ -1,170 +1,96 @@
-# Documentación Marketplace B2B Carrefour
+# Marketplace B2B Carrefour - Índice de Documentación
 
-Bienvenido a la documentación del **Marketplace B2B Carrefour**, una plataforma privada diseñada para que los franquiciados de Carrefour puedan contratar y comprar productos y servicios necesarios para la operación de sus establecimientos.
-
-## 📋 Índice
-
-- [Descripción General](#descripción-general)
-- [Documentación Técnica](#documentación-técnica)
-- [Guías de Usuario](#guías-de-usuario)
-- [Sprint Planning](./sprint_1/)
-
-### Documentación Técnica
-
-- [Arquitectura](./technical/ARCHITECTURE.md) - Arquitectura frontend y estructura del proyecto
-- [Guía de Desarrollo](./technical/DEVELOPMENT.md) - Setup, convenciones y workflow
-- [API Documentation](./technical/API.md) - Endpoints y contratos de la API
-
-### Guías de Usuario
-
-- [Guía de Usuario](./guides/USER_GUIDE.md) - Manual para franquiciados y proveedores
-
-### Módulos
-
-- [Módulos y Funcionalidades](./FEATURES.md) - Descripción detallada de cada módulo
-
-## Descripción General
-
-El Marketplace B2B Carrefour es una solución integral que conecta a franquiciados con proveedores para facilitar la adquisición de productos y servicios operativos (no destinados a la venta al consumidor final).
-
-### Objetivo del Proyecto
-
-Crear un ecosistema digital que simplifique y optimice el proceso de compra entre franquiciados Carrefour y sus proveedores aprobados, similar a una plataforma tipo Amazon pero especializada en el contexto B2B.
-
-## 🎯 Funcionalidades Principales
-
-### 1. **Gestión de Franquiciados**
-- Registro y administración de franquiciados
-- Perfiles de establecimiento
-- Gestión de ubicaciones y puntos de venta
-
-### 2. **Gestión de Proveedores**
-- Onboarding de proveedores aprobados
-- Catálogos de productos y servicios
-- Sistema de calificaciones y reseñas
-
-### 3. **Catálogo de Productos**
-- Navegación por categorías
-- Búsqueda avanzada y filtros
-- Comparación de productos
-- Gestión de inventario en tiempo real
-
-### 4. **Sistema de Órdenes**
-- Creación y seguimiento de pedidos
-- Workflow de aprobación
-- Estados del pedido (pendiente, aprobado, en tránsito, entregado)
-- Historial de compras
-
-### 5. **Gestión de Compras**
-- Carrito de compras
-- Proceso de checkout
-- Múltiples métodos de pago
-- Facturas y documentación
-
-### 6. **Gestión de Incidencias**
-- Reportes de problemas con pedidos
-- Sistema de tickets de soporte
-- Seguimiento de resoluciones
-- Comunicación franquiciado-proveedor
-
-## 🏗️ Arquitectura General
-
-```
-┌─────────────────┐       ┌──────────────────┐       ┌─────────────────┐
-│  Franquiciados  │◄─────►│   Frontend App   │◄─────►│   Proveedores   │
-│   (Usuarios)    │       │   (React/Vue)    │       │   (Usuarios)    │
-└─────────────────┘       └──────────────────┘       └─────────────────┘
-                                    │
-                                    ▼
-                          ┌──────────────────┐
-                          │   Backend API    │
-                          │   (REST/GraphQL) │
-                          └──────────────────┘
-                                    │
-                    ┌───────────────┼───────────────┐
-                    ▼               ▼               ▼
-            ┌─────────────┐ ┌─────────────┐ ┌─────────────┐
-            │   Base de   │ │  Servicios  │ │   Sistema   │
-            │    Datos    │ │  Externos   │ │    Pago     │
-            └─────────────┘ └─────────────┘ └─────────────┘
-```
-
-## � Stack Tecnológico
-
-### Frontend
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **UI Library**: Shadcn/ui + Tailwind CSS
-- **State Management**: React Query + Zustand
-- **Forms**: React Hook Form + Zod
-- **Data Tables**: TanStack Table
-- **Styling**: Tailwind CSS + CSS Modules
-- **Icons**: Lucide React
-- **Testing**: Vitest + React Testing Library + Playwright
-
-### Backend (Referencia)
-- **Platform**: MercurJS 2.x
-- **Database**: PostgreSQL + Redis
-- **Authentication**: JWT (via MercurJS)
-- **Payments**: Stripe
-- **File Storage**: S3-compatible (por definir)
-
-## �📱 Usuarios del Sistema
-
-### Franquiciados
-- Navegación y búsqueda de productos
-- Realización de pedidos
-- Seguimiento de compras
-- Gestión de incidencias
-- Consulta de facturas
-
-### Proveedores
-- Gestión de catálogos
-- Procesamiento de pedidos
-- Actualización de inventario
-- Atención de incidencias
-- Gestión de entregas
-
-### Administradores
-- Gestión de usuarios (franquiciados y proveedores)
-- Configuración de la plataforma
-- Reportes y analytics
-- Moderación de contenido
-
-## 🚀 Stack Tecnológico
-
-### Frontend
-- Framework: [Por definir - React/Vue/Angular]
-- State Management: [Por defitechnical/ARCHITECTURE.md)**: Detalles de la arquitectura del sistema
-- **[Guía de Desarrollo](./technical/DEVELOPMENT.md)**: Setup del entorno y guías de desarrollo
-- **[Funcionalidades](./FEATURES.md)**: Descripción detallada de cada módulo
-- **[API Documentation](./technical/API.md)**: Endpoints y contratos de la API
-- **[Guía de Usuario](./guides)
-- API: [Por definir]
-- Base de Datos: [Por definir]
-- Autenticación: [Por definir]
-
-## 📚 Documentación Adicional
-
-- **[Arquitectura Técnica](./ARCHITECTURE.md)**: Detalles de la arquitectura del sistema
-- **[Guía de Desarrollo](./DEVELOPMENT.md)**: Setup del entorno y guías de desarrollo
-- **[Funcionalidades](./FEATURES.md)**: Descripción detallada de cada módulo
-- **[API Documentation](./API.md)**: Endpoints y contratos de la API
-- **[Guía de Usuario](./USER_GUIDE.md)**: Manual de usuario para franquiciados y proveedores
-
-## 📅 Planificación
-
-La documentación de planificación de sprints se encuentra en la carpeta [sprint_1](./sprint_1/).
-
-## 🤝 Contribución
-
-[Por definir proceso de contribución]
-
-## 📞 Contacto y Soporte
-
-[Por definir información de contacto]
+Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carrefour.
 
 ---
 
-**Última actualización**: 5 de agosto de 2026
-**Versión**: 1.0.0
+## 📁 Estructura de Documentación
+
+### 🚀 Getting Started
+- **[Getting Started](./setup/GETTING_STARTED.md)** - Guía de instalación y configuración inicial
+
+### 🏗️ Arquitectura y Desarrollo
+**Carpeta: [`technical/`](./technical/)**
+- **[Architecture](./technical/ARCHITECTURE.md)** - Arquitectura del sistema y decisiones de diseño
+- **[Development](./technical/DEVELOPMENT.md)** - Setup, convenciones de código y workflow de desarrollo
+- **[API Documentation](./technical/API.md)** - Endpoints de la API y contratos (documentación base)
+- **[API Specification](./technical/API_SPEC.md)** - Especificación completa de la API
+
+### 🔄 Backend Integration (Medusa)
+- **[Backend Pendiente](./BACKEND_PENDIENTE.md)** - Estado de integración con Medusa backend
+- **[Auth Integration](./AUTH_INTEGRATION.md)** - Integración de autenticación
+- **[Proxy Configuration](./PROXY_CONFIG.md)** - Sistema de proxy por entornos (patrón Angular)
+- **[Proxy Architecture](./PROXY_ARCHITECTURE.md)** - Arquitectura técnica del proxy
+- **[CORS Workaround](./CORS_WORKAROUND.md)** - Solución temporal CORS
+- **[Roles y Redirecciones](./ROLES_Y_REDIRECCIONES.md)** - Sistema de roles y navegación
+
+### 📦 Deployment
+**Carpeta: [`deployment/`](./deployment/)**
+- **[Deployment Guide](./deployment/DEPLOYMENT_GUIDE.md)** - Guía completa de despliegue a servidor
+- **[Quick Deployment](./deployment/QUICK_DEPLOYMENT.md)** - Guía rápida de despliegue
+- **[Vercel Deployment](./deployment/VERCEL_DEPLOYMENT.md)** - Despliegue específico para Vercel
+
+### 🧪 Testing
+**Carpeta: [`testing/`](./testing/)**
+- **[Testing Guide](./testing/TESTING_GUIDE.md)** - Guía completa de testing
+- **[Dashboard Testing](./testing/DASHBOARD_TESTING_GUIDE.md)** - Tests específicos para dashboards
+
+### 📚 User Guides
+**Carpeta: [`guides/`](./guides/)**
+- **[User Guide](./guides/USER_GUIDE.md)** - Manual de usuario para franquiciados y proveedores (inglés)
+- **[Guía de Usuario](./guides/GUIA_USUARIO.md)** - Manual de usuario en español
+- **[Mercur Hybrid Setup](./guides/MERCUR_HYBRID_SETUP_GUIDE.md)** - Configuración híbrida con Mercur
+- **[Mercur API Migration Backlog](./guides/MERCUR_API_MIGRATION_BACKLOG.md)** - Backlog de migración
+
+### 🎯 Features
+- **[Features Overview](./FEATURES.md)** - Descripción detallada de todas las funcionalidades
+
+### 🔧 Backend Documentation (Medusa)
+**Carpeta: [`medusa/`](./medusa/)**
+- **[Frontend Usage](./medusa/README-front-usage.md)** - Uso del backend Medusa desde frontend
+- **[Smoke Test Checklist](./medusa/smoke-test-checklist.md)** - Checklist de tests de integración
+- **[Credentials](./medusa/CREDENTIALS.md)** - Credenciales para entornos de desarrollo
+
+### 📮 Postman Collections
+**Carpeta: [`postman/`](./postman/)**
+- Colecciones de API para testing
+- Entornos configurados (local, Render DEV)
+- Ver [postman/README.md](./postman/README.md)
+
+### 📋 Sprint Planning
+**Carpeta: [`sprint_1/`](./sprint_1/)**
+- Planificación y especificaciones del Sprint 1
+- Bases legales y proveedores
+
+### 📦 Archive
+**Carpeta: [`archive/`](./archive/)**
+- Documentación obsoleta o histórica
+- Guías específicas de semanas pasadas
+
+---
+
+## 🔗 Quick Links
+
+### Para Desarrolladores
+1. **Primer día**: [Getting Started](./setup/GETTING_STARTED.md)
+2. **Entender arquitectura**: [Architecture](./technical/ARCHITECTURE.md)
+3. **Configurar proxy**: [Proxy Config](./PROXY_CONFIG.md)
+4. **Hacer tests**: [Testing Guide](./testing/TESTING_GUIDE.md)
+
+### Para Backend Team
+1. **Pendientes backend**: [Backend Pendiente](./BACKEND_PENDIENTE.md)
+2. **Especificación API**: [API Spec](./technical/API_SPEC.md)
+3. **Tests de integración**: [Smoke Tests](./medusa/smoke-test-checklist.md)
+
+### Para Deployment
+1. **Despliegue rápido**: [Quick Deployment](./deployment/QUICK_DEPLOYMENT.md)
+2. **Despliegue completo**: [Deployment Guide](./deployment/DEPLOYMENT_GUIDE.md)
+
+### Para Usuarios Finales
+1. **Manual de usuario**: [Guía de Usuario](./guides/GUIA_USUARIO.md)
+
+---
+
+## 📞 Soporte
+
+Para dudas sobre la documentación, contactar al equipo de desarrollo.
