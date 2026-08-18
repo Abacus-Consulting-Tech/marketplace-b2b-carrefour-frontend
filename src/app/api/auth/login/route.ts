@@ -30,18 +30,18 @@ export async function POST(request: NextRequest) {
 
     const data = await response.json()
 
-    // Map Medusa user response to frontend format
+    // Medusa only returns { token: "..." }, no user object
+    // Create a minimal user object from the email
     const user = {
-      id: data.user.id,
-      email: data.user.email,
-      name: `${data.user.first_name || ''} ${data.user.last_name || ''}`.trim() || data.user.email,
-      role: data.user.metadata?.role || 'customer',
-      company: data.user.metadata?.company_name,
+      id: email, // Use email as ID until we have a proper user endpoint
+      email: email,
+      name: email.split('@')[0], // Use email prefix as name
+      role: 'customer', // Default role, can be updated from token claims if needed
     }
 
     return NextResponse.json({
       user,
-      token: 'medusa-session', // Session managed by httpOnly cookies
+      token: data.token,
     })
   } catch (error: any) {
     console.error('Auth proxy error:', error)
