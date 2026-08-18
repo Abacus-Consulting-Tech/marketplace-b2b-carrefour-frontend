@@ -55,9 +55,11 @@ Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carref
 
 ### 📮 Postman Collections
 **Carpeta: [`postman/`](./postman/)**
-- Colecciones de API para testing
+- **[Postman README](./postman/README.md)** - Índice de colecciones disponibles
+- **[Testing Guide](./postman/TESTING.md)** - 🧪 Guía completa paso a paso de testing con Postman
+- Colección principal: `marketplace-b2b-carrefour.postman_collection 1.json`
+- Colección legacy: `mercur-store-api.postman_collection.json`
 - Entornos configurados (local, Render DEV)
-- Ver [postman/README.md](./postman/README.md)
 
 ### 📋 Sprint Planning
 **Carpeta: [`sprint_1/`](./sprint_1/)**
@@ -78,12 +80,14 @@ Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carref
 2. **Entender arquitectura**: [Architecture](./technical/ARCHITECTURE.md)
 3. **Configurar proxy**: [Proxy Config](./PROXY_CONFIG.md)
 4. **Hacer tests**: [Testing Guide](./testing/TESTING_GUIDE.md)
+5. **Testing con Postman**: [Postman Testing](./postman/TESTING.md) 🧪
 
 ### Para Backend Team
 1. **Pendientes backend**: [Backend Pendiente](./BACKEND_PENDIENTE.md)
 2. **Especificación API**: [API Spec](./technical/API_SPEC.md)
-3. **Tests de integración**: [Smoke Tests](./medusa/smoke-test-checklist.md)
-4. **Datos para BD**: [Datos Iniciales](./medusa/DATOS_INICIALES.md) 📦
+3. **Testing de API**: [Postman Testing](./postman/TESTING.md) 🧪
+4. **Tests de integración**: [Smoke Tests](./medusa/smoke-test-checklist.md)
+5. **Datos para BD**: [Datos Iniciales](./medusa/DATOS_INICIALES.md) 📦
 
 ### Para Deployment
 1. **Despliegue rápido**: [Quick Deployment](./deployment/QUICK_DEPLOYMENT.md)
