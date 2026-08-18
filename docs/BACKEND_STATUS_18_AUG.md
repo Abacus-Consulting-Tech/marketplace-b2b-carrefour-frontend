@@ -65,7 +65,19 @@ El backend ha confirmado que los datos están cargados:
 - Frontend usa region ID hardcodeada: `reg_01M07RY98WSVVF2SP0Q7SB8KM0`
 - ⚠️ **Bloqueante** para flujo completo de compra
 
-**Acción requerida:** Backend debe crear al menos 1 región (ej: "España")
+**Acción requerida:** Backend debe crear región con estos datos exactos:
+
+```json
+{
+  "id": "reg_01M07RY98WSVVF2SP0Q7SB8KM0",
+  "name": "España",
+  "currency_code": "eur",
+  "tax_rate": 21.0,
+  "countries": ["es"]
+}
+```
+
+**Alternativa:** Si usáis un ID diferente, comunicadlo al frontend para actualizar `.env.local`
 
 ---
 

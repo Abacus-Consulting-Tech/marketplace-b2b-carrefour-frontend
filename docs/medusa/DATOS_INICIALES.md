@@ -117,6 +117,47 @@ Rating: 4.8
 
 ---
 
+## 🌍 Regiones (Regions)
+
+### Región Principal: España
+
+**⚠️ CRÍTICO:** Esta región es **requerida** para que funcione el checkout y el carrito.
+
+```json
+{
+  "id": "reg_01M07RY98WSVVF2SP0Q7SB8KM0",
+  "name": "España",
+  "currency_code": "eur",
+  "tax_rate": 21.0,
+  "tax_code": "IVA_ES_21",
+  "countries": ["es"],
+  "payment_providers": [],
+  "fulfillment_providers": [],
+  "metadata": {
+    "description": "Región principal para operaciones en España",
+    "timezone": "Europe/Madrid"
+  }
+}
+```
+
+**Datos simplificados:**
+```
+ID: reg_01M07RY98WSVVF2SP0Q7SB8KM0
+Nombre: España
+Código de moneda: EUR
+Tasa de impuesto: 21% (IVA España)
+Países: ["ES"]
+```
+
+**Dónde se usa:**
+- Frontend lo usa en `.env.local`: `NEXT_PUBLIC_MERCUR_REGION_ID=reg_01M07RY98WSVVF2SP0Q7SB8KM0`
+- Requerido para crear carritos: `POST /store/carts { region_id: "reg_..." }`
+- Necesario para calcular precios con impuestos
+
+**Importante:** Si creáis la región con un ID diferente, avisad al frontend para actualizar la variable de entorno.
+
+---
+
 ## 📦 Categorías de Productos
 
 1. **Uniformes** - Ropa corporativa para empleados
