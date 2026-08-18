@@ -217,7 +217,7 @@ export function ProductsUploadForm() {
               <ul className="mt-1 list-inside list-disc space-y-1">
                 <li>Formato: PNG únicamente</li>
                 <li>Nombres deben coincidir con la columna IMAGEN del CSV</li>
-                <li>Ejemplo: si en el CSV pones "producto-001.png", el ZIP debe contener ese archivo</li>
+                <li>Ejemplo: si en el CSV pones &quot;producto-001.png&quot;, el ZIP debe contener ese archivo</li>
               </ul>
             </div>
           </div>
