@@ -8,20 +8,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { apiClient } from "@/lib/api/client";
 
 export default function RegisterPage() {
   const router = useRouter();
   
   const [formData, setFormData] = useState({
-    name: "",
     email: "",
     password: "",
     confirmPassword: "",
-    role: "franchisee" as "franchisee" | "supplier",
-    company: "",
-    phone: "",
   });
   
   const [error, setError] = useState("");
@@ -44,35 +39,21 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
-      // Use mock API if NEXT_PUBLIC_MOCK_AUTH is true OR if no API URL is configured
-      const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true" || !process.env.NEXT_PUBLIC_API_URL;
+      // Use real API (nuevo endpoint POST /auth/register)
+      const response = await apiClient.post("/auth/register", {
+        email: formData.email,
+        password: formData.password,
+      });
       
-      if (isMockMode) {
-        // Use mock API
-        const { mockApi } = await import("@/lib/api/mock");
-        await mockApi.auth.register({
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role,
-          company: formData.company,
-          phone: formData.phone,
-        });
-      } else {
-        // Use real API
-        await apiClient.post("/auth/register", {
-          name: formData.name,
-          email: formData.email,
-          password: formData.password,
-          role: formData.role,
-          company: formData.company,
-          phone: formData.phone,
-        });
-      }
-      
+      // Success - redirect to login
       router.push("/login?registered=true");
     } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Error al registrar la cuenta");
+      // Handle duplicate email error
+      if (err.response?.data?.type === "duplicate_error") {
+        setError("Este email ya está registrado. ¿Quieres iniciar sesión?");
+      } else {
+        setError(err.response?.data?.message || err.message || "Error al registrar la cuenta");
+      }
     } finally {
       setLoading(false);
     }
@@ -83,7 +64,7 @@ export default function RegisterPage() {
       <CardHeader>
         <CardTitle>Crear Cuenta</CardTitle>
         <CardDescription>
-          Regístrate como franquiciado o proveedor
+          Regístrate en Marketplace B2B Carrefour
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
@@ -95,64 +76,13 @@ export default function RegisterPage() {
           )}
           
           <div className="space-y-2">
-            <Label>Tipo de cuenta</Label>
-            <RadioGroup
-              value={formData.role}
-              onValueChange={(value) => setFormData({ ...formData, role: value as "franchisee" | "supplier" })}
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="franchisee" id="franchisee" />
-                <Label htmlFor="franchisee" className="font-normal cursor-pointer">
-                  Franquiciado
-                </Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="supplier" id="supplier" />
-                <Label htmlFor="supplier" className="font-normal cursor-pointer">
-                  Proveedor
-                </Label>
-              </div>
-            </RadioGroup>
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="name">Nombre completo</Label>
-            <Input
-              id="name"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input
               id="email"
               type="email"
+              placeholder="tu@email.com"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="company">Empresa</Label>
-            <Input
-              id="company"
-              value={formData.company}
-              onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-              required
-            />
-          </div>
-          
-          <div className="space-y-2">
-            <Label htmlFor="phone">Teléfono</Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
               required
             />
           </div>

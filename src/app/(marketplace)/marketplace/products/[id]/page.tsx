@@ -185,10 +185,24 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             )}
           </div>
 
-          <div className="flex items-baseline gap-4">
-            <span className="text-4xl font-bold text-blue-600">
-              €{product.price.toFixed(2)}
-            </span>
+          <div>
+            <div className="flex items-baseline gap-2 mb-2">
+              <span className="text-4xl font-bold text-blue-600">
+                €{(product.price / 100).toFixed(2)}
+              </span>
+              {product.metadata?.pack_label && (
+                <span className="text-lg text-gray-500">
+                  / {product.metadata.pack_label}
+                </span>
+              )}
+            </div>
+            
+            {product.metadata?.units_per_pack && product.metadata.units_per_pack > 1 && (
+              <p className="text-gray-500 mb-3">
+                (€{(product.price / 100 / product.metadata.units_per_pack).toFixed(2)} por unidad)
+              </p>
+            )}
+            
             {product.stock !== undefined && (
               <Badge variant={product.stock > 0 ? "default" : "destructive"}>
                 {product.stock > 0 ? `Stock: ${product.stock}` : "Sin stock"}
@@ -249,7 +263,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 <div className="flex items-center justify-between pt-4 border-t">
                   <span className="text-lg font-semibold">Total:</span>
                   <span className="text-2xl font-bold text-blue-600">
-                    €{(product.price * quantity).toFixed(2)}
+                    €{((product.price / 100) * quantity).toFixed(2)}
                   </span>
                 </div>
 

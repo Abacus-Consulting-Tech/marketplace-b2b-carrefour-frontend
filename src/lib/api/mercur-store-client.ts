@@ -130,6 +130,36 @@ export interface MercurShippingOptionsResponse {
   shipping_options: Record<string, MercurShippingOption[]>
 }
 
+export interface MercurCustomerAddress {
+  id: string
+  first_name?: string | null
+  last_name?: string | null
+  address_1?: string | null
+  address_2?: string | null
+  city?: string | null
+  province?: string | null
+  postal_code?: string | null
+  country_code?: string | null
+  phone?: string | null
+  metadata?: {
+    store_code?: string
+    store_name?: string
+    [key: string]: unknown
+  } | null
+}
+
+export interface MercurCustomer {
+  id: string
+  email: string
+  first_name?: string | null
+  last_name?: string | null
+  shipping_addresses?: MercurCustomerAddress[]
+}
+
+export interface MercurCustomerResponse {
+  customer: MercurCustomer
+}
+
 export interface MercurPaymentSession {
   id: string
   provider_id: string
@@ -265,6 +295,12 @@ export const completeCart = async (cartId: string) => {
   )
 
   return response
+}
+
+export const getCustomer = async () => {
+  const response = await mercurStoreClient.get<unknown, MercurCustomerResponse>('/customers/me')
+
+  return response.customer
 }
 
 export { mercurStoreClient }

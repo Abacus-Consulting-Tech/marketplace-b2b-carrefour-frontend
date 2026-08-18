@@ -204,11 +204,28 @@ export default function MarketplacePage() {
                 <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
                   {product.description}
                 </p>
-                <div className="mt-4 flex items-center justify-between">
-                  <span className="text-2xl font-bold text-blue-600">
-                    €{product.price.toFixed(2)}
-                  </span>
-                  <div className="flex gap-2 flex-wrap justify-end">
+                <div className="mt-4">
+                  {/* Pack price */}
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-2xl font-bold text-blue-600">
+                      €{(product.price / 100).toFixed(2)}
+                    </span>
+                    {product.metadata?.pack_label && (
+                      <span className="text-sm text-gray-500">
+                        / {product.metadata.pack_label}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* Price per unit */}
+                  {product.metadata?.units_per_pack && product.metadata.units_per_pack > 1 && (
+                    <p className="text-sm text-gray-500 mt-1">
+                      (€{(product.price / 100 / product.metadata.units_per_pack).toFixed(2)} / unidad)
+                    </p>
+                  )}
+                  
+                  {/* Badges */}
+                  <div className="mt-3 flex gap-2 flex-wrap">
                     {product.supplier && (
                       <Badge variant="outline" className="text-xs">
                         {product.supplier.name}
