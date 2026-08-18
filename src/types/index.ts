@@ -27,6 +27,86 @@ export interface User {
   updatedAt: string
 }
 
+// Supplier types
+export type SupplierStatus = 'pending' | 'active' | 'rejected' | 'suspended'
+
+export interface Supplier {
+  id: string
+  userId: string
+  status: SupplierStatus
+  
+  // Datos legales (página 1 del formulario)
+  businessName: string // Nombre comercial
+  legalName: string // Razón social
+  nifCif: string // NIF/CIF
+  fiscalAddress: string // Dirección fiscal completa
+  municipality: string
+  postalCode: string
+  country: string
+  iban: string
+  email: string
+  phone: string
+  website?: string
+  
+  // Contacto directo (página 2)
+  contactName: string
+  contactSurname: string
+  contactPosition: string
+  contactEmail: string
+  contactPhone: string
+  
+  // Archivos subidos (página 3)
+  productsCsvUrl?: string
+  imagesZipUrl?: string
+  
+  // Gestión admin
+  approvedBy?: string
+  approvedAt?: Date | string
+  rejectionReason?: string
+  
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SupplierRegistrationForm {
+  // Página 1
+  businessName: string
+  legalName: string
+  nifCif: string
+  fiscalAddress: string
+  municipality: string
+  postalCode: string
+  country: string
+  iban: string
+  email: string
+  phone: string
+  website?: string
+  
+  // Página 2
+  contactName: string
+  contactSurname: string
+  contactPosition: string
+  contactEmail: string
+  contactPhone: string
+  
+  // Página 3
+  productsCsv?: File
+  imagesZip?: File
+}
+
+export interface ProductFromCSV {
+  proveedor: string
+  imagen: string
+  nombre: string
+  descripcion: string
+  caracteristicas: string
+  costeUnitario: number
+  pcb: number
+  importe: number
+  iva: number
+  plazoEntrega: string
+}
+
 // Product types
 export interface Product {
   id: string
@@ -149,41 +229,4 @@ export interface CartSummary {
   discount: number
   total: number
   currency: string
-}
-
-// Supplier types
-export type SupplierStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
-
-export interface Supplier {
-  id: string
-  companyName: string
-  legalName: string
-  cif: string
-  email: string
-  phone: string
-  address: string
-  city: string
-  province: string
-  postalCode: string
-  country: string
-  status: SupplierStatus
-  contactPerson: {
-    name: string
-    email: string
-    phone: string
-  }
-  bankAccount?: string
-  taxId: string
-  productCategories: string[]
-  website?: string
-  description?: string
-  logo?: string
-  rating?: number
-  totalProducts?: number
-  totalOrders?: number
-  createdAt: string
-  updatedAt: string
-  approvedAt?: string
-  approvedBy?: string
-  rejectedReason?: string
 }
