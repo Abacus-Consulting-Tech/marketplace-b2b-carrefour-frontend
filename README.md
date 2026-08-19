@@ -30,7 +30,27 @@ Para más detalles, ver [**Features Overview**](./docs/FEATURES.md).
 
 ---
 
-## 🚀 Quick Start
+## � Desarrollo vs Producción
+
+> **⚠️ IMPORTANTE**: Estamos usando un flujo de trabajo de **ramas separadas** para mantener producción estable.
+
+- **Producción**: Rama `medusa-update` → Desplegada en Vercel para revisión backend
+- **Desarrollo**: Rama `dev` → Todo el desarrollo nuevo va aquí
+
+**📖 Lee la [Guía de Workflow](./docs/deployment/WORKFLOW.md) antes de hacer cambios**
+
+```bash
+# Siempre trabaja en dev
+git checkout dev
+
+# Solo mergea a medusa-update cuando backend apruebe
+git checkout medusa-update
+git merge dev
+```
+
+---
+
+## �🚀 Quick Start
 
 ### Requisitos Previos
 

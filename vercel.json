@@ -1,0 +1,14 @@
+{
+  "git": {
+    "deploymentEnabled": {
+      "medusa-update": true
+    }
+  },
+  "github": {
+    "silent": false,
+    "autoJobCancelation": true
+  },
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs"
+}

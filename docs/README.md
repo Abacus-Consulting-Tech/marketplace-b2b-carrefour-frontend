@@ -41,6 +41,7 @@ Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carref
 
 ### 📦 Deployment
 **Carpeta: [`deployment/`](./deployment/)**
+- **[🔄 Workflow Guide](./deployment/WORKFLOW.md)** - ⭐ Flujo de trabajo: dev vs producción
 - **[Deployment Guide](./deployment/DEPLOYMENT_GUIDE.md)** - Guía completa de despliegue a servidor
 - **[Quick Deployment](./deployment/QUICK_DEPLOYMENT.md)** - Guía rápida de despliegue
 - **[Vercel Deployment](./deployment/VERCEL_DEPLOYMENT.md)** - Despliegue específico para Vercel
