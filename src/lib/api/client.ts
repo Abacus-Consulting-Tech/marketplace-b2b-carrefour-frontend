@@ -1,14 +1,11 @@
 import axios from 'axios'
 
-// In development, use relative URLs that go through Next.js rewrites
-// In production, use the full backend URL (requires CORS)
+// Always use Next.js API routes as proxy to avoid CORS issues
+// API routes run server-side and can call the backend directly
 const getBaseURL = () => {
-  if (process.env.NODE_ENV === 'development') {
-    // Use Next.js proxy in development (no CORS needed)
-    return '/backend'
-  }
-  // In production, call backend directly (CORS required)
-  return process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com'
+  // Use /api routes which proxy to the backend
+  // This works in both development and production
+  return '/api'
 }
 
 const apiClient = axios.create({
