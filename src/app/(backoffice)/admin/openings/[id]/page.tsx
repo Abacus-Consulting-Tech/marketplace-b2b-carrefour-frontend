@@ -9,19 +9,41 @@ import { useParams, useRouter } from 'next/navigation';
 import { useOpenings } from '@/lib/store/openings';
 import { openingsApi } from '@/lib/api/openings-client';
 import { ProjectStatusBadge } from '@/components/openings/shared/ProjectStatusBadge';
+import { CategoryForm } from '@/components/openings/admin/CategoryForm';
+import { CategoryList } from '@/components/openings/admin/CategoryList';
+import { InviteSupplierForm } from '@/components/openings/admin/InviteSupplierForm';
+import { InvitationsList } from '@/components/openings/admin/InvitationsList';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, ArrowLeft, Building2, Calendar, MapPin, FileText } from 'lucide-react';
 import { formatDate } from '@/types/openings';
+import { useToast } from '@/hooks/use-toast';
+import type { ProjectCategory, SupplierInvitation } from '@/types/openings';
+import type { MockSupplier } from '@/lib/api/openings-mock';
 
 export default function AdminOpeningDetailPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
+  const { toast } = useToast();
 
   const { selectedProject, selectProject, isLoadingProjects, setLoadingProjects } = useOpenings();
   const [error, setError] = React.useState<string | null>(null);
+  
+  // Categories state
+  const [categories, setCategories] = React.useState<ProjectCategory[]>([]);
+  const [loadingCategories, setLoadingCategories] = React.useState(false);
+  const [categoryFormOpen, setCategoryFormOpen] = React.useState(false);
+  const [editingCategory, setEditingCategory] = React.useState<ProjectCategory | undefined>();
+  const [savingCategory, setSavingCategory] = React.useState(false);
+
+  // Invitations state
+  const [invitations, setInvitations] = React.useState<SupplierInvitation[]>([]);
+  const [suppliers, setSuppliers] = React.useState<MockSupplier[]>([]);
+  const [loadingInvitations, setLoadingInvitations] = React.useState(false);
+  const [inviteFormOpen, setInviteFormOpen] = React.useState(false);
+  const [savingInvitation, setSavingInvitation] = React.useState(false);
 
   useEffect(() => {
     async function loadProject() {
@@ -48,6 +70,204 @@ export default function AdminOpeningDetailPage() {
 
     loadProject();
   }, [projectId, selectProject, setLoadingProjects]);
+
+  // Load categories
+  useEffect(() => {
+    async function loadCategories() {
+      if (!projectId) return;
+      
+      try {
+        setLoadingCategories(true);
+        const response = await openingsApi.getCategoriesByProject(projectId);
+        
+        if (response.success && response.data) {
+          setCategories(response.data);
+        }
+      } catch (error) {
+        console.error('[AdminOpeningDetail] Error loading categories:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'No se pudieron cargar las categorías',
+        });
+      } finally {
+        setLoadingCategories(false);
+      }
+    }
+
+    loadCategories();
+  }, [projectId, toast]);
+
+  // Load invitations
+  useEffect(() => {
+    async function loadInvitations() {
+      if (!projectId) return;
+      
+      try {
+        setLoadingInvitations(true);
+        const response = await openingsApi.getInvitationsByProject(projectId);
+        
+        if (response.success && response.data) {
+          setInvitations(response.data);
+        }
+      } catch (error) {
+        console.error('[AdminOpeningDetail] Error loading invitations:', error);
+        toast({
+          variant: 'destructive',
+          title: 'Error',
+          description: 'No se pudieron cargar las invitaciones',
+        });
+      } finally {
+        setLoadingInvitations(false);
+      }
+    }
+
+    loadInvitations();
+  }, [projectId, toast]);
+
+  // Load suppliers
+  useEffect(() => {
+    async function loadSuppliers() {
+      try {
+        const response = await openingsApi.getSuppliers();
+        
+        if (response.success && response.data) {
+          setSuppliers(response.data);
+        }
+      } catch (error) {
+        console.error('[AdminOpeningDetail] Error loading suppliers:', error);
+      }
+    }
+
+    loadSuppliers();
+  }, []);
+
+  // Category handlers
+  const handleAddCategory = () => {
+    setEditingCategory(undefined);
+    setCategoryFormOpen(true);
+  };
+
+  const handleEditCategory = (category: ProjectCategory) => {
+    setEditingCategory(category);
+    setCategoryFormOpen(true);
+  };
+
+  const handleDeleteCategory = async (categoryId: string) => {
+    try {
+      const response = await openingsApi.deleteCategory(categoryId);
+      
+      if (response.success) {
+        setCategories(prev => prev.filter(c => c.id !== categoryId));
+        toast({
+          title: 'Categoría eliminada',
+          description: 'La categoría se ha eliminado correctamente',
+        });
+      } else {
+        throw new Error(response.error || 'Error al eliminar');
+      }
+    } catch (error) {
+      console.error('[AdminOpeningDetail] Error deleting category:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo eliminar la categoría',
+      });
+    }
+  };
+
+  const handleSubmitCategory = async (data: any) => {
+    try {
+      setSavingCategory(true);
+
+      if (editingCategory) {
+        // Update existing category
+        const response = await openingsApi.updateCategory(editingCategory.id, data);
+        
+        if (response.success && response.data) {
+          setCategories(prev => prev.map(c => 
+            c.id === editingCategory.id ? response.data! : c
+          ));
+          toast({
+            title: 'Categoría actualizada',
+            description: 'Los cambios se han guardado correctamente',
+          });
+        }
+      } else {
+        // Create new category
+        const response = await openingsApi.createCategory(projectId, data);
+        
+        if (response.success && response.data) {
+          setCategories(prev => [...prev, response.data!]);
+          toast({
+            title: 'Categoría creada',
+            description: 'La categoría se ha añadido correctamente',
+          });
+        }
+      }
+
+      setCategoryFormOpen(false);
+      setEditingCategory(undefined);
+    } catch (error) {
+      console.error('[AdminOpeningDetail] Error saving category:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudo guardar la categoría',
+      });
+    } finally {
+      setSavingCategory(false);
+    }
+  };
+
+  // Invitation handlers
+  const handleInviteSuppliers = () => {
+    setInviteFormOpen(true);
+  };
+
+  const handleSubmitInvitation = async (data: {
+    category_id: string;
+    supplier_ids: string[];
+    message?: string;
+    deadline_days: number;
+  }) => {
+    try {
+      setSavingInvitation(true);
+
+      const response = await openingsApi.createInvitation(data);
+      
+      if (response.success && response.data) {
+        setInvitations(prev => [...prev, ...response.data!]);
+        toast({
+          title: 'Invitaciones enviadas',
+          description: `${response.data.length} proveedor(es) invitado(s) correctamente`,
+        });
+        setInviteFormOpen(false);
+      } else {
+        throw new Error(response.error || 'Error al crear invitaciones');
+      }
+    } catch (error) {
+      console.error('[AdminOpeningDetail] Error creating invitations:', error);
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'No se pudieron enviar las invitaciones',
+      });
+    } finally {
+      setSavingInvitation(false);
+    }
+  };
+
+  // Group invitations by category
+  const invitationsByCategory = React.useMemo(() => {
+    return invitations.reduce((acc, inv) => {
+      if (!acc[inv.category_id]) {
+        acc[inv.category_id] = [];
+      }
+      acc[inv.category_id].push(inv);
+      return acc;
+    }, {} as Record<string, SupplierInvitation[]>);
+  }, [invitations]);
 
   if (isLoadingProjects) {
     return (
@@ -202,25 +422,70 @@ export default function AdminOpeningDetailPage() {
         </TabsContent>
 
         <TabsContent value="categories">
-          <Card>
-            <CardHeader>
-              <CardTitle>Categorías del Proyecto</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-500">Funcionalidad en desarrollo...</p>
-            </CardContent>
-          </Card>
+          {loadingCategories ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                <span className="ml-2 text-gray-600">Cargando categorías...</span>
+              </CardContent>
+            </Card>
+          ) : (
+            <>
+              <CategoryList
+                categories={categories}
+                onAdd={handleAddCategory}
+                onEdit={handleEditCategory}
+                onDelete={handleDeleteCategory}
+                isLoading={savingCategory}
+              />
+              <CategoryForm
+                open={categoryFormOpen}
+                onOpenChange={setCategoryFormOpen}
+                onSubmit={handleSubmitCategory}
+                category={editingCategory}
+                isLoading={savingCategory}
+              />
+            </>
+          )}
         </TabsContent>
 
         <TabsContent value="suppliers">
-          <Card>
-            <CardHeader>
-              <CardTitle>Proveedores Invitados</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-gray-500">Funcionalidad en desarrollo...</p>
-            </CardContent>
-          </Card>
+          {loadingInvitations ? (
+            <Card>
+              <CardContent className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+                <span className="ml-2 text-gray-600">Cargando invitaciones...</span>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <div>
+                  <h3 className="text-lg font-semibold">Proveedores Invitados</h3>
+                  <p className="text-sm text-gray-600">
+                    {invitations.length} invitación(es) enviada(s)
+                  </p>
+                </div>
+                <Button onClick={handleInviteSuppliers} disabled={categories.length === 0}>
+                  Invitar Proveedores
+                </Button>
+              </div>
+
+              <InvitationsList
+                categories={categories}
+                invitationsByCategory={invitationsByCategory}
+              />
+
+              <InviteSupplierForm
+                open={inviteFormOpen}
+                onOpenChange={setInviteFormOpen}
+                onSubmit={handleSubmitInvitation}
+                categories={categories}
+                suppliers={suppliers}
+                isLoading={savingInvitation}
+              />
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="quotes">

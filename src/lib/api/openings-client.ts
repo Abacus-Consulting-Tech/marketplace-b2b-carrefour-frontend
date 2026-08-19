@@ -36,14 +36,17 @@ import {
   mockCategories,
   mockQuotes,
   mockInvitations,
+  mockSuppliers,
   mockSignatures,
   mockFinancialApprovals,
   getMockProjectById,
   getMockCategoriesByProject,
   getMockQuotesByCategory,
+  getMockInvitationsByCategory,
   getMockAuditLogsByProject,
   addMockProject,
   updateMockProject,
+  saveProjectsToStorage,
 } from './openings-mock';
 
 import { apiClient } from './client';
@@ -415,7 +418,7 @@ export const openingsApi = {
   async createQuote(
     categoryId: string,
     data: CreateQuoteRequest,
-    file: File
+    file?: File
   ): Promise<ApiResponse<Quote>> {
     if (isMockMode) {
       const newQuote: Quote = {
@@ -424,12 +427,12 @@ export const openingsApi = {
         supplier_id: 'user_supplier_current',
         amount: data.amount,
         currency: 'EUR',
-        pdf_url: `https://storage.example.com/quotes/quote_${Date.now()}.pdf`,
+        pdf_url: file ? `https://storage.example.com/quotes/quote_${Date.now()}.pdf` : '',
         notes: data.notes,
         delivery_days: data.delivery_days,
         warranty_months: data.warranty_months,
         payment_terms: data.payment_terms,
-        status: 'submitted',
+        status: (data as any).status || 'submitted', // Support draft or submitted
         submitted_at: new Date(),
         updated_at: new Date(),
         supplier: {
@@ -444,8 +447,15 @@ export const openingsApi = {
       return mockDelay({
         success: true,
         data: newQuote,
-        message: 'Presupuesto enviado correctamente',
+        message: newQuote.status === 'draft' ? 'Borrador guardado' : 'Presupuesto enviado correctamente',
       });
+    }
+
+    if (!file) {
+      return {
+        success: false,
+        error: 'El archivo PDF es requerido',
+      };
     }
 
     // Modo real: llamada a Medusa
@@ -465,6 +475,99 @@ export const openingsApi = {
       }
     );
     return response.data;
+  },
+
+  async getQuoteByInvitation(invitationId: string): Promise<ApiResponse<Quote | null>> {
+    if (isMockMode) {
+      // Find invitation
+      const invitation = mockInvitations.find(i => i.id === invitationId);
+      if (!invitation) {
+        return mockDelay({
+          success: false,
+          error: 'Invitación no encontrada',
+        });
+      }
+
+      // Find quote for this category and supplier
+      const quote = mockQuotes.find(
+        q => q.category_id === invitation.category_id && q.supplier_id === invitation.supplier_id
+      );
+
+      return mockDelay({
+        success: true,
+        data: quote || null,
+      });
+    }
+
+    // Modo real: llamada a Medusa
+    const response = await apiClient.get<ApiResponse<Quote | null>>(
+      `/openings/invitations/${invitationId}/quote`
+    );
+    return response.data;
+  },
+
+  async updateQuote(
+    quoteId: string,
+    data: Partial<CreateQuoteRequest>,
+    file?: File
+  ): Promise<ApiResponse<Quote>> {
+    if (isMockMode) {
+      const quoteIndex = mockQuotes.findIndex(q => q.id === quoteId);
+      
+      if (quoteIndex === -1) {
+        return mockDelay({
+          success: false,
+          error: 'Presupuesto no encontrado',
+        });
+      }
+
+      const quote = mockQuotes[quoteIndex];
+
+      // Update fields
+      if (data.amount !== undefined) quote.amount = data.amount;
+      if (data.delivery_days !== undefined) quote.delivery_days = data.delivery_days;
+      if (data.warranty_months !== undefined) quote.warranty_months = data.warranty_months;
+      if (data.payment_terms !== undefined) quote.payment_terms = data.payment_terms;
+      if (data.notes !== undefined) quote.notes = data.notes;
+      if ((data as any).status) quote.status = (data as any).status;
+      if (file) quote.pdf_url = `https://storage.example.com/quotes/quote_${Date.now()}.pdf`;
+      quote.updated_at = new Date();
+
+      return mockDelay({
+        success: true,
+        data: quote,
+        message: quote.status === 'draft' ? 'Borrador guardado' : 'Presupuesto actualizado',
+      });
+    }
+
+    // Modo real: llamada a Medusa
+    if (file) {
+      // Si hay archivo, usar FormData
+      const formData = new FormData();
+      formData.append('file', file);
+      if (data.amount !== undefined) formData.append('amount', data.amount.toString());
+      if (data.delivery_days) formData.append('delivery_days', data.delivery_days.toString());
+      if (data.warranty_months) formData.append('warranty_months', data.warranty_months.toString());
+      if (data.payment_terms) formData.append('payment_terms', data.payment_terms);
+      if (data.notes) formData.append('notes', data.notes);
+      if ((data as any).status) formData.append('status', (data as any).status);
+
+      const response = await apiClient.patch<ApiResponse<Quote>>(
+        `/openings/quotes/${quoteId}`,
+        formData,
+        {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        }
+      );
+      return response.data;
+    } else {
+      // Sin archivo, usar JSON normal
+      const response = await apiClient.patch<ApiResponse<Quote>>(
+        `/openings/quotes/${quoteId}`,
+        data
+      );
+      return response.data;
+    }
   },
 
   async awardQuote(quoteId: string): Promise<ApiResponse<{ quote: Quote; other_quotes_updated: number }>> {
@@ -683,6 +786,270 @@ export const openingsApi = {
     // Modo real: llamada a Medusa
     const response = await apiClient.get<ApiResponse<AuditLog[]>>(
       `/openings/projects/${projectId}/audit`
+    );
+    return response.data;
+  },
+
+  // --------------------------------------------------------------------------
+  // Categories
+  // --------------------------------------------------------------------------
+
+  async getCategoriesByProject(projectId: string): Promise<ApiResponse<ProjectCategory[]>> {
+    if (isMockMode) {
+      const categories = getMockCategoriesByProject(projectId);
+
+      return mockDelay({
+        success: true,
+        data: categories,
+      });
+    }
+
+    // Modo real: llamada a Medusa
+    const response = await apiClient.get<ApiResponse<ProjectCategory[]>>(
+      `/openings/projects/${projectId}/categories`
+    );
+    return response.data;
+  },
+
+  async createCategory(projectId: string, data: CreateCategoryRequest): Promise<ApiResponse<ProjectCategory>> {
+    if (isMockMode) {
+      const newCategory: ProjectCategory = {
+        id: `cat_${Date.now()}`,
+        project_id: projectId,
+        name: data.name,
+        description: data.description,
+        budget_estimate: data.budget_estimate,
+        specifications: data.specifications,
+        created_at: new Date(),
+        updated_at: new Date(),
+        quotes_count: 0,
+      };
+
+      // Add to mock categories array
+      mockCategories.push(newCategory);
+
+      // Update project categories_count
+      const projectIndex = mockProjects.findIndex(p => p.id === projectId);
+      if (projectIndex !== -1) {
+        mockProjects[projectIndex].categories_count = 
+          (mockProjects[projectIndex].categories_count || 0) + 1;
+        mockProjects[projectIndex].updated_at = new Date();
+        saveProjectsToStorage(mockProjects);
+      }
+
+      return mockDelay({
+        success: true,
+        data: newCategory,
+        message: 'Categoría creada exitosamente',
+      });
+    }
+
+    // Modo real: llamada a Medusa
+    const response = await apiClient.post<ApiResponse<ProjectCategory>>(
+      `/openings/projects/${projectId}/categories`,
+      data
+    );
+    return response.data;
+  },
+
+  async updateCategory(categoryId: string, data: Partial<CreateCategoryRequest>): Promise<ApiResponse<ProjectCategory>> {
+    if (isMockMode) {
+      const categoryIndex = mockCategories.findIndex(c => c.id === categoryId);
+      
+      if (categoryIndex === -1) {
+        return mockDelay({
+          success: false,
+          error: 'Categoría no encontrada',
+        });
+      }
+
+      // Update category
+      mockCategories[categoryIndex] = {
+        ...mockCategories[categoryIndex],
+        ...data,
+        updated_at: new Date(),
+      };
+
+      return mockDelay({
+        success: true,
+        data: mockCategories[categoryIndex],
+        message: 'Categoría actualizada exitosamente',
+      });
+    }
+
+    // Modo real: llamada a Medusa
+    const response = await apiClient.patch<ApiResponse<ProjectCategory>>(
+      `/openings/categories/${categoryId}`,
+      data
+    );
+    return response.data;
+  },
+
+  async deleteCategory(categoryId: string): Promise<ApiResponse<void>> {
+    if (isMockMode) {
+      const categoryIndex = mockCategories.findIndex(c => c.id === categoryId);
+      
+      if (categoryIndex === -1) {
+        return mockDelay({
+          success: false,
+          error: 'Categoría no encontrada',
+        });
+      }
+
+      const projectId = mockCategories[categoryIndex].project_id;
+      
+      // Remove category
+      mockCategories.splice(categoryIndex, 1);
+
+      // Update project categories_count
+      const projectIndex = mockProjects.findIndex(p => p.id === projectId);
+      if (projectIndex !== -1) {
+        mockProjects[projectIndex].categories_count = 
+          Math.max(0, (mockProjects[projectIndex].categories_count || 0) - 1);
+        mockProjects[projectIndex].updated_at = new Date();
+        saveProjectsToStorage(mockProjects);
+      }
+
+      return mockDelay({
+        success: true,
+        message: 'Categoría eliminada exitosamente',
+      });
+    }
+
+    // Modo real: llamada a Medusa
+    const response = await apiClient.delete<ApiResponse<void>>(
+      `/openings/categories/${categoryId}`
+    );
+    return response.data;
+  },
+
+  // ============================================================================
+  // Proveedores
+  // ============================================================================
+
+  async getSuppliers(): Promise<ApiResponse<any[]>> {
+    if (isMockMode) {
+      return mockDelay({
+        success: true,
+        data: mockSuppliers,
+      });
+    }
+
+    // Modo real: llamada a Medusa
+    const response = await apiClient.get<ApiResponse<any[]>>('/openings/suppliers');
+    return response.data;
+  },
+
+  // ============================================================================
+  // Invitaciones
+  // ============================================================================
+
+  async getInvitationsByProject(projectId: string): Promise<ApiResponse<SupplierInvitation[]>> {
+    if (isMockMode) {
+      // Get all invitations that belong to categories of this project
+      const projectCategories = getMockCategoriesByProject(projectId);
+      const categoryIds = projectCategories.map(c => c.id);
+      const invitations = mockInvitations.filter(inv => categoryIds.includes(inv.category_id));
+
+      return mockDelay({
+        success: true,
+        data: invitations,
+      });
+    }
+
+    // Modo real: llamada a Medusa
+    const response = await apiClient.get<ApiResponse<SupplierInvitation[]>>(
+      `/openings/projects/${projectId}/invitations`
+    );
+    return response.data;
+  },
+
+  async createInvitation(data: {
+    category_id: string;
+    supplier_ids: string[];
+    message?: string;
+    deadline_days: number;
+  }): Promise<ApiResponse<SupplierInvitation[]>> {
+    if (isMockMode) {
+      const category = mockCategories.find(c => c.id === data.category_id);
+      
+      if (!category) {
+        return mockDelay({
+          success: false,
+          error: 'Categoría no encontrada',
+        });
+      }
+
+      // Create invitations for each supplier
+      const newInvitations: SupplierInvitation[] = data.supplier_ids.map((supplierId) => {
+        const supplier = mockSuppliers.find(s => s.id === supplierId);
+        const invitedAt = new Date();
+        const deadline = new Date();
+        deadline.setDate(deadline.getDate() + data.deadline_days);
+
+        const invitation: SupplierInvitation = {
+          id: `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          category_id: data.category_id,
+          supplier_id: supplierId,
+          status: 'pending',
+          invited_at: invitedAt,
+          invited_by: 'user_admin', // En producción vendría del contexto de auth
+          message: data.message,
+          deadline,
+          supplier: supplier ? {
+            id: supplier.id,
+            name: supplier.name,
+            email: supplier.email,
+          } : undefined,
+          category: {
+            id: category.id,
+            name: category.name,
+            description: category.description,
+            budget_estimate: category.budget_estimate,
+          },
+        };
+
+        mockInvitations.push(invitation);
+        return invitation;
+      });
+
+      return mockDelay({
+        success: true,
+        data: newInvitations,
+        message: `${newInvitations.length} invitación(es) creada(s) exitosamente`,
+      });
+    }
+
+    // Modo real: llamada a Medusa
+    const response = await apiClient.post<ApiResponse<SupplierInvitation[]>>(
+      '/openings/invitations',
+      data
+    );
+    return response.data;
+  },
+
+  async deleteInvitation(invitationId: string): Promise<ApiResponse<void>> {
+    if (isMockMode) {
+      const invitationIndex = mockInvitations.findIndex(i => i.id === invitationId);
+      
+      if (invitationIndex === -1) {
+        return mockDelay({
+          success: false,
+          error: 'Invitación no encontrada',
+        });
+      }
+
+      mockInvitations.splice(invitationIndex, 1);
+
+      return mockDelay({
+        success: true,
+        message: 'Invitación eliminada exitosamente',
+      });
+    }
+
+    // Modo real: llamada a Medusa
+    const response = await apiClient.delete<ApiResponse<void>>(
+      `/openings/invitations/${invitationId}`
     );
     return response.data;
   },

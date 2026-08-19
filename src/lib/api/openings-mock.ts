@@ -162,6 +162,9 @@ function saveProjectsToStorage(projects: OpeningProject[]): void {
   }
 }
 
+// Export save function for use in API client
+export { saveProjectsToStorage };
+
 // Exportar proyectos con persistencia
 export let mockProjects: OpeningProject[] = loadProjectsFromStorage();
 
@@ -303,16 +306,17 @@ export const mockInvitations: SupplierInvitation[] = [
   },
   {
     id: 'inv_002',
-    category_id: 'cat_001',
-    supplier_id: 'user_supplier_mobiliario_b',
-    status: 'quote_submitted',
-    invited_at: new Date('2026-08-05T09:00:00Z'),
+    category_id: 'cat_002',
+    supplier_id: 'user_supplier_rotulacion_a',
+    status: 'pending',
+    invited_at: new Date('2026-08-06T10:30:00Z'),
     invited_by: 'user_admin',
+    message: 'Necesitamos presupuesto para rotulación interior y exterior de nuestra nueva tienda.',
     deadline: new Date('2026-09-15T23:59:59Z'),
     supplier: {
-      id: 'user_supplier_mobiliario_b',
-      name: 'Equipamiento Express S.A.',
-      email: 'comercial@equipamientoexpress.com',
+      id: 'user_supplier_rotulacion_a',
+      name: 'Rótulos y Vinilos Madrid',
+      email: 'ventas@rotulosmadrid.com',
     },
     project: {
       id: 'proj_001',
@@ -327,24 +331,25 @@ export const mockInvitations: SupplierInvitation[] = [
       floor_plan_url: 'https://storage.example.com/floor_plans/proj_001_plan.pdf',
     },
     category: {
-      id: 'cat_001',
-      name: 'Mobiliario',
-      description: 'Muebles y estanterías para la tienda',
-      budget_estimate: 3500000, // 35,000 EUR
+      id: 'cat_002',
+      name: 'Rotulación',
+      description: 'Señalización interior y exterior',
+      budget_estimate: 1200000, // 12,000 EUR
     },
   },
   {
     id: 'inv_003',
-    category_id: 'cat_001',
-    supplier_id: 'user_supplier_mobiliario_c',
+    category_id: 'cat_003',
+    supplier_id: 'user_supplier_it_a',
     status: 'pending',
-    invited_at: new Date('2026-08-05T09:00:00Z'),
+    invited_at: new Date('2026-08-07T11:00:00Z'),
     invited_by: 'user_admin',
+    message: 'Solicitamos presupuesto para equipamiento informático completo (TPVs, ordenadores, software).',
     deadline: new Date('2026-09-15T23:59:59Z'),
     supplier: {
-      id: 'user_supplier_mobiliario_c',
-      name: 'Mobiliario Profesional S.L.',
-      email: 'ventas@mobiliariopro.com',
+      id: 'user_supplier_it_a',
+      name: 'Soluciones IT Retail',
+      email: 'contacto@solucionesit.com',
     },
     project: {
       id: 'proj_001',
@@ -359,10 +364,10 @@ export const mockInvitations: SupplierInvitation[] = [
       floor_plan_url: 'https://storage.example.com/floor_plans/proj_001_plan.pdf',
     },
     category: {
-      id: 'cat_001',
-      name: 'Mobiliario',
-      description: 'Muebles y estanterías para la tienda',
-      budget_estimate: 3500000, // 35,000 EUR
+      id: 'cat_003',
+      name: 'Equipamiento Informático',
+      description: 'Hardware y software para gestión',
+      budget_estimate: 800000, // 8,000 EUR
     },
   },
 ];
@@ -575,6 +580,72 @@ export const mockAuditLogs: AuditLog[] = [
 // ============================================================================
 // Funciones Helper para Datos Mock
 // ============================================================================
+// Proveedores Mock (disponibles para invitar)
+// ============================================================================
+
+export interface MockSupplier {
+  id: string;
+  name: string;
+  email: string;
+  phone?: string;
+  categories: string[]; // Especialidades
+  rating?: number;
+}
+
+export const mockSuppliers: MockSupplier[] = [
+  {
+    id: 'user_supplier_mobiliario_a',
+    name: 'Mobiliario Retail S.L.',
+    email: 'info@mobiliarioretail.com',
+    phone: '+34 600 111 222',
+    categories: ['Mobiliario', 'Estanterías'],
+    rating: 4.5,
+  },
+  {
+    id: 'user_supplier_mobiliario_b',
+    name: 'Equipamiento Express S.A.',
+    email: 'comercial@equipamientoexpress.com',
+    phone: '+34 600 222 333',
+    categories: ['Mobiliario', 'Equipamiento'],
+    rating: 4.2,
+  },
+  {
+    id: 'user_supplier_rotulacion_a',
+    name: 'Rótulos y Vinilos Madrid',
+    email: 'ventas@rotulosmadrid.com',
+    phone: '+34 600 333 444',
+    categories: ['Rotulación', 'Señalización'],
+    rating: 4.7,
+  },
+  {
+    id: 'user_supplier_rotulacion_b',
+    name: 'Señalética Profesional',
+    email: 'info@senaleticapro.com',
+    phone: '+34 600 444 555',
+    categories: ['Rotulación', 'Impresión'],
+    rating: 4.3,
+  },
+  {
+    id: 'user_supplier_it_a',
+    name: 'Soluciones IT Retail',
+    email: 'contacto@solucionesit.com',
+    phone: '+34 600 555 666',
+    categories: ['Equipamiento Informático', 'Software'],
+    rating: 4.6,
+  },
+  {
+    id: 'user_supplier_it_b',
+    name: 'Tech Store Solutions',
+    email: 'info@techstore.com',
+    phone: '+34 600 666 777',
+    categories: ['Equipamiento Informático', 'TPV'],
+    rating: 4.4,
+  },
+];
+
+// ============================================================================
+// Helper functions
+// ============================================================================
 
 export function getMockProjectById(id: string): OpeningProject | undefined {
   return mockProjects.find((p) => p.id === id);
@@ -595,7 +666,9 @@ export function getMockQuotesByCategory(categoryId: string): Quote[] {
 export function getMockInvitationsBySupplier(supplierId: string): SupplierInvitation[] {
   return mockInvitations.filter((i) => i.supplier_id === supplierId);
 }
-
+export function getMockInvitationsByCategory(categoryId: string): SupplierInvitation[] {
+  return mockInvitations.filter((i) => i.category_id === categoryId);
+}
 export function getMockAuditLogsByProject(projectId: string): AuditLog[] {
   return mockAuditLogs.filter((log) => log.project_id === projectId);
 }

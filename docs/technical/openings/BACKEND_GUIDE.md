@@ -123,26 +123,331 @@ Una vez aprobado todo:
 
 ---
 
-## 📊 Estados del Proyecto
+## 📊 Estados del Proyecto y Workflow
+
+### Estados Principales del Proyecto
 
 El proyecto pasa por estos estados en orden:
 
-| Estado | Descripción | Quién puede cambiar |
-|--------|-------------|---------------------|
-| `draft` | Borrador inicial, sin categorías | Admin |
-| `preparing_documentation` | Añadiendo categorías y documentos | Admin |
-| `requesting_quotes` | Invitando proveedores | Admin |
-| `quotes_received` | Proveedores enviando presupuestos | Sistema (automático) |
-| `pending_selection` | Franquiciado comparando ofertas | Sistema |
-| `awarded` | Presupuestos adjudicados | Franquiciado |
-| `pending_signature` | Esperando firma digital | Sistema |
-| `signed` | Firmado, esperando financiación | Franquiciado |
-| `pending_financing` | Financiación solicitada | Franquiciado |
-| `financing_approved` | Financiación aprobada | Admin (Finanzas) |
-| `financing_rejected` | Financiación rechazada | Admin (Finanzas) |
-| `in_execution` | Proyecto en ejecución | Admin |
-| `completed` | Completado | Admin |
-| `cancelled` | Cancelado | Admin |
+| Estado | Descripción | Quién puede cambiar | Condiciones |
+|--------|-------------|---------------------|-------------|
+| `draft` | Borrador inicial, sin categorías | Admin | Proyecto creado |
+| `preparing_documentation` | Añadiendo categorías y documentos | Admin | Al menos 1 categoría creada |
+| `requesting_quotes` | Invitando proveedores | Admin | Proveedores invitados |
+| `quotes_received` | Proveedores enviando presupuestos | Sistema (automático) | Al menos 1 quote recibido |
+| `pending_selection` | Franquiciado comparando ofertas | Sistema | Todas las categorías tienen quotes |
+| `awarded` | Presupuestos adjudicados | Franquiciado | Todas las categorías tienen quote awarded |
+| `pending_signature` | Esperando firma digital | Sistema | Al menos 1 quote adjudicado |
+| `signed` | Firmado, esperando financiación | Franquiciado | Todos los quotes awarded firmados |
+| `pending_financing` | Financiación solicitada | Franquiciado | Solicitud de financiación creada |
+| `financing_approved` | Financiación aprobada | Admin (Finanzas) | Aprobación de financiación |
+| `financing_rejected` | Financiación rechazada | Admin (Finanzas) | Rechazo de financiación |
+| `in_execution` | Proyecto en ejecución | Admin | Inicio manual de ejecución |
+| `completed` | Completado | Admin | Finalización manual |
+| `cancelled` | Cancelado | Admin | Cancelación manual |
+
+### Estados de Categoría
+
+| Estado | Descripción | Transición |
+|--------|-------------|------------|
+| `pending_quotes` | Esperando presupuestos | Cuando se crea la categoría |
+| `quotes_received` | Presupuestos recibidos | Cuando se recibe el primer quote |
+| `comparing` | En comparación | Cuando el franquiciado accede a comparar |
+| `awarded` | Presupuesto seleccionado | Cuando se adjudica un quote |
+| `signed` | Contrato firmado | Cuando el quote se firma |
+
+### Estados de Presupuesto (Quote)
+
+| Estado | Descripción | Puede cambiar a |
+|--------|-------------|-----------------|
+| `draft` | Borrador guardado | `submitted`, `draft` (actualizar) |
+| `submitted` | Enviado al franquiciado | `awarded`, `rejected` |
+| `awarded` | Seleccionado como ganador | `signed` |
+| `rejected` | No seleccionado | - (final) |
+| `signed` | Firmado digitalmente | - (final) |
+
+### Estados de Invitación
+
+| Estado | Descripción |
+|--------|-------------|
+| `pending` | Invitación enviada, esperando respuesta |
+| `quote_submitted` | Proveedor ha enviado presupuesto |
+| `awarded` | Presupuesto del proveedor fue seleccionado |
+| `rejected` | Presupuesto no seleccionado |
+
+### Diagrama de Flujo de Estados
+
+```
+PROYECTO:
+draft
+  ↓ (admin crea categoría)
+preparing_documentation
+  ↓ (admin invita proveedores)
+requesting_quotes
+  ↓ (proveedor envía primer quote)
+quotes_received
+  ↓ (todas las categorías tienen quotes)
+pending_selection
+  ↓ (franquiciado adjudica todos los quotes)
+awarded
+  ↓ (automático)
+pending_signature
+  ↓ (franquiciado firma todos)
+signed
+  ↓ (si requiere financiación)
+pending_financing
+  ↓ (admin finanzas aprueba/rechaza)
+financing_approved / financing_rejected
+  ↓ (admin inicia ejecución)
+in_execution
+  ↓ (admin completa)
+completed
+```
+
+### Transiciones Automáticas (Backend)
+
+El backend debe implementar estas transiciones automáticas:
+
+#### 1. **draft → preparing_documentation**
+```javascript
+// Cuando se crea la primera categoría
+async function createCategory(projectId, categoryData) {
+  const category = await db.categories.create(categoryData);
+  
+  const project = await db.projects.findUnique({ where: { id: projectId } });
+  
+  if (project.status === 'draft') {
+    await db.projects.update({
+      where: { id: projectId },
+      data: { status: 'preparing_documentation' }
+    });
+  }
+  
+  return category;
+}
+```
+
+#### 2. **preparing_documentation → requesting_quotes**
+```javascript
+// Cuando se invita al primer proveedor
+async function inviteSuppliers(categoryId, supplierIds, deadline) {
+  const invitations = await db.invitations.createMany({
+    data: supplierIds.map(supplierId => ({
+      category_id: categoryId,
+      supplier_id: supplierId,
+      deadline,
+      status: 'pending'
+    }))
+  });
+  
+  const category = await db.categories.findUnique({ where: { id: categoryId } });
+  const project = await db.projects.findUnique({ where: { id: category.project_id } });
+  
+  if (project.status === 'preparing_documentation') {
+    await db.projects.update({
+      where: { id: project.id },
+      data: { status: 'requesting_quotes' }
+    });
+  }
+  
+  return invitations;
+}
+```
+
+#### 3. **requesting_quotes → quotes_received**
+```javascript
+// Cuando se recibe el primer presupuesto
+async function createQuote(categoryId, quoteData) {
+  const quote = await db.quotes.create(quoteData);
+  
+  // Actualizar estado de la categoría
+  await db.categories.update({
+    where: { id: categoryId },
+    data: { status: 'quotes_received' }
+  });
+  
+  // Actualizar proyecto si no estaba en quotes_received
+  const category = await db.categories.findUnique({ where: { id: categoryId } });
+  const project = await db.projects.findUnique({ where: { id: category.project_id } });
+  
+  if (project.status === 'requesting_quotes') {
+    await db.projects.update({
+      where: { id: project.id },
+      data: { status: 'quotes_received' }
+    });
+  }
+  
+  return quote;
+}
+```
+
+#### 4. **quotes_received → pending_selection**
+```javascript
+// Cuando TODAS las categorías tienen al menos 1 presupuesto
+async function checkIfReadyForSelection(projectId) {
+  const categories = await db.categories.findMany({
+    where: { project_id: projectId },
+    include: {
+      quotes: { where: { status: 'submitted' } }
+    }
+  });
+  
+  const allCategoriesHaveQuotes = categories.every(cat => cat.quotes.length > 0);
+  
+  if (allCategoriesHaveQuotes) {
+    await db.projects.update({
+      where: { id: projectId },
+      data: { status: 'pending_selection' }
+    });
+  }
+}
+
+// Llamar esta función cada vez que se crea/actualiza un quote
+```
+
+#### 5. **pending_selection → awarded**
+```javascript
+// Cuando TODAS las categorías tienen un quote adjudicado
+async function awardQuote(quoteId) {
+  // Adjudicar el quote
+  await db.quotes.update({
+    where: { id: quoteId },
+    data: { 
+      status: 'awarded',
+      awarded_at: new Date()
+    }
+  });
+  
+  // Rechazar otros quotes de la misma categoría
+  const quote = await db.quotes.findUnique({ where: { id: quoteId } });
+  await db.quotes.updateMany({
+    where: {
+      category_id: quote.category_id,
+      id: { not: quoteId },
+      status: 'submitted'
+    },
+    data: { status: 'rejected' }
+  });
+  
+  // Actualizar categoría
+  await db.categories.update({
+    where: { id: quote.category_id },
+    data: { status: 'awarded' }
+  });
+  
+  // Verificar si TODAS las categorías están awarded
+  const categories = await db.categories.findMany({
+    where: { project_id: quote.project_id }
+  });
+  
+  const allCategoriesAwarded = categories.every(cat => cat.status === 'awarded');
+  
+  if (allCategoriesAwarded) {
+    await db.projects.update({
+      where: { id: quote.project_id },
+      data: { status: 'awarded' }
+    });
+    
+    // Transición automática a pending_signature
+    await db.projects.update({
+      where: { id: quote.project_id },
+      data: { status: 'pending_signature' }
+    });
+  }
+}
+```
+
+#### 6. **pending_signature → signed**
+```javascript
+// Cuando TODOS los quotes awarded están firmados
+async function signQuote(quoteId, signatureData) {
+  const signature = await db.signatures.create({
+    data: {
+      quote_id: quoteId,
+      franchisee_id: signatureData.franchisee_id,
+      signature_data: signatureData.signature_data,
+      document_hash: signatureData.document_hash,
+      signed_at: new Date()
+    }
+  });
+  
+  // Actualizar quote
+  await db.quotes.update({
+    where: { id: quoteId },
+    data: { status: 'signed' }
+  });
+  
+  // Verificar si todos los quotes awarded están firmados
+  const quote = await db.quotes.findUnique({ where: { id: quoteId } });
+  const awardedQuotes = await db.quotes.findMany({
+    where: {
+      project_id: quote.project_id,
+      status: { in: ['awarded', 'signed'] }
+    },
+    include: { signature: true }
+  });
+  
+  const allSigned = awardedQuotes.every(q => q.signature !== null);
+  
+  if (allSigned) {
+    await db.projects.update({
+      where: { id: quote.project_id },
+      data: { status: 'signed' }
+    });
+  }
+  
+  return signature;
+}
+```
+
+### Validaciones de Transición
+
+El backend debe validar que las transiciones son válidas:
+
+```javascript
+const ALLOWED_TRANSITIONS = {
+  'draft': ['preparing_documentation', 'cancelled'],
+  'preparing_documentation': ['requesting_quotes', 'cancelled'],
+  'requesting_quotes': ['quotes_received', 'cancelled'],
+  'quotes_received': ['pending_selection', 'cancelled'],
+  'pending_selection': ['awarded', 'cancelled'],
+  'awarded': ['pending_signature', 'cancelled'],
+  'pending_signature': ['signed', 'cancelled'],
+  'signed': ['pending_financing', 'in_execution', 'cancelled'],
+  'pending_financing': ['financing_approved', 'financing_rejected', 'cancelled'],
+  'financing_approved': ['in_execution', 'cancelled'],
+  'financing_rejected': ['signed', 'cancelled'], // Volver a renegociar
+  'in_execution': ['completed', 'cancelled'],
+  'completed': [], // Estado final
+  'cancelled': []  // Estado final
+};
+
+async function updateProjectStatus(projectId, newStatus) {
+  const project = await db.projects.findUnique({ where: { id: projectId } });
+  
+  const allowedTransitions = ALLOWED_TRANSITIONS[project.status];
+  
+  if (!allowedTransitions.includes(newStatus)) {
+    throw new Error(
+      `Transición inválida: ${project.status} → ${newStatus}`
+    );
+  }
+  
+  await db.projects.update({
+    where: { id: projectId },
+    data: { 
+      status: newStatus,
+      updated_at: new Date()
+    }
+  });
+  
+  // Registrar en audit log
+  await logAuditEvent(projectId, 'project', 'status_changed', {
+    old_status: project.status,
+    new_status: newStatus
+  });
+}
+```
 
 **Nota:** El backend debe validar las transiciones de estado. Por ejemplo, no se puede pasar de `draft` directamente a `signed`.
 
@@ -573,23 +878,137 @@ Invitaciones recibidas por el proveedor (requiere autenticación de proveedor).
 #### `GET /api/admin/openings/categories/:categoryId/quotes`
 Ver todos los presupuestos de una categoría (solo admin).
 
-#### `POST /api/supplier/openings/categories/:categoryId/quote`
-Enviar presupuesto para una categoría (multipart/form-data).
-
-**Body:**
+**Respuesta:**
 ```json
 {
-  "amount_cents": 1450000,
-  "delivery_days": 30,
-  "warranty_months": 24,
-  "payment_terms": "50% anticipo, 50% a la entrega",
-  "notes": "Incluye instalación y formación",
-  "quote_pdf": [archivo PDF]
+  "success": true,
+  "data": [
+    {
+      "id": "quote_001",
+      "supplier_id": "supplier_abc",
+      "amount_cents": 1450000,
+      "status": "submitted",
+      "submitted_at": "2026-01-20T15:30:00Z"
+    }
+  ]
 }
 ```
 
+#### `GET /api/supplier/openings/invitations/:invitationId/quote`
+Obtener el presupuesto existente del proveedor para una invitación específica.
+
+**Respuesta:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "quote_001",
+    "category_id": "cat_001",
+    "amount_cents": 1450000,
+    "delivery_days": 30,
+    "warranty_months": 24,
+    "payment_terms": "50% anticipo, 50% a la entrega",
+    "notes": "Incluye instalación y formación",
+    "pdf_url": "https://storage.com/quotes/quote_001.pdf",
+    "status": "draft"
+  }
+}
+```
+
+#### `POST /api/supplier/openings/categories/:categoryId/quote`
+Crear un nuevo presupuesto para una categoría (multipart/form-data).
+
+**Body (FormData):**
+```
+amount_cents: 1450000
+delivery_days: 30
+warranty_months: 24
+payment_terms: "50% anticipo, 50% a la entrega"
+notes: "Incluye instalación y formación"
+status: "draft" | "submitted"
+file: [archivo PDF] (opcional en desarrollo, requerido en producción)
+```
+
+**Validaciones:**
+- `amount_cents`: Requerido, > 0, máximo 1,000,000,000 (€10M)
+- `delivery_days`: Opcional, 1-365
+- `warranty_months`: Opcional, 0-120
+- `payment_terms`: Opcional, máximo 500 caracteres
+- `notes`: Opcional, máximo 1000 caracteres
+- `file`: Archivo PDF, máximo 10MB, solo formato PDF
+- `status`: "draft" para guardar borrador, "submitted" para enviar final
+
+**Respuesta:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "quote_001",
+    "category_id": "cat_001",
+    "amount_cents": 1450000,
+    "pdf_url": "https://storage.com/quotes/quote_001.pdf",
+    "status": "draft",
+    "created_at": "2026-01-20T15:30:00Z"
+  },
+  "message": "Borrador guardado" | "Presupuesto enviado correctamente"
+}
+```
+
+**Errores posibles:**
+```json
+{
+  "success": false,
+  "error": "El archivo PDF es requerido"  // Solo en modo producción
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "El archivo debe ser PDF y no superar 10MB"
+}
+```
+
+#### `PUT /api/supplier/openings/quotes/:quoteId`
+Actualizar un presupuesto existente (solo borradores o antes de deadline).
+
+**Body (FormData):**
+```
+amount_cents: 1550000
+delivery_days: 25
+warranty_months: 36
+payment_terms: "100% a la entrega"
+notes: "Oferta actualizada con mejor garantía"
+status: "draft" | "submitted"
+file: [nuevo archivo PDF] (opcional - solo si se quiere reemplazar)
+```
+
+**Respuesta:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "quote_001",
+    "amount_cents": 1550000,
+    "pdf_url": "https://storage.com/quotes/quote_001_v2.pdf",
+    "status": "submitted",
+    "updated_at": "2026-01-21T10:00:00Z"
+  },
+  "message": "Presupuesto actualizado"
+}
+```
+
+**Validaciones del backend:**
+- No se puede actualizar si `status === 'awarded'`
+- No se puede actualizar si `status === 'rejected'`
+- No se puede actualizar después del `deadline` de la invitación
+- El proveedor solo puede actualizar sus propios presupuestos
+
 #### `GET /api/franchisee/openings/categories/:categoryId/compare`
 Comparar presupuestos de una categoría (solo franquiciado del proyecto).
+
+**Descripción:**
+Este endpoint permite al franquiciado ver todos los presupuestos recibidos para una categoría específica de su proyecto. La respuesta incluye información completa de cada proveedor para facilitar la comparación.
 
 **Respuesta:**
 ```json
@@ -598,58 +1017,117 @@ Comparar presupuestos de una categoría (solo franquiciado del proyecto).
   "data": {
     "category_id": "cat_001",
     "category_name": "Mobiliario Comercial",
+    "category_description": "Estanterías, mostradores, refrigeradores...",
     "budget_estimate": 1500000,
     "quotes": [
       {
         "id": "quote_001",
         "supplier": {
           "id": "supplier_abc",
-          "name": "Mobiliario Comercial S.L."
+          "name": "Mobiliario Comercial S.L.",
+          "email": "contacto@mobiliario.com",
+          "phone": "+34 600 111 222"
         },
         "amount_cents": 1450000,
         "delivery_days": 30,
         "warranty_months": 24,
-        "payment_terms": "...",
-        "status": "submitted"
+        "payment_terms": "50% anticipo, 50% a la entrega",
+        "notes": "Incluye instalación y formación del personal",
+        "pdf_url": "https://storage.com/quotes/quote_001.pdf",
+        "status": "submitted",
+        "submitted_at": "2026-01-20T15:30:00Z"
       },
       {
         "id": "quote_002",
         "supplier": {
           "id": "supplier_xyz",
-          "name": "Equipamientos Pro S.A."
+          "name": "Equipamientos Pro S.A.",
+          "email": "ventas@equipamientos.com",
+          "phone": "+34 600 333 444"
         },
         "amount_cents": 1620000,
         "delivery_days": 25,
         "warranty_months": 36,
-        "payment_terms": "...",
-        "status": "submitted"
+        "payment_terms": "30% anticipo, 70% a 30 días",
+        "notes": "Garantía extendida incluida",
+        "pdf_url": "https://storage.com/quotes/quote_002.pdf",
+        "status": "submitted",
+        "submitted_at": "2026-01-21T09:15:00Z"
       }
-    ]
+    ],
+    "quotes_count": 2,
+    "lowest_amount": 1450000,
+    "highest_amount": 1620000
   }
 }
 ```
 
+**Validaciones del backend:**
+- Solo el franquiciado propietario del proyecto puede acceder
+- Solo se muestran presupuestos con `status === 'submitted'` o `status === 'awarded'`
+- No se muestran borradores (`status === 'draft'`)
+- Ordenados por `amount_cents` ascendente (más barato primero)
+
 #### `POST /api/franchisee/openings/quotes/:quoteId/award`
-Adjudicar presupuesto (seleccionar ganador).
+Adjudicar presupuesto (seleccionar ganador para una categoría).
+
+**Descripción:**
+Este endpoint permite al franquiciado seleccionar el presupuesto ganador para una categoría específica. Al adjudicar un presupuesto, todos los demás presupuestos de la misma categoría se marcan automáticamente como rechazados.
 
 **Respuesta:**
 ```json
 {
   "success": true,
   "data": {
-    "id": "quote_001",
-    "status": "awarded",
-    "awarded_at": "2026-01-26T11:00:00Z"
+    "quote": {
+      "id": "quote_001",
+      "status": "awarded",
+      "awarded_at": "2026-01-26T11:00:00Z"
+    },
+    "other_quotes_updated": 2
   },
   "message": "Presupuesto adjudicado exitosamente"
 }
 ```
 
-**Nota:** Este endpoint debe:
-- Cambiar el estado del quote a `awarded`
-- Cambiar los otros quotes de la misma categoría a `rejected`
-- Actualizar el estado del proyecto si es necesario
-- Registrar en el audit log
+**Lógica del backend:**
+1. Verificar que el franquiciado es propietario del proyecto
+2. Verificar que el quote existe y tiene `status === 'submitted'`
+3. Actualizar el quote seleccionado: `status = 'awarded'`, `awarded_at = NOW()`
+4. Actualizar todos los otros quotes de la misma categoría: `status = 'rejected'`
+5. Actualizar estado de la categoría: `status = 'awarded'`
+6. Si todas las categorías del proyecto están `awarded`, actualizar proyecto a `awarded`
+7. Registrar acción en audit log
+8. Enviar notificación al proveedor ganador
+9. Enviar notificación a proveedores rechazados
+
+**Validaciones:**
+- El quote debe existir
+- El quote debe estar en estado `submitted`
+- El usuario debe ser el franquiciado del proyecto
+- No se puede adjudicar si ya hay otro quote `awarded` en la categoría
+
+**Errores posibles:**
+```json
+{
+  "success": false,
+  "error": "Presupuesto no encontrado"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Ya existe un presupuesto adjudicado para esta categoría"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "No tienes permiso para adjudicar este presupuesto"
+}
+```
 
 ---
 
@@ -771,23 +1249,317 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ---
 
-## 📦 Almacenamiento de Archivos
+## 📦 Almacenamiento de Archivos y Upload de Documentos
 
-### Archivos que se suben:
-- **Planos del local:** PDF grande (2-10 MB)
-- **Presupuestos de proveedores:** PDF (500 KB - 5 MB)
-- **Documentos adicionales:** PDF/imágenes
+### Tipos de Archivos en el Sistema
 
-### Recomendación:
-Usar **S3-compatible storage** (AWS S3, DigitalOcean Spaces, MinIO...)
+#### 1. **Planos del Local (Floor Plans)**
+- **Formato:** Solo PDF
+- **Tamaño máximo:** 10 MB
+- **Subido por:** Administrador
+- **Endpoint:** `POST /api/admin/openings/projects/:id/floor-plan`
+- **Acceso:** Franquiciado y proveedores invitados pueden descargar
+- **Nombre de archivo:** `floor_plan_[project_id]_[timestamp].pdf`
 
-### URL firmadas:
-Para descargas, generar URLs firmadas temporales (válidas por 1 hora):
+#### 2. **Presupuestos de Proveedores (Quote PDFs)**
+- **Formato:** Solo PDF
+- **Tamaño máximo:** 10 MB
+- **Subido por:** Proveedor
+- **Endpoint:** `POST /api/supplier/openings/categories/:id/quote` (multipart/form-data)
+- **Requerido:** OPCIONAL en desarrollo/testing, REQUERIDO en producción
+- **Acceso:** El proveedor que lo subió y el franquiciado del proyecto
+- **Nombre de archivo:** `quote_[category_id]_[supplier_id]_[timestamp].pdf`
+- **Actualización:** Se puede reemplazar subiendo nuevo PDF en `PUT /api/supplier/openings/quotes/:id`
+
+#### 3. **Documentos Adicionales**
+- **Formato:** PDF, imágenes (JPG, PNG)
+- **Tamaño máximo:** 10 MB por archivo
+- **Subido por:** Administrador o franquiciado
+- **Endpoint:** `POST /api/admin/openings/projects/:id/documents`
+
+### Validaciones de Archivos
+
+**Validaciones del Backend (OBLIGATORIAS):**
 
 ```javascript
-GET /api/openings/files/:fileId/download
-→ Redirect to signed URL
-→ https://storage.com/file.pdf?signature=abc123&expires=1234567890
+// Validación de tipo MIME
+const allowedMimeTypes = ['application/pdf'];
+if (!allowedMimeTypes.includes(file.mimetype)) {
+  return res.status(400).json({
+    success: false,
+    error: 'Solo se permiten archivos PDF'
+  });
+}
+
+// Validación de tamaño
+const maxSizeBytes = 10 * 1024 * 1024; // 10 MB
+if (file.size > maxSizeBytes) {
+  return res.status(400).json({
+    success: false,
+    error: 'El archivo no debe superar los 10MB'
+  });
+}
+
+// Validación de nombre de archivo (seguridad)
+const filename = file.originalname;
+if (!/^[a-zA-Z0-9_\-\. ]+$/.test(filename)) {
+  return res.status(400).json({
+    success: false,
+    error: 'Nombre de archivo inválido'
+  });
+}
+```
+
+**Validaciones del Frontend (recomendadas):**
+```javascript
+// En el componente QuoteForm.tsx ya implementado
+const handleFileChange = (e) => {
+  const file = e.target.files?.[0];
+  
+  // Validar tipo
+  if (file.type !== 'application/pdf') {
+    setFileError('Solo se permiten archivos PDF');
+    return;
+  }
+  
+  // Validar tamaño (10MB)
+  const maxSize = 10 * 1024 * 1024;
+  if (file.size > maxSize) {
+    setFileError('El archivo no debe superar los 10MB');
+    return;
+  }
+  
+  setPdfFile(file);
+};
+```
+
+### Almacenamiento Recomendado
+
+**Opción 1: AWS S3 (Producción)**
+```javascript
+import AWS from 'aws-sdk';
+
+const s3 = new AWS.S3({
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+  region: 'eu-west-1'
+});
+
+async function uploadQuotePDF(file, categoryId, supplierId) {
+  const filename = `quote_${categoryId}_${supplierId}_${Date.now()}.pdf`;
+  
+  const params = {
+    Bucket: 'carrefour-openings-quotes',
+    Key: `quotes/${filename}`,
+    Body: file.buffer,
+    ContentType: 'application/pdf',
+    ACL: 'private' // Importante: no público
+  };
+  
+  const result = await s3.upload(params).promise();
+  return result.Location; // URL del archivo
+}
+```
+
+**Opción 2: DigitalOcean Spaces (Alternativa más económica)**
+```javascript
+import AWS from 'aws-sdk';
+
+const spacesEndpoint = new AWS.Endpoint(process.env.DO_SPACES_ENDPOINT);
+const s3 = new AWS.S3({
+  endpoint: spacesEndpoint,
+  accessKeyId: process.env.DO_SPACES_KEY,
+  secretAccessKey: process.env.DO_SPACES_SECRET
+});
+
+// Mismo código que AWS S3
+```
+
+**Opción 3: Local Storage (Solo desarrollo)**
+```javascript
+import multer from 'multer';
+import path from 'path';
+
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/quotes/');
+  },
+  filename: (req, file, cb) => {
+    const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+    cb(null, `quote_${uniqueSuffix}.pdf`);
+  }
+});
+
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 10 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype !== 'application/pdf') {
+      return cb(new Error('Solo PDF'));
+    }
+    cb(null, true);
+  }
+});
+```
+
+### URLs Firmadas (Seguridad)
+
+**¿Por qué URLs firmadas?**
+- Los archivos contienen información sensible
+- No deben ser públicos
+- Solo usuarios autorizados pueden descargar
+
+**Implementación con S3:**
+```javascript
+async function getSignedDownloadUrl(fileKey, expiresInSeconds = 3600) {
+  const params = {
+    Bucket: 'carrefour-openings-quotes',
+    Key: fileKey,
+    Expires: expiresInSeconds // 1 hora por defecto
+  };
+  
+  return s3.getSignedUrlPromise('getObject', params);
+}
+
+// Endpoint para descargar
+app.get('/api/openings/quotes/:quoteId/pdf', async (req, res) => {
+  const quote = await getQuoteById(req.params.quoteId);
+  
+  // Validar permisos
+  if (!userCanAccessQuote(req.user, quote)) {
+    return res.status(403).json({ error: 'Sin permisos' });
+  }
+  
+  // Generar URL firmada
+  const signedUrl = await getSignedDownloadUrl(quote.pdf_key);
+  
+  // Redirect o retornar URL
+  res.json({ download_url: signedUrl });
+});
+```
+
+### Manejo de Presupuestos con/sin PDF
+
+**Modo Desarrollo (Mock):**
+```javascript
+// El PDF es OPCIONAL para facilitar testing
+if (isMockMode) {
+  const quote = {
+    id: generateId(),
+    amount_cents: data.amount_cents,
+    pdf_url: file ? `https://mock-storage.com/quotes/${generateId()}.pdf` : '',
+    // ... otros campos
+  };
+  
+  return { success: true, data: quote };
+}
+```
+
+**Modo Producción:**
+```javascript
+// El PDF es REQUERIDO
+if (!file) {
+  return res.status(400).json({
+    success: false,
+    error: 'El archivo PDF es requerido'
+  });
+}
+
+// Upload a S3
+const pdfUrl = await uploadQuotePDF(file, categoryId, supplierId);
+
+const quote = {
+  id: generateId(),
+  amount_cents: data.amount_cents,
+  pdf_url: pdfUrl,
+  pdf_key: extractKeyFromUrl(pdfUrl),
+  // ... otros campos
+};
+```
+
+### Actualización de Presupuestos
+
+**Si el proveedor sube nuevo PDF:**
+```javascript
+async function updateQuote(quoteId, data, newFile) {
+  const existingQuote = await getQuoteById(quoteId);
+  
+  let pdfUrl = existingQuote.pdf_url;
+  
+  // Si hay nuevo archivo, reemplazar
+  if (newFile) {
+    // Borrar el PDF anterior (opcional pero recomendado)
+    if (existingQuote.pdf_key) {
+      await s3.deleteObject({
+        Bucket: 'carrefour-openings-quotes',
+        Key: existingQuote.pdf_key
+      }).promise();
+    }
+    
+    // Subir nuevo PDF
+    pdfUrl = await uploadQuotePDF(newFile, existingQuote.category_id, existingQuote.supplier_id);
+  }
+  
+  // Actualizar en base de datos
+  await db.quotes.update({
+    where: { id: quoteId },
+    data: {
+      amount_cents: data.amount_cents,
+      pdf_url: pdfUrl,
+      updated_at: new Date()
+    }
+  });
+}
+```
+
+### Estructura de Carpetas Recomendada en S3
+
+```
+carrefour-openings/
+├── floor-plans/
+│   ├── proj_001_floor_plan.pdf
+│   ├── proj_002_floor_plan.pdf
+│   └── ...
+├── quotes/
+│   ├── cat_001/
+│   │   ├── quote_cat_001_supplier_abc_1234567890.pdf
+│   │   ├── quote_cat_001_supplier_xyz_1234567899.pdf
+│   │   └── ...
+│   ├── cat_002/
+│   └── ...
+└── documents/
+    ├── proj_001/
+    │   ├── license.pdf
+    │   ├── contract.pdf
+    │   └── ...
+    └── ...
+```
+
+### Respuestas de Endpoints con Archivos
+
+**Al crear presupuesto:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "quote_001",
+    "pdf_url": "https://carrefour-openings.s3.eu-west-1.amazonaws.com/quotes/cat_001/quote_...",
+    "pdf_uploaded": true,
+    "pdf_size_bytes": 2458934
+  }
+}
+```
+
+**Al obtener presupuesto para descargar:**
+```json
+{
+  "success": true,
+  "data": {
+    "quote_id": "quote_001",
+    "download_url": "https://carrefour-openings.s3.amazonaws.com/quotes/...?signature=...",
+    "expires_at": "2026-01-20T16:30:00Z"
+  }
+}
 ```
 
 ---
