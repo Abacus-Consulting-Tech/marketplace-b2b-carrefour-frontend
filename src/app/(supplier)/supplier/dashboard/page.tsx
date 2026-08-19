@@ -13,6 +13,8 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import Link from 'next/link';
 
 interface OrderItem {
   supplierId?: string;
@@ -199,6 +201,21 @@ export default function SupplierDashboardPage() {
                   {orders.filter(o => o.status === 'delivered').length}
                 </Badge>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Quick Actions */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Acciones Rápidas</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <Link href="/supplier/openings">
+                <Button variant="outline" className="w-full justify-start">
+                  <Package className="h-4 w-4 mr-2" />
+                  <span className="text-sm">Invitaciones de Apertura</span>
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>

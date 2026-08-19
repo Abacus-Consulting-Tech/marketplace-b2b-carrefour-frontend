@@ -16,32 +16,47 @@ Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carref
 - **[API Documentation](./technical/API.md)** - Endpoints de la API y contratos (documentación base)
 - **[API Specification](./technical/API_SPEC.md)** - Especificación completa de la API
 
-### 🔄 Backend Integration (Medusa)
-- **[Stripe Payment Integration](./STRIPE_PAYMENT_INTEGRATION.md)** - 💳 Guía completa de integración de pagos (NUEVO - 18/08/2026)
-- **[Regions Update](./REGIONS_UPDATE_18_AUG.md)** - 🌍 Actualización de regiones - checkout desbloqueado
-- **[Backend Status Report](./BACKEND_STATUS_18_AUG.md)** - 🔥 Estado actual con datos de verificación (18/08/2026)
-- **[Backend Pendiente](./BACKEND_PENDIENTE.md)** - Estado de integración con Medusa backend
-- **[Auth Integration](./AUTH_INTEGRATION.md)** - Integración de autenticación
-- **[Proxy Configuration](./PROXY_CONFIG.md)** - Sistema de proxy por entornos (patrón Angular)
-- **[Proxy Architecture](./PROXY_ARCHITECTURE.md)** - Arquitectura técnica del proxy
-- **[CORS Workaround](./CORS_WORKAROUND.md)** - Solución temporal CORS
-- **[Roles y Redirecciones](./ROLES_Y_REDIRECCIONES.md)** - Sistema de roles y navegación
+### 🏪 Módulo Nuevas Aperturas
+**Carpeta: [`technical/openings/`](./technical/openings/)** ⭐ NUEVO
+- **[Overview](./technical/openings/README.md)** - Guía rápida del módulo
+- **[Backend Guide](./technical/openings/BACKEND_GUIDE.md)** - 📘 Guía completa para backend (Español)
+- **[Testing Guide](./technical/openings/TESTING_GUIDE_OPENINGS.md)** - 🧪 Guía de testing del módulo
+- **[Email Template](./technical/openings/EMAIL_PARA_BACKEND.md)** - 📧 Plantilla de email para backend
+- **[Especificación Completa (ES)](./technical/openings/SPECIFICATION_ES.md)** - Especificación técnica en español
+- **[Full Specification (EN)](./technical/openings/SPECIFICATION_EN.md)** - Complete technical specification
+
+### 🔄 Backend Integration & Status
+**Carpeta: [`integration/`](./integration/)**
+- **[Backend Status Report](./integration/BACKEND_STATUS.md)** - 🔥 Estado actual con datos de verificación
+- **[Backend Pendiente](./integration/BACKEND_PENDIENTE.md)** - Estado de integración con Medusa backend
+- **[Backend Connection Troubleshooting](./integration/BACKEND_CONNECTION_TROUBLESHOOTING.md)** - 🔧 Solución de problemas de conexión
+- **[Auth Integration](./integration/AUTH_INTEGRATION.md)** - Integración de autenticación
+- **[Proxy Configuration](./integration/PROXY_CONFIG.md)** - Sistema de proxy por entornos (patrón Angular)
+- **[Proxy Architecture](./integration/PROXY_ARCHITECTURE.md)** - Arquitectura técnica del proxy
+- **[Roles y Redirecciones](./integration/ROLES_Y_REDIRECCIONES.md)** - Sistema de roles y navegación
+- **[CORS Workaround](./integration/CORS_WORKAROUND.md)** - Solución temporal CORS
+- **[Stripe Payment Integration](./integration/STRIPE_PAYMENT_INTEGRATION.md)** - 💳 Guía completa de integración de pagos
+- **[Stripe Setup](./integration/STRIPE_SETUP.md)** - 💳 Configuración inicial de Stripe
+- **[Regions Update](./integration/REGIONS_UPDATE.md)** - 🌍 Actualización de regiones - checkout desbloqueado
 
 ### 📦 Deployment
 **Carpeta: [`deployment/`](./deployment/)**
 - **[Deployment Guide](./deployment/DEPLOYMENT_GUIDE.md)** - Guía completa de despliegue a servidor
 - **[Quick Deployment](./deployment/QUICK_DEPLOYMENT.md)** - Guía rápida de despliegue
 - **[Vercel Deployment](./deployment/VERCEL_DEPLOYMENT.md)** - Despliegue específico para Vercel
+- **[Vercel Quick Deploy](./deployment/DEPLOY_VERCEL_QUICK.md)** - 🚀 Deploy rápido a Vercel
 
 ### 🧪 Testing
 **Carpeta: [`testing/`](./testing/)**
 - **[Testing Guide](./testing/TESTING_GUIDE.md)** - Guía completa de testing
 - **[Dashboard Testing](./testing/DASHBOARD_TESTING_GUIDE.md)** - Tests específicos para dashboards
+- **[Testing Changelog](./testing/TESTING_GUIDE_CHANGELOG.md)** - 📝 Historial de cambios en testing
 
 ### 📚 User Guides
 **Carpeta: [`guides/`](./guides/)**
 - **[User Guide](./guides/USER_GUIDE.md)** - Manual de usuario para franquiciados y proveedores (inglés)
 - **[Guía de Usuario](./guides/GUIA_USUARIO.md)** - Manual de usuario en español
+- **[Supplier Registration](./guides/SUPPLIER_REGISTRATION.md)** - 🏭 Guía de registro de proveedores
 - **[Mercur Hybrid Setup](./guides/MERCUR_HYBRID_SETUP_GUIDE.md)** - Configuración híbrida con Mercur
 - **[Mercur API Migration Backlog](./guides/MERCUR_API_MIGRATION_BACKLOG.md)** - Backlog de migración
 
@@ -81,16 +96,18 @@ Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carref
 ### Para Desarrolladores
 1. **Primer día**: [Getting Started](./setup/GETTING_STARTED.md)
 2. **Entender arquitectura**: [Architecture](./technical/ARCHITECTURE.md)
-3. **Configurar proxy**: [Proxy Config](./PROXY_CONFIG.md)
+3. **Configurar proxy**: [Proxy Config](./integration/PROXY_CONFIG.md)
 4. **Hacer tests**: [Testing Guide](./testing/TESTING_GUIDE.md)
 5. **Testing con Postman**: [Postman Testing](./postman/TESTING.md) 🧪
 
 ### Para Backend Team
-1. **Pendientes backend**: [Backend Pendiente](./BACKEND_PENDIENTE.md)
-2. **Especificación API**: [API Spec](./technical/API_SPEC.md)
-3. **Testing de API**: [Postman Testing](./postman/TESTING.md) 🧪
-4. **Tests de integración**: [Smoke Tests](./medusa/smoke-test-checklist.md)
-5. **Datos para BD**: [Datos Iniciales](./medusa/DATOS_INICIALES.md) 📦
+1. **Módulo Nuevas Aperturas**: [Backend Guide](./technical/openings/BACKEND_GUIDE.md) ⭐ NUEVO
+2. **Pendientes backend**: [Backend Pendiente](./integration/BACKEND_PENDIENTE.md)
+3. **Estado integración**: [Backend Status](./integration/BACKEND_STATUS.md)
+4. **Especificación API**: [API Spec](./technical/API_SPEC.md)
+5. **Testing de API**: [Postman Testing](./postman/TESTING.md) 🧪
+6. **Tests de integración**: [Smoke Tests](./medusa/smoke-test-checklist.md)
+7. **Datos para BD**: [Datos Iniciales](./medusa/DATOS_INICIALES.md) 📦
 
 ### Para Deployment
 1. **Despliegue rápido**: [Quick Deployment](./deployment/QUICK_DEPLOYMENT.md)

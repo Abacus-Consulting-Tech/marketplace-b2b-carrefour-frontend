@@ -235,10 +235,10 @@ npm start
 
 ### 🔄 Backend Integration
 
-- 🔗 **[Backend Pendiente](./docs/BACKEND_PENDIENTE.md)** - Estado integración Medusa
-- 🔐 **[Auth Integration](./docs/AUTH_INTEGRATION.md)** - Integración autenticación
-- 🌐 **[Proxy Config](./docs/PROXY_CONFIG.md)** - Configuración proxy por entornos
-- 🏗️ **[Proxy Architecture](./docs/PROXY_ARCHITECTURE.md)** - Arquitectura del proxy
+- 🔗 **[Backend Pendiente](./docs/integration/BACKEND_PENDIENTE.md)** - Estado integración Medusa
+- 🔐 **[Auth Integration](./docs/integration/AUTH_INTEGRATION.md)** - Integración autenticación
+- 🌐 **[Proxy Config](./docs/integration/PROXY_CONFIG.md)** - Configuración proxy por entornos
+- 🏗️ **[Proxy Architecture](./docs/integration/PROXY_ARCHITECTURE.md)** - Arquitectura del proxy
 
 ### 📘 Guías Específicas
 

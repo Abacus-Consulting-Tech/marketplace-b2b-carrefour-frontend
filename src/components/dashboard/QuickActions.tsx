@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Package, FileText, Headphones } from 'lucide-react';
+import { ShoppingCart, Package, FileText, Building2 } from 'lucide-react';
 import Link from 'next/link';
 
 export function QuickActions() {
@@ -20,17 +20,17 @@ export function QuickActions() {
       color: 'bg-green-100 text-green-600 hover:bg-green-200',
     },
     {
+      title: 'Proyectos de Apertura',
+      description: 'Gestionar nuevas aperturas',
+      icon: Building2,
+      href: '/franchisee/openings',
+      color: 'bg-purple-100 text-purple-600 hover:bg-purple-200',
+    },
+    {
       title: 'Facturas',
       description: 'Descargar facturas',
       icon: FileText,
       href: '/marketplace/orders',
-      color: 'bg-purple-100 text-purple-600 hover:bg-purple-200',
-    },
-    {
-      title: 'Soporte',
-      description: 'Contactar con ayuda',
-      icon: Headphones,
-      href: '#',
       color: 'bg-orange-100 text-orange-600 hover:bg-orange-200',
     },
   ];

@@ -264,6 +264,14 @@ export default function AdminDashboardPage() {
                   </Badge>
                 </Button>
               </Link>
+              <Link href="/admin/openings">
+                <Button variant="outline" className="w-full justify-between">
+                  <span className="text-sm">Nuevas Aperturas</span>
+                  <Badge variant="secondary" className="bg-green-100 text-green-800">
+                    3
+                  </Badge>
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
