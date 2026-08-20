@@ -307,7 +307,7 @@ export function getPhaseForStatus(status: ProjectStatus): WorkflowPhase | undefi
  * (excluye estados finales negativos como cancelled/rejected)
  */
 export function calculateProgress(currentStatus: ProjectStatus): number {
-  if (currentStatus === 'cancelled') return 0;
+  if (currentStatus === 'cancelled' || currentStatus === 'financing_rejected') return 0;
   
   const positiveStates = PROJECT_STATUS_ORDER.filter(
     (s) => s !== 'cancelled' && s !== 'financing_rejected'
