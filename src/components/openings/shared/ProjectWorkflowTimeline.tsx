@@ -36,8 +36,6 @@ export default function ProjectWorkflowTimeline({
     (s) => s !== 'cancelled' && s !== 'financing_rejected'
   );
 
-  const currentIndex = mainStatuses.indexOf(currentStatus);
-
   return (
     <Card className={className}>
       <CardHeader>
