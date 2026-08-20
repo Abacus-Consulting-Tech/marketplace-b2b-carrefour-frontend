@@ -346,6 +346,67 @@ export const openingsApi = {
     return response.data;
   },
 
+  async updateCategory(
+    categoryId: string,
+    data: Partial<CreateCategoryRequest>
+  ): Promise<ApiResponse<ProjectCategory>> {
+    if (isMockMode) {
+      const categoryIndex = mockCategories.findIndex((c) => c.id === categoryId);
+
+      if (categoryIndex === -1) {
+        return mockDelay({
+          success: false,
+          error: 'Categoría no encontrada',
+        });
+      }
+
+      mockCategories[categoryIndex] = {
+        ...mockCategories[categoryIndex],
+        ...data,
+        updated_at: new Date(),
+      };
+
+      return mockDelay({
+        success: true,
+        data: mockCategories[categoryIndex],
+        message: 'Categoría actualizada correctamente',
+      });
+    }
+
+    // Modo real: llamada a Medusa
+    const response = await apiClient.patch<ApiResponse<ProjectCategory>>(
+      `/openings/categories/${categoryId}`,
+      data
+    );
+    return response.data;
+  },
+
+  async deleteCategory(categoryId: string): Promise<ApiResponse<void>> {
+    if (isMockMode) {
+      const categoryIndex = mockCategories.findIndex((c) => c.id === categoryId);
+
+      if (categoryIndex === -1) {
+        return mockDelay({
+          success: false,
+          error: 'Categoría no encontrada',
+        });
+      }
+
+      mockCategories.splice(categoryIndex, 1);
+
+      return mockDelay({
+        success: true,
+        message: 'Categoría eliminada correctamente',
+      });
+    }
+
+    // Modo real: llamada a Medusa
+    const response = await apiClient.delete<ApiResponse<void>>(
+      `/openings/categories/${categoryId}`
+    );
+    return response.data;
+  },
+
   // --------------------------------------------------------------------------
   // Invitations
   // --------------------------------------------------------------------------
