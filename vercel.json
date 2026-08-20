@@ -1,6 +1,8 @@
 {
   "git": {
     "deploymentEnabled": {
+      "main": false,
+      "dev": false,
       "medusa-update": true
     }
   },
