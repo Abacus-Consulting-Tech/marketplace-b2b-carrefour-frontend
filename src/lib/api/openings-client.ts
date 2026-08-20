@@ -58,6 +58,7 @@ import {
   addMockStatusHistory,
   getMockProjects,
 } from './openings-mock';
+import type { MockSupplier } from './openings-mock';
 
 import { apiClient } from './client';
 
@@ -989,7 +990,7 @@ export const openingsApi = {
   // Proveedores
   // ============================================================================
 
-  async getSuppliers(): Promise<ApiResponse<unknown[]>> {
+  async getSuppliers(): Promise<ApiResponse<MockSupplier[]>> {
     if (isMockMode) {
       return mockDelay({
         success: true,
@@ -998,7 +999,7 @@ export const openingsApi = {
     }
 
     // Modo real: llamada a Medusa
-    const response = await apiClient.get<ApiResponse<unknown[]>>('/openings/suppliers');
+    const response = await apiClient.get<ApiResponse<MockSupplier[]>>('/openings/suppliers');
     return response.data;
   },
 
