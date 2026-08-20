@@ -396,8 +396,6 @@ export const mockQuotes: Quote[] = [
       id: 'user_supplier_mobiliario_a',
       name: 'Mobiliario Retail S.L.',
       email: 'info@mobiliarioretail.com',
-      phone: '+34 91 555 1234',
-      company_name: 'Mobiliario Retail S.L.',
     },
   },
   {
@@ -418,8 +416,6 @@ export const mockQuotes: Quote[] = [
       id: 'user_supplier_mobiliario_b',
       name: 'Equipamiento Express S.A.',
       email: 'comercial@equipamientoexpress.com',
-      phone: '+34 91 555 5678',
-      company_name: 'Equipamiento Express S.A.',
     },
   },
   {
@@ -439,8 +435,6 @@ export const mockQuotes: Quote[] = [
       id: 'user_supplier_rotulacion_a',
       name: 'Rotulación Visual S.L.',
       email: 'contacto@rotulacionvisual.com',
-      phone: '+34 91 555 9012',
-      company_name: 'Rotulación Visual S.L.',
     },
   },
   {
@@ -461,8 +455,6 @@ export const mockQuotes: Quote[] = [
       id: 'user_supplier_it_a',
       name: 'Soluciones IT Retail',
       email: 'ventas@solutionsit.com',
-      phone: '+34 91 555 3456',
-      company_name: 'Soluciones IT Retail',
     },
   },
 ];
