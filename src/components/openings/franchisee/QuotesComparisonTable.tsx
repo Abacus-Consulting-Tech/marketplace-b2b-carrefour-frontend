@@ -433,7 +433,7 @@ export default function QuotesComparisonTable({
               <DialogTitle>Revertir adjudicación</DialogTitle>
               <DialogDescription>
                 ¿Estás seguro de que deseas revertir la adjudicación de {selectedQuote?.supplier?.name}?
-                Esto devolverá el presupuesto al estado "Enviado" y los demás presupuestos también volverán a estar disponibles.
+                Esto devolverá el presupuesto al estado &quot;Enviado&quot; y los demás presupuestos también volverán a estar disponibles.
               </DialogDescription>
             </DialogHeader>
             {selectedQuote && (

@@ -139,7 +139,7 @@ function loadProjectsFromStorage(): OpeningProject[] {
     if (stored) {
       const projects = JSON.parse(stored);
       // Convertir strings de fecha a objetos Date
-      return projects.map((p: any) => ({
+      return projects.map((p: OpeningProject) => ({
         ...p,
         planned_opening_date: p.planned_opening_date ? new Date(p.planned_opening_date) : undefined,
         created_at: new Date(p.created_at),

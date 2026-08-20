@@ -511,7 +511,7 @@ export interface StatusHistoryEntry {
   changed_by_role: 'admin' | 'franchisee' | 'system';
   changed_at: string;
   notes?: string;
-  metadata?: Record<string, any>; // Datos adicionales del cambio
+  metadata?: Record<string, unknown>; // Datos adicionales del cambio
 }
 
 /**

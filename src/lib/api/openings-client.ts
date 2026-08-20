@@ -46,7 +46,6 @@ import {
   getMockProjectById,
   getMockCategoriesByProject,
   getMockQuotesByCategory,
-  getMockInvitationsByCategory,
   getMockAuditLogsByProject,
   addMockProject,
   updateMockProject,
@@ -443,7 +442,7 @@ export const openingsApi = {
         delivery_days: data.delivery_days,
         warranty_months: data.warranty_months,
         payment_terms: data.payment_terms,
-        status: (data as any).status || 'submitted', // Support draft or submitted
+        status: 'submitted',
         submitted_at: new Date(),
         updated_at: new Date(),
         supplier: {
@@ -540,7 +539,6 @@ export const openingsApi = {
       if (data.warranty_months !== undefined) quote.warranty_months = data.warranty_months;
       if (data.payment_terms !== undefined) quote.payment_terms = data.payment_terms;
       if (data.notes !== undefined) quote.notes = data.notes;
-      if ((data as any).status) quote.status = (data as any).status;
       if (file) quote.pdf_url = `https://storage.example.com/quotes/quote_${Date.now()}.pdf`;
       quote.updated_at = new Date();
 
@@ -561,9 +559,8 @@ export const openingsApi = {
       if (data.warranty_months) formData.append('warranty_months', data.warranty_months.toString());
       if (data.payment_terms) formData.append('payment_terms', data.payment_terms);
       if (data.notes) formData.append('notes', data.notes);
-      if ((data as any).status) formData.append('status', (data as any).status);
 
-      const response = await apiClient.patch<ApiResponse<Quote>>(
+      const response = await apiClient.patch<ApiResponse<Quote>>( 
         `/openings/quotes/${quoteId}`,
         formData,
         {
@@ -992,7 +989,7 @@ export const openingsApi = {
   // Proveedores
   // ============================================================================
 
-  async getSuppliers(): Promise<ApiResponse<any[]>> {
+  async getSuppliers(): Promise<ApiResponse<unknown[]>> {
     if (isMockMode) {
       return mockDelay({
         success: true,
@@ -1001,7 +998,7 @@ export const openingsApi = {
     }
 
     // Modo real: llamada a Medusa
-    const response = await apiClient.get<ApiResponse<any[]>>('/openings/suppliers');
+    const response = await apiClient.get<ApiResponse<unknown[]>>('/openings/suppliers');
     return response.data;
   },
 
