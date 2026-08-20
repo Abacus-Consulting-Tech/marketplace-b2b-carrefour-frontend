@@ -219,7 +219,7 @@ export default function DocumentsList({ projectId, refreshTrigger }: DocumentsLi
           <AlertDialogHeader>
             <AlertDialogTitle>¿Eliminar documento?</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta acción no se puede deshacer. El documento "{documentToDelete?.name}" será
+              Esta acción no se puede deshacer. El documento &quot;{documentToDelete?.name}&quot; será
               eliminado permanentemente.
             </AlertDialogDescription>
           </AlertDialogHeader>

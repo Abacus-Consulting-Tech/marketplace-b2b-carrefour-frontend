@@ -74,7 +74,7 @@ export function InvitationsList({ categories, invitationsByCategory }: Invitatio
                   <Mail className="w-12 h-12 text-gray-300 mx-auto mb-3" />
                   <p className="text-gray-500">No hay proveedores invitados para esta categoría</p>
                   <p className="text-sm text-gray-400 mt-1">
-                    Usa el botón "Invitar Proveedores" para añadir proveedores
+                    Usa el botón &quot;Invitar Proveedores&quot; para añadir proveedores
                   </p>
                 </div>
               ) : (
@@ -97,8 +97,8 @@ export function InvitationsList({ categories, invitationsByCategory }: Invitatio
                           </div>
                           {invitation.message && (
                             <div className="text-sm text-gray-500 mt-1 italic">
-                              "{invitation.message.substring(0, 100)}
-                              {invitation.message.length > 100 && '...'}"
+                              &quot;{invitation.message.substring(0, 100)}
+                              {invitation.message.length > 100 && '...'}&quot;
                             </div>
                           )}
                           <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
@@ -139,7 +139,7 @@ export function InvitationsList({ categories, invitationsByCategory }: Invitatio
             <FileText className="w-12 h-12 text-gray-300 mx-auto mb-3" />
             <p className="text-gray-500">No hay categorías definidas</p>
             <p className="text-sm text-gray-400 mt-1">
-              Primero añade categorías al proyecto en la pestaña "Categorías"
+              Primero añade categorías al proyecto en la pestaña &quot;Categorías&quot;
             </p>
           </CardContent>
         </Card>
