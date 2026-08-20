@@ -31,11 +31,6 @@ export default function ProjectWorkflowTimeline({
   const currentPhase = getPhaseForStatus(currentStatus);
   const progress = calculateProgress(currentStatus);
 
-  // Filtrar estados cancelados para el timeline principal
-  const mainStatuses = PROJECT_STATUS_ORDER.filter(
-    (s) => s !== 'cancelled' && s !== 'financing_rejected'
-  );
-
   return (
     <Card className={className}>
       <CardHeader>
@@ -65,8 +60,8 @@ export default function ProjectWorkflowTimeline({
         {/* Timeline por fases */}
         <div className="space-y-6">
           {WORKFLOW_PHASES.map((phase) => {
-            const phaseStatuses = phase.statuses.filter((s) =>
-              mainStatuses.includes(s)
+            const phaseStatuses = phase.statuses.filter(
+              (s) => s !== 'cancelled' && s !== 'financing_rejected'
             );
             const isCurrentPhase = phase.statuses.includes(currentStatus);
             const allCompleted = phaseStatuses.every((s) =>
