@@ -58,15 +58,22 @@ This is **core marketplace functionality** - without it:
    - Category selection
    - Optional: image upload
    - Variant builder (sizes, colors, SKUs)
+
+2. **Excel Bulk Upload** ⭐ NEW
+   - Download Excel template
+   - Upload .xlsx file with 100+ products
+   - Automatic validation and preview
+   - Variant-per-row structure
+   - Batch import to pending queue
    
-2. **My Products List**
+3. **My Products List**
    - Table/grid view of all proposed products
    - Status badges: Pending | Approved | Rejected
    - View rejection reasons
    - Filter by status
    - Search by title
 
-3. **Product Detail View**
+4. **Product Detail View**
    - Full product info
    - Approval status timeline
    - If rejected: reason + edit/resubmit option
@@ -125,13 +132,16 @@ src/
 │   │   ├── products-pricing-client.ts   # NEW - API client
 │   │   └── products-pricing-mock.ts     # NEW - Mock data
 │   └── utils/
-│       └── pricing-calculator.ts        # NEW - Price calculation logic
+│       ├── pricing-calculator.ts        # NEW - Price calculation logic
+│       └── excel-parser.ts              # NEW - Excel file parser & validator
 ├── components/
 │   ├── supplier/
 │   │   ├── ProductProposalForm.tsx      # NEW - Propose product
 │   │   ├── ProductsList.tsx             # NEW - My products list
 │   │   ├── ProductStatusBadge.tsx       # NEW - Status indicator
-│   │   └── VariantBuilder.tsx           # NEW - Build variants
+│   │   ├── VariantBuilder.tsx           # NEW - Build variants
+│   │   ├── ProductBulkUpload.tsx        # NEW - Excel bulk upload
+│   │   └── BulkUploadPreview.tsx        # NEW - Validation preview
 │   └── admin/
 │       ├── PricingQueue.tsx             # NEW - Pending products
 │       ├── ProductReviewPanel.tsx       # NEW - Review/approve
@@ -412,6 +422,158 @@ src/
 
 ---
 
+### Phase 9: Excel Bulk Upload (Day 4 - 4 hours)
+
+**Goal:** Suppliers can upload products in bulk via Excel template
+
+**Why This Matters:**
+- **Fast onboarding:** Load 100-500 products at once (ALTAVIA, Shopandroll, Pomares)
+- **Better for experienced suppliers:** Excel is familiar, faster than web form
+- **Complements web form:** Both channels feed same approval queue
+
+**Tasks:**
+
+1. ✅ **Create Excel Template Files**
+   - Store in `/public/templates/`
+   - `plantilla_proveedores_v1.0.xlsx` (simplified 22 fields)
+   - `plantilla_completa_v1.0.xlsx` (full 40+ fields, internal use)
+   - Template versioning for evolution
+
+2. ✅ **Create `ProductBulkUpload.tsx`**
+   ```typescript
+   // src/components/supplier/ProductBulkUpload.tsx
+   interface ProductBulkUploadProps {
+     supplierId: string;
+     onSuccess?: (result: BulkUploadResult) => void;
+   }
+   ```
+   
+   **Features:**
+   - Download template button (links to `/templates/plantilla_proveedores_v1.0.xlsx`)
+   - File dropzone (accept only `.xlsx`, `.xls`)
+   - Excel parser using SheetJS/xlsx library
+   - Validation preview table
+   - Submit all valid rows
+
+3. ✅ **Install SheetJS**
+   ```bash
+   npm install xlsx
+   npm install -D @types/node
+   ```
+
+4. ✅ **Create Excel Parser Utility**
+   ```typescript
+   // src/lib/utils/excel-parser.ts
+   
+   interface ParsedProduct {
+     row: number;
+     data: ProductProposal;
+     isValid: boolean;
+     errors: string[];
+     warnings: string[];
+   }
+   
+   interface ExcelParseResult {
+     valid: ParsedProduct[];
+     invalid: ParsedProduct[];
+     totalRows: number;
+   }
+   
+   export function parseProductsExcel(file: File): Promise<ExcelParseResult>
+   ```
+   
+   **Validation Rules:**
+   - ✅ Required: Título, SKU, Precio proveedor
+   - ✅ Precio proveedor > 0
+   - ✅ Valid category from allowed list
+   - ✅ Image URLs accessible (optional check)
+   - ✅ SKU uniqueness within file
+   - ⚠️ Warn: Missing EAN (optional but recommended)
+   - ⚠️ Warn: Missing images
+   - ⚠️ Warn: No description
+
+5. ✅ **Create Validation Preview Component**
+   ```typescript
+   // src/components/supplier/BulkUploadPreview.tsx
+   ```
+   
+   **Features:**
+   - Summary stats: X valid, Y errors, Z warnings
+   - Tabs: Valid | Errors | Warnings
+   - Table showing parsed data
+   - Checkbox to proceed despite warnings
+   - "Upload X Valid Products" button
+
+6. ✅ **Add Bulk Upload to Products Page**
+   - Update `/supplier/products/page.tsx`
+   - Add "Bulk Upload" button next to "New Product"
+   - Opens modal/drawer with ProductBulkUpload
+
+7. ✅ **Backend Integration**
+   ```typescript
+   // Add to products-pricing-client.ts
+   
+   async bulkProposeProducts(
+     sellerId: string, 
+     products: ProductProposal[]
+   ): Promise<BulkUploadResult> {
+     if (isMockMode) {
+       return mockBulkProposeProducts(sellerId, products);
+     }
+     const response = await apiClient.post(
+       '/vendor/custom/products/bulk',
+       { products },
+       { headers: { 'x-seller-id': sellerId } }
+     );
+     return response.data;
+   }
+   ```
+   
+   **Backend Response:**
+   ```typescript
+   interface BulkUploadResult {
+     success: number;        // 238 products created
+     warnings: number;       // 5 warnings (still imported)
+     errors: number;         // 2 errors (skipped)
+     details: {
+       successful: Array<{ row: number; product_id: string; title: string }>;
+       warnings: Array<{ row: number; message: string; product_id: string }>;
+       errors: Array<{ row: number; message: string; data: any }>;
+     };
+   }
+   ```
+
+8. ✅ **Error Reporting UI**
+   - After upload, show detailed results
+   - Downloadable CSV with errors
+   - Example:
+     ```
+     Row 15: Error - Precio proveedor is 0
+     Row 23: Warning - Missing image URLs (product created)
+     Row 34: Error - SKU "POLO-M" already exists
+     ```
+
+9. ✅ **Upload History (Optional)**
+   ```typescript
+   // src/components/supplier/UploadHistory.tsx
+   ```
+   - List past batch uploads
+   - Date, filename, total/success/errors
+   - Re-download error reports
+   - Link to products from that batch
+
+**Testing:**
+- Download template
+- Fill with 10 sample products
+- Upload and see validation
+- Fix errors, re-upload
+- See success with 10 products in pending queue
+- Admin can see all 10 in pricing queue
+
+**Deliverable:** Suppliers can bulk upload products via Excel
+
+---
+
 ## Component Breakdown
 
 ### 1. `ProductProposalForm.tsx`
@@ -613,6 +775,186 @@ interface SellerMarkupManagerProps {
 
 ---
 
+### 8. `ProductBulkUpload.tsx`
+
+**Purpose:** Excel file upload for bulk product import
+
+**Props:**
+```typescript
+interface ProductBulkUploadProps {
+  supplierId: string;
+  onSuccess?: (result: BulkUploadResult) => void;
+}
+```
+
+**State:**
+- file: File | null
+- isParsing: boolean
+- isUploading: boolean
+- parseResult: ExcelParseResult | null
+- uploadResult: BulkUploadResult | null
+
+**Logic:**
+- File drop → parse with SheetJS
+- Map Excel columns to ProductProposal fields
+- Validate each row (required fields, formats, ranges)
+- Show preview of valid/invalid products
+- Submit valid products → POST /vendor/custom/products/bulk
+- Show detailed result (success/warnings/errors)
+
+**UI:**
+- Template download button
+- File dropzone (drag & drop or click)
+- Parsing progress indicator
+- Validation preview (see BulkUploadPreview)
+- Upload button (disabled until valid data)
+- Result summary with downloadable error report
+
+---
+
+### 9. `BulkUploadPreview.tsx`
+
+**Purpose:** Preview and validate parsed Excel data before upload
+
+**Props:**
+```typescript
+interface BulkUploadPreviewProps {
+  parseResult: ExcelParseResult;
+  onProceed: () => void;
+  onCancel: () => void;
+}
+```
+
+**State:**
+- selectedTab: 'valid' | 'errors' | 'warnings'
+- proceedDespiteWarnings: boolean
+
+**Logic:**
+- Display summary stats
+- Show valid products in table
+- Show errors with row numbers
+- Show warnings (can proceed)
+- Enable upload only if valid.length > 0
+
+**UI:**
+- Stats cards: X valid, Y errors, Z warnings
+- Tabs for valid/errors/warnings
+- Table with: Row#, Title, SKU, Price, Status
+- Checkbox: "Proceed despite warnings"
+- Action buttons: Cancel | Upload X Products
+
+---
+
+## Excel Template Structure
+
+### Supplier Template (22 Fields)
+
+**File:** `plantilla_proveedores_v1.0.xlsx`
+
+**Required Fields (9):**
+1. `Título` - Product name
+2. `Descripción` - Product description
+3. `Categoría general` - From dropdown (5 categories)
+4. `SKU` - Unique per supplier
+5. `Precio proveedor` - Base price in EUR (> 0)
+6. `IVA` - Tax percentage (21, 10, 4, 0)
+7. `Unidades pack` - Units per package
+8. `Thumbnail URL` - Main image URL
+9. `Proveedor` - Auto-filled from login (optional in template)
+
+**Variant Options (6):**
+10-12. `Opción 1/2/3 nombre` - Option name (Talla, Color, Formato)
+13-15. `Opción 1/2/3 valor` - Option value (M, Azul, 18x9cm)
+
+**Optional but Recommended (7):**
+16. `Subcategoría`
+17. `Tags` - Comma-separated
+18. `EAN` - Barcode
+19. `Stock` - Initial inventory
+20. `Gestionar stock` - Sí/No
+21-22. `Imagen 1-5 URL` - Additional images
+
+**Hidden from Supplier:**
+- ❌ `Beneficio / markup %` (admin only)
+- ❌ `Precio venta calculado` (auto-calculated)
+- ❌ `Precio venta final` (admin decision)
+- ❌ `Excepciones / notas` (internal)
+- ❌ `Product Handle` (auto-generated)
+
+### Full Template (40+ Fields)
+
+**File:** `plantilla_completa_v1.0.xlsx`
+
+Includes all supplier fields PLUS:
+- Administrative fields (markup, pricing)
+- Technical fields (handles, IDs)
+- MAPPING_MEDUSA sheet (column mapping reference)
+- CONFIG sheet (category dropdowns, validation lists)
+
+**Usage:** Internal data modeling, admin use only
+
+---
+
+### Excel Column Mapping
+
+Map Excel columns → TypeScript ProductProposal:
+
+```typescript
+// src/lib/utils/excel-parser.ts
+
+const COLUMN_MAPPING = {
+  'Título': 'title',
+  'Descripción': 'description',
+  'Categoría general': 'category_id',  // Lookup from CONFIG sheet
+  'Subcategoría': 'subcategory',
+  'SKU': 'sku',
+  'EAN': 'ean',
+  'Precio proveedor': 'base_price',     // Parse as number
+  'IVA': 'tax_rate',                    // Parse as number
+  'Unidades pack': 'units_per_pack',    // Parse as number
+  'Thumbnail URL': 'thumbnail',
+  'Imagen 1 URL': 'image_1',
+  'Imagen 2 URL': 'image_2',
+  'Opción 1 nombre': 'variant_option_1_name',
+  'Opción 1 valor': 'variant_option_1_value',
+  'Tags': 'tags',                       // Split by comma
+  'Stock': 'stock',                     // Parse as number
+  'Gestionar stock': 'manage_inventory' // Parse as boolean
+};
+```
+
+### Variant-Per-Row Logic
+
+Each Excel row = One variant (or one simple product)
+
+**Example: Polo with 4 sizes**
+
+| Título | SKU | Opción 1 | Valor 1 | Precio |
+|--------|-----|----------|---------|--------|
+| Polo Corp | POLO-S | Talla | S | 18.50 |
+| Polo Corp | POLO-M | Talla | M | 18.50 |
+| Polo Corp | POLO-L | Talla | L | 19.00 |
+| Polo Corp | POLO-XL | Talla | XL | 19.00 |
+
+Parser groups by `Título` → creates 1 product with 4 variants
+
+**Backend Receives:**
+```json
+{
+  "title": "Polo Corp",
+  "description": "...",
+  "base_price": 18.50,
+  "variants": [
+    { "title": "Talla S", "sku": "POLO-S", "base_price": 18.50 },
+    { "title": "Talla M", "sku": "POLO-M", "base_price": 18.50 },
+    { "title": "Talla L", "sku": "POLO-L", "base_price": 19.00 },
+    { "title": "Talla XL", "sku": "POLO-XL", "base_price": 19.00 }
+  ]
+}
+```
+
+---
+
 ## API Integration
 
 ### Environment Variable
@@ -699,6 +1041,24 @@ export const pricingApi = {
     const response = await apiClient.patch(
       `/admin/custom/sellers/${sellerId}/markup`,
       { global_markup_percentage: markup }
+    );
+    return response.data;
+  },
+
+  // Bulk upload endpoint
+  async bulkProposeProducts(
+    sellerId: string,
+    products: ProductProposal[]
+  ): Promise<ApiResponse<BulkUploadResult>> {
+    if (isMockMode) {
+      return mockBulkProposeProducts(sellerId, products);
+    }
+    const response = await apiClient.post(
+      '/vendor/custom/products/bulk',
+      { products },
+      {
+        headers: { 'x-seller-id': sellerId }
+      }
     );
     return response.data;
   },
@@ -814,7 +1174,7 @@ const mockProducts = [
 
 ### Priority 2 (Should Have - Week 2)
 
-**Goal:** Polish and edge cases
+**Goal:** Polish and bulk operations
 
 - ✅ Seller markup management
 - ✅ Product detail page with resubmit
@@ -822,24 +1182,34 @@ const mockProducts = [
 - ✅ Image upload
 - ✅ Better filtering/search
 - ✅ Pagination for large lists
+- ✅ **Excel bulk upload (Phase 9)**
+  - Template download
+  - File parser (SheetJS)
+  - Validation preview
+  - Bulk import endpoint
+  - Error reporting
 - ✅ Backend integration (switch off mock mode)
 
-**Deliverable:** Production-ready features
+**Deliverable:** Production-ready features with bulk operations
 
 ---
 
 ### Priority 3 (Nice to Have - Week 3+)
 
-**Goal:** Enhanced UX
+**Goal:** Enhanced UX and power features
 
-- ⭕ Bulk approve/reject
+- ⭕ Bulk approve/reject (admin can approve all from same supplier)
+- ⭕ Upload history (track past Excel uploads)
+- ⭕ Download error reports as CSV
 - ⭕ Email notifications (backend work)
 - ⭕ Activity history/audit log
 - ⭕ Advanced analytics (products by status, avg approval time)
-- ⭕ Export to CSV
+- ⭕ Export current products to Excel
 - ⭕ Product templates for common items
+- ⭕ Image URL validation (check if accessible)
+- ⭕ Batch operations (archive, delete multiple)
 
-**Deliverable:** Power user features
+**Deliverable:** Power user features and optimizations
 
 ---
 
@@ -853,6 +1223,7 @@ touch src/types/products-pricing.ts
 touch src/lib/api/products-pricing-client.ts
 touch src/lib/api/products-pricing-mock.ts
 touch src/lib/utils/pricing-calculator.ts
+touch src/lib/utils/excel-parser.ts
 
 # Create component files
 mkdir -p src/components/supplier
@@ -860,6 +1231,8 @@ touch src/components/supplier/ProductProposalForm.tsx
 touch src/components/supplier/ProductsList.tsx
 touch src/components/supplier/ProductStatusBadge.tsx
 touch src/components/supplier/VariantBuilder.tsx
+touch src/components/supplier/ProductBulkUpload.tsx
+touch src/components/supplier/BulkUploadPreview.tsx
 
 mkdir -p src/components/admin
 touch src/components/admin/PricingQueue.tsx
@@ -875,6 +1248,13 @@ touch src/app/\(supplier\)/supplier/products/\[id\]/page.tsx
 
 mkdir -p src/app/\(backoffice\)/admin/products/{pricing,suppliers}
 touch src/app/\(backoffice\)/admin/products/pricing/page.tsx
+
+# Create Excel templates directory
+mkdir -p public/templates
+
+# Install dependencies for Excel parsing (Week 2)
+npm install xlsx
+npm install -D @types/node
 
 # Add env variable
 echo "NEXT_PUBLIC_MOCK_PRICING=true" >> .env.local
@@ -896,6 +1276,9 @@ echo "NEXT_PUBLIC_MOCK_PRICING=true" >> .env.local
 
 ### Week 2 Complete When:
 - [x] All Priority 2 features implemented
+- [x] Excel bulk upload working (download template, parse, validate, upload)
+- [x] Can upload 100+ products at once
+- [x] Validation errors clearly displayed
 - [x] Connected to real backend (mock mode = false)
 - [x] Error handling in place
 - [x] Loading states for all async operations
@@ -941,6 +1324,31 @@ echo "NEXT_PUBLIC_MOCK_PRICING=true" >> .env.local
 - Currency symbol before number
 - Handle multiple currencies? (Currently EUR only)
 
+### Excel Template Management
+- **Version Control:** Include version in filename (`v1.0`, `v1.1`)
+- **Two Versions:** 
+  - Supplier template (22 fields) - what they fill
+  - Full template (40+ fields) - internal data modeling
+- **Template Updates:** When adding fields, maintain backward compatibility
+- **Validation:** Parse template version from Excel, reject if too old
+- **Distribution:** Store in `/public/templates/` for easy download
+- **Documentation:** Include instruction sheet in Excel (hidden or separate sheet)
+
+### Variant Grouping Logic
+- **Grouping Key:** Products with same `Título` are grouped
+- **Result:** One product with multiple variants
+- **SKU Uniqueness:** Each row must have unique SKU within supplier
+- **Price Variance:** Each variant can have different `Precio proveedor`
+- **Images:** First row's images become product images, variant-specific images optional
+
+### Bulk Upload Considerations
+- **File Size Limit:** 5MB max (prevents browser freeze)
+- **Row Limit:** 1000 rows max per upload (performance)
+- **Progress Indicator:** Show parsing progress for large files
+- **Memory Management:** Process in chunks if >500 rows
+- **Retry Logic:** Save parsed data in localStorage if upload fails
+- **Timeout:** 60s timeout for bulk API call
+
 ---
 
 ## Reference Documentation
@@ -964,5 +1372,8 @@ Start with:
 8. 🚀 Keep momentum, one phase at a time
 
 **Expected Day 1 Progress:** Phases 1-3 complete (Foundation + Supplier proposal + Products list)
+
+**Week 1 Focus:** Individual product workflow (Phases 1-8)  
+**Week 2 Focus:** Bulk operations, Excel upload, backend integration (Phase 9 + Priority 2)
 
 Good luck! 🎯
