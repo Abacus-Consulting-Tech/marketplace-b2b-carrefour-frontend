@@ -738,21 +738,144 @@ Crear nuevo proyecto.
 #### `PUT /api/admin/openings/projects/:id`
 Actualizar proyecto existente.
 
-#### `POST /api/admin/openings/projects/:id/floor-plan`
-Subir plano del local (multipart/form-data).
+---
 
-**Body:**
-- `file` - Archivo PDF del plano
+### 📄 Documentos y Planos Técnicos
+
+#### `POST /api/admin/openings/projects/:id/documents`
+Subir documento/plano técnico al proyecto (multipart/form-data).
+
+**Body (FormData):**
+- `file` - Archivo PDF (requerido)
+- `category` - Categoría del documento (requerido)
+- `subcategory` - Subcategoría opcional (string, puede ser null)
+- `name` - Nombre descriptivo del documento (requerido)
+- `description` - Descripción detallada (opcional)
+
+**Categorías permitidas:**
+- `equipamientos` - Planos de equipamiento comercial
+- `obras_iluminacion` - Planos de iluminación
+- `obras_clima` - Planos de climatización
+- `obras_electricidad` - Planos eléctricos
+- `obras_general` - Planos generales de obra
+- `otros` - Otros documentos técnicos
+
+**Ejemplo de request (curl):**
+```bash
+curl -X POST http://localhost:3000/api/admin/openings/projects/proj_001/documents \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@/path/to/plano_iluminacion.pdf" \
+  -F "category=obras_iluminacion" \
+  -F "subcategory=circuitos" \
+  -F "name=Esquema Circuitos Principales" \
+  -F "description=Plano detallado de circuitos de iluminación de la zona comercial"
+```
 
 **Respuesta:**
 ```json
 {
   "success": true,
   "data": {
-    "floor_plan_url": "https://storage.com/planos/proj_001.pdf"
+    "id": "doc_001",
+    "project_id": "proj_001",
+    "category": "obras_iluminacion",
+    "subcategory": "circuitos",
+    "name": "Esquema Circuitos Principales",
+    "description": "Plano detallado de circuitos de iluminación de la zona comercial",
+    "file_url": "https://storage.com/docs/obras_iluminacion_proj_001_1234567890.pdf",
+    "file_size_bytes": 3145728,
+    "uploaded_by": "admin_user_id",
+    "uploaded_at": "2026-01-15T11:00:00Z"
+  },
+  "message": "Documento subido exitosamente"
+}
+```
+
+**Validaciones:**
+- Categoría debe ser una de las permitidas
+- Archivo debe ser PDF
+- Tamaño máximo 15 MB
+- Usuario debe ser admin
+- Proyecto debe existir
+
+#### `GET /api/admin/openings/projects/:id/documents`
+Listar todos los documentos de un proyecto.
+
+**Query params:**
+- `category` - Filtrar por categoría (opcional)
+- `subcategory` - Filtrar por subcategoría (opcional)
+
+**Respuesta:**
+```json
+{
+  "success": true,
+  "data": {
+    "project_id": "proj_001",
+    "documents": [
+      {
+        "id": "doc_001",
+        "category": "equipamientos",
+        "subcategory": null,
+        "name": "Layout Mobiliario Principal",
+        "description": "Distribución de estanterías y mostradores",
+        "file_url": "https://storage.com/docs/equipamientos_proj_001_123456.pdf",
+        "file_size_bytes": 2458624,
+        "uploaded_by": "admin_user_id",
+        "uploaded_at": "2026-01-15T10:30:00Z"
+      },
+      {
+        "id": "doc_002",
+        "category": "obras_iluminacion",
+        "subcategory": "circuitos",
+        "name": "Esquema Circuitos Iluminación",
+        "description": "Plano detallado de circuitos y luminarias",
+        "file_url": "https://storage.com/docs/obras_iluminacion_proj_001_123457.pdf",
+        "file_size_bytes": 3145728,
+        "uploaded_by": "admin_user_id",
+        "uploaded_at": "2026-01-15T11:00:00Z"
+      }
+    ],
+    "total_documents": 2,
+    "categories": {
+      "equipamientos": 1,
+      "obras_iluminacion": 1
+    }
   }
 }
 ```
+
+#### `GET /api/admin/openings/projects/:id/documents/:documentId`
+Obtener URL firmada para descargar un documento específico.
+
+**Respuesta:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "doc_001",
+    "name": "Layout Mobiliario Principal",
+    "category": "equipamientos",
+    "download_url": "https://storage.com/docs/equipamientos_proj_001_123456.pdf?signature=...",
+    "expires_at": "2026-01-15T12:00:00Z"
+  }
+}
+```
+
+#### `DELETE /api/admin/openings/projects/:id/documents/:documentId`
+Eliminar un documento del proyecto.
+
+**Respuesta:**
+```json
+{
+  "success": true,
+  "message": "Documento eliminado exitosamente"
+}
+```
+
+**Validaciones:**
+- Solo admin puede eliminar
+- Documento debe existir
+- Se elimina archivo del storage (S3) y registro de BD
 
 ---
 
@@ -1184,7 +1307,144 @@ Revisar solicitud de financiación (Carrefour Finanzas).
 
 ---
 
-### 📝 Auditoría
+### � Gestión de Estados del Proyecto (Workflow)
+
+#### `PATCH /api/admin/openings/projects/:projectId/status`
+Actualizar el estado del proyecto manualmente (solo Admin).
+
+**Descripción:**
+Este endpoint permite al administrador cambiar el estado del proyecto. El backend debe validar que la transición es válida según la matriz de transiciones permitidas.
+
+**Body:**
+```json
+{
+  "new_status": "quotes_received",
+  "notes": "Primer presupuesto recibido de Mobiliario SL"
+}
+```
+
+**Validación de transiciones permitidas:**
+```javascript
+const ALLOWED_TRANSITIONS = {
+  'draft': ['preparing_documentation', 'cancelled'],
+  'preparing_documentation': ['draft', 'requesting_quotes', 'cancelled'],
+  'requesting_quotes': ['quotes_received', 'cancelled'],
+  'quotes_received': ['pending_selection', 'requesting_quotes', 'cancelled'],
+  'pending_selection': ['awarded', 'quotes_received', 'cancelled'],
+  'awarded': ['pending_signature', 'cancelled'],
+  'pending_signature': ['signed', 'awarded', 'cancelled'],
+  'signed': ['pending_financing', 'in_execution', 'cancelled'],
+  'pending_financing': ['financing_approved', 'financing_rejected', 'cancelled'],
+  'financing_approved': ['in_execution', 'cancelled'],
+  'financing_rejected': ['pending_financing', 'cancelled'],
+  'in_execution': ['completed', 'cancelled'],
+  'completed': [],
+  'cancelled': []
+};
+```
+
+**Lógica del backend:**
+1. Verificar que el usuario es Admin
+2. Obtener el proyecto y su estado actual
+3. Validar que la transición `current_status → new_status` está permitida
+4. Actualizar el estado del proyecto
+5. Crear entrada en la tabla `opening_status_history`
+6. Registrar en audit log
+7. Enviar notificaciones si corresponde
+
+**Respuesta exitosa:**
+```json
+{
+  "success": true,
+  "data": {
+    "id": "proj_001",
+    "status": "quotes_received",
+    "updated_at": "2026-01-20T14:30:00Z"
+  },
+  "message": "Estado del proyecto actualizado"
+}
+```
+
+**Errores posibles:**
+```json
+{
+  "success": false,
+  "error": "Transición inválida: requesting_quotes → completed"
+}
+```
+
+```json
+{
+  "success": false,
+  "error": "Solo administradores pueden cambiar el estado manualmente"
+}
+```
+
+#### `GET /api/admin/openings/projects/:projectId/status-history`
+Obtener el historial completo de cambios de estado del proyecto.
+
+**Descripción:**
+Devuelve todas las transiciones de estado que ha tenido el proyecto, ordenadas de más reciente a más antigua.
+
+**Respuesta:**
+```json
+{
+  "success": true,
+  "data": {
+    "project_id": "proj_001",
+    "current_status": "requesting_quotes",
+    "history": [
+      {
+        "id": "hist_003",
+        "project_id": "proj_001",
+        "from_status": "preparing_documentation",
+        "to_status": "requesting_quotes",
+        "changed_by_user_id": "admin_001",
+        "changed_by_name": "Admin Sistema",
+        "changed_by_role": "admin",
+        "changed_at": "2026-01-18T09:15:00Z",
+        "notes": "Proveedores invitados para cotización",
+        "metadata": {
+          "categories_count": 3,
+          "invitations_sent": 8
+        }
+      },
+      {
+        "id": "hist_002",
+        "project_id": "proj_001",
+        "from_status": "draft",
+        "to_status": "preparing_documentation",
+        "changed_by_user_id": "admin_001",
+        "changed_by_name": "Admin Sistema",
+        "changed_by_role": "admin",
+        "changed_at": "2026-01-16T14:30:00Z",
+        "notes": "Primera categoría añadida"
+      },
+      {
+        "id": "hist_001",
+        "project_id": "proj_001",
+        "from_status": null,
+        "to_status": "draft",
+        "changed_by_user_id": "admin_001",
+        "changed_by_name": "Admin Sistema",
+        "changed_by_role": "admin",
+        "changed_at": "2026-01-15T10:00:00Z",
+        "notes": "Proyecto creado"
+      }
+    ]
+  }
+}
+```
+
+**Notas de implementación:**
+- `from_status` es `null` para el primer estado (creación del proyecto)
+- `changed_by_role` puede ser: `admin`, `franchisee`, o `system` (para cambios automáticos)
+- `metadata` es un objeto JSON opcional con información adicional del cambio
+- Ordenar por `changed_at DESC` (más reciente primero)
+
+---
+
+### �📝 Auditoría
 
 #### `GET /api/admin/openings/projects/:projectId/audit-logs`
 Historial completo de cambios del proyecto.
@@ -1253,13 +1513,75 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 
 ### Tipos de Archivos en el Sistema
 
-#### 1. **Planos del Local (Floor Plans)**
+#### 1. **Planos Técnicos del Proyecto (Multiple Floor Plans)**
+
+El sistema soporta **múltiples planos categorizados** por tipo de trabajo:
+
+**Categorías de Planos:**
+
+| Categoría | Código | Descripción | Ejemplos |
+|-----------|--------|-------------|----------|
+| **Equipamientos** | `equipamientos` | Planos de distribución y equipamiento comercial | Layout de estanterías, mostradores, refrigeradores |
+| **Obras - Iluminación** | `obras_iluminacion` | Planos del sistema de iluminación | Esquema lumínico, tipos de luminarias, circuitos |
+| **Obras - Clima** | `obras_clima` | Planos de climatización y ventilación | HVAC, aire acondicionado, extractores |
+| **Obras - Electricidad** | `obras_electricidad` | Planos eléctricos y cableado | Cuadros eléctricos, tomas, circuitos |
+| **Obras - General** | `obras_general` | Planos generales de construcción | Planta, alzados, secciones, reformas estructurales |
+| **Otros** | `otros` | Otros documentos técnicos | Licencias, permisos, certificaciones |
+
+**Especificaciones técnicas:**
 - **Formato:** Solo PDF
-- **Tamaño máximo:** 10 MB
+- **Tamaño máximo:** 15 MB por archivo
+- **Múltiples archivos:** Permitido (un proyecto puede tener varios planos de cada categoría)
 - **Subido por:** Administrador
-- **Endpoint:** `POST /api/admin/openings/projects/:id/floor-plan`
-- **Acceso:** Franquiciado y proveedores invitados pueden descargar
-- **Nombre de archivo:** `floor_plan_[project_id]_[timestamp].pdf`
+- **Endpoints:** 
+  - `POST /api/admin/openings/projects/:id/documents` - Subir nuevo documento/plano
+  - `GET /api/admin/openings/projects/:id/documents` - Listar todos los documentos
+  - `GET /api/admin/openings/projects/:id/documents?category=obras_iluminacion` - Filtrar por categoría
+  - `DELETE /api/admin/openings/projects/:id/documents/:documentId` - Eliminar documento
+- **Acceso:** Franquiciado y proveedores invitados pueden descargar todos los planos
+- **Nombre de archivo:** `[category]_[project_id]_[timestamp].pdf`
+
+**Ejemplo de estructura de un proyecto:**
+```javascript
+{
+  "project_id": "proj_001",
+  "documents": [
+    {
+      "id": "doc_001",
+      "category": "equipamientos",
+      "subcategory": null,
+      "name": "Layout Mobiliario Principal",
+      "description": "Distribución de estanterías y mostradores",
+      "file_url": "https://storage.com/docs/equipamientos_proj_001_123456.pdf",
+      "file_size_bytes": 2458624,
+      "uploaded_by": "admin_user_id",
+      "uploaded_at": "2026-01-15T10:30:00Z"
+    },
+    {
+      "id": "doc_002",
+      "category": "obras_iluminacion",
+      "subcategory": "circuitos",
+      "name": "Esquema Circuitos Iluminación",
+      "description": "Plano detallado de circuitos y luminarias",
+      "file_url": "https://storage.com/docs/obras_iluminacion_proj_001_123457.pdf",
+      "file_size_bytes": 3145728,
+      "uploaded_by": "admin_user_id",
+      "uploaded_at": "2026-01-15T11:00:00Z"
+    },
+    {
+      "id": "doc_003",
+      "category": "obras_clima",
+      "subcategory": "hvac",
+      "name": "Sistema HVAC",
+      "description": "Distribución de conductos y equipos de climatización",
+      "file_url": "https://storage.com/docs/obras_clima_proj_001_123458.pdf",
+      "file_size_bytes": 4194304,
+      "uploaded_by": "admin_user_id",
+      "uploaded_at": "2026-01-15T11:30:00Z"
+    }
+  ]
+}
+```
 
 #### 2. **Presupuestos de Proveedores (Quote PDFs)**
 - **Formato:** Solo PDF
@@ -1271,49 +1593,134 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 - **Nombre de archivo:** `quote_[category_id]_[supplier_id]_[timestamp].pdf`
 - **Actualización:** Se puede reemplazar subiendo nuevo PDF en `PUT /api/supplier/openings/quotes/:id`
 
-#### 3. **Documentos Adicionales**
-- **Formato:** PDF, imágenes (JPG, PNG)
-- **Tamaño máximo:** 10 MB por archivo
-- **Subido por:** Administrador o franquiciado
-- **Endpoint:** `POST /api/admin/openings/projects/:id/documents`
-
 ### Validaciones de Archivos
 
 **Validaciones del Backend (OBLIGATORIAS):**
 
 ```javascript
-// Validación de tipo MIME
-const allowedMimeTypes = ['application/pdf'];
-if (!allowedMimeTypes.includes(file.mimetype)) {
-  return res.status(400).json({
-    success: false,
-    error: 'Solo se permiten archivos PDF'
-  });
+// Para documentos de proyecto (planos técnicos)
+function validateProjectDocument(file, category, subcategory) {
+  // Validación de tipo MIME
+  const allowedMimeTypes = ['application/pdf'];
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    return {
+      valid: false,
+      error: 'Solo se permiten archivos PDF'
+    };
+  }
+
+  // Validación de tamaño (15 MB para documentos de proyecto)
+  const maxSizeBytes = 15 * 1024 * 1024; // 15 MB
+  if (file.size > maxSizeBytes) {
+    return {
+      valid: false,
+      error: 'El archivo no debe superar los 15MB'
+    };
+  }
+
+  // Validación de categoría
+  const validCategories = [
+    'equipamientos',
+    'obras_iluminacion',
+    'obras_clima',
+    'obras_electricidad',
+    'obras_general',
+    'otros'
+  ];
+  
+  if (!validCategories.includes(category)) {
+    return {
+      valid: false,
+      error: `Categoría inválida. Debe ser una de: ${validCategories.join(', ')}`
+    };
+  }
+
+  // Validación de nombre de archivo (seguridad)
+  const filename = file.originalname;
+  if (!/^[a-zA-Z0-9_\-\. ]+$/.test(filename)) {
+    return {
+      valid: false,
+      error: 'Nombre de archivo inválido. Solo se permiten letras, números, guiones y puntos'
+    };
+  }
+
+  return { valid: true };
 }
 
-// Validación de tamaño
-const maxSizeBytes = 10 * 1024 * 1024; // 10 MB
-if (file.size > maxSizeBytes) {
-  return res.status(400).json({
-    success: false,
-    error: 'El archivo no debe superar los 10MB'
-  });
-}
+// Para presupuestos de proveedores
+function validateQuotePDF(file) {
+  // Validación de tipo MIME
+  const allowedMimeTypes = ['application/pdf'];
+  if (!allowedMimeTypes.includes(file.mimetype)) {
+    return res.status(400).json({
+      success: false,
+      error: 'Solo se permiten archivos PDF'
+    });
+  }
 
-// Validación de nombre de archivo (seguridad)
-const filename = file.originalname;
-if (!/^[a-zA-Z0-9_\-\. ]+$/.test(filename)) {
-  return res.status(400).json({
-    success: false,
-    error: 'Nombre de archivo inválido'
-  });
+  // Validación de tamaño (10 MB para quotes)
+  const maxSizeBytes = 10 * 1024 * 1024; // 10 MB
+  if (file.size > maxSizeBytes) {
+    return res.status(400).json({
+      success: false,
+      error: 'El archivo no debe superar los 10MB'
+    });
+  }
+
+  // Validación de nombre de archivo (seguridad)
+  const filename = file.originalname;
+  if (!/^[a-zA-Z0-9_\-\. ]+$/.test(filename)) {
+    return res.status(400).json({
+      success: false,
+      error: 'Nombre de archivo inválido'
+    });
+  }
 }
+```
+
+**Ejemplo de uso en endpoint:**
+```javascript
+app.post('/api/admin/openings/projects/:id/documents', upload.single('file'), async (req, res) => {
+  const { category, subcategory, name, description } = req.body;
+  const file = req.file;
+
+  // Validar archivo y categoría
+  const validation = validateProjectDocument(file, category, subcategory);
+  if (!validation.valid) {
+    return res.status(400).json({
+      success: false,
+      error: validation.error
+    });
+  }
+
+  // Proceder con el upload...
+});
 ```
 
 **Validaciones del Frontend (recomendadas):**
 ```javascript
-// En el componente QuoteForm.tsx ya implementado
-const handleFileChange = (e) => {
+// Componente para subir documentos de proyecto
+const handleDocumentUpload = (e) => {
+  const file = e.target.files?.[0];
+  
+  // Validar tipo
+  if (file.type !== 'application/pdf') {
+    setError('Solo se permiten archivos PDF');
+    return;
+  }
+  
+  // Validar tamaño (15MB para documentos de proyecto)
+  const maxSize = 15 * 1024 * 1024;
+  if (file.size > maxSize) {
+    setError('El archivo no debe superar los 15MB');
+    return;
+  }
+  
+  setDocumentFile(file);
+};
+
+// Componente para presupuestos (QuoteForm.tsx ya implementado)
+const handleQuotePDFUpload = (e) => {
   const file = e.target.files?.[0];
   
   // Validar tipo
@@ -1322,7 +1729,7 @@ const handleFileChange = (e) => {
     return;
   }
   
-  // Validar tamaño (10MB)
+  // Validar tamaño (10MB para quotes)
   const maxSize = 10 * 1024 * 1024;
   if (file.size > maxSize) {
     setFileError('El archivo no debe superar los 10MB');
@@ -1516,9 +1923,24 @@ async function updateQuote(quoteId, data, newFile) {
 
 ```
 carrefour-openings/
-├── floor-plans/
-│   ├── proj_001_floor_plan.pdf
-│   ├── proj_002_floor_plan.pdf
+├── project-documents/
+│   ├── proj_001/
+│   │   ├── equipamientos/
+│   │   │   ├── equipamientos_proj_001_1234567890.pdf
+│   │   │   └── equipamientos_proj_001_1234567891.pdf
+│   │   ├── obras_iluminacion/
+│   │   │   ├── obras_iluminacion_proj_001_1234567892.pdf
+│   │   │   └── obras_iluminacion_proj_001_1234567893.pdf
+│   │   ├── obras_clima/
+│   │   │   └── obras_clima_proj_001_1234567894.pdf
+│   │   ├── obras_electricidad/
+│   │   │   └── obras_electricidad_proj_001_1234567895.pdf
+│   │   ├── obras_general/
+│   │   │   └── obras_general_proj_001_1234567896.pdf
+│   │   └── otros/
+│   │       └── otros_proj_001_1234567897.pdf
+│   ├── proj_002/
+│   │   └── ...
 │   └── ...
 ├── quotes/
 │   ├── cat_001/
@@ -1527,13 +1949,15 @@ carrefour-openings/
 │   │   └── ...
 │   ├── cat_002/
 │   └── ...
-└── documents/
-    ├── proj_001/
-    │   ├── license.pdf
-    │   ├── contract.pdf
-    │   └── ...
+└── signatures/
+    ├── signature_quote_001_1234567890.png
     └── ...
 ```
+
+**Convenciones de nombres:**
+- **Documentos de proyecto:** `[category]_[project_id]_[timestamp].pdf`
+- **Presupuestos:** `quote_[category_id]_[supplier_id]_[timestamp].pdf`
+- **Firmas:** `signature_quote_[quote_id]_[timestamp].png`
 
 ### Respuestas de Endpoints con Archivos
 
@@ -1894,6 +2318,124 @@ CREATE INDEX idx_opening_financial_status ON opening_financial_approvals(status)
 CREATE INDEX idx_opening_financial_requested_by ON opening_financial_approvals(requested_by);
 ```
 
+### Tabla: `opening_status_history`
+
+```sql
+CREATE TABLE opening_status_history (
+  id VARCHAR(50) PRIMARY KEY,
+  project_id VARCHAR(50) NOT NULL REFERENCES opening_projects(id) ON DELETE CASCADE,
+  
+  -- Transición de estado
+  from_status VARCHAR(50), -- NULL para el primer estado (creación)
+  to_status VARCHAR(50) NOT NULL,
+  
+  -- Usuario que hizo el cambio
+  changed_by_user_id VARCHAR(50) NOT NULL,
+  changed_by_name VARCHAR(255) NOT NULL,
+  changed_by_role VARCHAR(20) NOT NULL, -- 'admin', 'franchisee', 'system'
+  
+  -- Timestamp
+  changed_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  
+  -- Información adicional
+  notes TEXT,
+  metadata JSONB, -- Para almacenar información contextual adicional
+  
+  -- Constraints
+  CONSTRAINT valid_status_transition CHECK (
+    to_status IN (
+      'draft', 'preparing_documentation', 'requesting_quotes',
+      'quotes_received', 'pending_selection', 'awarded',
+      'pending_signature', 'signed', 'pending_financing',
+      'financing_approved', 'financing_rejected',
+      'in_execution', 'completed', 'cancelled'
+    )
+  ),
+  
+  CONSTRAINT valid_changed_by_role CHECK (
+    changed_by_role IN ('admin', 'franchisee', 'system')
+  )
+);
+
+-- Índices para búsquedas frecuentes
+CREATE INDEX idx_opening_status_history_project ON opening_status_history(project_id);
+CREATE INDEX idx_opening_status_history_timestamp ON opening_status_history(changed_at DESC);
+CREATE INDEX idx_opening_status_history_to_status ON opening_status_history(to_status);
+CREATE INDEX idx_opening_status_history_user ON opening_status_history(changed_by_user_id);
+
+-- Índice compuesto para obtener historial de un proyecto ordenado
+CREATE INDEX idx_opening_status_history_project_time 
+  ON opening_status_history(project_id, changed_at DESC);
+```
+
+**Notas sobre la tabla:**
+- Cada cambio de estado crea una nueva fila (registro inmutable)
+- `from_status` es NULL solo para el primer estado (cuando se crea el proyecto)
+- `changed_by_role = 'system'` se usa para transiciones automáticas del backend
+- `metadata` permite almacenar información contextual (ej: número de categorías, invitaciones enviadas, etc.)
+- Los índices están optimizados para obtener el historial de un proyecto ordenado por fecha
+
+**Ejemplo de trigger para crear entrada automática:**
+```sql
+CREATE OR REPLACE FUNCTION log_project_status_change()
+RETURNS TRIGGER AS $$
+BEGIN
+  -- Solo crear entrada si el estado cambió
+  IF NEW.status IS DISTINCT FROM OLD.status THEN
+    INSERT INTO opening_status_history (
+      id,
+      project_id,
+      from_status,
+      to_status,
+      changed_by_user_id,
+      changed_by_name,
+      changed_by_role,
+      changed_at,
+      notes
+    ) VALUES (
+      'hist_' || gen_random_uuid()::text,
+      NEW.id,
+      OLD.status,
+      NEW.status,
+      COALESCE(current_setting('app.current_user_id', true), 'system'),
+      COALESCE(current_setting('app.current_user_name', true), 'Sistema'),
+      COALESCE(current_setting('app.current_user_role', true), 'system'),
+      NOW(),
+      COALESCE(current_setting('app.status_change_notes', true), NULL)
+    );
+  END IF;
+  
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Asociar el trigger a la tabla de proyectos
+CREATE TRIGGER project_status_change_trigger
+  AFTER UPDATE ON opening_projects
+  FOR EACH ROW
+  EXECUTE FUNCTION log_project_status_change();
+```
+
+**Uso del trigger en tu aplicación:**
+```javascript
+// Antes de actualizar el estado, establece las variables de sesión
+await db.$executeRaw`
+  SELECT 
+    set_config('app.current_user_id', ${userId}, true),
+    set_config('app.current_user_name', ${userName}, true),
+    set_config('app.current_user_role', ${userRole}, true),
+    set_config('app.status_change_notes', ${notes || ''}, true)
+`;
+
+// Actualiza el proyecto
+await db.projects.update({
+  where: { id: projectId },
+  data: { status: newStatus }
+});
+
+// El trigger creará automáticamente la entrada en opening_status_history
+```
+
 ### Tabla: `opening_audit_logs`
 
 ```sql
@@ -1929,6 +2471,62 @@ CREATE INDEX idx_opening_audit_entity ON opening_audit_logs(entity_type, entity_
 CREATE INDEX idx_opening_audit_timestamp ON opening_audit_logs(timestamp DESC);
 CREATE INDEX idx_opening_audit_user ON opening_audit_logs(user_id);
 ```
+
+### Tabla: `opening_project_documents`
+
+```sql
+CREATE TABLE opening_project_documents (
+  id VARCHAR(50) PRIMARY KEY,
+  project_id VARCHAR(50) NOT NULL REFERENCES opening_projects(id) ON DELETE CASCADE,
+  
+  -- Clasificación
+  category VARCHAR(50) NOT NULL,
+  subcategory VARCHAR(100),
+  
+  -- Información del documento
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  
+  -- Archivo
+  file_url TEXT NOT NULL,
+  file_name VARCHAR(255) NOT NULL,
+  file_size_bytes BIGINT NOT NULL,
+  file_mime_type VARCHAR(100) NOT NULL DEFAULT 'application/pdf',
+  
+  -- Auditoría
+  uploaded_by VARCHAR(50) NOT NULL REFERENCES users(id),
+  uploaded_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  
+  -- Metadata adicional
+  is_active BOOLEAN DEFAULT TRUE,
+  version INTEGER DEFAULT 1,
+  
+  CONSTRAINT valid_document_category CHECK (category IN (
+    'equipamientos',
+    'obras_iluminacion',
+    'obras_clima',
+    'obras_electricidad',
+    'obras_general',
+    'otros'
+  ))
+);
+
+-- Índices para búsquedas frecuentes
+CREATE INDEX idx_opening_documents_project ON opening_project_documents(project_id);
+CREATE INDEX idx_opening_documents_category ON opening_project_documents(category);
+CREATE INDEX idx_opening_documents_active ON opening_project_documents(is_active);
+CREATE INDEX idx_opening_documents_uploaded_at ON opening_project_documents(uploaded_at DESC);
+
+-- Índice compuesto para filtrado por proyecto y categoría
+CREATE INDEX idx_opening_documents_project_category 
+  ON opening_project_documents(project_id, category);
+```
+
+**Notas sobre la tabla:**
+- Un proyecto puede tener múltiples documentos de cada categoría
+- `is_active` permite "soft delete" (marcar como inactivo sin borrar)
+- `version` permite controlar versiones si se sube actualización del mismo plano
+- `subcategory` es texto libre para clasificación adicional (ej: "circuitos", "hvac", "cuadros")
 
 ---
 
@@ -2028,7 +2626,85 @@ INSERT INTO opening_categories (
   NOW()
 );
 
--- 4. Insertar invitaciones a proveedores
+-- 4. Insertar documentos/planos técnicos del proyecto
+INSERT INTO opening_project_documents (
+  id, project_id, category, subcategory,
+  name, description,
+  file_url, file_name, file_size_bytes, file_mime_type,
+  uploaded_by, uploaded_at
+) VALUES 
+(
+  'doc_test_001',
+  'proj_test_001',
+  'equipamientos',
+  NULL,
+  'Layout Mobiliario Principal',
+  'Distribución de estanterías, mostradores y equipos refrigerados. Escala 1:50',
+  'https://storage.example.com/docs/equipamientos_proj_test_001_1234567890.pdf',
+  'layout_mobiliario.pdf',
+  2458624, -- ~2.3 MB
+  'application/pdf',
+  'admin_test_001',
+  NOW()
+),
+(
+  'doc_test_002',
+  'proj_test_001',
+  'obras_iluminacion',
+  'circuitos',
+  'Esquema de Circuitos de Iluminación',
+  'Plano eléctrico de circuitos lumínicos con tipos de luminarias y potencias',
+  'https://storage.example.com/docs/obras_iluminacion_proj_test_001_1234567891.pdf',
+  'circuitos_iluminacion.pdf',
+  3145728, -- 3 MB
+  'application/pdf',
+  'admin_test_001',
+  NOW()
+),
+(
+  'doc_test_003',
+  'proj_test_001',
+  'obras_clima',
+  'hvac',
+  'Sistema de Climatización HVAC',
+  'Distribución de conductos, difusores y equipos de climatización',
+  'https://storage.example.com/docs/obras_clima_proj_test_001_1234567892.pdf',
+  'hvac_climatizacion.pdf',
+  4194304, -- 4 MB
+  'application/pdf',
+  'admin_test_001',
+  NOW()
+),
+(
+  'doc_test_004',
+  'proj_test_001',
+  'obras_electricidad',
+  'cuadros',
+  'Esquema Cuadros Eléctricos',
+  'Diagrama unifilar de cuadros eléctricos generales y secundarios',
+  'https://storage.example.com/docs/obras_electricidad_proj_test_001_1234567893.pdf',
+  'cuadros_electricos.pdf',
+  2621440, -- ~2.5 MB
+  'application/pdf',
+  'admin_test_001',
+  NOW()
+),
+(
+  'doc_test_005',
+  'proj_test_001',
+  'obras_general',
+  'planta',
+  'Plano Planta General',
+  'Distribución general de espacios: zona comercial, almacén, baños, oficina',
+  'https://storage.example.com/docs/obras_general_proj_test_001_1234567894.pdf',
+  'planta_general.pdf',
+  5242880, -- 5 MB
+  'application/pdf',
+  'admin_test_001',
+  NOW()
+);
+
+-- 6. Insertar invitaciones a proveedores
 INSERT INTO opening_invitations (
   id, project_id, category_id, supplier_id,
   status, invited_at, deadline, invited_by
@@ -2064,7 +2740,7 @@ INSERT INTO opening_invitations (
   'admin_test_001'
 );
 
--- 5. Insertar presupuestos de ejemplo
+-- 7. Insertar presupuestos de ejemplo
 INSERT INTO opening_quotes (
   id, category_id, supplier_id,
   amount_cents, delivery_days, warranty_months,
@@ -2102,12 +2778,12 @@ INSERT INTO opening_quotes (
   NOW()
 );
 
--- 6. Actualizar estado de invitaciones
+-- 8. Actualizar estado de invitaciones
 UPDATE opening_invitations 
 SET status = 'quote_submitted' 
 WHERE id IN ('inv_test_001', 'inv_test_002');
 
--- 7. Insertar log de auditoría
+-- 9. Insertar log de auditoría
 INSERT INTO opening_audit_logs (
   id, project_id, entity_type, entity_id,
   action, user_id, user_role,
@@ -2344,17 +3020,84 @@ curl -X GET http://localhost:3000/api/admin/openings/projects/proj_test_001/audi
   -H "Content-Type: application/json"
 ```
 
-### 15. Subir plano del local (Admin)
+### 15. Subir documentos/planos técnicos (Admin)
 
 ```bash
-curl -X POST http://localhost:3000/api/admin/openings/projects/proj_test_001/floor-plan \
+# Subir plano de equipamiento
+curl -X POST http://localhost:3000/api/admin/openings/projects/proj_test_001/documents \
   -H "Authorization: Bearer $TOKEN" \
-  -F "file=@/path/to/plano_local.pdf"
+  -F "file=@/path/to/layout_mobiliario.pdf" \
+  -F "category=equipamientos" \
+  -F "name=Layout Mobiliario Principal" \
+  -F "description=Distribución de estanterías y mostradores. Escala 1:50"
+
+# Subir plano de iluminación
+curl -X POST http://localhost:3000/api/admin/openings/projects/proj_test_001/documents \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@/path/to/circuitos_iluminacion.pdf" \
+  -F "category=obras_iluminacion" \
+  -F "subcategory=circuitos" \
+  -F "name=Esquema de Circuitos de Iluminación" \
+  -F "description=Plano eléctrico de circuitos lumínicos con tipos de luminarias"
+
+# Subir plano de climatización
+curl -X POST http://localhost:3000/api/admin/openings/projects/proj_test_001/documents \
+  -H "Authorization: Bearer $TOKEN" \
+  -F "file=@/path/to/hvac.pdf" \
+  -F "category=obras_clima" \
+  -F "subcategory=hvac" \
+  -F "name=Sistema de Climatización HVAC" \
+  -F "description=Distribución de conductos y equipos"
+```
+
+### 16. Listar documentos del proyecto
+
+```bash
+# Listar todos los documentos
+curl -X GET http://localhost:3000/api/admin/openings/projects/proj_test_001/documents \
+  -H "Authorization: Bearer $TOKEN"
+
+# Filtrar por categoría
+curl -X GET "http://localhost:3000/api/admin/openings/projects/proj_test_001/documents?category=obras_iluminacion" \
+  -H "Authorization: Bearer $TOKEN"
+
+# Filtrar por categoría y subcategoría
+curl -X GET "http://localhost:3000/api/admin/openings/projects/proj_test_001/documents?category=obras_clima&subcategory=hvac" \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### 17. Descargar un documento específico
+
+```bash
+curl -X GET http://localhost:3000/api/admin/openings/projects/proj_test_001/documents/doc_test_001 \
+  -H "Authorization: Bearer $TOKEN"
+```
+
+### 18. Eliminar un documento
+
+```bash
+curl -X DELETE http://localhost:3000/api/admin/openings/projects/proj_test_001/documents/doc_test_001 \
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ---
 
 ## 📊 Queries SQL Útiles
+
+### Documentos agrupados por categoría para un proyecto:
+
+```sql
+SELECT 
+  category,
+  subcategory,
+  COUNT(*) as total_documentos,
+  SUM(file_size_bytes) as total_size_bytes,
+  ROUND(SUM(file_size_bytes) / 1024.0 / 1024.0, 2) as total_size_mb
+FROM opening_project_documents
+WHERE project_id = 'proj_test_001' AND is_active = TRUE
+GROUP BY category, subcategory
+ORDER BY category, subcategory;
+```
 
 ### Proyectos con más presupuestos recibidos:
 
@@ -2545,39 +3288,935 @@ CREATE TRIGGER audit_opening_projects
 
 ## 🎯 Endpoints Prioritarios (Roadmap de Implementación)
 
-### Fase 1: CRUD Básico (Semana 1)
+### Fase 1: CRUD Básico y Documentos (Semana 1)
 1. ✅ `POST /api/admin/openings/projects` - Crear proyecto
 2. ✅ `GET /api/admin/openings/projects` - Listar proyectos
 3. ✅ `GET /api/admin/openings/projects/:id` - Detalle proyecto
 4. ✅ `PUT /api/admin/openings/projects/:id` - Actualizar proyecto
-5. ✅ `POST /api/admin/openings/projects/:id/floor-plan` - Subir plano
+5. ✅ `POST /api/admin/openings/projects/:id/documents` - Subir planos/documentos
+6. ✅ `GET /api/admin/openings/projects/:id/documents` - Listar documentos
+7. ✅ `DELETE /api/admin/openings/projects/:id/documents/:docId` - Eliminar documento
 
 ### Fase 2: Categorías e Invitaciones (Semana 2)
-6. ✅ `POST /api/admin/openings/projects/:id/categories` - Crear categoría
-7. ✅ `GET /api/admin/openings/projects/:id/categories` - Listar categorías
-8. ✅ `POST /api/admin/openings/categories/:id/invite` - Invitar proveedores
-9. ✅ `GET /api/supplier/openings/invitations` - Mis invitaciones
+8. ✅ `POST /api/admin/openings/projects/:id/categories` - Crear categoría
+9. ✅ `GET /api/admin/openings/projects/:id/categories` - Listar categorías
+10. ✅ `POST /api/admin/openings/categories/:id/invite` - Invitar proveedores
+11. ✅ `GET /api/supplier/openings/invitations` - Mis invitaciones
 
 ### Fase 3: Presupuestos (Semana 3)
-10. ✅ `POST /api/supplier/openings/categories/:id/quote` - Enviar presupuesto
-11. ✅ `GET /api/franchisee/openings/categories/:id/compare` - Comparar presupuestos
-12. ✅ `POST /api/franchisee/openings/quotes/:id/award` - Adjudicar
+12. ✅ `POST /api/supplier/openings/categories/:id/quote` - Enviar presupuesto
+13. ✅ `GET /api/franchisee/openings/categories/:id/compare` - Comparar presupuestos
+14. ✅ `POST /api/franchisee/openings/quotes/:id/award` - Adjudicar
 
 ### Fase 4: Firmas y Financiación (Semana 4)
-13. ✅ `POST /api/franchisee/openings/quotes/:id/sign` - Firmar
-14. ✅ `POST /api/franchisee/openings/projects/:id/financing` - Solicitar financiación
-15. ✅ `POST /api/admin/openings/financing/:id/review` - Revisar financiación
-16. ✅ `GET /api/admin/openings/projects/:id/audit-logs` - Logs de auditoría
+15. ✅ `POST /api/franchisee/openings/quotes/:id/sign` - Firmar
+16. ✅ `POST /api/franchisee/openings/projects/:id/financing` - Solicitar financiación
+17. ✅ `POST /api/admin/openings/financing/:id/review` - Revisar financiación
+18. ✅ `GET /api/admin/openings/projects/:id/audit-logs` - Logs de auditoría
 
 ---
 
-## 📞 Soporte
+## 🎯 Best Practices y Recomendaciones
 
-Para dudas técnicas:
-- **Documentación completa:** `docs/technical/NEW_STORE_OPENINGS_SPEC.md`
-- **Guía de testing:** `TESTING_GUIDE_OPENINGS.md`
-- **Mock data reference:** `src/lib/api/openings-mock.ts`
+### Validación de Datos
+
+#### 1. Validación en múltiples capas
+```javascript
+// Frontend: Validación básica de UX
+const validateQuoteForm = (data) => {
+  if (!data.amount_cents || data.amount_cents <= 0) {
+    throw new Error("El importe debe ser mayor que 0");
+  }
+  // ... más validaciones
+};
+
+// Backend: Validación de seguridad y negocio
+const validateQuoteData = (data, category, invitation) => {
+  // Verificar que el proveedor está invitado
+  if (!invitation || invitation.supplier_id !== req.user.id) {
+    throw new UnauthorizedError("No estás invitado a esta categoría");
+  }
+  
+  // Verificar deadline
+  if (new Date() > new Date(invitation.deadline)) {
+    throw new ValidationError("El plazo para enviar presupuestos ha expirado");
+  }
+  
+  // Validar importes razonables
+  if (data.amount_cents > 100000000000) { // €1,000,000
+    throw new ValidationError("El importe excede el límite permitido");
+  }
+  
+  return true;
+};
+```
+
+#### 2. Sanitización de inputs
+```javascript
+import sanitizeHtml from 'sanitize-html';
+
+// Sanitizar campos de texto
+const sanitizeQuoteData = (data) => {
+  return {
+    ...data,
+    notes: sanitizeHtml(data.notes, {
+      allowedTags: [], // No permitir HTML
+      allowedAttributes: {}
+    }),
+    payment_terms: sanitizeHtml(data.payment_terms, {
+      allowedTags: [],
+      allowedAttributes: {}
+    })
+  };
+};
+```
+
+### Manejo de Transacciones
+
+#### Usar transacciones para operaciones complejas
+```javascript
+// Al adjudicar un presupuesto (múltiples updates)
+async function awardQuote(quoteId, userId) {
+  const client = await pool.connect();
+  
+  try {
+    await client.query('BEGIN');
+    
+    // 1. Verificar que el quote existe y está submitted
+    const quote = await client.query(
+      'SELECT * FROM opening_quotes WHERE id = $1 FOR UPDATE',
+      [quoteId]
+    );
+    
+    if (!quote.rows[0]) {
+      throw new NotFoundError('Presupuesto no encontrado');
+    }
+    
+    if (quote.rows[0].status !== 'submitted') {
+      throw new ValidationError('Solo se pueden adjudicar presupuestos enviados');
+    }
+    
+    // 2. Actualizar el quote seleccionado
+    await client.query(
+      'UPDATE opening_quotes SET status = $1, awarded_at = NOW() WHERE id = $2',
+      ['awarded', quoteId]
+    );
+    
+    // 3. Rechazar los demás quotes de la misma categoría
+    await client.query(
+      'UPDATE opening_quotes SET status = $1 WHERE category_id = $2 AND id != $3',
+      ['rejected', quote.rows[0].category_id, quoteId]
+    );
+    
+    // 4. Actualizar estado de la categoría
+    await client.query(
+      'UPDATE opening_categories SET status = $1 WHERE id = $2',
+      ['awarded', quote.rows[0].category_id]
+    );
+    
+    // 5. Verificar si todas las categorías están awarded
+    const project = await client.query(
+      `SELECT p.id, 
+              COUNT(c.id) as total_categories,
+              COUNT(CASE WHEN c.status = 'awarded' THEN 1 END) as awarded_categories
+       FROM opening_projects p
+       JOIN opening_categories c ON c.project_id = p.id
+       WHERE p.id = (SELECT project_id FROM opening_categories WHERE id = $1)
+       GROUP BY p.id`,
+      [quote.rows[0].category_id]
+    );
+    
+    if (project.rows[0].total_categories === project.rows[0].awarded_categories) {
+      await client.query(
+        'UPDATE opening_projects SET status = $1 WHERE id = $2',
+        ['awarded', project.rows[0].id]
+      );
+    }
+    
+    // 6. Registrar en audit log
+    await client.query(
+      `INSERT INTO opening_audit_logs (
+        id, project_id, entity_type, entity_id, action, user_id, timestamp
+      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())`,
+      [
+        'log_' + Date.now(),
+        project.rows[0].id,
+        'quote',
+        quoteId,
+        'awarded',
+        userId
+      ]
+    );
+    
+    await client.query('COMMIT');
+    
+    return quote.rows[0];
+    
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+}
+```
+
+### Optimización de Consultas
+
+#### 1. Usar índices apropiados
+```sql
+-- Ya definidos en el schema, pero asegurarse de crearlos:
+CREATE INDEX CONCURRENTLY idx_opening_quotes_category 
+  ON opening_quotes(category_id);
+
+CREATE INDEX CONCURRENTLY idx_opening_quotes_status_amount 
+  ON opening_quotes(status, amount_cents);
+```
+
+#### 2. Eager loading para evitar N+1 queries
+```javascript
+// ❌ MAL: N+1 queries
+const projects = await db.query('SELECT * FROM opening_projects');
+for (const project of projects.rows) {
+  const categories = await db.query(
+    'SELECT * FROM opening_categories WHERE project_id = $1',
+    [project.id]
+  );
+  project.categories = categories.rows;
+}
+
+// ✅ BIEN: Single query con JOIN
+const projects = await db.query(`
+  SELECT 
+    p.*,
+    json_agg(
+      json_build_object(
+        'id', c.id,
+        'name', c.name,
+        'budget_estimate', c.budget_estimate,
+        'status', c.status
+      )
+    ) as categories
+  FROM opening_projects p
+  LEFT JOIN opening_categories c ON c.project_id = p.id
+  GROUP BY p.id
+`);
+```
+
+### Seguridad
+
+#### 1. Validación de permisos
+```javascript
+// Middleware para verificar rol
+const requireRole = (allowedRoles) => {
+  return (req, res, next) => {
+    if (!allowedRoles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        error: 'No tienes permisos para realizar esta acción'
+      });
+    }
+    next();
+  };
+};
+
+// Middleware para verificar ownership
+const requireProjectOwnership = async (req, res, next) => {
+  const projectId = req.params.projectId || req.params.id;
+  
+  const project = await db.query(
+    'SELECT franchisee_id FROM opening_projects WHERE id = $1',
+    [projectId]
+  );
+  
+  if (!project.rows[0]) {
+    return res.status(404).json({
+      success: false,
+      error: 'Proyecto no encontrado'
+    });
+  }
+  
+  if (req.user.role === 'franchisee' && 
+      project.rows[0].franchisee_id !== req.user.id) {
+    return res.status(403).json({
+      success: false,
+      error: 'No tienes acceso a este proyecto'
+    });
+  }
+  
+  next();
+};
+
+// Uso:
+app.post('/api/franchisee/openings/quotes/:id/award', 
+  authenticateJWT,
+  requireRole(['franchisee']),
+  requireProjectOwnership,
+  awardQuoteHandler
+);
+```
+
+#### 2. Rate limiting
+```javascript
+import rateLimit from 'express-rate-limit';
+
+// Limitar creación de quotes
+const quoteCreationLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutos
+  max: 10, // Máximo 10 presupuestos por 15 minutos
+  message: 'Demasiadas solicitudes, intenta más tarde',
+  standardHeaders: true,
+  legacyHeaders: false,
+});
+
+app.post('/api/supplier/openings/categories/:id/quote',
+  quoteCreationLimiter,
+  createQuoteHandler
+);
+```
+
+### Caching
+
+#### 1. Cache de proyectos (Redis)
+```javascript
+import Redis from 'ioredis';
+
+const redis = new Redis(process.env.REDIS_URL);
+
+async function getProject(projectId) {
+  // Intentar obtener del cache
+  const cached = await redis.get(`project:${projectId}`);
+  if (cached) {
+    return JSON.parse(cached);
+  }
+  
+  // Si no está en cache, obtener de DB
+  const result = await db.query(
+    'SELECT * FROM opening_projects WHERE id = $1',
+    [projectId]
+  );
+  
+  const project = result.rows[0];
+  
+  // Guardar en cache por 5 minutos
+  await redis.setex(
+    `project:${projectId}`,
+    300,
+    JSON.stringify(project)
+  );
+  
+  return project;
+}
+
+// Invalidar cache cuando se actualiza
+async function updateProject(projectId, data) {
+  await db.query(
+    'UPDATE opening_projects SET ... WHERE id = $1',
+    [projectId]
+  );
+  
+  // Invalidar cache
+  await redis.del(`project:${projectId}`);
+}
+```
 
 ---
 
-**¡Toda la información técnica necesaria para implementar el backend! 🚀**
+## 🐛 Troubleshooting y Errores Comunes
+
+### Error 1: "No tienes permiso para adjudicar este presupuesto"
+
+**Causa:** El usuario no es el franquiciado del proyecto.
+
+**Solución:**
+```javascript
+// Verificar que el quote pertenece a un proyecto del franchisee
+const quote = await db.query(`
+  SELECT q.*, c.project_id, p.franchisee_id
+  FROM opening_quotes q
+  JOIN opening_categories c ON c.id = q.category_id
+  JOIN opening_projects p ON p.id = c.project_id
+  WHERE q.id = $1
+`, [quoteId]);
+
+if (quote.rows[0].franchisee_id !== req.user.id) {
+  throw new UnauthorizedError('No tienes permiso');
+}
+```
+
+### Error 2: "El plazo para enviar presupuestos ha expirado"
+
+**Causa:** El proveedor intenta enviar quote después del deadline.
+
+**Solución:**
+```javascript
+const invitation = await db.query(
+  'SELECT deadline FROM opening_invitations WHERE category_id = $1 AND supplier_id = $2',
+  [categoryId, supplierId]
+);
+
+const now = new Date();
+const deadline = new Date(invitation.rows[0].deadline);
+
+if (now > deadline) {
+  return res.status(400).json({
+    success: false,
+    error: 'El plazo ha expirado',
+    deadline: invitation.rows[0].deadline,
+    extended_message: 'Contacta con el administrador si necesitas una extensión'
+  });
+}
+```
+
+### Error 3: "Ya existe un presupuesto adjudicado para esta categoría"
+
+**Causa:** Se intenta adjudicar cuando ya hay otro quote awarded.
+
+**Solución:**
+```javascript
+// Verificar antes de adjudicar
+const existingAwarded = await db.query(
+  `SELECT id FROM opening_quotes 
+   WHERE category_id = $1 AND status = 'awarded'`,
+  [categoryId]
+);
+
+if (existingAwarded.rows.length > 0) {
+  return res.status(400).json({
+    success: false,
+    error: 'Ya existe un presupuesto adjudicado para esta categoría',
+    awarded_quote_id: existingAwarded.rows[0].id
+  });
+}
+```
+
+### Error 4: "Archivo PDF muy grande"
+
+**Causa:** El PDF supera el límite de 10 MB.
+
+**Solución:**
+```javascript
+import multer from 'multer';
+
+const upload = multer({
+  limits: {
+    fileSize: 10 * 1024 * 1024 // 10 MB
+  },
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype !== 'application/pdf') {
+      cb(new Error('Solo se permiten archivos PDF'));
+      return;
+    }
+    cb(null, true);
+  }
+});
+
+// Manejo de errores de multer
+app.use((error, req, res, next) => {
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        success: false,
+        error: 'El archivo es demasiado grande. Máximo 10 MB.',
+        max_size: '10 MB'
+      });
+    }
+  }
+  next(error);
+});
+```
+
+### Error 5: "Transición de estado inválida"
+
+**Causa:** Se intenta cambiar el estado de un proyecto a uno no permitido.
+
+**Solución:**
+```javascript
+const ALLOWED_TRANSITIONS = {
+  'draft': ['preparing_documentation', 'cancelled'],
+  'preparing_documentation': ['requesting_quotes', 'cancelled'],
+  'requesting_quotes': ['quotes_received', 'cancelled'],
+  'quotes_received': ['pending_selection', 'cancelled'],
+  'pending_selection': ['awarded', 'cancelled'],
+  'awarded': ['pending_signature', 'cancelled'],
+  'pending_signature': ['signed', 'cancelled'],
+  'signed': ['pending_financing', 'in_execution', 'cancelled'],
+  'pending_financing': ['financing_approved', 'financing_rejected', 'cancelled'],
+  'financing_approved': ['in_execution', 'cancelled'],
+  'financing_rejected': ['cancelled'],
+  'in_execution': ['completed', 'cancelled'],
+  'completed': [],
+  'cancelled': []
+};
+
+function validateTransition(currentStatus, newStatus) {
+  const allowed = ALLOWED_TRANSITIONS[currentStatus];
+  
+  if (!allowed.includes(newStatus)) {
+    throw new ValidationError(
+      `No se puede cambiar de ${currentStatus} a ${newStatus}. ` +
+      `Transiciones permitidas: ${allowed.join(', ')}`
+    );
+  }
+}
+```
+
+---
+
+## ⚡ Consideraciones de Performance
+
+### 1. Paginación
+
+Siempre implementar paginación en endpoints que retornan listas:
+
+```javascript
+async function getProjects(req, res) {
+  const page = parseInt(req.query.page) || 1;
+  const limit = Math.min(parseInt(req.query.limit) || 20, 100); // Máximo 100
+  const offset = (page - 1) * limit;
+  
+  // Contar total
+  const countResult = await db.query(
+    'SELECT COUNT(*) FROM opening_projects WHERE ...'
+  );
+  const total = parseInt(countResult.rows[0].count);
+  
+  // Obtener página
+  const projects = await db.query(
+    'SELECT * FROM opening_projects WHERE ... LIMIT $1 OFFSET $2',
+    [limit, offset]
+  );
+  
+  res.json({
+    success: true,
+    data: projects.rows,
+    pagination: {
+      page,
+      limit,
+      total,
+      total_pages: Math.ceil(total / limit),
+      has_next: page * limit < total,
+      has_prev: page > 1
+    }
+  });
+}
+```
+
+### 2. Lazy Loading de Archivos
+
+No cargar PDFs completos en listados, solo URLs:
+
+```javascript
+// ✅ BIEN: Solo URLs
+SELECT 
+  q.id,
+  q.amount_cents,
+  q.quote_pdf_url  -- Solo la URL, no el contenido
+FROM opening_quotes q;
+
+// ❌ MAL: Cargar archivos completos
+SELECT 
+  q.id,
+  q.amount_cents,
+  q.quote_pdf_content  -- ¡Muy pesado!
+FROM opening_quotes q;
+```
+
+### 3. Índices Compuestos
+
+Para queries comunes:
+
+```sql
+-- Query frecuente: Buscar quotes de un proveedor por estado
+CREATE INDEX idx_quotes_supplier_status 
+  ON opening_quotes(supplier_id, status);
+
+-- Query frecuente: Proyectos de un franchisee por fecha
+CREATE INDEX idx_projects_franchisee_date 
+  ON opening_projects(franchisee_id, planned_opening_date DESC);
+```
+
+### 4. Connection Pooling
+
+```javascript
+import { Pool } from 'pg';
+
+const pool = new Pool({
+  host: process.env.DB_HOST,
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  max: 20, // Máximo 20 conexiones concurrentes
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+});
+
+// Monitoreo de pool
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+});
+
+pool.on('connect', () => {
+  console.log('New client connected to database');
+});
+```
+
+---
+
+## 🔮 Mejoras Futuras
+
+### Fase 2: Funcionalidades Avanzadas
+
+#### 1. **Comparación Automática con IA**
+```javascript
+// Endpoint futuro
+POST /api/franchisee/openings/categories/:id/ai-recommendations
+
+// Analiza presupuestos y recomienda el mejor basándose en:
+// - Precio
+// - Garantía
+// - Plazo de entrega
+// - Historial del proveedor
+// - Reviews anteriores
+```
+
+#### 2. **Notificaciones en Tiempo Real (WebSockets)**
+```javascript
+import { Server } from 'socket.io';
+
+io.on('connection', (socket) => {
+  socket.on('subscribe:project', (projectId) => {
+    socket.join(`project:${projectId}`);
+  });
+});
+
+// Emitir cuando llega nuevo presupuesto
+io.to(`project:${projectId}`).emit('quote:received', {
+  category_id: categoryId,
+  quote_id: quoteId,
+  supplier_name: supplierName
+});
+```
+
+#### 3. **Dashboard de Analytics**
+```javascript
+GET /api/admin/openings/analytics
+
+// Retorna:
+// - Tiempo promedio de adjudicación
+// - Ahorro promedio vs presupuesto estimado
+// - Proveedores más competitivos
+// - Categorías con más competencia
+```
+
+#### 4. **Integración con ERP de Carrefour**
+```javascript
+// Sincronizar proyecto awarded con sistema ERP
+POST /api/integrations/erp/sync-project
+
+// Exportar datos del proyecto a formato ERP
+GET /api/admin/openings/projects/:id/export/erp
+```
+
+#### 5. **Firma Electrónica Avanzada**
+- Integración con servicios de firma electrónica certificada (DocuSign, Signaturit)
+- Validación legal de firmas
+- Certificados de autenticidad
+
+#### 6. **Módulo de Reviews**
+```sql
+CREATE TABLE opening_supplier_reviews (
+  id VARCHAR(50) PRIMARY KEY,
+  project_id VARCHAR(50) REFERENCES opening_projects(id),
+  supplier_id VARCHAR(50) REFERENCES users(id),
+  category_id VARCHAR(50) REFERENCES opening_categories(id),
+  rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+  quality_score INTEGER,
+  timing_score INTEGER,
+  communication_score INTEGER,
+  comments TEXT,
+  reviewed_by VARCHAR(50) REFERENCES users(id),
+  created_at TIMESTAMP DEFAULT NOW()
+);
+```
+
+#### 7. **Gestión de Hitos (Milestones)**
+```sql
+CREATE TABLE opening_milestones (
+  id VARCHAR(50) PRIMARY KEY,
+  project_id VARCHAR(50) REFERENCES opening_projects(id),
+  name VARCHAR(255),
+  description TEXT,
+  planned_date DATE,
+  completed_date DATE,
+  status VARCHAR(50),
+  responsible_role VARCHAR(50)
+);
+```
+
+---
+
+## 📊 Monitoreo y Logs
+
+### Logging Estructurado
+
+```javascript
+import winston from 'winston';
+
+const logger = winston.createLogger({
+  level: 'info',
+  format: winston.format.combine(
+    winston.format.timestamp(),
+    winston.format.json()
+  ),
+  transports: [
+    new winston.transports.File({ filename: 'error.log', level: 'error' }),
+    new winston.transports.File({ filename: 'combined.log' }),
+  ],
+});
+
+// Uso
+logger.info('Quote awarded', {
+  quote_id: quoteId,
+  category_id: categoryId,
+  project_id: projectId,
+  franchisee_id: userId,
+  amount_cents: quote.amount_cents
+});
+
+logger.error('Failed to award quote', {
+  quote_id: quoteId,
+  error: error.message,
+  stack: error.stack
+});
+```
+
+### Métricas con Prometheus
+
+```javascript
+import client from 'prom-client';
+
+const register = new client.Registry();
+
+// Contador de quotes creados
+const quotesCreated = new client.Counter({
+  name: 'openings_quotes_created_total',
+  help: 'Total de presupuestos creados',
+  labelNames: ['category_name']
+});
+
+// Histograma de tiempo de adjudicación
+const awardingTime = new client.Histogram({
+  name: 'openings_awarding_duration_seconds',
+  help: 'Tiempo de procesamiento de adjudicación',
+  buckets: [0.1, 0.5, 1, 2, 5]
+});
+
+register.registerMetric(quotesCreated);
+register.registerMetric(awardingTime);
+
+// Endpoint de métricas
+app.get('/metrics', async (req, res) => {
+  res.set('Content-Type', register.contentType);
+  res.end(await register.metrics());
+});
+```
+
+---
+
+## 📞 Soporte y Referencias
+
+### Documentación Relacionada
+
+- **Especificación completa:** [`docs/technical/openings/NEW_STORE_OPENINGS_SPEC.md`](./NEW_STORE_OPENINGS_SPEC.md)
+- **Guía de testing backend:** [`docs/technical/openings/TESTING_GUIDE_OPENINGS.md`](./TESTING_GUIDE_OPENINGS.md)
+- **Testing de comparación:** [`/TESTING_COMPARISON.md`](../../../TESTING_COMPARISON.md)
+- **Testing de invitaciones:** [`/TESTING_INVITATIONS.md`](../../../TESTING_INVITATIONS.md)
+- **Testing de formulario de quotes:** [`/TESTING_QUOTE_FORM.md`](../../../TESTING_QUOTE_FORM.md)
+- **Mock data reference:** [`src/lib/api/openings-mock.ts`](../../../src/lib/api/openings-mock.ts)
+
+### Testing del Frontend Mock
+
+El frontend está completamente funcional en modo mock. Para probar:
+
+```bash
+# 1. Asegurarse de que mock mode está activo
+echo "NEXT_PUBLIC_MOCK_OPENINGS=true" >> .env.local
+
+# 2. Iniciar servidor de desarrollo
+npm run dev
+
+# 3. Acceder a:
+# - Admin: http://localhost:3002/admin/openings
+# - Franchisee: http://localhost:3002/franchisee/openings
+# - Supplier: http://localhost:3002/supplier/openings
+
+# 4. Credenciales de prueba (ver TESTING_COMPARISON.md)
+# Admin: admin@test.com / admin123
+# Franchisee: franchisee@test.com / franchisee123
+# Supplier: supplier@test.com / supplier123
+```
+
+### 8. Actualizar estado del proyecto (Workflow)
+
+```bash
+# Cambiar estado de un proyecto
+curl -X PATCH http://localhost:3000/api/admin/openings/projects/proj_test_001/status \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "new_status": "quotes_received",
+    "notes": "Primer presupuesto recibido de Mobiliario Comercial SL"
+  }'
+
+# Respuesta esperada:
+# {
+#   "success": true,
+#   "data": {
+#     "id": "proj_test_001",
+#     "status": "quotes_received",
+#     "updated_at": "2026-01-20T14:30:00Z"
+#   },
+#   "message": "Estado del proyecto actualizado"
+# }
+```
+
+### 9. Obtener historial de estados
+
+```bash
+# Ver historial completo de cambios de estado
+curl -X GET http://localhost:3000/api/admin/openings/projects/proj_test_001/status-history \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json"
+
+# Respuesta esperada:
+# {
+#   "success": true,
+#   "data": {
+#     "project_id": "proj_test_001",
+#     "current_status": "quotes_received",
+#     "history": [
+#       {
+#         "id": "hist_003",
+#         "project_id": "proj_test_001",
+#         "from_status": "requesting_quotes",
+#         "to_status": "quotes_received",
+#         "changed_by_user_id": "admin_001",
+#         "changed_by_name": "Admin Sistema",
+#         "changed_by_role": "admin",
+#         "changed_at": "2026-01-20T14:30:00Z",
+#         "notes": "Primer presupuesto recibido de Mobiliario Comercial SL",
+#         "metadata": {
+#           "quotes_count": 1
+#         }
+#       },
+#       {
+#         "id": "hist_002",
+#         "project_id": "proj_test_001",
+#         "from_status": "preparing_documentation",
+#         "to_status": "requesting_quotes",
+#         "changed_by_user_id": "admin_001",
+#         "changed_by_name": "Admin Sistema",
+#         "changed_by_role": "admin",
+#         "changed_at": "2026-01-18T09:15:00Z",
+#         "notes": "Proveedores invitados para cotización"
+#       },
+#       {
+#         "id": "hist_001",
+#         "project_id": "proj_test_001",
+#         "from_status": null,
+#         "to_status": "draft",
+#         "changed_by_user_id": "admin_001",
+#         "changed_by_name": "Admin Sistema",
+#         "changed_by_role": "admin",
+#         "changed_at": "2026-01-15T10:00:00Z",
+#         "notes": "Proyecto creado"
+#       }
+#     ]
+#   }
+# }
+```
+
+### 10. Validación de transiciones inválidas
+
+```bash
+# Intentar una transición no permitida (debe fallar)
+curl -X PATCH http://localhost:3000/api/admin/openings/projects/proj_test_001/status \
+  -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "new_status": "completed",
+    "notes": "Intentando saltar estados"
+  }'
+
+# Respuesta esperada (error):
+# {
+#   "success": false,
+#   "error": "Transición inválida: quotes_received → completed. Transiciones permitidas: [pending_selection, requesting_quotes, cancelled]"
+# }
+```
+
+---
+
+### Cambiar a Backend Real
+
+Una vez implementado el backend:
+
+```bash
+# 1. Desactivar mock mode
+echo "NEXT_PUBLIC_MOCK_OPENINGS=false" >> .env.local
+
+# 2. Configurar URL del backend
+echo "NEXT_PUBLIC_API_URL=https://api.carrefour.com" >> .env.local
+
+# 3. El frontend automáticamente usará el backend real
+# No se requieren cambios de código
+```
+
+### Stack Tecnológico Recomendado
+
+**Backend:**
+- Node.js 18+ con Express o Fastify
+- PostgreSQL 14+
+- Redis (para caching)
+- AWS S3 / DigitalOcean Spaces (para archivos)
+
+**Librerías útiles:**
+- `pg` - Cliente PostgreSQL
+- `multer` - Upload de archivos
+- `aws-sdk` - S3 para almacenamiento
+- `jsonwebtoken` - Autenticación JWT
+- `bcrypt` - Hashing de passwords
+- `express-validator` - Validación de inputs
+- `winston` - Logging
+- `helmet` - Seguridad HTTP headers
+- `cors` - CORS configuration
+- `compression` - Compresión gzip
+
+### Contacto
+
+Para consultas técnicas sobre esta implementación:
+- **Documentación:** Este archivo y referencias listadas arriba
+- **Código mock:** `src/lib/api/openings-mock.ts`
+- **Testing:** Archivos `TESTING_*.md` en raíz del proyecto
+
+---
+
+## 🎉 Conclusión
+
+Esta guía proporciona toda la información necesaria para implementar el backend del módulo de **Nuevas Aperturas**:
+
+✅ **Flujo completo de trabajo** - Desde creación hasta ejecución  
+✅ **Estructura de datos detallada** - Schema SQL completo  
+✅ **Todos los endpoints necesarios** - Con ejemplos de request/response  
+✅ **Gestión de archivos** - Upload y storage de PDFs  
+✅ **Sistema de estados** - Transiciones automáticas  
+✅ **Seguridad y validaciones** - Permisos por rol  
+✅ **Best practices** - Transacciones, caching, performance  
+✅ **Troubleshooting** - Errores comunes y soluciones  
+✅ **Testing completo** - Ejemplos de curl y datos seed  
+
+El frontend ya está 100% implementado en modo mock y listo para conectarse al backend real en cuanto esté disponible.
+
+**¡Éxito con la implementación! 🚀**

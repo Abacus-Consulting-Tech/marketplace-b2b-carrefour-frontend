@@ -1,0 +1,55 @@
+Funcionan las multitiendas de un franquiciado y los packs de productos? ¿Está el objetivo de agosto conseguido? pero lo primero es lo primero dejar el producto básico en funcionamiento y luego las funciones de conexión a odoo y apertura de tiendas.
+Tenemos que finalizar la ingesta de productos y la tarificación. También.
+
+Te paso el manual y el Postman con el flujo de propuesta de productos por el proveedor y el sistema de tarificación. Todo probado en local y DEV.
+ 
+¿Cómo funciona el flujo?
+ 
+El proveedor propone sus productos con título, descripción, precio base y unidades por paquete. El producto queda en estado pending_approval — no visible en storefront.
+ 
+El tarificador Infocus revisa los productos pendientes y los aprueba o rechaza. Si aprueba, puede fijar un markup específico para ese producto. Si no lo fija, se usará el markup global del proveedor.
+ 
+El admin Infocus gestiona el markup global de cada proveedor, que puede cambiar en cualquier momento sin reaprobación.
+ 
+La fórmula de precios (excluyente, no acumulable):
+
+- Si el producto tiene markup asignado → precio = base_price × (1 + product_markup / 100)
+
+- Si no → precio = base_price × (1 + seller_global_markup / 100)
+ 
+Endpoints del proveedor:
+
+1. Login → POST /auth/member/emailpass
+
+2. Obtener seller_id → GET /vendor/sellers
+
+3. Proponer producto → POST /vendor/custom/products con title, base_price, units_per_pack, variantes opcionales
+
+4. Ver mis productos → GET /vendor/custom/products → campo pricing_status (pending_approval / approved / rejected)
+ 
+Endpoints del tarificador:
+
+1. Login → POST /auth/user/emailpass
+
+2. Ver pendientes → GET /admin/custom/products/pending
+
+3. Aprobar → PATCH /admin/custom/products/:id/pricing-approval con { "status": "approved", "markup_percentage": 15 } — el markup es opcional
+
+4. Rechazar → mismo endpoint con { "status": "rejected", "rejection_reason": "..." }
+ 
+Markup global del seller:
+
+- Ver → GET /admin/custom/sellers/:id/markup
+
+- Cambiar → PATCH /admin/custom/sellers/:id/markup con { "global_markup_percentage": 8 }
+ 
+Manual completo: docs/MANUAL_FRONTEND_PROPUESTA_PRODUCTOS_Y_TARIFICACION.md
+
+Postman actualizado: docs/postman/marketplace-b2b-carrefour.postman_collection.json — folders 6 y 7 con auto-save de tokens e IDs
+
+ 
+marketplace-b2b-carrefour.postman_collection 2.json
+MANUAL_FRONTEND_PROPUESTA_PRODUCTOS_Y_TARIFICACION.md
+ 
+Cuando lo tengas tendremos que seguir trabajando esto, faltarán más cosas
+ 

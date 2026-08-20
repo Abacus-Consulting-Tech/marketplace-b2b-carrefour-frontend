@@ -13,6 +13,7 @@ import type {
   Signature,
   FinancialApproval,
   AuditLog,
+  ProjectDocument,
 } from '@/types/openings';
 
 // ============================================================================
@@ -395,6 +396,7 @@ export const mockQuotes: Quote[] = [
       id: 'user_supplier_mobiliario_a',
       name: 'Mobiliario Retail S.L.',
       email: 'info@mobiliarioretail.com',
+      phone: '+34 91 555 1234',
       company_name: 'Mobiliario Retail S.L.',
     },
   },
@@ -416,6 +418,7 @@ export const mockQuotes: Quote[] = [
       id: 'user_supplier_mobiliario_b',
       name: 'Equipamiento Express S.A.',
       email: 'comercial@equipamientoexpress.com',
+      phone: '+34 91 555 5678',
       company_name: 'Equipamiento Express S.A.',
     },
   },
@@ -428,6 +431,7 @@ export const mockQuotes: Quote[] = [
     pdf_url: 'https://storage.example.com/quotes/quote_003.pdf',
     delivery_days: 15,
     warranty_months: 12,
+    payment_terms: 'Pago único contra entrega',
     status: 'submitted',
     submitted_at: new Date('2026-08-11T16:00:00Z'),
     updated_at: new Date('2026-08-11T16:00:00Z'),
@@ -435,7 +439,30 @@ export const mockQuotes: Quote[] = [
       id: 'user_supplier_rotulacion_a',
       name: 'Rotulación Visual S.L.',
       email: 'contacto@rotulacionvisual.com',
+      phone: '+34 91 555 9012',
       company_name: 'Rotulación Visual S.L.',
+    },
+  },
+  {
+    id: 'quote_004',
+    category_id: 'cat_003',
+    supplier_id: 'user_supplier_it_a',
+    amount: 780000, // 7,800 EUR
+    currency: 'EUR',
+    pdf_url: 'https://storage.example.com/quotes/quote_004.pdf',
+    notes: 'Incluye configuración y soporte técnico por 6 meses',
+    delivery_days: 20,
+    warranty_months: 12,
+    payment_terms: 'Pago en 2 plazos: 60% anticipo, 40% instalación',
+    status: 'submitted',
+    submitted_at: new Date('2026-08-13T09:00:00Z'),
+    updated_at: new Date('2026-08-13T09:00:00Z'),
+    supplier: {
+      id: 'user_supplier_it_a',
+      name: 'Soluciones IT Retail',
+      email: 'ventas@solutionsit.com',
+      phone: '+34 91 555 3456',
+      company_name: 'Soluciones IT Retail',
     },
   },
 ];
@@ -651,6 +678,10 @@ export function getMockProjectById(id: string): OpeningProject | undefined {
   return mockProjects.find((p) => p.id === id);
 }
 
+export function getMockProjects(): OpeningProject[] {
+  return mockProjects;
+}
+
 export function getMockProjectsByFranchisee(franchiseeId: string): OpeningProject[] {
   return mockProjects.filter((p) => p.franchisee_id === franchiseeId);
 }
@@ -672,3 +703,187 @@ export function getMockInvitationsByCategory(categoryId: string): SupplierInvita
 export function getMockAuditLogsByProject(projectId: string): AuditLog[] {
   return mockAuditLogs.filter((log) => log.project_id === projectId);
 }
+
+// ============================================================================
+// MOCK: Project Documents
+// ============================================================================
+
+export let mockProjectDocuments: ProjectDocument[] = [
+  {
+    id: 'doc_001',
+    project_id: 'proj_test_001',
+    category: 'equipamientos',
+    subcategory: null,
+    name: 'Layout Mobiliario Principal',
+    description: 'Distribución de estanterías, mostradores y equipos refrigerados. Escala 1:50',
+    file_url: 'https://storage.example.com/docs/equipamientos_proj_test_001_001.pdf',
+    file_name: 'layout_mobiliario.pdf',
+    file_size_bytes: 2458624,
+    file_mime_type: 'application/pdf',
+    uploaded_by: 'admin_user_id',
+    uploaded_at: '2026-01-15T10:30:00Z',
+    is_active: true,
+    version: 1,
+  },
+  {
+    id: 'doc_002',
+    project_id: 'proj_test_001',
+    category: 'obras_iluminacion',
+    subcategory: 'circuitos',
+    name: 'Esquema de Circuitos de Iluminación',
+    description: 'Plano eléctrico de circuitos lumínicos con tipos de luminarias y potencias',
+    file_url: 'https://storage.example.com/docs/obras_iluminacion_proj_test_001_002.pdf',
+    file_name: 'circuitos_iluminacion.pdf',
+    file_size_bytes: 3145728,
+    file_mime_type: 'application/pdf',
+    uploaded_by: 'admin_user_id',
+    uploaded_at: '2026-01-15T11:00:00Z',
+    is_active: true,
+    version: 1,
+  },
+  {
+    id: 'doc_003',
+    project_id: 'proj_test_001',
+    category: 'obras_clima',
+    subcategory: 'hvac',
+    name: 'Sistema de Climatización HVAC',
+    description: 'Distribución de conductos, difusores y equipos de climatización',
+    file_url: 'https://storage.example.com/docs/obras_clima_proj_test_001_003.pdf',
+    file_name: 'hvac_climatizacion.pdf',
+    file_size_bytes: 4194304,
+    file_mime_type: 'application/pdf',
+    uploaded_by: 'admin_user_id',
+    uploaded_at: '2026-01-15T11:30:00Z',
+    is_active: true,
+    version: 1,
+  },
+  {
+    id: 'doc_004',
+    project_id: 'proj_test_001',
+    category: 'obras_electricidad',
+    subcategory: 'cuadros',
+    name: 'Esquema Cuadros Eléctricos',
+    description: 'Diagrama unifilar de cuadros eléctricos generales y secundarios',
+    file_url: 'https://storage.example.com/docs/obras_electricidad_proj_test_001_004.pdf',
+    file_name: 'cuadros_electricos.pdf',
+    file_size_bytes: 2621440,
+    file_mime_type: 'application/pdf',
+    uploaded_by: 'admin_user_id',
+    uploaded_at: '2026-01-15T12:00:00Z',
+    is_active: true,
+    version: 1,
+  },
+  {
+    id: 'doc_005',
+    project_id: 'proj_test_001',
+    category: 'obras_general',
+    subcategory: 'planta',
+    name: 'Plano Planta General',
+    description: 'Distribución general de espacios: zona comercial, almacén, baños, oficina',
+    file_url: 'https://storage.example.com/docs/obras_general_proj_test_001_005.pdf',
+    file_name: 'planta_general.pdf',
+    file_size_bytes: 5242880,
+    file_mime_type: 'application/pdf',
+    uploaded_by: 'admin_user_id',
+    uploaded_at: '2026-01-15T12:30:00Z',
+    is_active: true,
+    version: 1,
+  },
+];
+
+// Helpers para documentos
+export function getMockDocumentsByProject(projectId: string): ProjectDocument[] {
+  return mockProjectDocuments.filter((d) => d.project_id === projectId && d.is_active);
+}
+
+export function getMockDocumentById(documentId: string): ProjectDocument | undefined {
+  return mockProjectDocuments.find((d) => d.id === documentId);
+}
+
+export function addMockDocument(document: ProjectDocument): void {
+  mockProjectDocuments.push(document);
+}
+
+export function deleteMockDocument(documentId: string): void {
+  const index = mockProjectDocuments.findIndex((d) => d.id === documentId);
+  if (index !== -1) {
+    mockProjectDocuments[index].is_active = false; // Soft delete
+  }
+}
+
+// ============================================================================
+// MOCK DATA: Historial de Estados
+// ============================================================================
+
+/**
+ * Historial de cambios de estado (mock)
+ */
+export let mockStatusHistory: import('@/types/openings').StatusHistoryEntry[] = [
+  {
+    id: 'hist_001',
+    project_id: 'proj_test_001',
+    from_status: null,
+    to_status: 'draft',
+    changed_by_user_id: 'admin_001',
+    changed_by_name: 'Admin Sistema',
+    changed_by_role: 'admin',
+    changed_at: '2024-01-15T10:00:00Z',
+    notes: 'Proyecto creado',
+  },
+  {
+    id: 'hist_002',
+    project_id: 'proj_test_001',
+    from_status: 'draft',
+    to_status: 'preparing_documentation',
+    changed_by_user_id: 'admin_001',
+    changed_by_name: 'Admin Sistema',
+    changed_by_role: 'admin',
+    changed_at: '2024-01-16T14:30:00Z',
+    notes: 'Primera categoría añadida',
+  },
+  {
+    id: 'hist_003',
+    project_id: 'proj_test_001',
+    from_status: 'preparing_documentation',
+    to_status: 'requesting_quotes',
+    changed_by_user_id: 'admin_001',
+    changed_by_name: 'Admin Sistema',
+    changed_by_role: 'admin',
+    changed_at: '2024-01-18T09:15:00Z',
+    notes: 'Proveedores invitados para cotización',
+  },
+];
+
+/**
+ * Obtener historial de un proyecto
+ */
+export function getMockStatusHistory(projectId: string): import('@/types/openings').StatusHistoryEntry[] {
+  return mockStatusHistory.filter((h) => h.project_id === projectId);
+}
+
+/**
+ * Agregar entrada al historial
+ */
+export function addMockStatusHistory(
+  projectId: string,
+  data: {
+    from_status: import('@/types/openings').ProjectStatus | null;
+    to_status: import('@/types/openings').ProjectStatus;
+    notes?: string;
+  }
+): void {
+  const newEntry: import('@/types/openings').StatusHistoryEntry = {
+    id: `hist_${Date.now()}`,
+    project_id: projectId,
+    from_status: data.from_status,
+    to_status: data.to_status,
+    changed_by_user_id: 'admin_current',
+    changed_by_name: 'Usuario Actual',
+    changed_by_role: 'admin',
+    changed_at: new Date().toISOString(),
+    notes: data.notes,
+  };
+
+  mockStatusHistory.push(newEntry);
+}
+

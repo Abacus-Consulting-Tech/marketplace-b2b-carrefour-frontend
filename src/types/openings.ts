@@ -428,6 +428,110 @@ export interface QuoteFilters {
 }
 
 // ============================================================================
+// Documentos del Proyecto
+// ============================================================================
+
+/**
+ * Categorías de documentos de proyecto
+ */
+export type DocumentCategory = 
+  | 'equipamientos'
+  | 'obras_iluminacion'
+  | 'obras_clima'
+  | 'obras_electricidad'
+  | 'obras_general'
+  | 'otros';
+
+/**
+ * Documento técnico de un proyecto
+ */
+export interface ProjectDocument {
+  id: string;
+  project_id: string;
+  category: DocumentCategory;
+  subcategory?: string | null;
+  name: string;
+  description?: string | null;
+  file_url: string;
+  file_name: string;
+  file_size_bytes: number;
+  file_mime_type: string;
+  uploaded_by: string;
+  uploaded_at: string;
+  is_active: boolean;
+  version: number;
+}
+
+/**
+ * Request para subir documento
+ */
+export interface UploadDocumentRequest {
+  category: DocumentCategory;
+  subcategory?: string;
+  name: string;
+  description?: string;
+  file: File;
+}
+
+/**
+ * Respuesta de lista de documentos con estadísticas
+ */
+export interface ProjectDocumentsResponse {
+  project_id: string;
+  documents: ProjectDocument[];
+  total_documents: number;
+  categories: Record<DocumentCategory, number>;
+}
+
+/**
+ * Metadatos de categorías de documentos
+ */
+export interface DocumentCategoryMetadata {
+  code: DocumentCategory;
+  label: string;
+  description: string;
+  icon: string; // Nombre del icono de lucide-react
+  color: string; // Clase de Tailwind para color
+}
+
+// ============================================================================
+// Historial de Estados
+// ============================================================================
+
+/**
+ * Entrada en el historial de cambios de estado del proyecto
+ */
+export interface StatusHistoryEntry {
+  id: string;
+  project_id: string;
+  from_status: ProjectStatus | null; // null para el estado inicial
+  to_status: ProjectStatus;
+  changed_by_user_id: string;
+  changed_by_name: string;
+  changed_by_role: 'admin' | 'franchisee' | 'system';
+  changed_at: string;
+  notes?: string;
+  metadata?: Record<string, any>; // Datos adicionales del cambio
+}
+
+/**
+ * Request para cambiar el estado del proyecto
+ */
+export interface UpdateProjectStatusRequest {
+  new_status: ProjectStatus;
+  notes?: string;
+}
+
+/**
+ * Respuesta de historial de estados
+ */
+export interface StatusHistoryResponse {
+  project_id: string;
+  current_status: ProjectStatus;
+  history: StatusHistoryEntry[];
+}
+
+// ============================================================================
 // Mapas de Estado (para UI)
 // ============================================================================
 

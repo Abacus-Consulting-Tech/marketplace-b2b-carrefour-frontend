@@ -29,6 +29,10 @@ import type {
   ProjectListResponse,
   QuoteComparisonData,
   ProjectFilters,
+  ProjectDocument,
+  DocumentCategory,
+  UploadDocumentRequest,
+  ProjectDocumentsResponse,
 } from '@/types/openings';
 
 import {
@@ -47,6 +51,13 @@ import {
   addMockProject,
   updateMockProject,
   saveProjectsToStorage,
+  getMockDocumentsByProject,
+  getMockDocumentById,
+  addMockDocument,
+  deleteMockDocument,
+  getMockStatusHistory,
+  addMockStatusHistory,
+  getMockProjects,
 } from './openings-mock';
 
 import { apiClient } from './client';
@@ -611,6 +622,56 @@ export const openingsApi = {
     return response.data;
   },
 
+  async revertQuote(quoteId: string): Promise<ApiResponse<{ quote: Quote; other_quotes_updated: number }>> {
+    if (isMockMode) {
+      const quoteIndex = mockQuotes.findIndex((q) => q.id === quoteId);
+      if (quoteIndex === -1) {
+        return mockDelay({
+          success: false,
+          error: 'Presupuesto no encontrado',
+        });
+      }
+
+      const quote = mockQuotes[quoteIndex];
+      
+      // Solo se puede revertir si está adjudicado
+      if (quote.status !== 'awarded') {
+        return mockDelay({
+          success: false,
+          error: 'Solo se pueden revertir presupuestos adjudicados',
+        });
+      }
+
+      quote.status = 'submitted';
+      quote.updated_at = new Date();
+
+      // Revertir otros presupuestos rechazados a submitted
+      const otherQuotes = mockQuotes.filter(
+        (q) => q.category_id === quote.category_id && q.id !== quoteId && q.status === 'rejected'
+      );
+      otherQuotes.forEach((q) => {
+        q.status = 'submitted';
+        q.updated_at = new Date();
+      });
+
+      return mockDelay({
+        success: true,
+        data: {
+          quote,
+          other_quotes_updated: otherQuotes.length,
+        },
+        message: 'Adjudicación revertida correctamente',
+      });
+    }
+
+    // Modo real: llamada a Medusa
+    const response = await apiClient.post<ApiResponse<{ quote: Quote; other_quotes_updated: number }>>(
+      `/openings/quotes/${quoteId}/revert`,
+      {}
+    );
+    return response.data;
+  },
+
   async getQuoteComparison(categoryId: string): Promise<ApiResponse<QuoteComparisonData>> {
     if (isMockMode) {
       const category = mockCategories.find((c) => c.id === categoryId);
@@ -621,7 +682,11 @@ export const openingsApi = {
         });
       }
 
-      const quotes = getMockQuotesByCategory(categoryId);
+      // Obtener solo quotes enviados o adjudicados (no borradores)
+      const allQuotes = getMockQuotesByCategory(categoryId);
+      const quotes = allQuotes.filter(
+        (q) => q.status === 'submitted' || q.status === 'awarded' || q.status === 'rejected'
+      );
 
       return mockDelay({
         success: true,
@@ -1050,6 +1115,251 @@ export const openingsApi = {
     // Modo real: llamada a Medusa
     const response = await apiClient.delete<ApiResponse<void>>(
       `/openings/invitations/${invitationId}`
+    );
+    return response.data;
+  },
+
+  // --------------------------------------------------------------------------
+  // Documents
+  // --------------------------------------------------------------------------
+
+  /**
+   * Subir documento/plano técnico a un proyecto
+   */
+  async uploadProjectDocument(
+    projectId: string,
+    data: UploadDocumentRequest
+  ): Promise<ApiResponse<ProjectDocument>> {
+    if (isMockMode) {
+      const newDoc: ProjectDocument = {
+        id: `doc_${Date.now()}`,
+        project_id: projectId,
+        category: data.category,
+        subcategory: data.subcategory || null,
+        name: data.name,
+        description: data.description || null,
+        file_url: `https://storage.example.com/docs/${data.category}_${projectId}_${Date.now()}.pdf`,
+        file_name: data.file.name,
+        file_size_bytes: data.file.size,
+        file_mime_type: data.file.type,
+        uploaded_by: 'admin_user_id',
+        uploaded_at: new Date().toISOString(),
+        is_active: true,
+        version: 1,
+      };
+
+      // Añadir a mockProjectDocuments
+      addMockDocument(newDoc);
+
+      return mockDelay({
+        success: true,
+        data: newDoc,
+        message: 'Documento subido exitosamente',
+      });
+    }
+
+    // Modo real: llamada al backend
+    const formData = new FormData();
+    formData.append('file', data.file);
+    formData.append('category', data.category);
+    if (data.subcategory) formData.append('subcategory', data.subcategory);
+    formData.append('name', data.name);
+    if (data.description) formData.append('description', data.description);
+
+    const response = await apiClient.post<ApiResponse<ProjectDocument>>(
+      `/admin/openings/projects/${projectId}/documents`,
+      formData,
+      {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      }
+    );
+    return response.data;
+  },
+
+  /**
+   * Obtener lista de documentos de un proyecto
+   */
+  async getProjectDocuments(
+    projectId: string,
+    filters?: {
+      category?: DocumentCategory;
+      subcategory?: string;
+    }
+  ): Promise<ApiResponse<ProjectDocumentsResponse>> {
+    if (isMockMode) {
+      let documents = getMockDocumentsByProject(projectId);
+
+      // Aplicar filtros
+      if (filters?.category) {
+        documents = documents.filter((d) => d.category === filters.category);
+      }
+      if (filters?.subcategory) {
+        documents = documents.filter((d) => d.subcategory === filters.subcategory);
+      }
+
+      // Calcular estadísticas por categoría
+      const categories: Record<string, number> = {};
+      documents.forEach((doc) => {
+        categories[doc.category] = (categories[doc.category] || 0) + 1;
+      });
+
+      return mockDelay({
+        success: true,
+        data: {
+          project_id: projectId,
+          documents,
+          total_documents: documents.length,
+          categories: categories as Record<DocumentCategory, number>,
+        },
+      });
+    }
+
+    // Modo real: llamada al backend
+    const params = new URLSearchParams();
+    if (filters?.category) params.append('category', filters.category);
+    if (filters?.subcategory) params.append('subcategory', filters.subcategory);
+
+    const queryString = params.toString();
+    const url = `/admin/openings/projects/${projectId}/documents${queryString ? `?${queryString}` : ''}`;
+
+    const response = await apiClient.get<ApiResponse<ProjectDocumentsResponse>>(url);
+    return response.data;
+  },
+
+  /**
+   * Obtener URL de descarga de un documento específico
+   */
+  async getDocumentDownloadUrl(
+    projectId: string,
+    documentId: string
+  ): Promise<ApiResponse<{ download_url: string; expires_at: string }>> {
+    if (isMockMode) {
+      const doc = getMockDocumentById(documentId);
+      
+      if (!doc) {
+        return mockDelay({
+          success: false,
+          error: 'Documento no encontrado',
+        });
+      }
+
+      return mockDelay({
+        success: true,
+        data: {
+          download_url: doc.file_url,
+          expires_at: new Date(Date.now() + 3600000).toISOString(), // 1 hora
+        },
+      });
+    }
+
+    // Modo real: llamada al backend
+    const response = await apiClient.get<ApiResponse<{ download_url: string; expires_at: string }>>(
+      `/admin/openings/projects/${projectId}/documents/${documentId}`
+    );
+    return response.data;
+  },
+
+  /**
+   * Eliminar un documento del proyecto
+   */
+  async deleteProjectDocument(
+    projectId: string,
+    documentId: string
+  ): Promise<ApiResponse<void>> {
+    if (isMockMode) {
+      deleteMockDocument(documentId);
+
+      return mockDelay({
+        success: true,
+        data: undefined,
+        message: 'Documento eliminado exitosamente',
+      });
+    }
+
+    // Modo real: llamada al backend
+    const response = await apiClient.delete<ApiResponse<void>>(
+      `/admin/openings/projects/${projectId}/documents/${documentId}`
+    );
+    return response.data;
+  },
+
+  // ==========================================================================
+  // GESTIÓN DE ESTADO DEL PROYECTO
+  // ==========================================================================
+
+  /**
+   * Actualizar el estado del proyecto
+   */
+  async updateProjectStatus(
+    projectId: string,
+    data: import('@/types/openings').UpdateProjectStatusRequest
+  ): Promise<ApiResponse<import('@/types/openings').OpeningProject>> {
+    if (isMockMode) {
+      const project = getMockProjects().find((p) => p.id === projectId);
+
+      if (!project) {
+        return mockDelay({
+          success: false,
+          error: 'Proyecto no encontrado',
+        });
+      }
+
+      // Actualizar estado en mock
+      project.status = data.new_status;
+
+      // Agregar entrada al historial
+      addMockStatusHistory(projectId, {
+        from_status: project.status,
+        to_status: data.new_status,
+        notes: data.notes,
+      });
+
+      return mockDelay({
+        success: true,
+        data: project,
+        message: 'Estado del proyecto actualizado',
+      });
+    }
+
+    // Modo real: llamada al backend
+    const response = await apiClient.patch<ApiResponse<import('@/types/openings').OpeningProject>>(
+      `/admin/openings/projects/${projectId}/status`,
+      data
+    );
+    return response.data;
+  },
+
+  /**
+   * Obtener historial de cambios de estado del proyecto
+   */
+  async getStatusHistory(
+    projectId: string
+  ): Promise<ApiResponse<import('@/types/openings').StatusHistoryResponse>> {
+    if (isMockMode) {
+      const project = getMockProjects().find((p) => p.id === projectId);
+
+      if (!project) {
+        return mockDelay({
+          success: false,
+          error: 'Proyecto no encontrado',
+        });
+      }
+
+      const history = getMockStatusHistory(projectId);
+
+      return mockDelay({
+        success: true,
+        data: {
+          project_id: projectId,
+          current_status: project.status,
+          history,
+        },
+      });
+    }
+
+    // Modo real: llamada al backend
+    const response = await apiClient.get<ApiResponse<import('@/types/openings').StatusHistoryResponse>>(
+      `/admin/openings/projects/${projectId}/status-history`
     );
     return response.data;
   },

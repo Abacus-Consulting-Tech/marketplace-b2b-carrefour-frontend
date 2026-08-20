@@ -13,6 +13,11 @@ import { CategoryForm } from '@/components/openings/admin/CategoryForm';
 import { CategoryList } from '@/components/openings/admin/CategoryList';
 import { InviteSupplierForm } from '@/components/openings/admin/InviteSupplierForm';
 import { InvitationsList } from '@/components/openings/admin/InvitationsList';
+import DocumentUploadForm from '@/components/openings/admin/DocumentUploadForm';
+import DocumentsList from '@/components/openings/admin/DocumentsList';
+import ProjectWorkflowTimeline from '@/components/openings/shared/ProjectWorkflowTimeline';
+import ProjectStatusChanger from '@/components/openings/admin/ProjectStatusChanger';
+import StatusHistoryLog from '@/components/openings/shared/StatusHistoryLog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -44,6 +49,12 @@ export default function AdminOpeningDetailPage() {
   const [loadingInvitations, setLoadingInvitations] = React.useState(false);
   const [inviteFormOpen, setInviteFormOpen] = React.useState(false);
   const [savingInvitation, setSavingInvitation] = React.useState(false);
+
+  // Documents state
+  const [documentsRefreshTrigger, setDocumentsRefreshTrigger] = React.useState(0);
+
+  // Workflow state
+  const [workflowRefreshTrigger, setWorkflowRefreshTrigger] = React.useState(0);
 
   useEffect(() => {
     async function loadProject() {
@@ -374,6 +385,7 @@ export default function AdminOpeningDetailPage() {
       <Tabs defaultValue="overview" className="w-full">
         <TabsList>
           <TabsTrigger value="overview">Resumen</TabsTrigger>
+          <TabsTrigger value="workflow">Workflow</TabsTrigger>
           <TabsTrigger value="categories">Categorías</TabsTrigger>
           <TabsTrigger value="suppliers">Proveedores</TabsTrigger>
           <TabsTrigger value="quotes">Presupuestos</TabsTrigger>
@@ -419,6 +431,29 @@ export default function AdminOpeningDetailPage() {
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="workflow" className="space-y-6">
+          {/* Timeline del Workflow */}
+          <ProjectWorkflowTimeline
+            currentStatus={selectedProject.status}
+            showProgress={true}
+          />
+
+          {/* Control de Estado (Admin) */}
+          <ProjectStatusChanger
+            project={selectedProject}
+            onStatusChanged={(updatedProject) => {
+              selectProject(updatedProject);
+              setWorkflowRefreshTrigger((prev) => prev + 1);
+            }}
+          />
+
+          {/* Historial de Cambios */}
+          <StatusHistoryLog
+            projectId={selectedProject.id}
+            refreshTrigger={workflowRefreshTrigger}
+          />
         </TabsContent>
 
         <TabsContent value="categories">
@@ -500,28 +535,19 @@ export default function AdminOpeningDetailPage() {
         </TabsContent>
 
         <TabsContent value="documents">
-          <Card>
-            <CardHeader>
-              <CardTitle>Documentos del Proyecto</CardTitle>
-            </CardHeader>
-            <CardContent>
-              {selectedProject.floor_plan_url ? (
-                <div className="flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-blue-600" />
-                  <a
-                    href={selectedProject.floor_plan_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-blue-600 hover:underline"
-                  >
-                    Plano del local
-                  </a>
-                </div>
-              ) : (
-                <p className="text-gray-500">No hay documentos adjuntos</p>
-              )}
-            </CardContent>
-          </Card>
+          <div className="space-y-6">
+            {/* Formulario de Upload */}
+            <DocumentUploadForm
+              projectId={selectedProject.id}
+              onUploadSuccess={() => setDocumentsRefreshTrigger((prev) => prev + 1)}
+            />
+
+            {/* Lista de Documentos */}
+            <DocumentsList
+              projectId={selectedProject.id}
+              refreshTrigger={documentsRefreshTrigger}
+            />
+          </div>
         </TabsContent>
       </Tabs>
     </div>

@@ -184,21 +184,44 @@ Todos los endpoints están implementados en modo mock con delay de 300ms:
 - 🔒 Audit trail completo
 - 🔒 Validación de permisos por rol
 
-## 📈 Próximos Pasos
+## 📈 Estado del Proyecto (Agosto 2026)
 
-1. ✅ Tipos TypeScript *(Completado)*
-2. ✅ API Client con mocks *(Completado)*
-3. ✅ Zustand Store *(Completado)*
-4. ✅ Componentes UI básicos *(Completado)*
-5. ⏳ Estructura de rutas
-6. ⏳ Portal Admin
-7. ⏳ Portal Franquiciado
-8. ⏳ Portal Proveedor
+### ✅ Completado - Frontend 100% Funcional (Mock Mode)
+
+1. ✅ Tipos TypeScript completos
+2. ✅ API Client dual mode (mock/real)
+3. ✅ Zustand Store
+4. ✅ Componentes UI básicos
+5. ✅ Estructura de rutas
+6. ✅ Portal Admin completo
+7. ✅ Portal Franquiciado completo
+8. ✅ Portal Proveedor completo
+9. ✅ **Sistema de documentos múltiples categorizados** (6 tipos)
+10. ✅ **Workflow visual con timeline y control de estados** (14 estados)
+11. ✅ **Historial de cambios de estado** con auditoría completa
+
+### 🚧 Pendiente para Septiembre 2026
+
+- [ ] Firma digital de contratos
+- [ ] Sistema de financiación
+- [ ] Dashboard y analytics
+- [ ] Notificaciones en tiempo real
+- [ ] **Backend completo** (ver BACKEND_GUIDE.md)
+
+**Ver roadmap detallado:** [ROADMAP_SEPTIEMBRE.md](./ROADMAP_SEPTIEMBRE.md)
 
 ## 📚 Documentación Completa
 
-- [Especificación Técnica EN](../docs/technical/NEW_STORE_OPENINGS_SPEC.md)
-- [Especificación Técnica ES](../docs/technical/ESPECIFICACION_NUEVAS_APERTURAS.md)
+### Guías Principales
+- 🎯 **[ROADMAP_SEPTIEMBRE.md](./ROADMAP_SEPTIEMBRE.md)** - TODOs y plan de trabajo
+- 📘 **[BACKEND_GUIDE.md](./BACKEND_GUIDE.md)** - Guía completa para backend (4200+ líneas)
+- 📄 **[FRONTEND_DOCUMENTS_IMPLEMENTATION.md](./FRONTEND_DOCUMENTS_IMPLEMENTATION.md)** - Sistema de documentos múltiples
+- 🧪 **[TESTING_GUIDE_OPENINGS.md](./TESTING_GUIDE_OPENINGS.md)** - Guía de testing
+
+### Especificaciones Técnicas
+- [SPECIFICATION_ES.md](./SPECIFICATION_ES.md) - Especificación en español
+- [SPECIFICATION_EN.md](./SPECIFICATION_EN.md) - Especificación en inglés
+- [EMAIL_PARA_BACKEND.md](./EMAIL_PARA_BACKEND.md) - Contexto para equipo backend
 
 ## 🤝 Contribución
 
@@ -210,8 +233,20 @@ Para añadir nuevas funcionalidades:
 4. Actualizar store si es necesario
 5. Crear componentes UI
 6. Añadir rutas
+7. Actualizar ROADMAP_SEPTIEMBRE.md con progreso
+
+## 🎉 Logros de Agosto 2026
+
+- ✨ Sistema de **documentos técnicos múltiples** con 6 categorías
+- ✨ **Workflow visual completo** con stepper, timeline y control manual
+- ✨ **Historial de estados** con trazabilidad completa
+- ✨ BACKEND_GUIDE.md expandido con 200+ líneas nuevas
+- ✨ Frontend 100% funcional en modo mock
+
+**Progreso total:** ~35% (Frontend completo, Backend pendiente)
 
 ---
 
-**Versión:** 1.0.0  
-**Última actualización:** Semana 2 - Enero 2026
+**Versión:** 2.0.0  
+**Última actualización:** 20 Agosto 2026  
+**Próxima sesión:** Septiembre 2026

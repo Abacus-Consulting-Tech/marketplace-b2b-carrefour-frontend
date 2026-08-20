@@ -1,4 +1,4 @@
-{
+ {
   "info": {
     "name": "Carrefour B2B - Mercur Store API",
     "description": "Postman collection for the local Mercur/Medusa Store API used by the Next.js storefront. Calls go through the API layer, not directly to Postgres.",

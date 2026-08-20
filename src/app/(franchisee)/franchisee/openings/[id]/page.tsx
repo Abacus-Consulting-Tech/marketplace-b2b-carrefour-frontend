@@ -312,10 +312,10 @@ export default function FranchiseeProjectDetailPage() {
                         )}
                       </div>
                       <Button
-                        onClick={() => handleViewQuotes(category.id)}
+                        onClick={() => router.push(`/franchisee/openings/${projectId}/categories/${category.id}/compare`)}
                         disabled={!category.quotes_count || category.quotes_count === 0}
                       >
-                        Ver Presupuestos
+                        Comparar Presupuestos
                       </Button>
                     </div>
                   </CardContent>
