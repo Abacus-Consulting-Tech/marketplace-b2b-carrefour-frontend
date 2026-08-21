@@ -889,9 +889,9 @@ function ProductsPreviewTable({ products }: { products: ParsedProduct[] }) {
               <TableCell className="font-medium">
                 <div>
                   {product.data.title || <span className="text-gray-400">Sin título</span>}
-                  {product.data.subcategoria && (
+                  {product.data.subcategory && (
                     <div className="text-xs text-gray-500 mt-1">
-                      {product.data.category_id} › {product.data.subcategoria}
+                      {product.data.category_id} › {product.data.subcategory}
                     </div>
                   )}
                 </div>
