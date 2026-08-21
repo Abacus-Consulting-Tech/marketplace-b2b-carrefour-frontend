@@ -451,7 +451,7 @@ export default function DevToolsPage() {
                   <div key={key} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="space-y-1">
                       <h3 className="font-semibold capitalize">{key}</h3>
-                      <p className="text-sm text-muted-foreground">{config.description}</p>
+                      <p className="text-sm text-muted-foreground">{config.notes}</p>
                       <div className="flex gap-2 mt-2">
                         <Badge variant="outline">
                           Backend: {config.backendReady ? '✅ Ready' : '⏳ Pending'}
