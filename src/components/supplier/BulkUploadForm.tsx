@@ -164,7 +164,7 @@ export function BulkUploadForm() {
         base_price: grouped.base_price,
         units_per_pack: grouped.units_per_pack,
         category_id: grouped.category_id.trim(),
-        subcategory: grouped.subcategoria?.trim(),
+        subcategory: grouped.subcategory?.trim(),
         thumbnail: grouped.images[0],
         images: grouped.images.filter(Boolean),
         variants,
