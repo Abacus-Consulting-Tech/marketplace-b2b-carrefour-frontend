@@ -67,10 +67,10 @@ export const featureFlags = {
     } satisfies ModuleConfig,
     
     products: {
-      useMock: false, // Already using real API
-      backendReady: true,
+      useMock: process.env.NEXT_PUBLIC_MOCK_PRODUCTS !== 'false', // Use env var, default to mock
+      backendReady: false,
       apiBaseUrl: '/api/products',
-      notes: 'Live in production',
+      notes: 'Using mock mode until backend is ready',
       lastUpdated: '2026-08-21',
     } satisfies ModuleConfig,
 
