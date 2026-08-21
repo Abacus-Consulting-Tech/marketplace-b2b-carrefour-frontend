@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthStore } from "@/lib/store/auth";
 import { apiClient } from "@/lib/api/client";
+import { featureFlags } from "@/config/feature-flags";
 
 export default function LoginPage() {
   const router = useRouter();
-  const login = useAuthStore((state) => state.login);
+  const { login, isAuthenticated, user, _hasHydrated } = useAuthStore();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -21,18 +22,21 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showMockInfo, setShowMockInfo] = useState(false);
 
-  // Use mock API if NEXT_PUBLIC_MOCK_AUTH is true OR if no API URL is configured
-  const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true" || !process.env.NEXT_PUBLIC_API_URL;
+  // Use feature flags to determine mock mode
+  const isMockMode = featureFlags.shouldUseMock('auth');
+
+  // NOTE: Removed automatic redirect on mount to prevent infinite loops
+  // If user is already authenticated, ProtectedRoute will handle redirects
+  // Only redirect happens after successful login form submission
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
+    console.log('[Login] Form submitted, attempting login...');
+
     try {
-      // Use mock API if NEXT_PUBLIC_MOCK_AUTH is true OR if no API URL is configured
-      const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true" || !process.env.NEXT_PUBLIC_API_URL;
-      
       let user, token;
       if (isMockMode) {
         // Use mock API
@@ -42,6 +46,7 @@ export default function LoginPage() {
         token = response.data.token;
       } else {
         // Use Next.js API proxy to avoid CORS issues
+        console.log('[Login] Calling /api/auth/login...');
         const response = await fetch('/api/auth/login', {
           method: 'POST',
           headers: {
@@ -52,6 +57,7 @@ export default function LoginPage() {
 
         if (!response.ok) {
           const error = await response.json();
+          console.error('[Login] API error:', error);
           throw new Error(error.message || 'Authentication failed');
         }
 
@@ -60,17 +66,33 @@ export default function LoginPage() {
         token = data.token;
       }
       
+      console.log('[Login] User logged in:', user.email, 'Role:', user.role);
+      console.log('[Login] Token received:', token ? 'yes' : 'no');
+      
+      // Save to store
       login(user, token);
       
-      // Redirect based on role
+      console.log('[Login] Store updated, waiting for persistence...');
+      
+      // Wait for Zustand to persist the state to localStorage
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      console.log('[Login] State persisted, navigating to dashboard with full page reload...');
+      
+      // Use window.location.href for a full page reload
+      // This ensures Zustand hydrates from localStorage before ProtectedRoute checks
       if (user.role === "admin") {
-        router.push("/admin/dashboard");
+        console.log('[Login] Redirecting to /admin/dashboard');
+        window.location.href = "/admin/dashboard";
       } else if (user.role === "supplier") {
-        router.push("/supplier/dashboard");
+        console.log('[Login] Redirecting to /supplier/dashboard');
+        window.location.href = "/supplier/dashboard";
       } else if (user.role === "franchisee") {
-        router.push("/marketplace/dashboard");
+        console.log('[Login] Redirecting to /marketplace/dashboard');
+        window.location.href = "/marketplace/dashboard";
       } else {
-        router.push("/marketplace");
+        console.log('[Login] Redirecting to /marketplace');
+        window.location.href = "/marketplace";
       }
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } }; message?: string };
@@ -79,6 +101,20 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  // Show loading while hydrating
+  if (!_hasHydrated) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center py-12">
+          <div className="flex flex-col items-center gap-3">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+            <p className="text-sm text-gray-600">Cargando...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -121,14 +157,14 @@ export default function LoginPage() {
                     </>
                   ) : (
                     <>
-                      <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                        <strong>Admin:</strong> admin@carrefour.dev / supersecret
+                      <div className="font-mono bg-green-100 dark:bg-green-900 p-2 rounded border border-green-300">
+                        <strong>✅ Admin:</strong> admin@carrefour.dev / supersecret
                       </div>
-                      <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                        <strong>Seller:</strong> seller@mercur.dev / supersecret
+                      <div className="font-mono bg-green-100 dark:bg-green-900 p-2 rounded border border-green-300">
+                        <strong>✅ Seller:</strong> seller@mercur.dev / DevSeller123!
                       </div>
-                      <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                        <strong>Franchisee:</strong> franchisee@test.com / supersecret <span className="text-gray-500">(3 tiendas)</span>
+                      <div className="font-mono bg-green-100 dark:bg-green-900 p-2 rounded border border-green-300">
+                        <strong>✅ Franchisee:</strong> franchisee@carrefour.dev / supersecret
                       </div>
                     </>
                   )}

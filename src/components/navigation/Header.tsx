@@ -16,7 +16,9 @@ export function Header() {
   const itemCount = useCartStore((state) => state.getItemCount());
 
   const handleLogout = () => {
+    console.log('[Header] Logout initiated');
     logout();
+    console.log('[Header] Store cleared, redirecting to /login');
     router.push("/login");
   };
 

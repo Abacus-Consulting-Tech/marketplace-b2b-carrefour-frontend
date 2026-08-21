@@ -1,0 +1,11 @@
+﻿PLANTILLA MAESTRA DE PRODUCTOS – MEDUSA / MERCUR,
+Principio,Una fila representa una variante/SKU. Varias filas con el mismo Producto padre ID / Product Handle pertenecen al mismo producto.
+Imágenes,Usar URLs públicas HTTPS. Imagen 1–5 son imágenes del producto. Thumbnail puede coincidir con Imagen 1.
+Proveedor,"Rellena datos del producto, variante, pack, precio proveedor, inventario e imágenes."
+Administración General,Rellena Beneficio / markup %. El Excel calcula el precio de venta. Puede indicar Precio venta manual para sobrescribirlo.
+Administración Base,"Rellena Excepciones / notas. Campo interno, no visible en storefront."
+Categorías,Hay 5 categorías generales provisionales en CONFIG; sustituir por los nombres definitivos.
+Variantes,"Usar Talla, Color, Formato, Idioma, Acabado, etc. como opciones."
+SKU,Debe identificar inequívocamente la variante. Los códigos OPEX/ERP pueden conservarse como ID externo.
+Estado,Recomendado: proveedor carga draft/proposed y Administración publica tras revisión.
+Carga backend,"El backend transforma esta plantilla al CSV/API de Medusa/Mercur y resuelve IDs reales de categorías, colecciones y canales."

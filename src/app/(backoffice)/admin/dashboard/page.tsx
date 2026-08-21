@@ -5,6 +5,7 @@ import { StatCard } from '@/components/dashboard/StatCard';
 import { useAuthStore } from '@/lib/store/auth';
 import { mockApi } from '@/lib/api/mock';
 import { apiClient } from '@/lib/api/client';
+import { featureFlags } from '@/config/feature-flags';
 import { 
   Users, 
   ShoppingBag, 
@@ -23,8 +24,8 @@ export default function AdminDashboardPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Check if we're in mock mode
-  const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true" || !process.env.NEXT_PUBLIC_API_URL;
+  // Check if we're in mock mode using feature flags
+  const isMockMode = featureFlags.shouldUseMock('auth');
 
   useEffect(() => {
     const fetchData = async () => {

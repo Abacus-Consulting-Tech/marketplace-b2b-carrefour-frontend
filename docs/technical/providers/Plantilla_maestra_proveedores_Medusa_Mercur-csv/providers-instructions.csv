@@ -1,0 +1,14 @@
+﻿PLANTILLA DE CARGA DE PRODUCTOS PARA PROVEEDORES,
+Regla principal,"Cada fila corresponde a un SKU o variante. Si un producto tiene varias tallas, colores o formatos, repite el Producto ID y crea una fila por variante."
+Producto ID,Código común para agrupar todas las variantes del mismo producto. Ejemplo: PANT-H-MAR.
+SKU / Referencia,Código único de cada variante o referencia comercial del proveedor.
+Categoría general,Seleccionar una de las 5 categorías disponibles en el desplegable.
+Subcategoría,"Texto libre. Ejemplos: Uniformes, Preimpresos, Señalética, Mobiliario."
+Variante,"Nombre legible de la variante. Ejemplo: Talla M, Pack 250, Color Azul."
+Opciones,"Usar Opción 1/Valor 1 y Opción 2/Valor 2 para Talla, Color, Formato, Acabado, etc."
+Precio proveedor,"Precio neto del proveedor, sin aplicar margen de la plataforma."
+IVA,"Seleccionar 0, 10 o 21."
+Stock,"Unidades disponibles. Si no se gestiona stock, dejar vacío."
+Imágenes,Introducir URLs públicas HTTPS. Imagen 1 es la principal; las demás son adicionales. No insertar imágenes dentro del Excel.
+Campos internos,"El proveedor NO debe incluir margen de beneficio, precio final ni notas internas de administración; esos datos se gestionan después en la plataforma."
+Ejemplos,Las primeras filas de PRODUCTOS son ejemplos. Pueden borrarse antes de rellenar el archivo definitivo.

@@ -1,6 +1,7 @@
 // Mock authentication for development/testing
-// Enable by setting NEXT_PUBLIC_MOCK_AUTH=true in .env.local
+// Mode controlled by feature flags in @/config/feature-flags
 
+import { featureFlags } from '@/config/feature-flags';
 import type { Order } from '@/types';
 
 interface MockUser {
@@ -52,7 +53,7 @@ const MOCK_USERS: MockUser[] = [
     email: "supplier@test.com",
     password: "supplier123",
     user: {
-      id: "3",
+      id: "sel_uniformes_corp", // Changed to match seller_id in pricing mock data
       email: "supplier@test.com",
       name: "María García",
       role: "supplier",
@@ -642,7 +643,7 @@ const saveStoredOrders = (orders: Order[]) => {
 export const mockApi = {
   // Check if mock mode is enabled
   isMockMode: () => {
-    return process.env.NEXT_PUBLIC_MOCK_AUTH === "true";
+    return featureFlags.shouldUseMock('auth');
   },
 
   // Auth endpoints

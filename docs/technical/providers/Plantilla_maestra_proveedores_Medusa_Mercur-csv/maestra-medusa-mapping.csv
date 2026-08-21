@@ -1,0 +1,19 @@
+﻿Plantilla,Medusa / Mercur,Nivel,Notas
+Product Handle,Product Handle,Producto,Único; minúsculas/números/guiones.
+Título producto,Product Title,Producto,Obligatorio al crear si no hay Product Id.
+Subtítulo,Product Subtitle,Producto,Opcional.
+Descripción,Product Description,Producto,Descripción comercial.
+Categoría general / Subcategoría,Product Category *,Producto,Backend convierte nombre a ID existente.
+Tipo producto,Product Type Id,Producto,Backend resuelve ID.
+Colección,Product Collection Id,Producto,Opcional.
+ID externo / ERP,Product External Id,Producto,OPEX/ERP/código maestro.
+Thumbnail URL,Product Thumbnail,Producto,URL pública.
+Imagen 1–5 URL,Product Image *,Producto,URL pública.
+Variante,Variant Title,Variante,Una fila por variante.
+SKU / Referencia,Variant SKU,Variante,Código del proveedor.
+Opción 1–3,Variant Options,Variante,"Ej.: Talla=S, Color=Marino."
+Precio venta final EUR,Variant Price EUR,Variante/Oferta,Precio final para catálogo/oferta.
+Peso/Alto/Ancho/Largo,Variant attributes,Variante,Atributos físicos.
+Stock / Backorder,Inventory,Variante/Oferta,Inventario del vendedor/oferta.
+Beneficio / markup %,Custom admin field / metadata,Administración General,Interno.
+Excepciones / notas,Custom admin field / metadata,Administración Base,Interno.

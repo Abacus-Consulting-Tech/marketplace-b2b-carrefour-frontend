@@ -5,10 +5,10 @@
  * - Modo Mock (desarrollo sin backend)
  * - Modo Real (integración con Medusa)
  * 
- * Cambiar entre modos con variable de entorno:
- * NEXT_PUBLIC_MOCK_OPENINGS=true/false
+ * Mode controlled by feature flags in @/config/feature-flags
  */
 
+import { featureFlags } from '@/config/feature-flags';
 import type {
   OpeningProject,
   ProjectCategory,
@@ -66,7 +66,16 @@ import { apiClient } from './client';
 // Configuración
 // ============================================================================
 
-const isMockMode = process.env.NEXT_PUBLIC_MOCK_OPENINGS === 'true';
+const isMockMode = featureFlags.shouldUseMock('openings');
+const API_BASE_URL = featureFlags.getApiBaseUrl('openings') || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
+
+// Log mode on initialization
+if (typeof window !== 'undefined') {
+  console.log(
+    `${isMockMode ? '🎭' : '🌐'} Openings API Mode: ${isMockMode ? 'MOCK' : 'REAL'}`,
+    `(Backend Ready: ${featureFlags.isBackendReady('openings') ? 'Yes ✅' : 'No ⏳'})`
+  );
+}
 
 // Simular delay de red en modo mock
 const MOCK_DELAY_MS = 300;

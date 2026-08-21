@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { apiClient } from "@/lib/api/client";
+import { featureFlags } from "@/config/feature-flags";
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
@@ -21,8 +22,7 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      // Use mock API if NEXT_PUBLIC_MOCK_AUTH is true OR if no API URL is configured
-      const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true" || !process.env.NEXT_PUBLIC_API_URL;
+      const isMockMode = featureFlags.shouldUseMock('auth');
       
       if (isMockMode) {
         // Use mock API
