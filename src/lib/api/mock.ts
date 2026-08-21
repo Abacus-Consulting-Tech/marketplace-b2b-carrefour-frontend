@@ -651,13 +651,22 @@ export const mockApi = {
     login: async (email: string, password: string) => {
       await delay();
       
+      console.log('[Mock Auth] Login attempt with email:', email);
+      console.log('[Mock Auth] Available users:', MOCK_USERS.map(u => u.email));
+      
       const mockUser = MOCK_USERS.find(
-        (u) => u.email === email && u.password === password
+        (u) => u.email.toLowerCase().trim() === email.toLowerCase().trim() && 
+               u.password === password
       );
 
       if (!mockUser) {
+        console.error('[Mock Auth] User not found or password mismatch');
+        console.error('[Mock Auth] Email searched:', email.toLowerCase().trim());
+        console.error('[Mock Auth] Password provided:', password);
         throw new Error("Credenciales inválidas");
       }
+
+      console.log('[Mock Auth] Login successful for:', mockUser.user.email, 'Role:', mockUser.user.role);
 
       return {
         data: {
