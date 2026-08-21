@@ -283,7 +283,7 @@ export function BulkUploadForm() {
         title: firstRow.titulo,
         description: firstRow.descripcion,
         category_id: firstRow.categoria,
-        subcategoria: firstRow.subcategoria,
+        subcategory: firstRow.subcategoria,
         marca: firstRow.marca,
         base_price: parseFloat(firstRow.precio) || 0,
         units_per_pack: parseInt(firstRow.unidades_pack) || 1,
