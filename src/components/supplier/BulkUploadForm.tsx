@@ -580,8 +580,8 @@ PREIMP-001,Super Precio Express,Preimpreso promocional para tienda,Preimpresos,M
                 <div>
                   <p className="font-semibold text-gray-700 mb-1">💰 Precios y Stock:</p>
                   <ul className="list-disc list-inside ml-4 space-y-1 text-xs">
-                    <li><code className="bg-white px-1 rounded">Unidades por pack</code> - Cantidad de unidades por pack (entero >= 1) <span className="text-red-600">*</span></li>
-                    <li><code className="bg-white px-1 rounded">Precio proveedor (€)</code> - Precio neto del proveedor (número > 0) <span className="text-red-600">*</span></li>
+                    <li><code className="bg-white px-1 rounded">Unidades por pack</code> - Cantidad de unidades por pack (entero &gt;= 1) <span className="text-red-600">*</span></li>
+                    <li><code className="bg-white px-1 rounded">Precio proveedor (€)</code> - Precio neto del proveedor (número &gt; 0) <span className="text-red-600">*</span></li>
                     <li><code className="bg-white px-1 rounded">IVA (%)</code> - Tipo de IVA: 0, 10 o 21 <span className="text-red-600">*</span></li>
                     <li><code className="bg-white px-1 rounded">Stock</code> - Unidades disponibles (opcional)</li>
                   </ul>
