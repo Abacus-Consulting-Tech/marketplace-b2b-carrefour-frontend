@@ -569,9 +569,9 @@ PREIMP-001,Super Precio Express,Preimpreso promocional para tienda,Preimpresos,M
                   <ul className="list-disc list-inside ml-4 space-y-1 text-xs">
                     <li><code className="bg-white px-1 rounded">SKU / Referencia</code> - Código único de variante <span className="text-red-600">*</span></li>
                     <li><code className="bg-white px-1 rounded">EAN / Código de barras</code> - Código de barras del producto</li>
-                    <li><code className="bg-white px-1 rounded">Variante</code> - Nombre legible (ej: "Talla M", "Pack 250")</li>
-                    <li><code className="bg-white px-1 rounded">Opción 1</code> - Nombre de opción (ej: "Talla", "Color")</li>
-                    <li><code className="bg-white px-1 rounded">Valor 1</code> - Valor de opción 1 (ej: "M", "Azul")</li>
+                    <li><code className="bg-white px-1 rounded">Variante</code> - Nombre legible (ej: &quot;Talla M&quot;, &quot;Pack 250&quot;)</li>
+                    <li><code className="bg-white px-1 rounded">Opción 1</code> - Nombre de opción (ej: &quot;Talla&quot;, &quot;Color&quot;)</li>
+                    <li><code className="bg-white px-1 rounded">Valor 1</code> - Valor de opción 1 (ej: &quot;M&quot;, &quot;Azul&quot;)</li>
                     <li><code className="bg-white px-1 rounded">Opción 2</code> - Segunda opción si aplica</li>
                     <li><code className="bg-white px-1 rounded">Valor 2</code> - Valor de opción 2</li>
                   </ul>
