@@ -588,7 +588,8 @@ export default function ApprovalQueuePage() {
                     Usar markup global del proveedor
                     {(() => {
                       const seller = getSellerInfo(selectedProduct.seller_id);
-                      return seller && (
+                      if (!seller) return null;
+                      return (
                         <Badge variant="secondary" className="ml-2">
                           {seller.global_markup_percentage}%
                         </Badge>
