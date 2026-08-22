@@ -103,7 +103,10 @@ const baseMockOrders: SupplierOrder[] = [
     
     franchiseeNotes: 'Urgente - necesario para apertura del 1 de septiembre',
     
-    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    // Timestamps (both formats for compatibility)
+    createdAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 hours ago
+    updatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
   },
   
@@ -159,7 +162,10 @@ const baseMockOrders: SupplierOrder[] = [
     estimatedDelivery: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
     supplierNotes: 'Confirmo recepción del pedido. Preparación iniciada.',
     
-    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+    // Timestamps (both formats for compatibility)
+    createdAt: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 day ago
+    updatedAt: new Date(Date.now() - 22 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 22 * 60 * 60 * 1000).toISOString(),
   },
   
@@ -217,7 +223,10 @@ const baseMockOrders: SupplierOrder[] = [
     estimatedDelivery: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString(),
     supplierNotes: 'Pedido en preparación. Envío previsto para mañana.',
     
-    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+    // Timestamps (both formats for compatibility)
+    createdAt: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days ago
+    updatedAt: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
+    created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString(),
   },
   
@@ -291,6 +300,9 @@ const baseMockOrders: SupplierOrder[] = [
     estimatedDelivery: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000).toISOString(),
     supplierNotes: 'Pedido enviado. Número de seguimiento: ESP123456789',
     
+    // Timestamps (both formats for compatibility)
+    createdAt: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     created_at: new Date(Date.now() - 5 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
     shipped_at: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString(),
@@ -351,6 +363,9 @@ const baseMockOrders: SupplierOrder[] = [
     carrier: 'Correos',
     actualDelivery: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     
+    // Timestamps (both formats for compatibility)
+    createdAt: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
+    updatedAt: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     created_at: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
     updated_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(),
     shipped_at: new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString(),
@@ -431,10 +446,12 @@ export function updateMockOrder(id: string, updates: Partial<SupplierOrder>): Su
   
   if (index === -1) return null
   
+  const now = new Date().toISOString()
   orders[index] = {
     ...orders[index],
     ...updates,
-    updated_at: new Date().toISOString(),
+    updatedAt: now,      // camelCase for base Order type
+    updated_at: now,     // snake_case for Medusa compatibility
   }
   
   saveMockOrders(orders)
