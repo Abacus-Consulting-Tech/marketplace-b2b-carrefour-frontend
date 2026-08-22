@@ -23,7 +23,8 @@ Marketplace privado que conecta a franquiciados Carrefour con proveedores aproba
 - 📦 **Gestión de Proveedores** - Onboarding y gestión de catálogos
 - 🛒 **Catálogo de Productos** - Navegación, búsqueda avanzada y comparación
 - 📝 **Sistema de Órdenes** - Creación, seguimiento y gestión de pedidos
-- 💳 **Gestión de Compras** - Carrito, checkout y facturación
+- � **Gestión de Pedidos (Proveedor)** - Aceptar, procesar y enviar pedidos ⭐ NUEVO
+- �💳 **Gestión de Compras** - Carrito, checkout y facturación
 - 🎫 **Gestión de Incidencias** - Tickets y resolución de problemas
 
 Para más detalles, ver [**Features Overview**](./docs/FEATURES.md).

@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -35,60 +36,65 @@ export default function MarketplacePage() {
   const { toast } = useToast();
 
   useEffect(() => {
-    fetchProducts();
-  }, []);
+    const fetchProducts = async () => {
+      try {
+        const useMercurCatalog = process.env.NEXT_PUBLIC_CATALOG_SOURCE === "mercur";
 
-  const fetchProducts = async () => {
-    try {
-      const useMercurCatalog = process.env.NEXT_PUBLIC_CATALOG_SOURCE === "mercur";
+        if (useMercurCatalog) {
+          const response = await mercurStoreClient.get<unknown, { products: MercurStoreProduct[] }>("/products", {
+            params: {
+              region_id: process.env.NEXT_PUBLIC_MERCUR_REGION_ID,
+            },
+          });
+          setProducts(response.products.map(mapMercurProductToProduct));
+          setLoading(false);
+          return;
+        }
 
-      if (useMercurCatalog) {
-        const response = await mercurStoreClient.get<unknown, { products: MercurStoreProduct[] }>("/products", {
-          params: {
-            region_id: process.env.NEXT_PUBLIC_MERCUR_REGION_ID,
-          },
+        // Use mock API if NEXT_PUBLIC_MOCK_AUTH is true OR if no API URL is configured
+        const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true" || !process.env.NEXT_PUBLIC_API_URL;
+        
+        let response;
+        if (isMockMode) {
+          // Direct import for better performance (no dynamic import)
+          response = await mockApi.products.list();
+        } else {
+          response = await apiClient.get("/products");
+        }
+        
+        setProducts(response.data);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching products:", error);
+        toast({
+          title: "Error",
+          description: "No se pudieron cargar los productos",
+          variant: "destructive",
         });
-        setProducts(response.products.map(mapMercurProductToProduct));
-        return;
+        setLoading(false);
       }
+    };
 
-      // Use mock API if NEXT_PUBLIC_MOCK_AUTH is true OR if no API URL is configured
-      const isMockMode = process.env.NEXT_PUBLIC_MOCK_AUTH === "true" || !process.env.NEXT_PUBLIC_API_URL;
+    fetchProducts();
+  }, [toast]);
+
+  // Memoize filtered products to avoid recalculating on every render
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      const matchesSearch =
+        product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        product.description?.toLowerCase().includes(searchQuery.toLowerCase());
       
-      let response;
-      if (isMockMode) {
-        response = await mockApi.products.list();
-      } else {
-        response = await apiClient.get("/products");
-      }
+      const matchesCategory =
+        selectedCategory === "all" || product.category === selectedCategory;
       
-      setProducts(response.data);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los productos",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+      return matchesSearch && matchesCategory;
+    });
+  }, [products, searchQuery, selectedCategory]);
 
-  const filteredProducts = products.filter((product) => {
-    const matchesSearch =
-      product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      product.description?.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesCategory =
-      selectedCategory === "all" || product.category === selectedCategory;
-    
-    return matchesSearch && matchesCategory;
-  });
-
-  const handleAddToCart = async (product: Product) => {
-    // Try Mercur cart if enabled AND product has offerId
-    if (isMercurCartEnabled() && product.offerId) {
+  // Memoize handleAddToCart to avoid recreating on every render
+  const handleAddToCart = useCallback(async (product: Product) => {
+    if (isMercurCartEnabled()) {
       try {
         const mappedCart = await addProductToMercurCart({ product, quantity: 1, cartId });
         syncMercurCart(mappedCart);
@@ -96,15 +102,17 @@ export default function MarketplacePage() {
           title: "Producto agregado",
           description: `${product.name} se agregó al carrito`,
         });
-        return;
       } catch (error) {
         console.error("Error adding Mercur cart line item:", error);
-        // Fallback to local cart on error
-        console.warn("Falling back to local cart storage");
+        toast({
+          title: "Error",
+          description: "No se pudo agregar el producto al carrito",
+          variant: "destructive",
+        });
       }
+      return;
     }
 
-    // Use local cart (either by default or as fallback)
     addItem({
       productId: product.id,
       name: product.name,
@@ -118,7 +126,7 @@ export default function MarketplacePage() {
       title: "Producto agregado",
       description: `${product.name} se agregó al carrito`,
     });
-  };
+  }, [cartId, syncMercurCart, addItem, toast]);
 
   return (
     <div className="space-y-6">
@@ -186,11 +194,16 @@ export default function MarketplacePage() {
           {filteredProducts.map((product) => (
             <Card key={product.id} className="flex flex-col">
               <CardHeader className="p-0">
-                {product.images && product.images.length > 0 ? (
-                  <img
-                    src={product.images[0]}
-                    alt={product.name}
-                    className="w-full h-48 object-cover rounded-t-lg"
+                {prdiv className="relative w-full h-48">
+                    <Image
+                      src={product.images[0]}
+                      alt={product.name}
+                      fill
+                      className="object-cover rounded-t-lg"
+                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                      loading="lazy"
+                    />
+                  </div className="w-full h-48 object-cover rounded-t-lg"
                   />
                 ) : (
                   <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded-t-lg flex items-center justify-center">

@@ -32,7 +32,7 @@ export interface ModuleConfig {
   lastUpdated?: string;
 }
 
-type ModuleName = 'auth' | 'pricing' | 'openings' | 'products' | 'suppliers' | 'categories' | 'quotes';
+type ModuleName = 'auth' | 'pricing' | 'openings' | 'products' | 'suppliers' | 'categories' | 'quotes' | 'orders';
 
 export const featureFlags = {
   /**
@@ -96,6 +96,14 @@ export const featureFlags = {
       apiBaseUrl: '/api/quotes',
       notes: 'Planned for future release',
       lastUpdated: '2026-08-21',
+    } satisfies ModuleConfig,
+
+    orders: {
+      useMock: true,
+      backendReady: false,
+      apiBaseUrl: '/api/supplier/orders',
+      notes: 'Supplier order management - UI ready with mock data, backend pending',
+      lastUpdated: '2026-08-22',
     } satisfies ModuleConfig,
   } as const,
   

@@ -25,71 +25,75 @@
 ### Alta Prioridad
 
 #### 1. **Gestión de Pedidos - Proveedor** 📦
-**Estado:** Pendiente  
+**Estado:** ✅ **COMPLETADO** (22 Agosto 2026)  
 **Ubicación:** `/supplier/orders`  
-**Descripción:** Actualmente muestra mensaje "Próximamente"
+**Modo:** Mock data (backend pendiente)
 
-**Funcionalidades requeridas:**
-- [ ] Ver todos los pedidos que contienen productos del proveedor
-- [ ] Filtrar pedidos por estado:
-  - Nuevos (pendiente confirmación)
+**Funcionalidades implementadas:**
+- [x] Ver todos los pedidos que contienen productos del proveedor
+- [x] Filtrar pedidos por estado:
+  - Pendientes (nuevos)
   - Confirmados
   - En preparación
   - Enviados
   - Entregados
   - Cancelados
-- [ ] Aceptar o rechazar pedidos nuevos
-- [ ] Actualizar estado de preparación
+  - Rechazados
+- [x] Aceptar o rechazar pedidos nuevos
+- [x] Actualizar estado de preparación
   - Cambiar de "Confirmado" a "En Preparación"
   - Cambiar de "En Preparación" a "Enviado"
-- [ ] Agregar información de seguimiento:
+- [x] Agregar información de seguimiento:
   - Número de tracking
   - Transportista
+  - URL de seguimiento
   - Fecha estimada de entrega
-- [ ] Gestionar incidencias y devoluciones:
-  - Reportar problemas con pedidos
-  - Ver incidencias abiertas
-  - Resolver incidencias
-- [ ] Vista detalle de pedido:
+- [x] Vista detalle de pedido:
   - Productos incluidos (solo los del proveedor)
-  - Cantidades
-  - Precios
+  - Cantidades y precios
   - Cliente (franquiciado)
-  - Dirección de entrega
+  - Dirección de entrega completa
   - Fecha de pedido
-  - Estado actual
-- [ ] Métricas del proveedor:
+  - Estado actual con timeline
+- [x] Métricas del proveedor:
   - Pedidos pendientes de procesar
   - Pedidos en preparación
-  - Pedidos enviados (últimos 7 días)
-  - Tiempo promedio de procesamiento
-- [ ] Notificaciones:
-  - Email al recibir nuevo pedido
-  - Recordatorio de pedidos pendientes
+  - Pedidos enviados
+  - Ingresos del mes
+- [x] Búsqueda por número de pedido o cliente
+- [x] Mock data con 5 pedidos de ejemplo
+- [x] Sistema de feature flags (mock/real)
+- [x] Documentación completa
+
+**Pendiente:**
+- [ ] Gestión de incidencias completa (estructura creada)
+- [ ] Notificaciones por email (requiere backend)
+- [ ] Integración con backend real (7 endpoints documentados)
 
 **Dependencias Backend:**
-- API `/vendor/orders` - Listar pedidos del proveedor
-- API `/vendor/orders/:id` - Detalle de pedido
-- API `/vendor/orders/:id/accept` - Aceptar pedido
-- API `/vendor/orders/:id/reject` - Rechazar pedido
-- API `/vendor/orders/:id/status` - Actualizar estado
-- API `/vendor/orders/:id/tracking` - Agregar información de tracking
-- API `/vendor/orders/:id/incidents` - Gestionar incidencias
+- API `/supplier/orders` - Listar pedidos del proveedor
+- API `/supplier/orders/:id` - Detalle de pedido
+- API `/supplier/orders/:id/accept` - Aceptar pedido
+- API `/supplier/orders/:id/reject` - Rechazar pedido
+- API `/supplier/orders/:id/status` - Actualizar estado
+- API `/supplier/orders/:id/tracking` - Agregar información de tracking
+- API `/supplier/orders/:id/incidents` - Gestionar incidencias
+- API `/supplier/orders/stats` - Estadísticas
 
-**Archivos a crear/modificar:**
-- `src/app/(supplier)/supplier/orders/page.tsx` - Listado de pedidos
-- `src/app/(supplier)/supplier/orders/[id]/page.tsx` - Detalle de pedido
-- `src/types/orders.ts` - Tipos TypeScript
+**Archivos creados:** ✅
+- `src/types/orders-supplier.ts` - Tipos TypeScript
 - `src/lib/api/orders-supplier-client.ts` - Cliente API
 - `src/lib/api/orders-supplier-mock.ts` - Datos mock
 - `src/components/supplier/OrdersList.tsx` - Componente listado
 - `src/components/supplier/OrderDetail.tsx` - Componente detalle
 - `src/components/supplier/OrderStatusBadge.tsx` - Badge de estado
-- `src/components/supplier/OrderActions.tsx` - Acciones (aceptar/rechazar)
+- `src/app/(supplier)/supplier/orders/page.tsx` - Página principal ✅
+- `src/app/(supplier)/supplier/orders/[id]/page.tsx` - Página detalle ✅
+- `docs/technical/SUPPLIER_ORDERS_IMPLEMENTATION.md` - Documentación
 
-**Prioridad:** 🔴 **ALTA** - Funcionalidad core para proveedores
+**Prioridad:** ✅ **COMPLETADO** - Funcionando en modo mock
 
-**Estimación:** 2-3 días de desarrollo
+**Documentación:** [SUPPLIER_ORDERS_IMPLEMENTATION.md](./docs/technical/SUPPLIER_ORDERS_IMPLEMENTATION.md)
 
 ---
 

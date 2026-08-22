@@ -694,19 +694,6 @@ Incluye:
 
 ---
 
-## 🚀 Próximas Funcionalidades
-
-Estamos trabajando en:
-
-- 📊 Reportes avanzados con gráficos
-- 📧 Notificaciones in-app en tiempo real
-- 💬 Chat directo entre proveedores y administradores
-- 📦 Tracking avanzado de pedidos
-- 🤖 Sugerencias automáticas de margen basadas en categoría
-- 📈 Dashboard analítico con tendencias de ventas
-
----
-
 ## 🎓 Glosario
 
 **Margen / Markup:** Porcentaje añadido al precio del proveedor

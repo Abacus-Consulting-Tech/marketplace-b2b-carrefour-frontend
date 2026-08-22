@@ -1,148 +1,113 @@
-'use client';
+'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Package, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { useEffect, useState } from 'react'
+import { Package, TrendingUp, Clock, Truck, Euro } from 'lucide-react'
+
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { OrdersList } from '@/components/supplier/OrdersList'
+import { supplierOrdersApi } from '@/lib/api/orders-supplier-client'
+import type { SupplierOrder, SupplierOrderStats, SupplierOrderFilters } from '@/types/orders-supplier'
 
 export default function SupplierOrdersPage() {
+  const [orders, setOrders] = useState<SupplierOrder[]>([])
+  const [stats, setStats] = useState<SupplierOrderStats | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [filters, setFilters] = useState<SupplierOrderFilters>({})
+
+  useEffect(() => {
+    loadData()
+  }, [filters])
+
+  const loadData = async () => {
+    setIsLoading(true)
+    try {
+      const [ordersData, statsData] = await Promise.all([
+        supplierOrdersApi.getOrders(filters),
+        supplierOrdersApi.getOrderStats(),
+      ])
+      setOrders(ordersData.orders)
+      setStats(statsData)
+    } catch (error) {
+      console.error('Error loading orders:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleFilterChange = (newFilters: { status?: any; search?: string }) => {
+    setFilters(prev => ({ ...prev, ...newFilters }))
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Pedidos Recibidos</h1>
         <p className="text-gray-600 mt-1">
-          Gestiona los pedidos de tus productos
+          Gestiona los pedidos que contienen tus productos
         </p>
       </div>
 
-      {/* Coming Soon Card */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="p-3 bg-blue-100 rounded-lg">
-              <Package className="h-8 w-8 text-blue-600" />
-            </div>
-            <div>
-              <CardTitle className="text-blue-900">Gestión de Pedidos - Próximamente</CardTitle>
-              <CardDescription className="text-blue-700">
-                Esta funcionalidad estará disponible en la próxima versión
-              </CardDescription>
-            </div>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            <p className="text-sm text-blue-800">
-              Aquí podrás:
-            </p>
-            <ul className="space-y-2 text-sm text-blue-800">
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Ver todos los pedidos que contienen tus productos
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Aceptar o rechazar pedidos
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Actualizar el estado de preparación
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Agregar información de seguimiento
-              </li>
-              <li className="flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Gestionar incidencias y devoluciones
-              </li>
-            </ul>
-          </div>
-        </CardContent>
-      </Card>
+      {/* Stats Cards */}
+      {stats && (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Pendientes</CardTitle>
+              <Clock className="h-4 w-4 text-yellow-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.pendingCount}</div>
+              <p className="text-xs text-gray-600 mt-1">Requieren acción</p>
+            </CardContent>
+          </Card>
 
-      {/* Sample Data Preview */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Vista Previa - Pedidos Pendientes</CardTitle>
-          <CardDescription>Ejemplo de cómo se verán tus pedidos</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {/* Sample Order 1 */}
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-yellow-50 border-yellow-200">
-              <div className="flex items-center gap-4">
-                <div className="p-2 bg-yellow-100 rounded-full">
-                  <Clock className="h-5 w-5 text-yellow-600" />
-                </div>
-                <div>
-                  <p className="font-medium">Pedido #CF-10001</p>
-                  <p className="text-sm text-gray-600">Franquiciado Norte - 3 productos tuyos</p>
-                </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">En Preparación</CardTitle>
+              <Package className="h-4 w-4 text-purple-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {stats.confirmedCount + stats.inPreparationCount}
               </div>
-              <div className="text-right">
-                <p className="font-semibold">€145.50</p>
-                <p className="text-xs text-yellow-600 font-medium">Pendiente de Aceptar</p>
-              </div>
-            </div>
+              <p className="text-xs text-gray-600 mt-1">En proceso</p>
+            </CardContent>
+          </Card>
 
-            {/* Sample Order 2 */}
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-purple-50 border-purple-200">
-              <div className="flex items-center gap-4">
-                <div className="p-2 bg-purple-100 rounded-full">
-                  <Package className="h-5 w-5 text-purple-600" />
-                </div>
-                <div>
-                  <p className="font-medium">Pedido #CF-10002</p>
-                  <p className="text-sm text-gray-600">Franquiciado Sur - 5 productos tuyos</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <p className="font-semibold">€289.00</p>
-                <p className="text-xs text-purple-600 font-medium">En Preparación</p>
-              </div>
-            </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Enviados</CardTitle>
+              <Truck className="h-4 w-4 text-indigo-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{stats.shippedCount}</div>
+              <p className="text-xs text-gray-600 mt-1">Últimos 7 días</p>
+            </CardContent>
+          </Card>
 
-            {/* Sample Order 3 */}
-            <div className="flex items-center justify-between p-4 border rounded-lg bg-green-50 border-green-200">
-              <div className="flex items-center gap-4">
-                <div className="p-2 bg-green-100 rounded-full">
-                  <CheckCircle className="h-5 w-5 text-green-600" />
-                </div>
-                <div>
-                  <p className="font-medium">Pedido #CF-09998</p>
-                  <p className="text-sm text-gray-600">Franquiciado Centro - 2 productos tuyos</p>
-                </div>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Ingresos (Mes)</CardTitle>
+              <TrendingUp className="h-4 w-4 text-green-600" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold flex items-center">
+                <Euro className="h-5 w-5 mr-1" />
+                {stats.revenueThisMonth.toFixed(2)}
               </div>
-              <div className="text-right">
-                <p className="font-semibold">€95.00</p>
-                <p className="text-xs text-green-600 font-medium">Entregado</p>
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Info Banner */}
-      <div className="bg-amber-50 border border-amber-200 rounded-lg p-6">
-        <div className="flex items-start gap-4">
-          <div className="p-3 bg-amber-100 rounded-lg">
-            <AlertCircle className="h-6 w-6 text-amber-600" />
-          </div>
-          <div className="flex-1">
-            <h3 className="font-semibold text-amber-900 mb-1">
-              Funcionalidad en Desarrollo
-            </h3>
-            <p className="text-sm text-amber-800 mb-3">
-              Esta página está en desarrollo activo. Mientras tanto, puedes ver un resumen 
-              de tus pedidos en el Dashboard.
-            </p>
-            <a href="/supplier/dashboard" className="text-sm font-medium text-amber-700 hover:underline">
-              ← Volver al Dashboard
-            </a>
-          </div>
+              <p className="text-xs text-gray-600 mt-1">Este mes</p>
+            </CardContent>
+          </Card>
         </div>
-      </div>
+      )}
+
+      {/* Orders List */}
+      <OrdersList
+        orders={orders}
+        isLoading={isLoading}
+        onFilterChange={handleFilterChange}
+      />
     </div>
-  );
+  )
 }

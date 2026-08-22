@@ -74,25 +74,26 @@ export default function LoginPage() {
       
       console.log('[Login] Store updated, waiting for persistence...');
       
-      // Wait for Zustand to persist the state to localStorage
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // Wait longer for Zustand to persist the state to localStorage
+      // This prevents the double-login issue
+      await new Promise(resolve => setTimeout(resolve, 500));
       
-      console.log('[Login] State persisted, navigating to dashboard with full page reload...');
+      console.log('[Login] State persisted, navigating to dashboard...');
       
-      // Use window.location.href for a full page reload
-      // This ensures Zustand hydrates from localStorage before ProtectedRoute checks
+      // Use router.push instead of window.location.href
+      // The ProtectedRoute will handle the authentication check
       if (user.role === "admin") {
         console.log('[Login] Redirecting to /admin/dashboard');
-        window.location.href = "/admin/dashboard";
+        router.push("/admin/dashboard");
       } else if (user.role === "supplier") {
         console.log('[Login] Redirecting to /supplier/dashboard');
-        window.location.href = "/supplier/dashboard";
+        router.push("/supplier/dashboard");
       } else if (user.role === "franchisee") {
         console.log('[Login] Redirecting to /marketplace/dashboard');
-        window.location.href = "/marketplace/dashboard";
+        router.push("/marketplace/dashboard");
       } else {
         console.log('[Login] Redirecting to /marketplace');
-        window.location.href = "/marketplace";
+        router.push("/marketplace");
       }
     } catch (err) {
       const error = err as { response?: { data?: { message?: string } }; message?: string };

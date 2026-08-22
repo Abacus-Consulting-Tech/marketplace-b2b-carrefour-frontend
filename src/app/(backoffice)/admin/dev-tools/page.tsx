@@ -237,12 +237,84 @@ export default function DevToolsPage() {
         requiresAuth: true,
         medusaEndpoint: '/vendor/custom/sellers/me/markup'
       },
+      
+      // Supplier Orders Module (NEW)
+      {
+        path: '/api/supplier/orders',
+        method: 'GET',
+        module: 'orders',
+        description: 'Listar pedidos del proveedor',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/orders (pendiente)'
+      },
+      {
+        path: '/api/supplier/orders/:id',
+        method: 'GET',
+        module: 'orders',
+        description: 'Obtener detalle de pedido',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/orders/:id (pendiente)'
+      },
+      {
+        path: '/api/supplier/orders/stats',
+        method: 'GET',
+        module: 'orders',
+        description: 'Estadísticas de pedidos del proveedor',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/orders/stats (pendiente)'
+      },
+      {
+        path: '/api/supplier/orders/:id/accept',
+        method: 'POST',
+        module: 'orders',
+        description: 'Aceptar pedido',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/orders/:id/accept (pendiente)'
+      },
+      {
+        path: '/api/supplier/orders/:id/reject',
+        method: 'POST',
+        module: 'orders',
+        description: 'Rechazar pedido',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/orders/:id/reject (pendiente)'
+      },
+      {
+        path: '/api/supplier/orders/:id/status',
+        method: 'PATCH',
+        module: 'orders',
+        description: 'Actualizar estado del pedido',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/orders/:id/status (pendiente)'
+      },
+      {
+        path: '/api/supplier/orders/:id/tracking',
+        method: 'POST',
+        module: 'orders',
+        description: 'Añadir información de seguimiento',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/orders/:id/tracking (pendiente)'
+      },
     ];
 
     setEndpoints(allEndpoints);
   }, []);
 
-  const modules = ['all', 'auth', 'admin', 'pricing', 'products', 'suppliers', 'store'];
+  const modules = ['all', 'auth', 'admin', 'pricing', 'products', 'suppliers', 'store', 'orders'];
   
   const filteredEndpoints = selectedModule === 'all' 
     ? endpoints 
