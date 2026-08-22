@@ -36,7 +36,10 @@ export interface SupplierOrderFilters {
  * Supplier-specific order view
  * Contains only items belonging to the supplier
  */
-export interface SupplierOrder extends Omit<Order, 'items'> {
+export interface SupplierOrder extends Omit<Order, 'items' | 'status'> {
+  // Override status with supplier-specific values
+  status: SupplierOrderStatus
+  
   // Medusa-specific fields
   fulfillment_status?: string
   display_id?: number // Human-readable order number
