@@ -117,6 +117,7 @@ export function QuoteForm({
     await onSubmit(data, isDraft, pdfFile);
   };
 
+  // Render component
   return (
     <Card>
       <CardHeader>
