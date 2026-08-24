@@ -112,6 +112,7 @@ export function QuoteForm({
     await onSubmit(data, isDraft, pdfFile);
   };
 
+  // Calculate budget estimate for reference
   const budgetEstimate = invitation.category?.budget_estimate
     ? invitation.category.budget_estimate / 100
     : null;
