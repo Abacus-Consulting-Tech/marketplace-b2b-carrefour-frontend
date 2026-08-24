@@ -5,13 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
+import * as CardComponents from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -25,6 +19,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Send, Save, Upload, FileText, X } from 'lucide-react';
 import type { Quote, SupplierInvitation } from '@/types/openings';
+
+const { Card, CardContent, CardDescription, CardHeader, CardTitle } = CardComponents;
 
 const quoteFormSchema = z.object({
   amount: z.number()
