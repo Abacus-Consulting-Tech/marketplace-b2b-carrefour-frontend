@@ -71,6 +71,11 @@ export function QuoteForm({
     },
   });
 
+  // Calculate budget estimate for reference
+  const budgetEstimate = invitation.category?.budget_estimate
+    ? invitation.category.budget_estimate / 100
+    : null;
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setFileError('');
@@ -111,11 +116,6 @@ export function QuoteForm({
   const handleSubmit = async (data: QuoteFormData, isDraft: boolean) => {
     await onSubmit(data, isDraft, pdfFile);
   };
-
-  // Calculate budget estimate for reference
-  const budgetEstimate = invitation.category?.budget_estimate
-    ? invitation.category.budget_estimate / 100
-    : null;
 
   return (
     <Card>
