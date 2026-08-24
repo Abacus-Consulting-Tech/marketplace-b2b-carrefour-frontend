@@ -113,8 +113,7 @@ export function QuoteForm({
     await onSubmit(data, isDraft, pdfFile);
   };
 
-  // JSX Render
-  const renderForm = () => (
+  return (
     <Card>
       <CardHeader>
         <CardTitle>
@@ -415,6 +414,4 @@ export function QuoteForm({
       </CardContent>
     </Card>
   );
-  
-  return renderForm();
 }
