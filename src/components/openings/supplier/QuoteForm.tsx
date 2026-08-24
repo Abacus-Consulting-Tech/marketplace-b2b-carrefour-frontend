@@ -115,7 +115,7 @@ export function QuoteForm({
   };
 
   const cardChildren = (
-    <>
+    <React.Fragment>
       <CardHeader>
         <CardTitle>
           {existingQuote ? 'Editar Presupuesto' : 'Enviar Presupuesto'}
@@ -413,7 +413,7 @@ export function QuoteForm({
           </form>
         </Form>
       </CardContent>
-    </>
+    </React.Fragment>
   );
 
   return React.createElement(BaseCard, { children: cardChildren });
