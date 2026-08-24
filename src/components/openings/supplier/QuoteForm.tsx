@@ -6,7 +6,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import * as CardComponents from '@/components/ui/card';
 import {
   Form,
   FormControl,
@@ -21,7 +20,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Send, Save, Upload, FileText, X } from 'lucide-react';
 import type { Quote, SupplierInvitation } from '@/types/openings';
 
-const { Card: BaseCard, CardContent, CardDescription, CardHeader, CardTitle } = CardComponents;
 
 const quoteFormSchema = z.object({
   amount: z.number()
@@ -114,19 +112,19 @@ export function QuoteForm({
     await onSubmit(data, isDraft, pdfFile);
   };
 
-  const cardChildren = (
-    <React.Fragment>
-      <CardHeader>
-        <CardTitle>
+  return (
+    <div className="rounded-lg border bg-card text-card-foreground shadow-sm">
+      <div className="flex flex-col space-y-1.5 p-6">
+        <h3 className="text-2xl font-semibold leading-none tracking-tight">
           {existingQuote ? 'Editar Presupuesto' : 'Enviar Presupuesto'}
-        </CardTitle>
-        <CardDescription>
+        </h3>
+        <p className="text-sm text-muted-foreground">
           Complete los detalles de su presupuesto para{' '}
           <strong>{invitation.category?.name}</strong>
-        </CardDescription>
-      </CardHeader>
+        </p>
+      </div>
 
-      <CardContent>
+      <div className="p-6 pt-0">
         <Form {...form}>
           <form className="space-y-6">
             {/* Budget Reference */}
@@ -412,10 +410,8 @@ export function QuoteForm({
             </div>
           </form>
         </Form>
-      </CardContent>
-    </React.Fragment>
+      </div>
+    </div>
   );
-
-  return React.createElement(BaseCard, { children: cardChildren });
 }
 
