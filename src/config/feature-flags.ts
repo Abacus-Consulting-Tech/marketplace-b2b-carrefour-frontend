@@ -32,7 +32,7 @@ export interface ModuleConfig {
   lastUpdated?: string;
 }
 
-type ModuleName = 'auth' | 'pricing' | 'openings' | 'products' | 'suppliers' | 'categories' | 'quotes' | 'orders';
+type ModuleName = 'auth' | 'pricing' | 'openings' | 'products' | 'suppliers' | 'categories' | 'quotes' | 'orders' | 'franchisees';
 
 export const featureFlags = {
   /**
@@ -104,6 +104,14 @@ export const featureFlags = {
       apiBaseUrl: '/api/supplier/orders',
       notes: 'Supplier order management - UI ready with mock data, backend pending',
       lastUpdated: '2026-08-22',
+    } satisfies ModuleConfig,
+
+    franchisees: {
+      useMock: true,
+      backendReady: false,
+      apiBaseUrl: '/api/admin/customers',
+      notes: 'Franchisee management (Medusa Customers) - Full CRUD with mock data',
+      lastUpdated: '2026-08-24',
     } satisfies ModuleConfig,
   } as const,
   
