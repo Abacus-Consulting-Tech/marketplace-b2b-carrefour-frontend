@@ -118,8 +118,10 @@ export function QuoteForm({
   };
 
   // Render component
+  const CardComponent = Card;
+  
   return (
-    <Card>
+    <CardComponent>
       <CardHeader>
         <CardTitle>
           {existingQuote ? 'Editar Presupuesto' : 'Enviar Presupuesto'}
@@ -417,6 +419,6 @@ export function QuoteForm({
           </form>
         </Form>
       </CardContent>
-    </Card>
+    </CardComponent>
   );
 }
