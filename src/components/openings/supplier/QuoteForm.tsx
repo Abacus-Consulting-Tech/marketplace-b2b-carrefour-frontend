@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
@@ -20,7 +21,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Loader2, Send, Save, Upload, FileText, X } from 'lucide-react';
 import type { Quote, SupplierInvitation } from '@/types/openings';
 
-const { Card, CardContent, CardDescription, CardHeader, CardTitle } = CardComponents;
+const { Card: BaseCard, CardContent, CardDescription, CardHeader, CardTitle } = CardComponents;
 
 const quoteFormSchema = z.object({
   amount: z.number()
@@ -113,8 +114,8 @@ export function QuoteForm({
     await onSubmit(data, isDraft, pdfFile);
   };
 
-  return (
-    <Card>
+  return React.createElement(BaseCard, { children: (
+    <>
       <CardHeader>
         <CardTitle>
           {existingQuote ? 'Editar Presupuesto' : 'Enviar Presupuesto'}
@@ -412,6 +413,7 @@ export function QuoteForm({
           </form>
         </Form>
       </CardContent>
-    </Card>
-  );
+    </>
+  ) });
 }
+
