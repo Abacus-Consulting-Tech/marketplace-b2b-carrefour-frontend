@@ -114,7 +114,7 @@ export function QuoteForm({
     await onSubmit(data, isDraft, pdfFile);
   };
 
-  return React.createElement(BaseCard, { children: (
+  const cardChildren = (
     <>
       <CardHeader>
         <CardTitle>
@@ -414,6 +414,8 @@ export function QuoteForm({
         </Form>
       </CardContent>
     </>
-  ) });
+  );
+
+  return React.createElement(BaseCard, { children: cardChildren });
 }
 
