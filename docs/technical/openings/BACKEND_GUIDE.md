@@ -1403,7 +1403,7 @@ Devuelve todas las transiciones de estado que ha tenido el proyecto, ordenadas d
         "changed_by_name": "Admin Sistema",
         "changed_by_role": "admin",
         "changed_at": "2026-01-18T09:15:00Z",
-        "notes": "Proveedores invitados para cotización",
+        "notes": "Proveedores invitados para presupuesto",
         "metadata": {
           "categories_count": 3,
           "invitations_sent": 8

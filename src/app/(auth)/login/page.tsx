@@ -10,11 +10,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuthStore } from "@/lib/store/auth";
 import { apiClient } from "@/lib/api/client";
+import { mockApi } from "@/lib/api/mock";
 import { featureFlags } from "@/config/feature-flags";
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login, isAuthenticated, user, _hasHydrated } = useAuthStore();
+  const { login, isAuthenticated, user, _hasHydrated, setHasHydrated } = useAuthStore();
   
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,6 +25,18 @@ export default function LoginPage() {
 
   // Use feature flags to determine mock mode
   const isMockMode = featureFlags.shouldUseMock('auth');
+
+  // Fallback: Force hydration after 2 seconds if not hydrated
+  useEffect(() => {
+    const timeout = setTimeout(() => {
+      if (!_hasHydrated) {
+        console.log('[Login] Hydration timeout - forcing hydration to true');
+        setHasHydrated(true);
+      }
+    }, 2000);
+    
+    return () => clearTimeout(timeout);
+  }, [_hasHydrated, setHasHydrated]);
 
   // NOTE: Removed automatic redirect on mount to prevent infinite loops
   // If user is already authenticated, ProtectedRoute will handle redirects
@@ -40,7 +53,6 @@ export default function LoginPage() {
       let user, token;
       if (isMockMode) {
         // Use mock API
-        const { mockApi } = await import("@/lib/api/mock");
         const response = await mockApi.auth.login(email, password);
         user = response.data.user;
         token = response.data.token;

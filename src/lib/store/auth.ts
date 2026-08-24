@@ -22,6 +22,7 @@ export const useAuthStore = create<AuthStore>()(
       _hasHydrated: false,
 
       setHasHydrated: (state) => {
+        console.log('[AuthStore] setHasHydrated called with:', state);
         set({
           _hasHydrated: state
         })
@@ -49,9 +50,18 @@ export const useAuthStore = create<AuthStore>()(
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => (state) => {
-        console.log('[AuthStore] Hydrating from localStorage...');
-        console.log('[AuthStore] Hydrated state:', state?.user?.email, 'isAuthenticated:', state?.isAuthenticated);
-        state?.setHasHydrated(true)
+        console.log('[AuthStore] onRehydrateStorage callback fired');
+        // This callback runs after hydration completes
+        return (state, error) => {
+          if (error) {
+            console.error('[AuthStore] Hydration error:', error);
+          }
+          console.log('[AuthStore] Hydration complete. User:', state?.user?.email, 'isAuth:', state?.isAuthenticated);
+          // Always set hydrated to true, even if there was an error or no stored data
+          if (state) {
+            state.setHasHydrated(true);
+          }
+        };
       },
     }
   )

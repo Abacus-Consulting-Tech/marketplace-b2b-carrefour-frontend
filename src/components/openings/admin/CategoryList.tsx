@@ -55,7 +55,7 @@ export function CategoryList({
           </div>
           <h3 className="text-lg font-semibold mb-2">No hay categorías</h3>
           <p className="text-gray-600 text-center mb-6 max-w-md">
-            Añade categorías al proyecto para poder invitar proveedores y recibir cotizaciones.
+            Añade categorías al proyecto para poder invitar proveedores y recibir presupuestos.
           </p>
           <Button onClick={onAdd} disabled={isLoading}>
             <Plus className="w-4 h-4 mr-2" />
@@ -130,15 +130,15 @@ export function CategoryList({
                   </div>
                 </div>
 
-                {/* Cotizaciones */}
+                {/* Presupuestos */}
                 <div className="flex items-center gap-2">
                   <div className="rounded-full bg-green-100 p-2">
                     <FileText className="w-4 h-4 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-xs text-gray-600">Cotizaciones</p>
+                    <p className="text-xs text-gray-600">Presupuestos</p>
                     <p className="font-semibold">
-                      {category.quotes_count || 0} recibidas
+                      {category.quotes_count || 0} recibidos
                     </p>
                   </div>
                 </div>
@@ -202,7 +202,7 @@ export function CategoryList({
             <DialogTitle>¿Eliminar categoría?</DialogTitle>
             <DialogDescription>
               Esta acción no se puede deshacer. Se eliminarán también todas las invitaciones
-              y cotizaciones asociadas a esta categoría.
+              y presupuestos asociados a esta categoría.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

@@ -9,8 +9,8 @@ interface CartStore {
   setCartId: (cartId: string) => void
   syncMercurCart: (cart: { cartId: string; items: CartItem[]; summary: CartSummary }) => void
   addItem: (item: CartItem) => void
-  removeItem: (productId: string) => void
-  updateQuantity: (productId: string, quantity: number) => void
+  removeItem: (productId: string, variantId?: string) => void
+  updateQuantity: (productId: string, quantity: number, variantId?: string) => void
   clearCart: () => void
   getTotal: () => number
   getItemCount: () => number
@@ -34,11 +34,15 @@ export const useCartStore = create<CartStore>()(
       
       addItem: (item: CartItem) =>
         set(state => {
-          const existingItem = state.items.find(i => i.productId === item.productId)
+          // Find existing item by productId AND variantId (to support different variants)
+          const existingItem = state.items.find(
+            i => i.productId === item.productId && i.variantId === item.variantId
+          );
+          
           if (existingItem) {
             return {
               items: state.items.map(i =>
-                i.productId === item.productId
+                i.productId === item.productId && i.variantId === item.variantId
                   ? { ...i, quantity: i.quantity + item.quantity }
                   : i
               ),
@@ -47,16 +51,30 @@ export const useCartStore = create<CartStore>()(
           return { items: [...state.items, item] }
         }),
 
-      removeItem: (productId: string) =>
+      removeItem: (productId: string, variantId?: string) =>
         set(state => ({
-          items: state.items.filter(i => i.productId !== productId),
+          items: state.items.filter(i => {
+            // If variantId is provided, match both productId and variantId
+            // Otherwise, just match productId (for backward compatibility)
+            if (variantId) {
+              return !(i.productId === productId && i.variantId === variantId);
+            }
+            return i.productId !== productId;
+          }),
         })),
 
-      updateQuantity: (productId: string, quantity: number) =>
+      updateQuantity: (productId: string, quantity: number, variantId?: string) =>
         set(state => ({
-          items: state.items.map(i =>
-            i.productId === productId ? { ...i, quantity } : i
-          ),
+          items: state.items.map(i => {
+            // If variantId is provided, match both productId and variantId
+            // Otherwise, just match productId (for backward compatibility)
+            if (variantId) {
+              return i.productId === productId && i.variantId === variantId
+                ? { ...i, quantity }
+                : i;
+            }
+            return i.productId === productId ? { ...i, quantity } : i;
+          }),
         })),
 
       clearCart: () => set({ cartId: undefined, items: [], summary: undefined }),

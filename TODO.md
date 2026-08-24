@@ -1,30 +1,87 @@
 # TODO - Marketplace B2B Carrefour
 
-**Actualizado:** 21 Agosto 2026
+**Actualizado:** 24 Agosto 2026
+
+---
+
+## 🔥 PRIORIDAD MÁXIMA - Flujo E2E Franquiciado
+
+**Objetivo:** Completar el journey de compra end-to-end para franquiciados
+
+### Sprint 1 (Próximos 5 días)
+- [ ] **Catálogo de Productos (Franchisee)** - 2-3 días
+  - Lista de productos con filtros
+  - Vista detallada de producto  
+  - Búsqueda y categorías
+  - Integrar con productos existentes del admin
+  
+- [ ] **Carrito de Compra** - 1-2 días
+  - Añadir/quitar productos
+  - Modificar cantidades
+  - Persistencia en localStorage
+  - Cálculo de totales
+
+### Sprint 2 (Próximos 5 días después)
+- [ ] **Checkout Completo** - 2-3 días
+  - Wizard multi-paso
+  - Dirección de envío
+  - Método de pago (mock)
+  - Confirmación de pedido
+  
+- [ ] **Mis Pedidos (Franquiciado)** - 1-2 días
+  - Historial de pedidos
+  - Detalle de pedido
+  - Estado de envío
+  
+- [ ] **Testing E2E** - 1 día
+  - Probar flujo completo
+  - Documentar en testing guide
+
+**Resultado:** Franquiciado puede comprar productos end-to-end
 
 ---
 
 ## 📋 Estado General del Proyecto
 
-### ✅ Completado (Fases 1-9)
+### ✅ Completado (Fases 1-10)
 
-- [x] **Fase 1-5:** Autenticación, dashboard básico, perfiles, navegación (completado en sesión anterior)
-- [x] **Fase 6:** Gestión de Márgenes Global y por Proveedor (SellerMarkupManager)
-- [x] **Fase 7:** Cola de Aprobación de Productos (ApprovalQueue)
-- [x] **Fase 8:** Dashboard de Proveedor mejorado (ProductsList + detalle con timeline)
-- [x] **Fase 9:** Carga Masiva CSV (22 columnas, drag & drop, 4 etapas)
+- [x] **Fase 1-5:** Autenticación, dashboard básico, perfiles, navegación
+- [x] **Fase 6:** Gestión de Márgenes Global y por Proveedor
+- [x] **Fase 7:** Cola de Aprobación de Productos
+- [x] **Fase 8:** Dashboard de Proveedor mejorado
+- [x] **Fase 9:** Carga Masiva CSV
+- [x] **Fase 10:** **Product Management (Admin CRUD)** ⭐ NUEVO 24/08/2026
 - [x] Navegación mejorada (sidebars organizados por secciones)
 - [x] Sistema de feature flags (modo mock/real API)
-- [x] Documentación backend completa (5 documentos)
+- [x] Documentación backend completa
 - [x] Guía de usuario no técnica en español
 
 ---
 
 ## 🚧 En Desarrollo
 
-### Alta Prioridad
+### Alta Prioridad (Después de Flujo E2E)
 
-#### 1. **Gestión de Pedidos - Proveedor** 📦
+#### 1. **Admin Orders - Gestión Global de Pedidos** 📦
+**Estado:** ⏳ **PLANIFICADO** (Fase 2 - Sprint 3)  
+**Ubicación:** `/admin/orders`  
+**Modo:** Placeholder actual - Implementación después de flujo franquiciado  
+**Tiempo estimado:** 2-3 días  
+**Especificación:** Ver `docs/ADMIN_ORDERS_SPEC.md`
+
+**Propósito:**
+- Panel admin para ver TODOS los pedidos (todos franquiciados + proveedores)
+- Diferente de `/supplier/orders` (solo pedidos del proveedor - ✅ ya completo)
+- Gestión de incidencias, exportación, análisis global
+
+**Por qué esperar:**
+- Primero necesitamos que franquiciados puedan crear pedidos
+- Entonces Admin Orders tendrá pedidos reales para gestionar
+- Mejor ROI: completar flujo E2E primero
+
+---
+
+#### 2. **Gestión de Pedidos - Proveedor** 📦
 **Estado:** ✅ **COMPLETADO** (22 Agosto 2026)  
 **Ubicación:** `/supplier/orders`  
 **Modo:** Mock data (backend pendiente)

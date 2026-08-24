@@ -107,7 +107,7 @@ export function FranchiseeSidebar() {
           <NavItem
             href="/marketplace/quotes"
             icon={<MessageSquare className="h-5 w-5" />}
-            label="Cotizaciones"
+            label="Presupuestos"
             isActive={isActive("/marketplace/quotes")}
           />
         </NavSection>

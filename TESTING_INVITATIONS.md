@@ -61,9 +61,9 @@ Sistema que permite a los administradores invitar proveedores a cotizar en categ
 2. Click en tab "Proveedores"
 3. ESPERADO:
    - Se muestran 3 cards (una por categoría: Mobiliario, Rotulación, Equipamiento Informático)
-   - Card "Mobiliario": 1 proveedor invitado, 1 cotización recibida
-   - Card "Rotulación": 1 proveedor invitado, 0 cotizaciones
-   - Card "Equipamiento Informático": 1 proveedor invitado, 0 cotizaciones
+   - Card "Mobiliario": 1 proveedor invitado, 1 presupuesto recibido
+   - Card "Rotulación": 1 proveedor invitado, 0 presupuestos
+   - Card "Equipamiento Informático": 1 proveedor invitado, 0 presupuestos
    - Botón "Invitar Proveedores" visible
 ```
 
@@ -92,8 +92,8 @@ Sistema que permite a los administradores invitar proveedores a cotizar en categ
    - Toast de confirmación: "1 proveedor(es) invitado(s) correctamente"
    - La card "Mobiliario" ahora muestra:
      * 2 proveedores invitados
-     * 1 cotización recibida
-   - Se ven los 2 proveedores listados con estado "Cotización enviada" y "Pendiente"
+     * 1 presupuesto recibido
+   - Se ven los 2 proveedores listados con estado "Presupuesto enviado" y "Pendiente"
 ```
 
 ### 4. Ver Detalles de Invitaciones
@@ -106,19 +106,19 @@ Sistema que permite a los administradores invitar proveedores a cotizar en categ
    - Estado (badge):
      * "Pendiente" → badge secondary (gris)
      * "Vista" → badge default (azul)
-     * "Cotización enviada" → badge default (azul)
+     * "Presupuesto enviado" → badge default (azul)
      * "Rechazada" → badge destructive (rojo)
      * "Expirada" → badge outline (gris claro)
    - Icono de estado:
      * Pendiente → reloj naranja
      * Vista → sobre azul
-     * Cotización enviada → check verde
+     * Presupuesto enviado → check verde
      * Rechazada → X roja
      * Expirada → reloj gris
    - Mensaje de invitación (truncado a 100 caracteres)
    - Fecha de invitación
    - Fecha límite (deadline)
-   - Si tiene cotización: enlace "Ver cotización"
+   - Si tiene presupuesto: enlace "Ver presupuesto"
 ```
 
 ### 5. Invitar a Mismos Proveedores (Duplicados)
@@ -162,7 +162,7 @@ CAMPO MENSAJE:
 Estados disponibles:
 - pending: Invitación enviada, proveedor no ha abierto
 - viewed: Proveedor abrió la invitación
-- quote_submitted: Proveedor envió cotización
+- quote_submitted: Proveedor envió presupuesto
 - declined: Proveedor rechazó la invitación
 - expired: Venció el plazo sin respuesta
 ```
@@ -265,10 +265,10 @@ ESCENARIO: Invitar 3 proveedores de rotulación
 2. **Envío de emails**: Integrar con servicio de email (SendGrid, SES, etc.)
 3. **Cambio de estados**: Los proveedores cambiarán estados al:
    - Abrir el email → `viewed`
-   - Enviar cotización → `quote_submitted`
+   - Enviar presupuesto → `quote_submitted`
    - Rechazar → `declined`
    - Vencer deadline sin acción → `expired`
-4. **Notificaciones**: Avisar al admin cuando proveedor ve invitación o envía cotización
+4. **Notificaciones**: Avisar al admin cuando proveedor ve invitación o envía presupuesto
 5. **Filtros**: Añadir filtros por estado de invitación
 6. **Búsqueda**: Buscar proveedores por nombre/email en el formulario
 7. **Historial**: Log de cambios de estado de invitaciones
@@ -295,9 +295,9 @@ ESCENARIO: Invitar 3 proveedores de rotulación
 ## Próximos Pasos
 
 Después de validar este módulo, continuar con:
-1. **Formulario de Cotización** (Feature #3) - Proveedores pueden enviar cotizaciones
-2. **Tabla de Comparación** (Feature #4) - Comparar cotizaciones recibidas
-3. **Upload de Documentos** (Feature #5) - Adjuntar archivos a cotizaciones
+1. **Formulario de Presupuesto** (Feature #3) - Proveedores pueden enviar presupuestos
+2. **Tabla de Comparación** (Feature #4) - Comparar presupuestos recibidos
+3. **Upload de Documentos** (Feature #5) - Adjuntar archivos a presupuestos
 4. **Workflow de Estados** (Feature #6) - Transiciones de estado del proyecto
 
 ## Archivos Creados/Modificados

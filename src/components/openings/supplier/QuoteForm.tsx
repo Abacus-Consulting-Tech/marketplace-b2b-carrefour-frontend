@@ -123,7 +123,7 @@ export function QuoteForm({
           {existingQuote ? 'Editar Presupuesto' : 'Enviar Presupuesto'}
         </CardTitle>
         <CardDescription>
-          Complete los detalles de su cotización para{' '}
+          Complete los detalles de su presupuesto para{' '}
           <strong>{invitation.category?.name}</strong>
         </CardDescription>
       </CardHeader>
@@ -142,12 +142,12 @@ export function QuoteForm({
                   })}
                 </p>
                 <p className="text-xs text-blue-600 mt-1">
-                  Esta es una referencia. Su cotización puede ser diferente.
+                  Esta es una referencia. Su presupuesto puede ser diferente.
                 </p>
               </div>
             )}
 
-            {/* Amount */}
+            {/* Amount */
             <FormField
               control={form.control}
               name="amount"

@@ -21,7 +21,7 @@ function getInvitationStatusBadge(status: string) {
   const variants: Record<string, { label: string; variant: 'default' | 'secondary' | 'destructive' | 'outline' }> = {
     pending: { label: 'Pendiente', variant: 'secondary' },
     viewed: { label: 'Vista', variant: 'default' },
-    quote_submitted: { label: 'Cotización enviada', variant: 'default' },
+    quote_submitted: { label: 'Presupuesto enviado', variant: 'default' },
     declined: { label: 'Rechazada', variant: 'destructive' },
     expired: { label: 'Expirada', variant: 'outline' },
   };
@@ -64,7 +64,7 @@ export function InvitationsList({ categories, invitationsByCategory }: Invitatio
                   </CardDescription>
                 </div>
                 <div className="text-sm text-gray-600">
-                  {invitations.filter(i => i.status === 'quote_submitted').length} cotización(es) recibida(s)
+                  {invitations.filter(i => i.status === 'quote_submitted').length} presupuesto(s) recibido(s)
                 </div>
               </div>
             </CardHeader>
@@ -120,7 +120,7 @@ export function InvitationsList({ categories, invitationsByCategory }: Invitatio
                         {invitation.status === 'quote_submitted' && invitation.quote && (
                           <div className="flex items-center gap-1 text-xs text-green-600">
                             <FileText className="w-3 h-3" />
-                            Ver cotización
+                            Ver presupuesto
                           </div>
                         )}
                       </div>

@@ -206,7 +206,7 @@ export function InviteSupplierForm({
                     />
                   </FormControl>
                   <FormDescription>
-                    Días que tendrán los proveedores para enviar su cotización
+                    Días que tendrán los proveedores para enviar su presupuesto
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

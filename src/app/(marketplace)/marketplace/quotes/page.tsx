@@ -7,9 +7,9 @@ export default function QuotesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Cotizaciones</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Presupuestos</h1>
         <p className="text-muted-foreground">
-          Solicita y gestiona cotizaciones personalizadas
+          Solicita y gestiona presupuestos personalizados
         </p>
       </div>
 
@@ -18,9 +18,9 @@ export default function QuotesPage() {
           <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/20">
             <MessageSquare className="h-10 w-10 text-blue-600 dark:text-blue-400" />
           </div>
-          <CardTitle>Cotizaciones Personalizadas</CardTitle>
+          <CardTitle>Presupuestos Personalizados</CardTitle>
           <CardDescription>
-            Próximamente podrás solicitar cotizaciones a proveedores
+            Próximamente podrás solicitar presupuestos a proveedores
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center text-sm text-muted-foreground">

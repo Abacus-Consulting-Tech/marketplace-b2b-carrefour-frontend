@@ -15,7 +15,7 @@
 4. ✅ **Product Pricing/Approval** - Cola de aprobación de productos
 
 ### Frontend con Placeholder (requiere desarrollo):
-1. ⏳ **Quotes** - Sistema de cotizaciones (página placeholder, ~2 días desarrollo)
+1. ⏳ **Quotes** - Sistema de presupuestos (página placeholder, ~2 días desarrollo)
 2. ⏳ **Product Management** - CRUD de productos admin (placeholder, ~4 días desarrollo)
 3. ⏳ **Franchisee Management** - CRUD de franquiciados (placeholder, ~4 días desarrollo)
 
@@ -151,7 +151,7 @@ PATCH  /admin/categories/:id/reorder
 
 ---
 
-#### 8. Sistema de Cotizaciones (Admin/Store API)
+#### 8. Sistema de Presupuestos (Admin/Store API)
 
 **¿Qué es?**  
 Sistema para que franquiciados soliciten presupuestos personalizados a proveedores para productos especiales, grandes volúmenes o condiciones particulares.
@@ -174,12 +174,12 @@ Sistema para que franquiciados soliciten presupuestos personalizados a proveedor
    - Disponibilidad y plazo
    - Condiciones (mínimo pedido, etc.)
 
-4. Franquiciado acepta o rechaza la cotización
+4. Franquiciado acepta o rechaza el presupuesto
 
 **Endpoints necesarios:**
 ```
 # Franquiciado
-POST   /store/quotes                # Crear solicitud de cotización
+POST   /store/quotes                # Crear solicitud de presupuesto
 GET    /store/quotes                # Ver mis solicitudes
 GET    /store/quotes/:id            # Ver detalle de solicitud
 
@@ -370,7 +370,7 @@ GET /products?category_id=1&supplier_id=2&min_price=10&max_price=100
 ### Fase 3 - Admin (Semanas 7-10)
 1. ✅ Openings
 2. ✅ Categorías
-3. ✅ Cotizaciones
+3. ✅ Presupuestos
 4. ✅ Aprobación de productos
 5. ✅ Gestión de franquiciados
 6. ✅ Catálogo admin

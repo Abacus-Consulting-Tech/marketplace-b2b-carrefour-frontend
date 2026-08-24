@@ -30,6 +30,8 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   // Form state
   const [formData, setFormData] = useState({
@@ -57,27 +59,82 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
     notes: franchisee?.metadata?.notes || '',
   });
 
+  const validateField = (field: string, value: any): string | null => {
+    switch (field) {
+      case 'first_name':
+        return !value?.trim() ? 'El nombre es obligatorio' : null;
+      case 'last_name':
+        return !value?.trim() ? 'Los apellidos son obligatorios' : null;
+      case 'email':
+        if (!value?.trim()) return 'El email es obligatorio';
+        if (!value.includes('@')) return 'El email no es válido';
+        return null;
+      case 'password':
+        if (mode === 'create') {
+          if (!value) return 'La contraseña es obligatoria';
+          if (value.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
+        }
+        return null;
+      case 'company_name':
+        return !value?.trim() ? 'El nombre de la empresa es obligatorio' : null;
+      case 'tax_id':
+        return !value?.trim() ? 'El CIF/NIF es obligatorio' : null;
+      case 'store_code':
+        return !value?.trim() ? 'El código de tienda es obligatorio' : null;
+      case 'credit_limit':
+        const creditLimit = parseFloat(value);
+        if (isNaN(creditLimit)) return 'Debe ser un número';
+        if (creditLimit < 0) return 'El límite de crédito debe ser positivo';
+        return null;
+      case 'payment_terms':
+        const paymentTerms = parseInt(value);
+        if (isNaN(paymentTerms)) return 'Debe ser un número';
+        if (paymentTerms < 0) return 'Los días de pago deben ser positivos';
+        return null;
+      default:
+        return null;
+    }
+  };
+
   const handleChange = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+    // Clear general error when user starts typing
+    if (error) setError(null);
+    // Validate field if it has been touched
+    if (touched[field]) {
+      const fieldError = validateField(field, value);
+      setFieldErrors((prev) => ({
+        ...prev,
+        [field]: fieldError || '',
+      }));
+    }
+  };
+
+  const handleBlur = (field: string) => {
+    setTouched((prev) => ({ ...prev, [field]: true }));
+    const fieldError = validateField(field, formData[field as keyof typeof formData]);
+    setFieldErrors((prev) => ({
+      ...prev,
+      [field]: fieldError || '',
+    }));
   };
 
   const validateForm = (): string | null => {
-    if (!formData.first_name.trim()) return 'El nombre es obligatorio';
-    if (!formData.last_name.trim()) return 'Los apellidos son obligatorios';
-    if (!formData.email.trim()) return 'El email es obligatorio';
-    if (!formData.email.includes('@')) return 'El email no es válido';
-    if (mode === 'create' && !formData.password) return 'La contraseña es obligatoria';
-    if (mode === 'create' && formData.password.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
-    if (!formData.company_name.trim()) return 'El nombre de la empresa es obligatorio';
-    if (!formData.tax_id.trim()) return 'El CIF/NIF es obligatorio';
-    if (!formData.store_code.trim()) return 'El código de tienda es obligatorio';
+    // Validate all fields
+    const errors: Record<string, string> = {};
+    Object.keys(formData).forEach((field) => {
+      const error = validateField(field, formData[field as keyof typeof formData]);
+      if (error) {
+        errors[field] = error;
+      }
+    });
 
-    const creditLimit = parseFloat(formData.credit_limit);
-    if (isNaN(creditLimit) || creditLimit < 0) return 'El límite de crédito debe ser un número positivo';
-
-    const paymentTerms = parseInt(formData.payment_terms);
-    if (isNaN(paymentTerms) || paymentTerms < 0) return 'Los días de pago deben ser un número positivo';
-
+    setFieldErrors(errors);
+    
+    if (Object.keys(errors).length > 0) {
+      return 'Por favor, corrige los errores en el formulario';
+    }
+    
     return null;
   };
 
@@ -222,9 +279,14 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
                 id="first_name"
                 value={formData.first_name}
                 onChange={(e) => handleChange('first_name', e.target.value)}
+                onBlur={() => handleBlur('first_name')}
                 placeholder="Juan"
                 required
+                className={fieldErrors.first_name ? 'border-red-500' : ''}
               />
+              {fieldErrors.first_name && (
+                <p className="text-sm text-red-600">{fieldErrors.first_name}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -233,9 +295,14 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
                 id="last_name"
                 value={formData.last_name}
                 onChange={(e) => handleChange('last_name', e.target.value)}
+                onBlur={() => handleBlur('last_name')}
                 placeholder="García López"
                 required
+                className={fieldErrors.last_name ? 'border-red-500' : ''}
               />
+              {fieldErrors.last_name && (
+                <p className="text-sm text-red-600">{fieldErrors.last_name}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -245,9 +312,14 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleChange('email', e.target.value)}
+                onBlur={() => handleBlur('email')}
                 placeholder="juan.garcia@carrefour.es"
                 required
+                className={fieldErrors.email ? 'border-red-500' : ''}
               />
+              {fieldErrors.email && (
+                <p className="text-sm text-red-600">{fieldErrors.email}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -269,13 +341,19 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
                   type="password"
                   value={formData.password}
                   onChange={(e) => handleChange('password', e.target.value)}
+                  onBlur={() => handleBlur('password')}
                   placeholder="Mínimo 8 caracteres"
                   required
                   minLength={8}
+                  className={fieldErrors.password ? 'border-red-500' : ''}
                 />
-                <p className="text-xs text-muted-foreground">
-                  La contraseña debe tener al menos 8 caracteres
-                </p>
+                {fieldErrors.password ? (
+                  <p className="text-sm text-red-600">{fieldErrors.password}</p>
+                ) : (
+                  <p className="text-xs text-muted-foreground">
+                    La contraseña debe tener al menos 8 caracteres
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -296,9 +374,14 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
                 id="company_name"
                 value={formData.company_name}
                 onChange={(e) => handleChange('company_name', e.target.value)}
+                onBlur={() => handleBlur('company_name')}
                 placeholder="Carrefour Centro SL"
                 required
+                className={fieldErrors.company_name ? 'border-red-500' : ''}
               />
+              {fieldErrors.company_name && (
+                <p className="text-sm text-red-600">{fieldErrors.company_name}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -307,9 +390,14 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
                 id="tax_id"
                 value={formData.tax_id}
                 onChange={(e) => handleChange('tax_id', e.target.value)}
+                onBlur={() => handleBlur('tax_id')}
                 placeholder="B12345678"
                 required
+                className={fieldErrors.tax_id ? 'border-red-500' : ''}
               />
+              {fieldErrors.tax_id && (
+                <p className="text-sm text-red-600">{fieldErrors.tax_id}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -318,9 +406,14 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
                 id="store_code"
                 value={formData.store_code}
                 onChange={(e) => handleChange('store_code', e.target.value)}
+                onBlur={() => handleBlur('store_code')}
                 placeholder="CF-MAD-001"
                 required
+                className={fieldErrors.store_code ? 'border-red-500' : ''}
               />
+              {fieldErrors.store_code && (
+                <p className="text-sm text-red-600">{fieldErrors.store_code}</p>
+              )}
             </div>
           </div>
         </CardContent>
@@ -355,11 +448,17 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
                 id="credit_limit"
                 type="number"
                 step="0.01"
+                min="0"
                 value={formData.credit_limit}
                 onChange={(e) => handleChange('credit_limit', e.target.value)}
+                onBlur={() => handleBlur('credit_limit')}
                 placeholder="5000"
                 required
+                className={fieldErrors.credit_limit ? 'border-red-500' : ''}
               />
+              {fieldErrors.credit_limit && (
+                <p className="text-sm text-red-600">{fieldErrors.credit_limit}</p>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -367,11 +466,17 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
               <Input
                 id="payment_terms"
                 type="number"
+                min="0"
                 value={formData.payment_terms}
                 onChange={(e) => handleChange('payment_terms', e.target.value)}
+                onBlur={() => handleBlur('payment_terms')}
                 placeholder="30"
                 required
+                className={fieldErrors.payment_terms ? 'border-red-500' : ''}
               />
+              {fieldErrors.payment_terms && (
+                <p className="text-sm text-red-600">{fieldErrors.payment_terms}</p>
+              )}
             </div>
           </div>
         </CardContent>

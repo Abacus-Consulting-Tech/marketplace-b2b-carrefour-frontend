@@ -205,7 +205,7 @@ export default function FranchiseesList() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription">Gold & Silver</CardDescription>
+            <CardDescription>Gold & Silver</CardDescription>
             <CardTitle className="text-2xl">{stats.gold + stats.silver}</CardTitle>
           </CardHeader>
           <CardContent>

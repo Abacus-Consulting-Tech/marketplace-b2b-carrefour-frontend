@@ -49,7 +49,7 @@ export const WORKFLOW_PHASES: WorkflowPhase[] = [
     color: 'gray',
   },
   {
-    name: 'Cotización',
+    name: 'Presupuesto',
     description: 'Invitación a proveedores y recepción de ofertas',
     statuses: ['requesting_quotes', 'quotes_received', 'pending_selection'],
     color: 'blue',

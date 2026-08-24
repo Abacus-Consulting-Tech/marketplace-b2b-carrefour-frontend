@@ -47,7 +47,7 @@ y este proyecto adhiere a [Semantic Versioning](https://semver.org/lang/es/).
 
 #### Sistema Completo de Gestión de Estados
 - **14 estados del proyecto** definidos en orden secuencial
-- **5 fases del workflow**: Preparación, Cotización, Adjudicación, Financiación, Ejecución
+- **5 fases del workflow**: Preparación, Presupuesto, Adjudicación, Financiación, Ejecución
 - **Matriz de transiciones válidas** - validación estricta de cambios permitidos
 
 #### Constantes y Utilidades

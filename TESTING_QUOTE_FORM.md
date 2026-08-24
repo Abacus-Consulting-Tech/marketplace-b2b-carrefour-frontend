@@ -1,4 +1,4 @@
-# Guía de Testing - Formulario de Cotización (Supplier Portal)
+# Guía de Testing - Formulario de Presupuesto (Supplier Portal)
 
 ## Descripción
 Sistema que permite a los proveedores enviar presupuestos para las categorías a las que han sido invitados. Incluye funcionalidad de borradores y envío final.
@@ -89,7 +89,7 @@ Invitación 3:
      * Botón "Enviar Presupuesto" (azul) o "Ver Presupuesto" (outline)
 ```
 
-### 3. Acceder al Formulario de Cotización
+### 3. Acceder al Formulario de Presupuesto
 ```bash
 1. Click en "Enviar Presupuesto" de la categoría "Rotulación"
 2. ESPERADO:
@@ -313,7 +313,7 @@ NOTA: En producción, presupuestos enviados no deberían editarse
 1. Guardar borrador
 2. Navegar a otra página
 3. Volver a /supplier/openings
-4. Volver a la cotización
+4. Volver al presupuesto
 5. ESPERADO:
    - Datos del borrador persisten (sessionStorage)
 
@@ -392,18 +392,18 @@ ESCENARIO: Proveedor envía presupuesto para Rotulación
 2. Ir a proyecto "Nueva apertura - Calle Carmen 50"
 3. Tab "Proveedores"
 4. ESPERADO:
-   - Ver invitación de "Mobiliario" con estado "Cotización enviada"
+   - Ver invitación de "Mobiliario" con estado "Presupuesto enviado"
    - Ver datos del proveedor
-   - Mostrar que tiene cotización disponible
+   - Mostrar que tiene presupuesto disponible
 5. Tab "Presupuestos" (Feature #4 - próximo):
-   - Podrá ver y comparar cotizaciones recibidas
+   - Podrá ver y comparar presupuestos recibidos
 ```
 
 ## Puntos de Verificación
 
 ### ✅ Funcionalidades Implementadas
 - [x] Componente QuoteForm reutilizable
-- [x] Página de envío de cotización
+- [x] Página de envío de presupuesto
 - [x] Carga de datos de invitación
 - [x] Formulario con validación Zod
 - [x] Guardar como borrador
@@ -429,11 +429,11 @@ ESCENARIO: Proveedor envía presupuesto para Rotulación
 2. **Upload de PDF**: Integrar con Feature #5 (Upload de Documentos)
 3. **Validación de deadline**: Bloquear envío si fecha expirada
 4. **Confirmación**: Añadir dialog de confirmación antes de enviar
-5. **Email notifications**: Notificar al admin cuando proveedor envía cotización
+5. **Email notifications**: Notificar al admin cuando proveedor envía presupuesto
 6. **Edición limitada**: Bloquear edición de presupuestos ya enviados (o solo permitir antes de revisión)
 7. **Historial de versiones**: Guardar historial si se permiten ediciones
 8. **Cálculos automáticos**: Añadir calculadora de IVA, descuentos
-9. **Comparación con estimado**: Destacar si cotización excede el presupuesto estimado
+9. **Comparación con estimado**: Destacar si presupuesto excede el presupuesto estimado
 10. **Adjuntos múltiples**: Permitir varios documentos (catálogos, certificaciones)
 
 ## Resolución de Problemas
@@ -479,12 +479,12 @@ GET /openings/invitations
 GET /openings/invitations/:invitationId/quote
 → openingsApi.getQuoteByInvitation(invitationId)
 
-// Crear nueva cotización
+// Crear nuevo presupuesto
 POST /openings/categories/:categoryId/quotes
 Body: { amount, delivery_days, warranty_months, payment_terms, notes, status }
 → openingsApi.createQuote(categoryId, data)
 
-// Actualizar cotización existente
+// Actualizar presupuesto existente
 PATCH /openings/quotes/:quoteId
 Body: { amount, delivery_days, warranty_months, payment_terms, notes, status }
 → openingsApi.updateQuote(quoteId, data)
@@ -493,7 +493,7 @@ Body: { amount, delivery_days, warranty_months, payment_terms, notes, status }
 ## Próximos Pasos
 
 Después de validar este módulo, continuar con:
-1. **Tabla de Comparación** (Feature #4) - Admin compara cotizaciones recibidas
+1. **Tabla de Comparación** (Feature #4) - Admin compara presupuestos recibidos
 2. **Upload de Documentos** (Feature #5) - Adjuntar PDFs y otros archivos
 3. **Workflow de Estados** (Feature #6) - Gestión de transiciones de estado
 

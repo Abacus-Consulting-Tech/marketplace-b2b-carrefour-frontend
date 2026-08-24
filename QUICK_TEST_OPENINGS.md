@@ -17,9 +17,9 @@
 **Funcionalidades en Desarrollo (Placeholders):**
 - 🚧 Gestión de categorías (tab muestra "Funcionalidad en desarrollo...")
 - 🚧 Invitación de proveedores (tab muestra "Funcionalidad en desarrollo...")
-- 🚧 Cotizaciones/Presupuestos (tab muestra "Funcionalidad en desarrollo...")
-- 🚧 Formulario de cotización para suppliers (página no implementada)
-- 🚧 Comparación de cotizaciones para franchisees (funcionalidad pendiente)
+- 🚧 Presupuestos (tab muestra "Funcionalidad en desarrollo...")
+- 🚧 Formulario de presupuesto para suppliers (página no implementada)
+- 🚧 Comparación de presupuestos para franchisees (funcionalidad pendiente)
 
 **Objetivo de este Testing:**
 Verificar que la **estructura base y navegación funcionan correctamente**, reconociendo que las funcionalidades avanzadas están marcadas explícitamente como "en desarrollo".
@@ -63,7 +63,7 @@ Proyectos (3 proyectos mockup):
 
 ┌──────────────────────────────────────┐
 │ 🏪 Nueva Tienda Madrid Centro        │
-│ [Badge: Solicitando Cotizaciones]    │
+│ [Badge: Solicitando Presupuestos]    │
 │                                       │
 │ Franquiciado: Carrefour Express MAD  │
 │ Ubicación: Madrid                    │
@@ -75,7 +75,7 @@ Proyectos (3 proyectos mockup):
 
 ┌──────────────────────────────────────┐
 │ 🏪 Ampliación Barcelona Sur          │
-│ [Badge: Cotizaciones Recibidas]      │
+│ [Badge: Presupuestos Recibidos]      │
 │ ...                                  │
 └──────────────────────────────────────┘
 
@@ -316,12 +316,12 @@ Password: supplier123
 
 Las siguientes funcionalidades están **en desarrollo** y no son testeables aún:
 
-### ❌ Test 8: Comparación de Cotizaciones (Franchisee)
+### ❌ Test 8: Comparación de Presupuestos (Franchisee)
 - Estado: **En desarrollo**
 - Ubicación esperada: Tab "Presupuestos" en detalles de proyecto
 - Actualmente muestra: "Funcionalidad en desarrollo..."
 
-### ❌ Test 9: Enviar Cotización (Supplier)
+### ❌ Test 9: Enviar Presupuesto (Supplier)
 - Estado: **En desarrollo**
 - Ubicación esperada: `/supplier/openings/[categoryId]/quote`
 - Actualmente: Página no implementada
@@ -351,9 +351,9 @@ Las siguientes funcionalidades están **en desarrollo** y no son testeables aún
 ### 🚧 En Desarrollo (Mostrado como Placeholder)
 1. **Gestión de Categorías**
 2. **Invitación de Proveedores**
-3. **Recepción de Cotizaciones**
+3. **Recepción de Presupuestos**
 4. **Comparación de Presupuestos**
-5. **Formulario de Cotización (Supplier)**
+5. **Formulario de Presupuesto (Supplier)**
 6. **Upload de Documentos**
 7. **Workflow completo de Estados**
 
@@ -370,9 +370,9 @@ Las siguientes funcionalidades están **en desarrollo** y no son testeables aún
 **Próximos pasos de desarrollo:**
 1. Implementar gestión de categorías desde detalle
 2. Sistema de invitación a proveedores
-3. Formulario de cotización para suppliers
-4. Comparación de cotizaciones para franchisees
-5. Upload de documentos (planos, cotizaciones)
+3. Formulario de presupuesto para suppliers
+4. Comparación de presupuestos para franchisees
+5. Upload de documentos (planos, presupuestos)
 6. Workflow de estados del proyecto
 7. Integración con backend real (Medusa)
 
@@ -394,12 +394,12 @@ Las siguientes funcionalidades están **en desarrollo** y no son testeables aún
 - [ ] Login como franchisee
 - [ ] Ver proyectos asignados
 - [ ] Ver detalles con estructura básica
-- [ ] (Comparación de cotizaciones: en desarrollo)
+- [ ] (Comparación de presupuestos: en desarrollo)
 
 ### Funcionalidad Supplier
 - [ ] Login como supplier
 - [ ] Ver invitaciones pendientes (mock data)
-- [ ] (Formulario de cotización: en desarrollo)
+- [ ] (Formulario de presupuesto: en desarrollo)
 
 ### General
 - [ ] Navegación entre portales
@@ -413,9 +413,9 @@ Las siguientes funcionalidades están **en desarrollo** y no son testeables aún
 - ❌ Añadir categorías desde formulario de creación
 - ❌ Gestión de categorías desde detalles
 - ❌ Invitar proveedores
-- ❌ Ver cotizaciones recibidas
+- ❌ Ver presupuestos recibidos
 - ❌ Comparar presupuestos
-- ❌ Enviar cotizaciones (supplier portal)
+- ❌ Enviar presupuestos (supplier portal)
 - ❌ Upload de documentos en formulario
 - ❌ Gestión completa de documentos
 
@@ -456,7 +456,7 @@ Las siguientes funcionalidades están **en desarrollo** y no son testeables aún
 3. **Mock Data Limitado**
    - Solo 3 proyectos de ejemplo en admin
    - Proyectos de franchisee/supplier dependen de IDs hardcoded
-   - Categorías, cotizaciones, etc. no están en mock actual
+   - Categorías, presupuestos, etc. no están en mock actual
 
 ---
 

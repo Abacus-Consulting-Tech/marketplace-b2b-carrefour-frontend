@@ -842,7 +842,7 @@ export let mockStatusHistory: import('@/types/openings').StatusHistoryEntry[] = 
     changed_by_name: 'Admin Sistema',
     changed_by_role: 'admin',
     changed_at: '2024-01-18T09:15:00Z',
-    notes: 'Proveedores invitados para cotización',
+    notes: 'Proveedores invitados para presupuesto',
   },
 ];
 

@@ -29,14 +29,14 @@
 **Tab "Categorías":**
 
 - [ ] Ver lista de 3 categorías mock:
-  - ✅ **Mobiliario** - €35,000 - 3 cotizaciones
-  - ✅ **Rotulación** - €12,000 - 2 cotizaciones  
-  - ✅ **Equipamiento Informático** - €8,000 - 2 cotizaciones
+  - ✅ **Mobiliario** - €35,000 - 3 presupuestos
+  - ✅ **Rotulación** - €12,000 - 2 presupuestos  
+  - ✅ **Equipamiento Informático** - €8,000 - 2 presupuestos
 
 - [ ] Cada categoría muestra:
   - ✅ Nombre y descripción
   - ✅ Presupuesto estimado
-  - ✅ Número de cotizaciones recibidas
+  - ✅ Número de presupuestos recibidos
   - ✅ Plazo estimado (días)
   - ✅ Lista de requisitos
   - ✅ Badges de entregables
@@ -200,9 +200,9 @@ npm run build
 Una vez verificada esta funcionalidad, continuar con:
 
 1. **Sistema de Invitaciones** - Añadir proveedores a categorías
-2. **Formulario de Cotización** - Supplier portal
+2. **Formulario de Presupuesto** - Supplier portal
 3. **Tabla de Comparación** - Franchisee portal
-4. **Upload de Documentos** - Planos, cotizaciones
+4. **Upload de Documentos** - Planos, presupuestos
 5. **Workflow de Estados** - Transiciones automáticas
 
 ---

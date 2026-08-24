@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { apiClient } from "@/lib/api/client";
+import { mockApi } from "@/lib/api/mock";
 import { featureFlags } from "@/config/feature-flags";
 
 export default function ForgotPasswordPage() {
@@ -26,7 +27,6 @@ export default function ForgotPasswordPage() {
       
       if (isMockMode) {
         // Use mock API
-        const { mockApi } = await import("@/lib/api/mock");
         await mockApi.auth.forgotPassword(email);
       } else {
         // Use real API
