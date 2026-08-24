@@ -117,11 +117,9 @@ export function QuoteForm({
     await onSubmit(data, isDraft, pdfFile);
   };
 
-  // Render component
-  const CardComponent = Card;
-  
-  return (
-    <CardComponent>
+  // JSX Render
+  const renderForm = () => (
+    <Card>
       <CardHeader>
         <CardTitle>
           {existingQuote ? 'Editar Presupuesto' : 'Enviar Presupuesto'}
@@ -419,6 +417,8 @@ export function QuoteForm({
           </form>
         </Form>
       </CardContent>
-    </CardComponent>
+    </Card>
   );
+  
+  return renderForm();
 }
