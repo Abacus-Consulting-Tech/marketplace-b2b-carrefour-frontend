@@ -1097,7 +1097,554 @@ Sistema para que franquiciados soliciten presupuestos personalizados para:
 
 ---
 
-## 🔑 Decisiones Clave Pendientes
+## � Guía de Implementación de API Calls (Mock → Real Backend)
+
+Esta guía explica cómo migrar cada módulo de mock a real API cuando el backend esté listo.
+
+### 📚 Referencia: Dev Tools Panel
+
+**URL Local**: http://localhost:3000/admin/dev-tools  
+**Qué contiene:**
+- 77 endpoints documentados (Auth, Admin, Pricing, Store, Vendor, Orders, Products)
+- Estructura de requests/responses para cada endpoint
+- Feature flags de cada módulo
+- Credenciales de testing
+- Ejemplos de curl para cada endpoint
+
+**Úsalo para:**
+- Ver qué endpoints están disponibles
+- Copiar estructura de requests
+- Verificar feature flags actuales
+- Testear endpoints con curl antes de integrar
+
+---
+
+### 🛠️ Proceso de Migración por Módulo (5 Pasos)
+
+#### **Paso 1: Verificar Backend Ready (15-30 min)**
+
+1. **Revisar Dev Tools**
+   ```
+   http://localhost:3000/admin/dev-tools
+   ```
+   - Buscar sección del módulo (ej: "Products")
+   - Copiar todos los endpoints que necesitas
+   - Verificar estructura JSON de requests/responses
+
+2. **Probar endpoints con curl**
+   ```bash
+   # Ejemplo: Login para obtener token
+   curl -X POST https://marketplace-b2b-backend-dev.onrender.com/auth/user/emailpass \
+     -H "Content-Type: application/json" \
+     -d '{"email": "admin@carrefour.dev", "password": "supersecret"}'
+   
+   # Ejemplo: Listar productos
+   curl -X GET https://marketplace-b2b-backend-dev.onrender.com/store/products \
+     -H "Authorization: Bearer YOUR_TOKEN_HERE"
+   ```
+
+3. **Comparar JSON real vs mock**
+   - Abre `src/lib/api/[modulo]-mock.ts`
+   - Compara estructura con response del backend
+   - Anota diferencias (campos extra, nombres diferentes, etc.)
+
+4. **Actualizar types si necesario**
+   ```typescript
+   // src/types/products.ts
+   export interface Product {
+     id: string;
+     title: string;
+     // ... campos actuales
+     
+     // ⬇️ Añadir campos nuevos del backend si los tiene
+     merchant_id?: string; // Ejemplo: campo nuevo del backend
+   }
+   ```
+
+---
+
+#### **Paso 2: Crear Cliente API Real (1-2 horas)**
+
+1. **Ubicación del archivo**
+   ```
+   src/lib/api/[modulo]-client.ts
+   ```
+   Ejemplo: `src/lib/api/products-client.ts` (ya existe)
+
+2. **Estructura del archivo** (copiar del existente y modificar)
+
+```typescript
+import { featureFlags } from '@/config/feature-flags';
+import { 
+  mockGetProducts,   // ⬅️ Funciones mock existentes
+  mockGetProduct,
+  mockCreateProduct,
+  // ... resto
+} from './products-mock';
+
+// ⬇️ Nueva función para llamar al backend real
+async function realGetProducts(params: GetProductsParams) {
+  const { search, status, supplierId, expand } = params;
+  
+  // Construir query string
+  const queryParams = new URLSearchParams();
+  if (search) queryParams.append('q', search);
+  if (status) queryParams.append('status', status);
+  if (supplierId) queryParams.append('supplier_id', supplierId);
+  if (expand) queryParams.append('expand', expand);
+  
+  const url = `${process.env.NEXT_PUBLIC_API_URL}/store/products?${queryParams}`;
+  
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+      // Añadir auth si necesario:
+      // 'Authorization': `Bearer ${getToken()}`
+    },
+  });
+  
+  if (!response.ok) {
+    throw new Error(`Error fetching products: ${response.statusText}`);
+  }
+  
+  const data = await response.json();
+  return data; // Devolver en formato esperado por componentes
+}
+
+// ⬇️ Exportar versión dual (usa feature flag)
+export async function getProducts(params: GetProductsParams = {}) {
+  if (featureFlags.shouldUseMock('products')) {
+    return mockGetProducts(params);
+  }
+  return realGetProducts(params);
+}
+```
+
+3. **Implementar cada método**
+   - GET endpoints: usar `fetch()` con query params
+   - POST/PATCH/DELETE: incluir body como JSON
+   - Manejo de errores con try/catch
+   - Headers de autenticación si necesario
+
+4. **Helpers comunes** (crear una vez, reutilizar)
+
+```typescript
+// src/lib/api/api-helpers.ts
+export function getAuthHeaders(): HeadersInit {
+  const token = localStorage.getItem('auth_token');
+  return {
+    'Content-Type': 'application/json',
+    ...(token && { 'Authorization': `Bearer ${token}` })
+  };
+}
+
+export async function apiRequest<T>(
+  url: string,
+  options: RequestInit = {}
+): Promise<T> {
+  const response = await fetch(url, {
+    ...options,
+    headers: {
+      ...getAuthHeaders(),
+      ...options.headers,
+    },
+  });
+  
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || 'API request failed');
+  }
+  
+  return response.json();
+}
+
+// Uso:
+const products = await apiRequest<{ products: Product[] }>(
+  `${API_URL}/store/products`
+);
+```
+
+---
+
+#### **Paso 3: Actualizar Feature Flag (5 minutos)**
+
+1. **Abrir archivo de configuración**
+   ```
+   src/config/feature-flags.ts
+   ```
+
+2. **Cambiar a modo real**
+   ```typescript
+   products: {
+     useMock: false,        // ⬅️ Cambiar de true a false
+     backendReady: true,    // ⬅️ Confirmar que backend está listo
+     apiBaseUrl: process.env.NEXT_PUBLIC_API_URL,
+     notes: 'Real API - Migrado 25/08/2026' // ⬅️ Actualizar fecha
+   }
+   ```
+
+3. **Verificar en Dev Tools**
+   - Refresh http://localhost:3000/admin/dev-tools
+   - Buscar el módulo
+   - Debe decir "Real API" en verde ✅
+
+---
+
+#### **Paso 4: Testing Integrado (2-4 horas)**
+
+1. **Testing manual de cada endpoint**
+   
+   **Lista de testing:**
+   - [ ] GET list - Listar todos los items
+   - [ ] GET by ID - Obtener item específico
+   - [ ] POST create - Crear nuevo item
+   - [ ] PATCH update - Actualizar item existente
+   - [ ] DELETE - Eliminar item
+   - [ ] Filtros - Búsqueda, filtros por campo
+   - [ ] Paginación - Si aplica
+   - [ ] Validaciones - Errores de validación
+   - [ ] Auth - Permisos por rol
+
+2. **Flujo de testing:**
+   ```bash
+   # 1. Login
+   http://localhost:3000/login
+   # Email: admin@carrefour.dev
+   # Password: supersecret
+   
+   # 2. Ir al módulo
+   http://localhost:3000/admin/products
+   
+   # 3. Probar CRUD
+   - Crear nuevo producto ✓
+   - Editar producto ✓
+   - Listar productos ✓
+   - Filtrar/buscar ✓
+   - Eliminar producto ✓
+   
+   # 4. Verificar errores
+   - Campos requeridos vacíos → debe mostrar error
+   - Item no encontrado → debe mostrar 404
+   - Sin permisos → debe redirigir
+   ```
+
+3. **Verificar consola del navegador**
+   - Abrir DevTools (F12)
+   - Pestaña Network
+   - Verificar que llama al backend real (no mock)
+   - Verificar status codes (200, 201, 400, 404, etc.)
+   - Ver structure de JSON responses
+
+4. **Testing de edge cases**
+   - [ ] Stock bajo → debe mostrar warning
+   - [ ] Campos vacíos → validación client-side
+   - [ ] Backend down → mostrar error gracefully
+   - [ ] Token expirado → redirigir a login
+   - [ ] Respuesta lenta → mostrar loading state
+
+---
+
+#### **Paso 5: Rollback Plan (si algo falla)**
+
+1. **Volver a mock inmediatamente**
+   ```typescript
+   // src/config/feature-flags.ts
+   products: {
+     useMock: true,  // ⬅️ Volver a true
+     backendReady: false,
+     notes: 'Rollback - Backend tenía issue XYZ'
+   }
+   ```
+
+2. **Documentar el problema**
+   ```markdown
+   ## Issues encontrados durante migración:
+   
+   **Fecha**: 25/08/2026
+   **Módulo**: Products
+   **Issue**: 
+   - Campo `merchant_id` no viene en response
+   - Endpoint `/admin/products` devuelve 500
+   
+   **Solución temporal**: Rollback a mock
+   **Próximo paso**: Coordinar con backend para fix
+   ```
+
+3. **Comunicar a backend**
+   - Email con detalles del error
+   - Screenshots si aplica
+   - Request/response examples
+   - Fecha estimada para re-intentar
+
+---
+
+### 📋 Checklist de Migración por Módulo
+
+Usa esta checklist cada vez que migres un módulo:
+
+```markdown
+## Migración de [MÓDULO] a Real API
+
+**Fecha inicio**: __/__/____
+**Backend ready**: [ ] Sí / [ ] No
+**Responsable**: ________
+
+### Pre-migración
+- [ ] Backend confirma endpoints listos
+- [ ] Probado todos los endpoints con curl
+- [ ] Comparado JSON mock vs real
+- [ ] Actualizado types si necesario
+- [ ] Revisado docs en Dev Tools
+
+### Implementación
+- [ ] Creadas funciones realXxx() en api client
+- [ ] Añadido manejo de errores
+- [ ] Añadido auth headers si necesario
+- [ ] Testeado cada función en aislamiento
+- [ ] Feature flag cambiado a false
+
+### Testing
+- [ ] Login funciona
+- [ ] GET list funciona
+- [ ] GET by ID funciona
+- [ ] POST create funciona
+- [ ] PATCH update funciona
+- [ ] DELETE funciona
+- [ ] Filtros funcionan
+- [ ] Búsqueda funciona
+- [ ] Validaciones funcionan
+- [ ] Loading states correctos
+- [ ] Error handling correcto
+
+### Edge Cases
+- [ ] Backend down → error graceful
+- [ ] Token expirado → redirect login
+- [ ] 404 → mensaje amigable
+- [ ] 500 → mensaje de error
+- [ ] Slow response → loading spinner
+
+### Documentación
+- [ ] Actualizado feature-flags.ts
+- [ ] Actualizado PROJECT_STATUS_AND_ROADMAP.md
+- [ ] Commit con mensaje descriptivo
+- [ ] Email a equipo confirmando migración
+
+### Post-migración
+- [ ] Monitoreado por 24h
+- [ ] Sin errores reportados
+- [ ] Performance aceptable
+- [ ] Usuarios notificados (si aplica)
+
+**Fecha completado**: __/__/____
+**Status**: ✅ Exitoso / ⚠️ Con issues / ❌ Rollback
+```
+
+---
+
+### 🚨 Problemas Comunes y Soluciones
+
+#### **1. CORS Errors**
+
+**Síntoma:**
+```
+Access to fetch at 'https://backend.com/api' has been blocked by CORS policy
+```
+
+**Solución:**
+- Backend debe añadir headers CORS
+- O usar proxy de Next.js en `next.config.js`:
+
+```javascript
+// next.config.js
+async rewrites() {
+  return [
+    {
+      source: '/api/:path*',
+      destination: 'https://backend.com/:path*'
+    }
+  ]
+}
+```
+
+---
+
+#### **2. Token JWT Expirado**
+
+**Síntoma:**
+```
+401 Unauthorized
+```
+
+**Solución:**
+```typescript
+// src/lib/api/api-helpers.ts
+export async function apiRequest<T>(url: string, options: RequestInit = {}) {
+  const response = await fetch(url, options);
+  
+  if (response.status === 401) {
+    // Token expirado → logout y redirect
+    localStorage.removeItem('auth_token');
+    window.location.href = '/login';
+    throw new Error('Session expired');
+  }
+  
+  // ... resto del código
+}
+```
+
+---
+
+#### **3. Estructura JSON Diferente**
+
+**Síntoma:**
+```
+Cannot read property 'title' of undefined
+```
+
+**Solución:**
+```typescript
+// Backend devuelve: { data: { products: [...] } }
+// Pero esperábamos: { products: [...] }
+
+// Adaptar response:
+async function realGetProducts() {
+  const response = await fetch(url);
+  const json = await response.json();
+  
+  // ⬇️ Transformar a formato esperado
+  return {
+    products: json.data.products || []
+  };
+}
+```
+
+---
+
+#### **4. Campo Required Faltante**
+
+**Síntoma:**
+```
+400 Bad Request: "merchant_id is required"
+```
+
+**Solución:**
+```typescript
+// Añadir campo al request:
+async function realCreateProduct(data: CreateProductRequest) {
+  const body = {
+    ...data,
+    merchant_id: getCurrentMerchantId(), // ⬅️ Añadir campo requerido
+  };
+  
+  return apiRequest('/admin/products', {
+    method: 'POST',
+    body: JSON.stringify(body)
+  });
+}
+```
+
+---
+
+### 📊 Orden Recomendado de Migración
+
+Según dependencias y prioridad:
+
+1. **Auth** ✅ (YA MIGRADO - 25/08/2026)
+2. **Products (Store)** - Catálogo público, sin auth
+3. **Cart** - Depende de Products
+4. **Orders (Supplier)** - Proveedores ven sus pedidos
+5. **Categories** - Independiente, bajo riesgo
+6. **Openings** - Módulo admin, independiente
+7. **Franchisees** - CRUD admin
+8. **Product Pricing/Approval** - Workflow complejo
+9. **Admin Orders** - Vista global, depende de todo
+10. **Quotes** - Último, menos crítico
+
+**Tiempo estimado**: 1-2 días por módulo × 9 módulos = **2-3 semanas**
+
+---
+
+### 🎯 Quick Start: Migrar tu Primer Módulo
+
+**Ejemplo: Migrar Products en 1 hora**
+
+1. **Minuto 0-5**: Probar endpoints en Dev Tools
+   ```bash
+   curl https://backend.com/store/products
+   ```
+
+2. **Minuto 5-30**: Crear funciones real en `products-client.ts`
+   ```typescript
+   async function realGetProducts() { ... }
+   async function realGetProduct() { ... }
+   async function realCreateProduct() { ... }
+   ```
+
+3. **Minuto 30-35**: Cambiar feature flag
+   ```typescript
+   products: { useMock: false }
+   ```
+
+4. **Minuto 35-55**: Testing manual
+   - Login → Ir a /admin/products
+   - Crear producto → ✓
+   - Editar → ✓
+   - Eliminar → ✓
+
+5. **Minuto 55-60**: Commit y documentar
+   ```bash
+   git commit -m "feat: Migrate products to real API"
+   ```
+
+**Done!** 🎉
+
+---
+
+### 📱 Dev Tools Reference
+
+**Secciones disponibles en** http://localhost:3000/admin/dev-tools:
+
+1. **Overview**
+   - Feature flags status
+   - Módulos en mock vs real
+   - Estadísticas generales
+
+2. **Auth Endpoints** (4)
+   - POST /auth/user/emailpass - Admin login
+   - POST /auth/member/emailpass - Vendor login
+   - POST /auth/register
+   - POST /auth/forgot-password
+
+3. **Admin Endpoints** (2)
+   - GET /admin/users/me
+   - GET /admin/orders
+
+4. **Pricing Endpoints** (6)
+   - GET /admin/pricing/queue
+   - PATCH /admin/pricing/:id/approve
+   - etc.
+
+5. **Store Endpoints** (3)
+   - GET /store/products
+   - GET /store/products/:id
+   - GET /store/regions
+
+6. **Vendor Endpoints** (4)
+   - POST /vendor/products
+   - GET /vendor/products
+   - etc.
+
+7. **Orders Endpoints** (7)
+   - Supplier orders CRUD
+
+8. **Products Endpoints** (8)
+   - Admin products CRUD
+
+**Total**: 77 endpoints documentados
+
+---
+
+## �🔑 Decisiones Clave Pendientes
 
 1. **Arquitectura Frontend** 🔥 CRÍTICO - LUNES
    - ¿Continuar con custom frontend?
