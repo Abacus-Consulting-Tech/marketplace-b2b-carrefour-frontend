@@ -234,7 +234,7 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
         handle: formData.handle || undefined,
         status: formData.status as any,
         supplier_id: formData.supplier_id,
-        category_ids: formData.category_ids,
+        categories: formData.category_ids,
         tags: formData.tags.length > 0 ? formData.tags : undefined,
         variants: variants.map((v) => ({
           title: v.title,
