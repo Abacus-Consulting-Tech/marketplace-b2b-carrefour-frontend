@@ -207,7 +207,7 @@ function mockUpdateProduct(id: string, request: UpdateProductRequest): Promise<A
   const updates: Partial<Product> = {
     ...request,
     updated_at: new Date().toISOString(),
-  };
+  } as Partial<Product>;
 
   // Transform tags from string[] to ProductTag[]
   if (request.tags) {
