@@ -215,7 +215,7 @@ function mockUpdateFranchisee(id: string, request: UpdateFranchiseeRequest): Pro
         return;
       }
 
-      const updated = {
+      const updated: Franchisee = {
         ...mockFranchisees[index],
         ...request,
         metadata: {
@@ -223,7 +223,7 @@ function mockUpdateFranchisee(id: string, request: UpdateFranchiseeRequest): Pro
           ...request.metadata,
         },
         updated_at: new Date().toISOString(),
-      };
+      } as Franchisee;
 
       mockFranchisees[index] = updated;
 
@@ -411,7 +411,7 @@ function mockBulkUpdateFranchisees(request: BulkUpdateFranchiseesRequest): Promi
             },
             groups: request.groups || mockFranchisees[index].groups,
             updated_at: new Date().toISOString(),
-          };
+          } as Franchisee;
           updated.push(mockFranchisees[index]);
         }
       });
