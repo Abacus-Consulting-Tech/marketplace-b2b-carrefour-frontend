@@ -190,7 +190,7 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
             <CardContent>
               <div className="flex items-center text-xs text-muted-foreground">
                 <ShoppingCart className="h-3 w-3 mr-1" />
-                {stats.pending_orders} pendientes
+                {stats.orders_by_status.pending} pendientes
               </div>
             </CardContent>
           </Card>
@@ -212,13 +212,15 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
             <CardHeader className="pb-2">
               <CardDescription>Crédito Disponible</CardDescription>
               <CardTitle className="text-2xl">
-                {formatCurrency(stats.credit_available)}
+                {formatCurrency(
+                  ((franchisee?.metadata?.credit_limit as number) || 0) - (stats?.total_spent || 0)
+                )}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-xs text-muted-foreground">
                 <Euro className="h-3 w-3 mr-1" />
-                Límite: {formatCurrency(stats.credit_limit)}
+                Límite: {formatCurrency((franchisee?.metadata?.credit_limit as number) || 0)}
               </div>
             </CardContent>
           </Card>
@@ -233,8 +235,8 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
             <CardContent>
               <div className="flex items-center text-xs text-muted-foreground">
                 <Clock className="h-3 w-3 mr-1" />
-                {stats.days_since_last_order !== null
-                  ? `Hace ${stats.days_since_last_order} días`
+                {stats.last_order_date
+                  ? `Hace ${Math.floor((new Date().getTime() - new Date(stats.last_order_date).getTime()) / (1000 * 60 * 60 * 24))} días`
                   : '-'}
               </div>
             </CardContent>
@@ -429,7 +431,9 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
                 <div className="space-y-1">
                   <p className="text-sm text-muted-foreground">Crédito Disponible</p>
                   <p className="font-medium text-lg">
-                    {formatCurrency(stats?.credit_available || 0)}
+                    {formatCurrency(
+                      ((franchisee?.metadata?.credit_limit as number) || 0) - (stats?.total_spent || 0)
+                    )}
                   </p>
                 </div>
               </div>
