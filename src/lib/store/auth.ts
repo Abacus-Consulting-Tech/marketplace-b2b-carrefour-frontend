@@ -52,7 +52,7 @@ export const useAuthStore = create<AuthStore>()(
       onRehydrateStorage: () => (state) => {
         console.log('[AuthStore] onRehydrateStorage callback fired');
         // This callback runs after hydration completes
-        return (state, error) => {
+        return (state: AuthStore | undefined, error?: Error) => {
           if (error) {
             console.error('[AuthStore] Hydration error:', error);
           }
