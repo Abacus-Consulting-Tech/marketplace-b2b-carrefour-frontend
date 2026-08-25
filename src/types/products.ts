@@ -196,6 +196,7 @@ export interface CreateProductRequest {
   title: string;
   subtitle?: string;
   description?: string;
+  handle?: string;
   status?: Product['status'];
   thumbnail?: string;
   images?: string[];
