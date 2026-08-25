@@ -257,6 +257,7 @@ export interface DeleteProductResponse {
 export interface UpdateInventoryRequest {
   variant_id: string;
   quantity: number;
+  reason?: string;
 }
 
 export interface UpdateInventoryResponse {
