@@ -181,6 +181,7 @@ export interface CreateFranchiseeRequest {
     credit_limit?: number;
     discount_tier?: string;
     payment_terms?: number;
+    is_active?: boolean;
     notes?: string;
   };
   
