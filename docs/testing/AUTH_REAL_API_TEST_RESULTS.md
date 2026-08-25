@@ -14,7 +14,7 @@
 | User Type | Email | Password | Status | Details |
 |-----------|-------|----------|--------|---------|
 | **Admin** | `admin@carrefour.dev` | `supersecret` | ✅ **SUCCESS** | Login → 200 OK<br>Redirected to /admin/dashboard |
-| **Seller/Supplier** | `seller@mercur.dev` | `DevSeller123!` | ✅ **SUCCESS** | Login → 200 OK<br>Redirected to /supplier/dashboard |
+| **Seller/Supplier** | `seller@mercur.dev` | `supersecret` | ✅ **SUCCESS** | Login → 200 OK<br>Redirected to /supplier/dashboard |
 
 ### ⏳ **Pendiente de Prueba**
 
@@ -60,7 +60,7 @@ Password: supersecret
 **Credentials:**
 ```
 Email: seller@mercur.dev
-Password: DevSeller123!
+Password: supersecret
 ```
 
 **HTTP Requests:**
@@ -184,7 +184,7 @@ const isMockMode = featureFlags.shouldUseMock('auth');
   <strong>✅ Admin:</strong> admin@carrefour.dev / supersecret
 </div>
 <div className="font-mono bg-green-100 p-2 rounded border border-green-300">
-  <strong>✅ Seller:</strong> seller@mercur.dev / DevSeller123!
+  <strong>✅ Seller:</strong> seller@mercur.dev / supersecret
 </div>
 <div className="font-mono bg-red-100 p-2 rounded border border-red-300">
   <strong>❌ Franchisee:</strong> franchisee@test.com <span>(user not in backend)</span>
@@ -194,7 +194,7 @@ const isMockMode = featureFlags.shouldUseMock('auth');
 **Changes:**
 - Green background for working credentials
 - Red background for non-working credentials
-- Fixed seller password from `supersecret` to `DevSeller123!`
+- Fixed seller password to match backend: `supersecret`
 - Added warning that franchisee doesn't exist
 
 **Status:** ✅ UI now shows accurate credential status
@@ -257,11 +257,11 @@ Try alternative seller accounts:
 ```
 Kickz:
   Email: kickz@mercur.dev
-  Password: DevSeller123! (assumed)
+  Password: supersecret
 
 Trailhead:
   Email: trailhead@mercur.dev
-  Password: DevSeller123! (assumed)
+  Password: supersecret
 ```
 
 ---

@@ -1092,7 +1092,7 @@ export default function DevToolsPage() {
                   <h3 className="font-semibold mb-2">Supplier (Seller)</h3>
                   <div className="space-y-1 font-mono text-sm">
                     <div>Email: <span className="text-purple-600">seller@mercur.dev</span></div>
-                    <div>Password: <span className="text-purple-600">DevSeller123!</span></div>
+                    <div>Password: <span className="text-purple-600">supersecret</span></div>
                     <div>Role: <Badge variant="outline">supplier</Badge></div>
                     <div>Seller ID: <code>sel_01M0A89ET1F5NBDER95X09ZPES</code></div>
                     <div>Dashboard: <code>/supplier/dashboard</code></div>

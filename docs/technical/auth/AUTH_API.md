@@ -270,7 +270,7 @@ Admin:
 
 Seller/Supplier:
   Email: seller@mercur.dev
-  Password: DevSeller123!
+  Password: supersecret
   Status: ✅ Tested and working
 
 Franchisee:
@@ -284,11 +284,11 @@ Franchisee:
 ```
 Kickz:
   Email: kickz@mercur.dev
-  Password: DevSeller123! (assumed)
+  Password: supersecret
 
 Trailhead:
-  Email: trailhead@mercur.dev  
-  Password: DevSeller123! (assumed)
+  Email: trailhead@mercur.dev
+  Password: supersecret
 ```
 
 ---

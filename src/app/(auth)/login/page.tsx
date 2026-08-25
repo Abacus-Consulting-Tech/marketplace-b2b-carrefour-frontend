@@ -174,7 +174,7 @@ export default function LoginPage() {
                         <strong>✅ Admin:</strong> admin@carrefour.dev / supersecret
                       </div>
                       <div className="font-mono bg-green-100 dark:bg-green-900 p-2 rounded border border-green-300">
-                        <strong>✅ Seller:</strong> seller@mercur.dev / DevSeller123!
+                        <strong>✅ Seller:</strong> seller@mercur.dev / supersecret
                       </div>
                       <div className="font-mono bg-green-100 dark:bg-green-900 p-2 rounded border border-green-300">
                         <strong>✅ Franchisee:</strong> franchisee@carrefour.dev / supersecret

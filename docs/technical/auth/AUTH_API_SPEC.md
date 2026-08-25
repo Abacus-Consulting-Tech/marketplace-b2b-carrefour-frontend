@@ -144,7 +144,7 @@ Content-Type: application/json
 
 {
   "email": "seller@mercur.dev",
-  "password": "DevSeller123!"
+  "password": "supersecret"
 }
 ```
 
@@ -1001,7 +1001,7 @@ Expected Role: franchisee
 
 # Supplier
 Email: seller@mercur.dev
-Password: DevSeller123!
+Password: supersecret
 Expected Role: supplier
 Seller ID: sel_01M0A89ET1F5NBDER95X09ZPES
 ```
