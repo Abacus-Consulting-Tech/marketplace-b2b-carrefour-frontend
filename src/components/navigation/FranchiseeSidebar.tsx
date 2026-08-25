@@ -13,6 +13,7 @@ import {
   User,
   MapPin,
   BarChart3,
+  Building2,
 } from "lucide-react";
 
 interface NavItemProps {
@@ -89,6 +90,16 @@ export function FranchiseeSidebar() {
           label="Inicio"
           isActive={isActive("/marketplace/dashboard")}
         />
+
+        {/* Proyectos de Apertura */}
+        <NavSection title="Proyectos">
+          <NavItem
+            href="/marketplace/openings"
+            icon={<Building2 className="h-5 w-5" />}
+            label="Mis Aperturas"
+            isActive={isActive("/marketplace/openings")}
+          />
+        </NavSection>
 
         {/* Compras */}
         <NavSection title="Compras">

@@ -180,8 +180,8 @@ export default function CartPage() {
       return;
     }
     
-    // Redirigir al checkout
-    router.push('/checkout');
+    // Redirigir al nuevo checkout
+    router.push('/marketplace/checkout-new');
   };
 
   if (items.length === 0) {

@@ -1,53 +1,60 @@
-'use client';
+/**
+ * Admin Orders Page
+ * 
+ * Vista global de todos los pedidos de la plataforma para administradores
+ * Route: /admin/orders
+ */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Package, Search, Filter, Download } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import Link from 'next/link';
+import { AdminOrdersList } from '@/components/admin/AdminOrdersList'
+import { AdminOrdersStats } from '@/components/admin/AdminOrdersStats'
+import { Button } from '@/components/ui/button'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { Package, Download, BarChart3 } from 'lucide-react'
 
 export default function AdminOrdersPage() {
-  // Mock data for preview
-  const mockOrders = [
-    { id: '1', orderNumber: 'CF-10001', franchisee: 'Tienda Centro', date: '2026-08-10', total: 456.89, status: 'delivered' },
-    { id: '2', orderNumber: 'CF-10002', franchisee: 'Tienda Norte', date: '2026-08-09', total: 789.50, status: 'shipped' },
-    { id: '3', orderNumber: 'CF-10003', franchisee: 'Tienda Sur', date: '2026-08-08', total: 234.00, status: 'pending' },
-  ];
-
-  const statusColors = {
-    pending: 'bg-yellow-100 text-yellow-800',
-    shipped: 'bg-indigo-100 text-indigo-800',
-    delivered: 'bg-green-100 text-green-800',
-  };
-
-  const statusLabels = {
-    pending: 'Pendiente',
-    shipped: 'Enviado',
-    delivered: 'Entregado',
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Gestión de Pedidos</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
+            <Package className="h-8 w-8" />
+            Gestión de Pedidos
+          </h1>
+          <p className="text-gray-600 mt-2">
             Vista completa de todos los pedidos de la plataforma
           </p>
         </div>
-        <Button>
+        <Button variant="outline">
           <Download className="h-4 w-4 mr-2" />
           Exportar
         </Button>
       </div>
 
-      {/* Coming Soon Banner */}
-      <Card className="border-blue-200 bg-blue-50">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-blue-900">
-            <Package className="h-5 w-5" />
+      {/* Tabs */}
+      <Tabs defaultValue="list" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="list">
+            <Package className="h-4 w-4 mr-2" />
+            Lista de Pedidos
+          </TabsTrigger>
+          <TabsTrigger value="stats">
+            <BarChart3 className="h-4 w-4 mr-2" />
+            Estadísticas
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="list">
+          <AdminOrdersList />
+        </TabsContent>
+
+        <TabsContent value="stats">
+          <AdminOrdersStats />
+        </TabsContent>
+      </Tabs>
+    </div>
+  )
+}
             Funcionalidad en Desarrollo
           </CardTitle>
           <CardDescription className="text-blue-700">

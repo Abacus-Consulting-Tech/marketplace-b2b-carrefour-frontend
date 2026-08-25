@@ -1,0 +1,263 @@
+{
+  "info": {
+    "name": "Carrefour B2B - Sample Orders Data",
+    "description": "Pedidos de ejemplo para poblar la base de datos de testing",
+    "version": "1.0.0"
+  },
+  "sampleOrders": [
+    {
+      "orderNumber": "CF-10001",
+      "customerEmail": "franchisee@test.com",
+      "shippingAddress": {
+        "first_name": "Juan",
+        "last_name": "Pérez",
+        "address_1": "Calle Mayor 123, 2º A",
+        "city": "Madrid",
+        "postal_code": "28001",
+        "country_code": "es",
+        "phone": "+34 666 123 456"
+      },
+      "items": [
+        {
+          "productName": "Polo Corporativo Carrefour",
+          "sku": "UNI-001",
+          "quantity": 20,
+          "unitPrice": 18.50
+        },
+        {
+          "productName": "Cartel de Precios PVC (Pack 10 uds)",
+          "sku": "SEÑ-001",
+          "quantity": 3,
+          "unitPrice": 55.00
+        }
+      ],
+      "notes": "Pedido urgente para nueva tienda en Madrid Centro"
+    },
+    {
+      "orderNumber": "CF-10002",
+      "customerEmail": "franchisee@test.com",
+      "shippingAddress": {
+        "first_name": "Juan",
+        "last_name": "Pérez",
+        "address_1": "Calle Mayor 123, 2º A",
+        "city": "Madrid",
+        "postal_code": "28001",
+        "country_code": "es",
+        "phone": "+34 666 123 456"
+      },
+      "items": [
+        {
+          "productName": "Bolsa Reutilizable Carrefour (Pack 100 uds)",
+          "sku": "MER-001",
+          "quantity": 5,
+          "unitPrice": 65.00
+        }
+      ],
+      "notes": "Reposición mensual de bolsas reutilizables"
+    },
+    {
+      "orderNumber": "CF-10003",
+      "customerEmail": "admin@carrefour.dev",
+      "shippingAddress": {
+        "first_name": "Admin",
+        "last_name": "Carrefour",
+        "address_1": "Avenida Diagonal 123",
+        "city": "Barcelona",
+        "postal_code": "08001",
+        "country_code": "es",
+        "phone": "+34 666 999 888"
+      },
+      "items": [
+        {
+          "productName": "Balanza Digital de Mostrador",
+          "sku": "EQU-001",
+          "quantity": 2,
+          "unitPrice": 189.00
+        },
+        {
+          "productName": "Tótem Expositivo de Pie",
+          "sku": "SEÑ-003",
+          "quantity": 1,
+          "unitPrice": 125.00
+        }
+      ],
+      "notes": "Equipamiento para nueva zona de frutas y verduras"
+    },
+    {
+      "orderNumber": "CF-10004",
+      "customerEmail": "franchisee@test.com",
+      "shippingAddress": {
+        "first_name": "María",
+        "last_name": "González",
+        "address_1": "Calle del Sol 45",
+        "city": "Valencia",
+        "postal_code": "46001",
+        "country_code": "es",
+        "phone": "+34 666 777 555"
+      },
+      "items": [
+        {
+          "productName": "Chaqueta de Trabajo Unisex",
+          "sku": "UNI-002",
+          "quantity": 10,
+          "unitPrice": 45.00
+        },
+        {
+          "productName": "Delantal de Trabajo",
+          "sku": "UNI-003",
+          "quantity": 15,
+          "unitPrice": 12.90
+        },
+        {
+          "productName": "Bolígrafo Corporativo (Pack 200 uds)",
+          "sku": "MER-002",
+          "quantity": 2,
+          "unitPrice": 48.00
+        }
+      ],
+      "notes": "Uniformes para nuevo equipo - 15 empleados"
+    },
+    {
+      "orderNumber": "CF-10005",
+      "customerEmail": "admin@carrefour.dev",
+      "shippingAddress": {
+        "first_name": "Carlos",
+        "last_name": "Martínez",
+        "address_1": "Plaza Mayor 10",
+        "city": "Sevilla",
+        "postal_code": "41001",
+        "country_code": "es",
+        "phone": "+34 666 444 333"
+      },
+      "items": [
+        {
+          "productName": "Folleto Promocional A5 (Pack 1.000 uds)",
+          "sku": "FOL-001",
+          "quantity": 3,
+          "unitPrice": 89.00
+        },
+        {
+          "productName": "Catálogo de Productos A4 (Pack 500 uds)",
+          "sku": "FOL-002",
+          "quantity": 2,
+          "unitPrice": 210.00
+        }
+      ],
+      "notes": "Material para campaña de verano 2024"
+    },
+    {
+      "orderNumber": "CF-10006",
+      "customerEmail": "franchisee@test.com",
+      "shippingAddress": {
+        "first_name": "Ana",
+        "last_name": "Rodríguez",
+        "address_1": "Calle de la Paz 88",
+        "city": "Zaragoza",
+        "postal_code": "50001",
+        "country_code": "es",
+        "phone": "+34 666 222 111"
+      },
+      "items": [
+        {
+          "productName": "Vinilo Adhesivo para Suelo",
+          "sku": "SEÑ-002",
+          "quantity": 10,
+          "unitPrice": 38.00
+        },
+        {
+          "productName": "Cartel de Precios PVC (Pack 10 uds)",
+          "sku": "SEÑ-001",
+          "quantity": 5,
+          "unitPrice": 55.00
+        }
+      ],
+      "notes": "Renovación de señalización interior"
+    },
+    {
+      "orderNumber": "CF-10007",
+      "customerEmail": "admin@carrefour.dev",
+      "shippingAddress": {
+        "first_name": "Laura",
+        "last_name": "Fernández",
+        "address_1": "Gran Vía 42",
+        "city": "Málaga",
+        "postal_code": "29001",
+        "country_code": "es",
+        "phone": "+34 666 888 777"
+      },
+      "items": [
+        {
+          "productName": "Expositor Metálico Giratorio 4 Caras",
+          "sku": "EQU-002",
+          "quantity": 3,
+          "unitPrice": 320.00
+        },
+        {
+          "productName": "Carro de Transporte Plegable",
+          "sku": "EQU-003",
+          "quantity": 5,
+          "unitPrice": 74.00
+        }
+      ],
+      "notes": "Equipamiento para nueva sección de promociones"
+    },
+    {
+      "orderNumber": "CF-10008",
+      "customerEmail": "franchisee@test.com",
+      "shippingAddress": {
+        "first_name": "Pedro",
+        "last_name": "López",
+        "address_1": "Paseo de Gracia 99",
+        "city": "Barcelona",
+        "postal_code": "08008",
+        "country_code": "es",
+        "phone": "+34 666 333 222"
+      },
+      "items": [
+        {
+          "productName": "Taza Cerámica con Logotipo (Pack 24 uds)",
+          "sku": "MER-003",
+          "quantity": 4,
+          "unitPrice": 96.00
+        },
+        {
+          "productName": "Bolsa Reutilizable Carrefour (Pack 100 uds)",
+          "sku": "MER-001",
+          "quantity": 3,
+          "unitPrice": 65.00
+        }
+      ],
+      "notes": "Merchandising para evento de inauguración"
+    }
+  ],
+  "instructions": {
+    "automaticSeeding": {
+      "description": "Usa el script automatizado para crear todos los pedidos de una vez",
+      "command": "node scripts/seed-orders.mjs",
+      "requirements": [
+        "Backend Medusa corriendo",
+        "Credenciales admin configuradas",
+        "Productos ya creados en la base de datos"
+      ]
+    },
+    "manualCreation": {
+      "description": "Crea pedidos manualmente usando la API de Medusa",
+      "steps": [
+        "1. Autenticarse como admin (POST /auth/user/emailpass)",
+        "2. Obtener lista de productos (GET /store/products)",
+        "3. Crear carrito (POST /store/carts) con region_id y shipping_address",
+        "4. Agregar items al carrito (POST /store/carts/{id}/line-items) con variant_id y quantity",
+        "5. Completar carrito para crear orden (POST /store/carts/{id}/complete)"
+      ]
+    }
+  },
+  "metadata": {
+    "region_id": "reg_01M07RY98WSVVF2SP0Q7SB8KM0",
+    "currency": "EUR",
+    "tax_rate": 0.21,
+    "country": "ES",
+    "totalOrders": 8,
+    "totalItems": 25,
+    "estimatedTotalValue": "4500+ EUR"
+  }
+}

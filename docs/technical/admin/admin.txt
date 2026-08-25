@@ -1,0 +1,18 @@
+Pon este script en Post-response de POST {{baseUrl}}/auth/user/emailpass: let body = {};
+ 
+try {   body = pm.response.json(); } catch (e) {   console.log("Respuesta raw:", pm.response.text());   throw new Error("La respuesta no es JSON valido"); }
+ 
+const token = body.token || body.access_token || body.jwt || "";
+ 
+if (!token) {   console.log("Status:", pm.response.code);   console.log("Respuesta login:", body);   throw new Error("No se encontro token en body.token, body.access_token ni body.jwt"); }
+ 
+// Guardar en varias scopes para que {{jwtToken}} lo pueda resolver. pm.variables.set("jwtToken", token); pm.collectionVariables.set("jwtToken", token);
+ 
+if (pm.environment.name) {   pm.environment.set("jwtToken", token); }
+ 
+pm.test("JWT guardado", function () {   pm.expect(pm.variables.get("jwtToken")).to.eql(token); });
+ 
+console.log("jwtToken guardado"); console.log("local:", Boolean(pm.variables.get("jwtToken"))); console.log("collection:", Boolean(pm.collectionVariables.get("jwtToken"))); console.log("environment:", Boolean(pm.environment.get("jwtToken")));
+ 
+ 
+ 

@@ -1,124 +1,181 @@
 # Marketplace B2B Carrefour - Índice de Documentación
 
+**Última actualización**: 25 de Agosto de 2026
+
 Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carrefour.
+
+---
+
+## 🎯 Fuentes de Verdad (Source of Truth)
+
+Para información actualizada del proyecto, consultar estas **3 fuentes oficiales**:
+
+1. **📊 [Estado y Roadmap](PROJECT_STATUS_AND_ROADMAP.md)** - Documento maestro con estado actual, módulos completados y roadmap
+2. **🔧 [Dev Tools Panel](http://localhost:3000/admin/dev-tools)** - Panel en vivo con 95 endpoints API documentados
+3. **📚 [Documentación Técnica](technical/)** - Guías técnicas detalladas por módulo
 
 ---
 
 ## 📁 Estructura de Documentación
 
-### 🚀 Getting Started
-- **[Getting Started](./setup/GETTING_STARTED.md)** - Guía de instalación y configuración inicial
+### ⭐ Documentos Maestros
+
+- **[PROJECT_STATUS_AND_ROADMAP.md](PROJECT_STATUS_AND_ROADMAP.md)** - 📊 Estado del proyecto, roadmap, métricas
+- **[TODO.md](TODO.md)** - Tareas pendientes consolidadas
+- **[MODULES_ORGANIZATION.md](MODULES_ORGANIZATION.md)** - Mapeo de organización de documentación
+
+### 📦 Documentación Backend (Para Backend Team)
+
+**Carpeta: [`modules/`](modules/)** - 15 documentos organizados por módulo
+
+- **[Índice de Módulos](modules/README.md)** - Resumen de 10 módulos con documentación
+- `01-auth/` - Autenticación y autorización
+- `02-openings/` - Gestión de aperturas (2 documentos)
+- `03-categories/` - Categorías (productos + aperturas) ✅ 840 líneas SQL
+- `04-supplier-orders/` - Pedidos de proveedores
+- `05-product-pricing/` - Aprobación de precios (3 documentos + SQL)
+- `06-product-management/` - CRUD de productos
+- `07-franchisee-catalog/` - Catálogo de franquiciado
+- `08-franchisee-orders/` - Pedidos de franquiciados
+- `09-admin-orders/` - Vista global de pedidos (2 documentos + SQL)
+- `10-quotes/` - Presupuestos (2 documentos + SQL 840 líneas)
+
+**Ver detalles completos**: [modules/README.md](modules/README.md)
 
 ### 🏗️ Arquitectura y Desarrollo
-**Carpeta: [`technical/`](./technical/)**
-- **[Architecture](./technical/ARCHITECTURE.md)** - Arquitectura del sistema y decisiones de diseño
-- **[Development](./technical/DEVELOPMENT.md)** - Setup, convenciones de código y workflow de desarrollo
-- **[API Documentation](./technical/API.md)** - Endpoints de la API y contratos (documentación base)
-- **[API Specification](./technical/API_SPEC.md)** - Especificación completa de la API
 
-### 🏪 Módulo Nuevas Aperturas
-**Carpeta: [`technical/openings/`](./technical/openings/)** ⭐ NUEVO
-- **[Overview](./technical/openings/README.md)** - Guía rápida del módulo
-- **[Backend Guide](./technical/openings/BACKEND_GUIDE.md)** - 📘 Guía completa para backend (Español)
-- **[Testing Guide](./technical/openings/TESTING_GUIDE_OPENINGS.md)** - 🧪 Guía de testing del módulo
-- **[Email Template](./technical/openings/EMAIL_PARA_BACKEND.md)** - 📧 Plantilla de email para backend
-- **[Especificación Completa (ES)](./technical/openings/SPECIFICATION_ES.md)** - Especificación técnica en español
-- **[Full Specification (EN)](./technical/openings/SPECIFICATION_EN.md)** - Complete technical specification
+**Carpeta: [`technical/`](technical/)** ⭐ FUENTE DE VERDAD
+
+- **[Architecture](technical/ARCHITECTURE.md)** - Arquitectura del sistema
+- **[Development](technical/DEVELOPMENT.md)** - Setup y workflow de desarrollo
+- **[API Specification](technical/API_SPEC.md)** - Especificación completa de la API
+- **[CHECKOUT_IMPLEMENTATION.md](technical/CHECKOUT_IMPLEMENTATION.md)** - Implementación del checkout
+- **[MEDUSA_INTEGRATION_COMPLETE.md](technical/MEDUSA_INTEGRATION_COMPLETE.md)** - Integración con Medusa
+- **`openings/`** - Módulo de nuevas aperturas (guías completas)
 
 ### 🔄 Backend Integration & Status
-**Carpeta: [`integration/`](./integration/)**
-- **[Backend Status Report](./integration/BACKEND_STATUS.md)** - 🔥 Estado actual con datos de verificación
-- **[Backend Pendiente](./integration/BACKEND_PENDIENTE.md)** - Estado de integración con Medusa backend
-- **[Backend Connection Troubleshooting](./integration/BACKEND_CONNECTION_TROUBLESHOOTING.md)** - 🔧 Solución de problemas de conexión
-- **[Auth Integration](./integration/AUTH_INTEGRATION.md)** - Integración de autenticación
-- **[Proxy Configuration](./integration/PROXY_CONFIG.md)** - Sistema de proxy por entornos (patrón Angular)
-- **[Proxy Architecture](./integration/PROXY_ARCHITECTURE.md)** - Arquitectura técnica del proxy
-- **[Roles y Redirecciones](./integration/ROLES_Y_REDIRECCIONES.md)** - Sistema de roles y navegación
-- **[CORS Workaround](./integration/CORS_WORKAROUND.md)** - Solución temporal CORS
-- **[Stripe Payment Integration](./integration/STRIPE_PAYMENT_INTEGRATION.md)** - 💳 Guía completa de integración de pagos
-- **[Stripe Setup](./integration/STRIPE_SETUP.md)** - 💳 Configuración inicial de Stripe
-- **[Regions Update](./integration/REGIONS_UPDATE.md)** - 🌍 Actualización de regiones - checkout desbloqueado
 
-### 📦 Deployment
-**Carpeta: [`deployment/`](./deployment/)**
-- **[🔄 Workflow Guide](./deployment/WORKFLOW.md)** - ⭐ Flujo de trabajo: dev vs producción
-- **[Deployment Guide](./deployment/DEPLOYMENT_GUIDE.md)** - Guía completa de despliegue a servidor
-- **[Quick Deployment](./deployment/QUICK_DEPLOYMENT.md)** - Guía rápida de despliegue
-- **[Vercel Deployment](./deployment/VERCEL_DEPLOYMENT.md)** - Despliegue específico para Vercel
-- **[Vercel Quick Deploy](./deployment/DEPLOY_VERCEL_QUICK.md)** - 🚀 Deploy rápido a Vercel
+**Carpeta: [`integration/`](integration/)**
+
+- **[Backend Status Report](integration/BACKEND_STATUS.md)** - Estado actual de integración
+- **[Backend Pendiente](integration/BACKEND_PENDIENTE.md)** - Tareas pendientes backend
+- **[Backend Connection Troubleshooting](integration/BACKEND_CONNECTION_TROUBLESHOOTING.md)** - Solución de problemas
+- **[Proxy Configuration](integration/PROXY_CONFIG.md)** - Sistema de proxy por entornos
+- **[Proxy Architecture](integration/PROXY_ARCHITECTURE.md)** - Arquitectura del proxy
+- **[Roles y Redirecciones](integration/ROLES_Y_REDIRECCIONES.md)** - Sistema de roles
+- **[Stripe Payment Integration](integration/STRIPE_PAYMENT_INTEGRATION.md)** - Integración de pagos
 
 ### 🧪 Testing
-**Carpeta: [`testing/`](./testing/)**
-- **[Testing Guide](./testing/TESTING_GUIDE.md)** - Guía completa de testing
-- **[Dashboard Testing](./testing/DASHBOARD_TESTING_GUIDE.md)** - Tests específicos para dashboards
-- **[Testing Changelog](./testing/TESTING_GUIDE_CHANGELOG.md)** - 📝 Historial de cambios en testing
 
-### 📚 User Guides
-**Carpeta: [`guides/`](./guides/)**
-- **[User Guide](./guides/USER_GUIDE.md)** - Manual de usuario para franquiciados y proveedores (inglés)
-- **[Guía de Usuario](./guides/GUIA_USUARIO.md)** - Manual de usuario en español
-- **[Supplier Registration](./guides/SUPPLIER_REGISTRATION.md)** - 🏭 Guía de registro de proveedores
-- **[Mercur Hybrid Setup](./guides/MERCUR_HYBRID_SETUP_GUIDE.md)** - Configuración híbrida con Mercur
-- **[Mercur API Migration Backlog](./guides/MERCUR_API_MIGRATION_BACKLOG.md)** - Backlog de migración
+**Carpeta: [`testing/`](testing/)** - 7 guías de testing por módulo
 
-### 🎯 Features
-- **[Features Overview](./FEATURES.md)** - Descripción detallada de todas las funcionalidades
+- **[Índice de Testing](testing/README.md)** - Resumen de todas las guías
+- `TESTING_CATALOG.md` - Testing del catálogo
+- `TESTING_PRODUCT_MANAGEMENT.md` - Testing CRUD de productos
+- `TESTING_CATEGORY_MANAGEMENT.md` - Testing de categorías
+- `TESTING_COMPARISON.md` - Testing del comparador
+- `TESTING_FRANCHISEE_MANAGEMENT.md` - Testing gestión franquiciados
+- `TESTING_INVITATIONS.md` - Testing de invitaciones
+- `TESTING_QUOTE_FORM.md` - Testing de presupuestos
 
-### 🔧 Backend Documentation (Medusa)
-**Carpeta: [`medusa/`](./medusa/)**
-- **[Frontend Usage](./medusa/README-front-usage.md)** - Uso del backend Medusa desde frontend
-- **[Smoke Test Checklist](./medusa/smoke-test-checklist.md)** - Checklist de tests de integración
-- **[Credentials](./medusa/CREDENTIALS.md)** - Credenciales para entornos de desarrollo
-- **[Datos Iniciales](./medusa/DATOS_INICIALES.md)** - 📦 Mock data para poblar la base de datos
-- **[API Calls Actual](./medusa/API_CALLS_ACTUAL.md)** - 🔌 Todas las llamadas API que hace el frontend
+### 📚 Guías de Usuario
+
+**Carpeta: [`guides/`](guides/)**
+
+- **[Guía Completa de Usuarios](guides/GUIA_COMPLETA_USUARIOS.md)** - Manual completo en español
+- **[User Guide](guides/USER_GUIDE.md)** - Manual en inglés
+- **[Quick Test Openings](guides/QUICK_TEST_OPENINGS.md)** - Guía rápida de testing de aperturas
+- **[Supplier Registration](guides/SUPPLIER_REGISTRATION.md)** - Registro de proveedores
+- **[Mercur Hybrid Setup](guides/MERCUR_HYBRID_SETUP_GUIDE.md)** - Configuración híbrida
+
+### 📦 Deployment
+
+**Carpeta: [`deployment/`](deployment/)**
+
+- **[Workflow Guide](deployment/WORKFLOW.md)** - Flujo de trabajo: dev vs producción
+- **[Deployment Guide](deployment/DEPLOYMENT_GUIDE.md)** - Guía completa de despliegue
+- **[Quick Deployment](deployment/QUICK_DEPLOYMENT.md)** - Despliegue rápido
+- **[Vercel Deployment](deployment/VERCEL_DEPLOYMENT.md)** - Despliegue en Vercel
+
+### 🔧 Backend Medusa
+
+**Carpeta: [`medusa/`](medusa/)**
+
+- **[Frontend Usage](medusa/README-front-usage.md)** - Uso del backend desde frontend
+- **[Smoke Test Checklist](medusa/smoke-test-checklist.md)** - Tests de integración
+- **[Credentials](medusa/CREDENTIALS.md)** - Credenciales de desarrollo
+- **[Datos Iniciales](medusa/DATOS_INICIALES.md)** - Mock data para BD
+- **[API Calls Actual](medusa/API_CALLS_ACTUAL.md)** - Todas las llamadas API
 
 ### 📮 Postman Collections
-**Carpeta: [`postman/`](./postman/)**
-- **[Postman README](./postman/README.md)** - Índice de colecciones disponibles
-- **[Testing Guide](./postman/TESTING.md)** - 🧪 Guía completa paso a paso de testing con Postman
-- Colección principal: `marketplace-b2b-carrefour.postman_collection 1.json`
-- Colección legacy: `mercur-store-api.postman_collection.json`
-- Entornos configurados (local, Render DEV)
 
-### 📋 Sprint Planning
-**Carpeta: [`sprint_1/`](./sprint_1/)**
-- Planificación y especificaciones del Sprint 1
-- Bases legales y proveedores
+**Carpeta: [`postman/`](postman/)**
 
-### 📦 Archive
-**Carpeta: [`archive/`](./archive/)**
-- Documentación obsoleta o histórica
-- Guías específicas de semanas pasadas
+- **[Postman README](postman/README.md)** - Índice de colecciones
+- **[Testing Guide](postman/TESTING.md)** - Guía de testing con Postman
+- Colecciones y entornos configurados
+
+### 🚀 Setup Inicial
+
+**Carpeta: [`setup/`](setup/)**
+
+- **[Getting Started](setup/GETTING_STARTED.md)** - Instalación y configuración inicial
 
 ---
 
 ## 🔗 Quick Links
 
-### Para Desarrolladores
-1. **Primer día**: [Getting Started](./setup/GETTING_STARTED.md)
-2. **Entender arquitectura**: [Architecture](./technical/ARCHITECTURE.md)
-3. **Configurar proxy**: [Proxy Config](./integration/PROXY_CONFIG.md)
-4. **Hacer tests**: [Testing Guide](./testing/TESTING_GUIDE.md)
-5. **Testing con Postman**: [Postman Testing](./postman/TESTING.md) 🧪
+### Para Desarrolladores Frontend
+
+1. **Primer día**: [Getting Started](setup/GETTING_STARTED.md)
+2. **Estado del proyecto**: [PROJECT_STATUS_AND_ROADMAP.md](PROJECT_STATUS_AND_ROADMAP.md) ⭐
+3. **Arquitectura**: [Architecture](technical/ARCHITECTURE.md)
+4. **Dev Tools**: [http://localhost:3000/admin/dev-tools](http://localhost:3000/admin/dev-tools) 🔧
+5. **Proxy Config**: [Proxy Configuration](integration/PROXY_CONFIG.md)
+6. **Testing**: [Testing README](testing/README.md)
 
 ### Para Backend Team
-1. **Módulo Nuevas Aperturas**: [Backend Guide](./technical/openings/BACKEND_GUIDE.md) ⭐ NUEVO
-2. **Pendientes backend**: [Backend Pendiente](./integration/BACKEND_PENDIENTE.md)
-3. **Estado integración**: [Backend Status](./integration/BACKEND_STATUS.md)
-4. **Especificación API**: [API Spec](./technical/API_SPEC.md)
-5. **Testing de API**: [Postman Testing](./postman/TESTING.md) 🧪
-6. **Tests de integración**: [Smoke Tests](./medusa/smoke-test-checklist.md)
-7. **Datos para BD**: [Datos Iniciales](./medusa/DATOS_INICIALES.md) 📦
+
+1. **Documentación Backend Completa**: [modules/README.md](modules/README.md) ⭐
+2. **Estado del Proyecto**: [PROJECT_STATUS_AND_ROADMAP.md](PROJECT_STATUS_AND_ROADMAP.md) ⭐
+3. **Especificación API**: [API Spec](technical/API_SPEC.md)
+4. **Módulo Aperturas**: [Backend Guide](technical/openings/BACKEND_GUIDE.md)
+5. **Pendientes Backend**: [Backend Pendiente](integration/BACKEND_PENDIENTE.md)
+6. **Testing API**: [Postman Testing](postman/TESTING.md)
+7. **Smoke Tests**: [Smoke Test Checklist](medusa/smoke-test-checklist.md)
 
 ### Para Deployment
-1. **Despliegue rápido**: [Quick Deployment](./deployment/QUICK_DEPLOYMENT.md)
-2. **Despliegue completo**: [Deployment Guide](./deployment/DEPLOYMENT_GUIDE.md)
+
+1. **Workflow**: [Workflow Guide](deployment/WORKFLOW.md)
+2. **Despliegue Rápido**: [Quick Deployment](deployment/QUICK_DEPLOYMENT.md)
+3. **Despliegue Completo**: [Deployment Guide](deployment/DEPLOYMENT_GUIDE.md)
 
 ### Para Usuarios Finales
-1. **Manual de usuario**: [Guía de Usuario](./guides/GUIA_USUARIO.md)
+
+1. **Manual de Usuario**: [Guía Completa](guides/GUIA_COMPLETA_USUARIOS.md)
+2. **User Guide (EN)**: [User Guide](guides/USER_GUIDE.md)
+
+---
+
+## 📊 Estadísticas de Documentación
+
+- **Backend Docs**: 15 documentos en `modules/`
+- **Testing Guides**: 7 guías en `testing/`
+- **Technical Docs**: 10+ documentos en `technical/`
+- **User Guides**: 3+ guías en `guides/`
+- **SQL Scripts**: 4 módulos (Categories, Pricing, Orders, Quotes)
+- **README Files**: 12 índices
 
 ---
 
 ## 📞 Soporte
 
-Para dudas sobre la documentación, contactar al equipo de desarrollo.
+Para dudas sobre la documentación:
+- **Dev Tools Panel**: [http://localhost:3000/admin/dev-tools](http://localhost:3000/admin/dev-tools)
+- **Estado del Proyecto**: [PROJECT_STATUS_AND_ROADMAP.md](PROJECT_STATUS_AND_ROADMAP.md)
+- **Contacto Backend**: Ver email enviado al equipo backend
+
+---
+
+**Última actualización**: 25 de Agosto de 2026  
+**Mantenido por**: Frontend Team

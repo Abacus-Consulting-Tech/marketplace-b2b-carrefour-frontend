@@ -1,0 +1,59 @@
+Asunto: Request: Seed de Pedidos DEV - Marketplace B2B Carrefour
+
+Hola equipo backend,
+
+Estamos avanzando en el desarrollo del dashboard admin del marketplace B2B y necesitamos vuestra ayuda para poblar la base de datos DEV con pedidos de ejemplo.
+
+**Contexto:**
+El frontend ya tiene funcionando:
+✓ Autenticación con el backend (POST /auth/user/emailpass)
+✓ Listado de productos (GET /admin/products - 16 productos encontrados)
+✓ UI del dashboard admin completa
+
+Lo que nos falta:
+✗ Datos de pedidos para testing completo del admin panel
+
+**Request:**
+Necesitamos crear 8 pedidos de ejemplo en la BD DEV.
+
+He preparado un documento técnico completo con toda la información necesaria:
+📄 docs/medusa/BACKEND_ORDER_SEED_REQUEST.md
+
+**Contenido del documento:**
+1. Contexto del problema actual (payment sessions requirement)
+2. 8 pedidos completos en formato JSON
+   - Todos los variant_id son IDs reales de vuestra BD actual
+   - Región: reg_01M0AAYKP7T4XSM0PWRYHQF0BE
+   - Precios en centavos (formato Medusa)
+   - Estados variados (pending, processing, shipped, completed)
+3. Tres opciones de implementación:
+   - Opción A: Script de seed (preferida, similar a seed-b2b-dev.ts)
+   - Opción B: SQL direct insert
+   - Opción C: Endpoint admin custom POST /admin/orders/seed
+4. Ejemplo de código TypeScript
+5. Criterios de aceptación
+6. Plan de testing
+
+**Timeline estimado:** 2-3 horas de desarrollo
+
+**Testing:**
+Una vez implementado, validaremos que:
+- GET /admin/orders retorna los 8 pedidos
+- El frontend puede visualizarlos en http://localhost:3000/admin/dashboard
+- Todos los estados y datos son correctos
+
+**Próximos pasos:**
+¿Podéis revisar el documento y confirmar si es viable?
+¿Preferís alguna de las opciones de implementación?
+¿Necesitáis alguna aclaración o información adicional?
+
+Quedamos atentos a vuestro feedback.
+
+Muchas gracias por la colaboración,
+Equipo Frontend - Marketplace B2B Carrefour
+
+---
+
+ADJUNTAR:
+- docs/medusa/BACKEND_ORDER_SEED_REQUEST.md (documento principal)
+- docs/medusa/sample-orders.json (opcional, datos en JSON)

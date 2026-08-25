@@ -32,7 +32,7 @@ export interface ModuleConfig {
   lastUpdated?: string;
 }
 
-type ModuleName = 'auth' | 'pricing' | 'openings' | 'products' | 'suppliers' | 'categories' | 'quotes' | 'orders' | 'franchisees' | 'catalog';
+type ModuleName = 'auth' | 'pricing' | 'openings' | 'products' | 'suppliers' | 'categories' | 'quotes' | 'orders' | 'franchisees' | 'catalog' | 'checkout';
 
 export const featureFlags = {
   /**
@@ -94,16 +94,16 @@ export const featureFlags = {
       useMock: true,
       backendReady: false,
       apiBaseUrl: '/api/quotes',
-      notes: 'Planned for future release',
-      lastUpdated: '2026-08-21',
+      notes: 'Quotes module for opening projects - UI complete with mock data, aligned with Medusa + Mercur framework, backend pending',
+      lastUpdated: '2026-08-25',
     } satisfies ModuleConfig,
 
     orders: {
       useMock: true,
       backendReady: false,
       apiBaseUrl: '/api/supplier/orders',
-      notes: 'Supplier order management - UI ready with mock data, backend pending',
-      lastUpdated: '2026-08-22',
+      notes: 'Order management - Supplier orders (receive) and Franchisee orders (my orders) - UI ready with mock data, backend pending',
+      lastUpdated: '2026-08-25',
     } satisfies ModuleConfig,
 
     franchisees: {
@@ -120,6 +120,14 @@ export const featureFlags = {
       apiBaseUrl: '/store/products',
       notes: 'Franchisee marketplace catalog - Uses Product Management mock data, aligned with Medusa Store API',
       lastUpdated: '2026-08-24',
+    } satisfies ModuleConfig,
+
+    checkout: {
+      useMock: process.env.NEXT_PUBLIC_MOCK_CHECKOUT !== 'false', // Default to mock
+      backendReady: false,
+      apiBaseUrl: '/store',
+      notes: 'Checkout and order creation - Mock mode until payment provider is configured',
+      lastUpdated: '2026-08-25',
     } satisfies ModuleConfig,
   } as const,
   
@@ -217,6 +225,14 @@ export const featureFlags = {
       console.log(`${icon} ${module.padEnd(12)} | ${mode.padEnd(10)} | Backend: ${readyIcon} ${backendReady.padEnd(3)} | ${notes}`);
     });
     console.groupEnd();
+  },
+
+  /**
+   * Get checkout source (mock or real)
+   * Used by checkout-client.ts
+   */
+  getCheckoutSource(): 'mock' | 'real' {
+    return this.shouldUseMock('checkout') ? 'mock' : 'real';
   },
 };
 

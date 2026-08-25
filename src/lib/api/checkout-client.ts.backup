@@ -1,0 +1,276 @@
+/**
+ * Checkout API Client - Marketplace B2B Carrefour
+ * 
+ * Cliente para operaciones de checkout y creación de órdenes
+ * Soporta mock mode y real Medusa backend
+ */
+
+import { featureFlags } from '@/config/feature-flags'
+import type {
+  CompleteCartRequest,
+  CompleteCartResponse,
+  Order,
+  OrderItem,
+  ShippingAddress,
+} from '@/types/checkout'
+
+// ============================================================================
+// Mock Data
+// ============================================================================
+
+const MOCK_ORDER_BASE: Partial<Order> = {
+  region_id: 'reg_01M0AAYKP7T4XSM0PWRYHQF0BE',
+  currency_code: 'eur',
+  status: 'confirmed',
+  payment_status: 'captured',
+  fulfillment_status: 'not_fulfilled',
+}
+
+function generateDisplayId(): string {
+  const timestamp = Date.now().toString().slice(-6)
+  return `CF-${timestamp}`
+}
+
+function createMockOrder(request: CompleteCartRequest, cartItems: any[]): Order {
+  const now = new Date().toISOString()
+  
+  // Convert cart items to order items
+  const orderItems: OrderItem[] = cartItems.map((item, index) => ({
+    id: `item_mock_${index + 1}`,
+    order_id: `order_mock_${Date.now()}`,
+    product_id: item.productId,
+    variant_id: item.variantId,
+    title: item.title,
+    description: item.description,
+    thumbnail: item.thumbnail,
+    quantity: item.quantity,
+    unit_price: item.price,
+    subtotal: item.price * item.quantity,
+    tax_total: Math.round(item.price * item.quantity * 0.21), // 21% IVA
+    total: Math.round(item.price * item.quantity * 1.21),
+  }))
+
+  const subtotal = orderItems.reduce((sum, item) => sum + item.subtotal, 0)
+  const tax_total = orderItems.reduce((sum, item) => sum + item.tax_total, 0)
+  const total = subtotal + tax_total
+
+  return {
+    id: `order_mock_${Date.now()}`,
+    display_id: generateDisplayId(),
+    email: request.shipping_address.first_name.toLowerCase() + '@example.com',
+    items: orderItems,
+    shipping_address: {
+      first_name: request.shipping_address.first_name,
+      last_name: request.shipping_address.last_name,
+      company: request.shipping_address.company,
+      address_1: request.shipping_address.address_1,
+      address_2: request.shipping_address.address_2,
+      city: request.shipping_address.city,
+      province: request.shipping_address.province,
+      postal_code: request.shipping_address.postal_code,
+      country_code: request.shipping_address.country_code,
+      phone: request.shipping_address.phone,
+    },
+    billing_address: request.billing_address,
+    subtotal,
+    tax_total,
+    shipping_total: 0, // Free shipping for B2B
+    discount_total: 0,
+    total,
+    notes: request.notes,
+    created_at: now,
+    updated_at: now,
+    ...MOCK_ORDER_BASE,
+  } as Order
+}
+
+// ============================================================================
+// API Functions
+// ============================================================================
+
+/**
+ * Complete cart and create order
+ */
+export async function completeCart(
+  request: CompleteCartRequest,
+  cartItems: any[]
+): Promise<CompleteCartResponse> {
+  const isMock = featureFlags.getCheckoutSource() === 'mock'
+
+  if (isMock) {
+    // Mock mode - simulate API delay
+    await new Promise(resolve => setTimeout(resolve, 1000))
+    
+    const order = createMockOrder(request, cartItems)
+    
+    return {
+      order,
+    }
+  }
+
+  // Real API mode
+  const apiUrl = featureFlags.getApiBaseUrl('checkout')
+  const response = await fetch(`${apiUrl}/store/carts/${request.cart_id}/complete`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      shipping_address: request.shipping_address,
+      billing_address: request.billing_address,
+      payment_method: request.payment_method,
+      payment_details: request.payment_details,
+      notes: request.notes,
+    }),
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.message || 'Failed to complete checkout')
+  }
+
+  return response.json()
+}
+
+/**
+ * Get order by ID
+ */
+export async function getOrder(orderId: string): Promise<Order> {
+  const isMock = featureFlags.getCheckoutSource() === 'mock'
+
+  if (isMock) {
+    // Mock mode - return placeholder order
+    await new Promise(resolve => setTimeout(resolve, 500))
+    
+    // In real implementation, you'd fetch from localStorage or state
+    throw new Error('Mock order retrieval not implemented - use order from checkout success')
+  }
+
+  // Real API mode
+  const apiUrl = featureFlags.getApiBaseUrl('checkout')
+  const response = await fetch(`${apiUrl}/store/orders/${orderId}`, {
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  })
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.message || 'Failed to get order')
+  }
+
+  const data = await response.json()
+  return data.order
+}
+
+/**
+ * Validate shipping address
+ */
+export function validateShippingAddress(address: Partial<ShippingAddress>): {
+  isValid: boolean
+  errors: Record<string, string>
+} {
+  const errors: Record<string, string> = {}
+
+  if (!address.first_name?.trim()) {
+    errors.first_name = 'El nombre es obligatorio'
+  }
+
+  if (!address.last_name?.trim()) {
+    errors.last_name = 'Los apellidos son obligatorios'
+  }
+
+  if (!address.address_1?.trim()) {
+    errors.address_1 = 'La dirección es obligatoria'
+  }
+
+  if (!address.city?.trim()) {
+    errors.city = 'La ciudad es obligatoria'
+  }
+
+  if (!address.postal_code?.trim()) {
+    errors.postal_code = 'El código postal es obligatorio'
+  } else if (!/^\d{5}$/.test(address.postal_code)) {
+    errors.postal_code = 'Código postal inválido (debe tener 5 dígitos)'
+  }
+
+  if (!address.country_code) {
+    errors.country_code = 'El país es obligatorio'
+  }
+
+  if (!address.phone?.trim()) {
+    errors.phone = 'El teléfono es obligatorio'
+  } else if (!/^[\d\s+()-]{9,}$/.test(address.phone)) {
+    errors.phone = 'Teléfono inválido'
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  }
+}
+
+/**
+ * Validate payment details
+ */
+export function validatePaymentDetails(details: any): {
+  isValid: boolean
+  errors: Record<string, string>
+} {
+  const errors: Record<string, string> = {}
+
+  if (!details.method) {
+    errors.method = 'Selecciona un método de pago'
+  }
+
+  if (details.method === 'card') {
+    if (!details.card_number?.trim()) {
+      errors.card_number = 'Número de tarjeta obligatorio'
+    } else if (!/^\d{16}$/.test(details.card_number.replace(/\s/g, ''))) {
+      errors.card_number = 'Número de tarjeta inválido'
+    }
+
+    if (!details.card_holder?.trim()) {
+      errors.card_holder = 'Titular obligatorio'
+    }
+
+    if (!details.expiry_date?.trim()) {
+      errors.expiry_date = 'Fecha de expiración obligatoria'
+    } else if (!/^\d{2}\/\d{2}$/.test(details.expiry_date)) {
+      errors.expiry_date = 'Formato inválido (MM/YY)'
+    }
+
+    if (!details.cvv?.trim()) {
+      errors.cvv = 'CVV obligatorio'
+    } else if (!/^\d{3,4}$/.test(details.cvv)) {
+      errors.cvv = 'CVV inválido'
+    }
+  }
+
+  if (details.method === 'transfer' && !details.bank_reference?.trim()) {
+    errors.bank_reference = 'Referencia bancaria obligatoria'
+  }
+
+  if (details.method === 'invoice' && !details.tax_id?.trim()) {
+    errors.tax_id = 'NIF/CIF obligatorio para factura'
+  }
+
+  return {
+    isValid: Object.keys(errors).length === 0,
+    errors,
+  }
+}
+
+/**
+ * Format price (cents to EUR string)
+ */
+export function formatPrice(cents: number): string {
+  return `€${(cents / 100).toFixed(2)}`
+}
+
+/**
+ * Format order display ID
+ */
+export function formatOrderId(orderId: string): string {
+  return orderId.startsWith('CF-') ? orderId : `Pedido #${orderId}`
+}

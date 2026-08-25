@@ -12,6 +12,7 @@ import {
   CheckCircle,
   DollarSign,
   Wrench,
+  MapPin,
 } from "lucide-react";
 
 interface NavItemProps {
@@ -80,6 +81,12 @@ export function AdminSidebar() {
 
         {/* Gestión */}
         <NavSection title="Gestión">
+          <NavItem
+            href="/admin/openings"
+            icon={<MapPin className="h-5 w-5" />}
+            label="Nuevas Aperturas"
+            isActive={isActive("/admin/openings")}
+          />
           <NavItem
             href="/admin/suppliers"
             icon={<Building2 className="h-5 w-5" />}

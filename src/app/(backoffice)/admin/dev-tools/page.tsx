@@ -3,17 +3,24 @@
  * 
  * Comprehensive documentation of all Medusa API endpoints used in the application.
  * 
- * Endpoint Summary (Total: 66 endpoints):
+ * Endpoint Summary (Total: 122 endpoints):
  * - Auth: 4 endpoints (Login, Logout, Session)
  * - Admin: 5 endpoints (Orders, Users, Sellers)
  * - Franchisees: 9 endpoints (Medusa Customers + Addresses CRUD)
- * - Openings: 8 endpoints (Projects, Categories, Quotes)
+ * - Openings: 8 endpoints (Projects, Categories, Quotes, Invitations)
  * - Pricing: 6 endpoints (Pending Products, Approval, Markup)
  * - Products (Admin): 8 endpoints (CRUD, Stats, Bulk Operations, Inventory)
  * - Catalog (Franchisee): 2 endpoints (Product List + Detail for Marketplace)
+ * - Checkout: 15 endpoints (Cart, Address, Shipping, Payment Sessions, Complete, Order)
  * - Store: 11 endpoints (Regions, Cart Operations, Shipping, Customer)
  * - Vendor: 5 endpoints (Products, Bulk Upload, Markup)
  * - Supplier Orders: 9 endpoints (CRUD, Stats, Accept/Reject, Tracking, Incidents)
+ * - Supplier Products: 6 endpoints (CRUD, Bulk Upload, Images)
+ * - Franchisee Orders: 4 endpoints (List, Detail, Stats, Cancel)
+ * - Franchisee Management: 6 endpoints (CRUD, Activate/Deactivate, Stats)
+ * - Admin Orders: 8 endpoints (List, Detail, Stats, Update Status, Priority, Refund, Incidents, Notes)
+ * - Quotes (Franchisee): 6 endpoints (List, Detail, Award, Reject, Sign, Stats)
+ * - Quotes (Supplier): 7 endpoints (Invitations, Create, Update, Submit, Decline, List, Detail)
  * 
  * Features:
  * - Filter by module
@@ -567,16 +574,6 @@ export default function DevToolsPage() {
         medusaEndpoint: '/store/carts/:id/line-items/:itemId'
       },
       {
-        path: '/store/carts/:id/complete',
-        method: 'POST',
-        module: 'cart',
-        description: 'Completar compra (checkout)',
-        usesRealAPI: true,
-        status: 'untested',
-        requiresAuth: false,
-        medusaEndpoint: '/store/carts/:id/complete'
-      },
-      {
         path: '/store/shipping-options',
         method: 'GET',
         module: 'cart',
@@ -586,15 +583,59 @@ export default function DevToolsPage() {
         requiresAuth: false,
         medusaEndpoint: '/store/shipping-options'
       },
+      
+      // ========================================================================
+      // CHECKOUT MODULE (Store - Checkout Flow)
+      // ========================================================================
+      {
+        path: '/store/carts/:id',
+        method: 'POST',
+        module: 'checkout',
+        description: 'Actualizar carrito con dirección de envío/facturación',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/carts/:id'
+      },
       {
         path: '/store/carts/:id/shipping-methods',
         method: 'POST',
-        module: 'cart',
-        description: 'Seleccionar método de envío',
-        usesRealAPI: true,
-        status: 'untested',
+        module: 'checkout',
+        description: 'Añadir método de envío al carrito',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/shipping-methods'
+      },
+      {
+        path: '/store/carts/:id/payment-collections',
+        method: 'POST',
+        module: 'checkout',
+        description: 'Crear colección de pago (Stripe)',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/carts/:id/payment-collections'
+      },
+      {
+        path: '/store/carts/:id/complete',
+        method: 'POST',
+        module: 'checkout',
+        description: 'Completar carrito y crear pedido',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/carts/:id/complete'
+      },
+      {
+        path: '/store/orders/:id',
+        method: 'GET',
+        module: 'checkout',
+        description: 'Obtener detalles del pedido creado',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/orders/:id'
       },
       {
         path: '/store/customers/me',
@@ -754,6 +795,504 @@ export default function DevToolsPage() {
         requiresAuth: true,
         medusaEndpoint: '/vendor/orders/:id/incidents'
       },
+      
+      // ========================================================================
+      // FRANCHISEE ORDERS MODULE (My Orders)
+      // ========================================================================
+      {
+        path: '/store/orders',
+        method: 'GET',
+        module: 'orders',
+        description: 'Listar mis pedidos (franquiciado)',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/store/orders'
+      },
+      {
+        path: '/store/orders/:id',
+        method: 'GET',
+        module: 'orders',
+        description: 'Detalle de mi pedido',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/store/orders/:id'
+      },
+      {
+        path: '/store/orders/stats',
+        method: 'GET',
+        module: 'orders',
+        description: 'Estadísticas de mis pedidos',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/store/orders/stats'
+      },
+      {
+        path: '/store/orders/:id/cancel',
+        method: 'POST',
+        module: 'orders',
+        description: 'Cancelar mi pedido',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/store/orders/:id/cancel'
+      },
+
+      // ========================================================================
+      // ADMIN ORDERS MODULE (Global Order Management)
+      // ========================================================================
+      {
+        path: '/admin/orders',
+        method: 'GET',
+        module: 'orders',
+        description: 'Listar todos los pedidos (admin)',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/orders'
+      },
+      {
+        path: '/admin/orders/:id',
+        method: 'GET',
+        module: 'orders',
+        description: 'Detalle de pedido (admin)',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/orders/:id'
+      },
+      {
+        path: '/admin/orders/stats',
+        method: 'GET',
+        module: 'orders',
+        description: 'Estadísticas globales de pedidos',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/orders/stats'
+      },
+      {
+        path: '/admin/orders/:id/status',
+        method: 'PATCH',
+        module: 'orders',
+        description: 'Actualizar estado de pedido',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/orders/:id/status'
+      },
+      {
+        path: '/admin/orders/:id/priority',
+        method: 'PATCH',
+        module: 'orders',
+        description: 'Actualizar prioridad de pedido',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/orders/:id/priority'
+      },
+      {
+        path: '/admin/orders/:id/refund',
+        method: 'POST',
+        module: 'orders',
+        description: 'Procesar reembolso',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/orders/:id/refund'
+      },
+      {
+        path: '/admin/orders/:id/incidents',
+        method: 'GET',
+        module: 'orders',
+        description: 'Obtener incidencias del pedido',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/orders/:id/incidents'
+      },
+      {
+        path: '/admin/orders/:id/notes',
+        method: 'POST',
+        module: 'orders',
+        description: 'Añadir nota de administrador',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/orders/:id/notes'
+      },
+
+      // ========================================================================
+      // QUOTES MODULE - FRANCHISEE (Opening Projects)
+      // ========================================================================
+      {
+        path: '/store/quotes',
+        method: 'GET',
+        module: 'quotes',
+        description: 'Listar presupuestos del franquiciado',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/store/quotes'
+      },
+      {
+        path: '/store/quotes/:id',
+        method: 'GET',
+        module: 'quotes',
+        description: 'Detalle de presupuesto',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/store/quotes/:id'
+      },
+      {
+        path: '/store/quotes/:id/award',
+        method: 'POST',
+        module: 'quotes',
+        description: 'Adjudicar presupuesto a proveedor',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/store/quotes/:id/award'
+      },
+      {
+        path: '/store/quotes/:id/reject',
+        method: 'POST',
+        module: 'quotes',
+        description: 'Rechazar presupuesto',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/store/quotes/:id/reject'
+      },
+      {
+        path: '/store/quotes/:id/sign',
+        method: 'POST',
+        module: 'quotes',
+        description: 'Firmar presupuesto adjudicado',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/store/quotes/:id/sign'
+      },
+      {
+        path: '/store/quotes/stats',
+        method: 'GET',
+        module: 'quotes',
+        description: 'Estadísticas de presupuestos',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/store/quotes/stats'
+      },
+
+      // ========================================================================
+      // QUOTES MODULE - SUPPLIER (Vendor Panel)
+      // ========================================================================
+      {
+        path: '/seller/invitations',
+        method: 'GET',
+        module: 'quotes',
+        description: 'Listar invitaciones recibidas',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/seller/invitations'
+      },
+      {
+        path: '/seller/quotes',
+        method: 'GET',
+        module: 'quotes',
+        description: 'Listar presupuestos del proveedor',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/seller/quotes'
+      },
+      {
+        path: '/seller/quotes',
+        method: 'POST',
+        module: 'quotes',
+        description: 'Crear presupuesto (borrador)',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/seller/quotes'
+      },
+      {
+        path: '/seller/quotes/:id',
+        method: 'PATCH',
+        module: 'quotes',
+        description: 'Actualizar presupuesto borrador',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/seller/quotes/:id'
+      },
+      {
+        path: '/seller/quotes/:id/submit',
+        method: 'POST',
+        module: 'quotes',
+        description: 'Enviar presupuesto (draft → submitted)',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/seller/quotes/:id/submit'
+      },
+      {
+        path: '/seller/invitations/:id/decline',
+        method: 'POST',
+        module: 'quotes',
+        description: 'Declinar invitación',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/seller/invitations/:id/decline'
+      },
+      {
+        path: '/admin/quotes',
+        method: 'GET',
+        module: 'quotes',
+        description: 'Listar todos los presupuestos (admin)',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/quotes'
+      },
+
+      // ========================================================================
+      // SUPPLIER PRODUCTS MODULE (Vendor Product Management)
+      // ========================================================================
+      {
+        path: '/vendor/products',
+        method: 'GET',
+        module: 'supplier-products',
+        description: 'Listar mis productos (proveedor)',
+        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/products'
+      },
+      {
+        path: '/vendor/products',
+        method: 'POST',
+        module: 'supplier-products',
+        description: 'Crear nuevo producto',
+        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/products'
+      },
+      {
+        path: '/vendor/products/:id',
+        method: 'PATCH',
+        module: 'supplier-products',
+        description: 'Actualizar producto',
+        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/products/:id'
+      },
+      {
+        path: '/vendor/products/:id',
+        method: 'DELETE',
+        module: 'supplier-products',
+        description: 'Eliminar producto',
+        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/products/:id'
+      },
+      {
+        path: '/vendor/products/bulk-upload',
+        method: 'POST',
+        module: 'supplier-products',
+        description: 'Carga masiva de productos (CSV/Excel)',
+        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/products/bulk-upload'
+      },
+      {
+        path: '/vendor/products/:id/images',
+        method: 'POST',
+        module: 'supplier-products',
+        description: 'Subir imágenes de producto',
+        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/products/:id/images'
+      },
+
+      // ========================================================================
+      // FRANCHISEE MANAGEMENT MODULE (Admin Franchisee CRUD)
+      // ========================================================================
+      {
+        path: '/admin/franchisees',
+        method: 'GET',
+        module: 'franchisee-management',
+        description: 'Listar franquiciados',
+        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/franchisees'
+      },
+      {
+        path: '/admin/franchisees/:id',
+        method: 'GET',
+        module: 'franchisee-management',
+        description: 'Detalle de franquiciado',
+        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/franchisees/:id'
+      },
+      {
+        path: '/admin/franchisees',
+        method: 'POST',
+        module: 'franchisee-management',
+        description: 'Crear franquiciado',
+        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/franchisees'
+      },
+      {
+        path: '/admin/franchisees/:id',
+        method: 'PATCH',
+        module: 'franchisee-management',
+        description: 'Actualizar franquiciado',
+        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/franchisees/:id'
+      },
+      {
+        path: '/admin/franchisees/:id/status',
+        method: 'PATCH',
+        module: 'franchisee-management',
+        description: 'Activar/desactivar franquiciado',
+        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/franchisees/:id/status'
+      },
+      {
+        path: '/admin/franchisees/:id/stats',
+        method: 'GET',
+        module: 'franchisee-management',
+        description: 'Estadísticas del franquiciado',
+        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/franchisees/:id/stats'
+      },
+
+      // ========================================================================
+      // CHECKOUT MODULE - ADDITIONAL ENDPOINTS
+      // ========================================================================
+      {
+        path: '/store/carts/:id/shipping-address',
+        method: 'POST',
+        module: 'checkout',
+        description: 'Actualizar dirección de envío',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/carts/:id/shipping-address'
+      },
+      {
+        path: '/store/carts/:id/billing-address',
+        method: 'POST',
+        module: 'checkout',
+        description: 'Actualizar dirección de facturación',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/carts/:id/billing-address'
+      },
+      {
+        path: '/store/carts/:id/payment-sessions',
+        method: 'POST',
+        module: 'checkout',
+        description: 'Iniciar sesión de pago',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/carts/:id/payment-sessions'
+      },
+      {
+        path: '/store/carts/:id/payment-session',
+        method: 'POST',
+        module: 'checkout',
+        description: 'Seleccionar método de pago',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/carts/:id/payment-session'
+      },
+      {
+        path: '/store/shipping-options/:cartId',
+        method: 'GET',
+        module: 'checkout',
+        description: 'Obtener opciones de envío disponibles',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/shipping-options/:cartId'
+      },
+      {
+        path: '/store/payment-collections/:id',
+        method: 'GET',
+        module: 'checkout',
+        description: 'Obtener estado de pago',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/payment-collections/:id'
+      },
+      {
+        path: '/store/carts/:id/line-items',
+        method: 'POST',
+        module: 'checkout',
+        description: 'Añadir item al carrito',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/carts/:id/line-items'
+      },
+      {
+        path: '/store/carts/:id/line-items/:lineId',
+        method: 'PATCH',
+        module: 'checkout',
+        description: 'Actualizar cantidad de item',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/carts/:id/line-items/:lineId'
+      },
+      {
+        path: '/store/carts/:id/line-items/:lineId',
+        method: 'DELETE',
+        module: 'checkout',
+        description: 'Eliminar item del carrito',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/carts/:id/line-items/:lineId'
+      },
+      {
+        path: '/store/carts/:id/discounts/:code',
+        method: 'POST',
+        module: 'checkout',
+        description: 'Aplicar código de descuento',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/store/carts/:id/discounts/:code'
+      },
     ];
 
     setEndpoints(allEndpoints);
@@ -764,14 +1303,18 @@ export default function DevToolsPage() {
     'auth',
     'admin',
     'franchisees',
+    'franchisee-management',
     'openings',
     'pricing',
     'products',
+    'supplier-products',
     'catalog',
+    'checkout',
     'suppliers',
     'cart',
     'store',
-    'orders'
+    'orders',
+    'quotes'
   ];
   
   const filteredEndpoints = selectedModule === 'all' 

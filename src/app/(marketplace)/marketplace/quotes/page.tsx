@@ -1,35 +1,66 @@
-"use client";
+/**
+ * Franchisee Quotes Page
+ * 
+ * Lista de presupuestos recibidos para proyectos de apertura
+ */
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MessageSquare, Clock } from "lucide-react";
+'use client'
+
+import { QuotesList } from '@/components/quotes/QuotesList'
+import { Card } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { FileText, ArrowLeft, Info } from 'lucide-react'
+import Link from 'next/link'
 
 export default function QuotesPage() {
+  // TODO: Get from auth context
+  const franchiseeId = 'cus_bcn_norte_001'
+  
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Presupuestos</h1>
-        <p className="text-muted-foreground">
-          Solicita y gestiona presupuestos personalizados
-        </p>
+    <div className="container mx-auto px-4 py-8 max-w-7xl">
+      {/* Header */}
+      <div className="mb-8">
+        <div className="flex items-center gap-3 mb-4">
+          <Button variant="ghost" size="sm" asChild>
+            <Link href="/marketplace">
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Volver
+            </Link>
+          </Button>
+        </div>
+        
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
+              <FileText className="h-8 w-8 text-blue-600" />
+              Mis Presupuestos
+            </h1>
+            <p className="text-gray-600">
+              Presupuestos recibidos para tus proyectos de apertura
+            </p>
+          </div>
+        </div>
       </div>
-
-      <Card className="border-dashed">
-        <CardHeader className="text-center">
-          <div className="mx-auto mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100 dark:bg-blue-900/20">
-            <MessageSquare className="h-10 w-10 text-blue-600 dark:text-blue-400" />
+      
+      {/* Info Banner */}
+      <Card className="p-6 mb-6 bg-blue-50 border-blue-200">
+        <div className="flex items-start gap-3">
+          <Info className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+          <div className="space-y-2 text-sm text-blue-900">
+            <p className="font-medium">¿Cómo funciona el sistema de presupuestos?</p>
+            <ul className="list-disc list-inside space-y-1 text-blue-800">
+              <li>Crea un proyecto de apertura desde el módulo de Aperturas</li>
+              <li>El equipo administrativo invita a proveedores cualificados</li>
+              <li>Los proveedores envían sus presupuestos con todos los detalles</li>
+              <li>Compara las ofertas y adjudica al mejor proveedor</li>
+              <li>Firma digitalmente el presupuesto adjudicado</li>
+            </ul>
           </div>
-          <CardTitle>Presupuestos Personalizados</CardTitle>
-          <CardDescription>
-            Próximamente podrás solicitar presupuestos a proveedores
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-center text-sm text-muted-foreground">
-          <div className="flex items-center justify-center gap-2">
-            <Clock className="h-4 w-4" />
-            <span>Funcionalidad en desarrollo</span>
-          </div>
-        </CardContent>
+        </div>
       </Card>
+      
+      {/* Quotes List */}
+      <QuotesList franchiseeId={franchiseeId} />
     </div>
-  );
+  )
 }

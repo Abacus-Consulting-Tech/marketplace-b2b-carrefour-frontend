@@ -206,11 +206,16 @@ export default function SupplierInvitationsPage() {
                       </Button>
                     )}
 
-                    {/* Descargar documentos */}
-                    {invitation.project?.floor_plan_url && (
-                      <Button variant="ghost">
+                    {/* Ver documentos técnicos del proyecto */}
+                    {invitation.project_id && (
+                      <Button
+                        variant="outline"
+                        onClick={() =>
+                          router.push(`/supplier/openings/${invitation.project_id}`)
+                        }
+                      >
                         <FileText className="w-4 h-4 mr-2" />
-                        Descargar Plano
+                        Ver Documentos Técnicos
                       </Button>
                     )}
                   </div>

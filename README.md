@@ -1,69 +1,44 @@
 # Marketplace B2B Carrefour - Frontend
 
-<div align="center">
-
-**Plataforma digital B2B para franquiciados Carrefour**
+**Plataforma de comercio electrónico B2B para franquiciados y proveedores Carrefour**
 
 [![Next.js](https://img.shields.io/badge/Next.js-14-black)](https://nextjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
-[![Medusa](https://img.shields.io/badge/Backend-Medusa-blueviolet)](https://medusajs.com/)
-[![License](https://img.shields.io/badge/License-Proprietary-red)](./LICENSE)
-
-</div>
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-3.0-38B2AC)](https://tailwindcss.com/)
+[![Medusa](https://img.shields.io/badge/Medusa-2.x-7C3AED)](https://medusajs.com/)
 
 ---
 
-## 📋 Descripción
+## 📋 Estado del Proyecto
 
-Marketplace privado que conecta a franquiciados Carrefour con proveedores aprobados, facilitando la adquisición de productos y servicios operativos necesarios para sus establecimientos (no destinados a la venta al consumidor final).
+**Última Actualización**: 25 de Agosto de 2026  
+**Versión**: 1.0.0  
+**Estado**: ✅ 13 módulos completados (~19,866 líneas de código)
 
-### Funcionalidades Principales
+### 🎯 Fuentes de Verdad (Source of Truth)
 
-- 🏪 **Gestión de Franquiciados** - Registro, perfiles y administración de establecimientos
-- 📦 **Gestión de Proveedores** - Onboarding y gestión de catálogos
-- 🛒 **Catálogo de Productos** - Navegación, búsqueda avanzada y comparación
-- 📝 **Sistema de Órdenes** - Creación, seguimiento y gestión de pedidos
-- � **Gestión de Pedidos (Proveedor)** - Aceptar, procesar y enviar pedidos ⭐ NUEVO
-- �💳 **Gestión de Compras** - Carrito, checkout y facturación
-- 🎫 **Gestión de Incidencias** - Tickets y resolución de problemas
+Para información actualizada del proyecto, consultar estas **3 fuentes oficiales**:
 
-Para más detalles, ver [**Features Overview**](./docs/FEATURES.md).
+1. **📊 [Estado y Roadmap](docs/PROJECT_STATUS_AND_ROADMAP.md)** - Documento maestro con estado actual, módulos completados y roadmap
+2. **🔧 [Dev Tools Panel](http://localhost:3000/admin/dev-tools)** - Panel en vivo con 122 endpoints API documentados
+3. **📚 [Documentación Técnica](docs/technical/)** - Guías técnicas detalladas por módulo
 
----
-
-## � Desarrollo vs Producción
-
-> **⚠️ IMPORTANTE**: Estamos usando un flujo de trabajo de **ramas separadas** para mantener producción estable.
-
-- **Producción**: Rama `medusa-update` → Desplegada en Vercel para revisión backend
-- **Desarrollo**: Rama `dev` → Todo el desarrollo nuevo va aquí
-
-**📖 Lee la [Guía de Workflow](./docs/deployment/WORKFLOW.md) antes de hacer cambios**
-
-```bash
-# Siempre trabaja en dev
-git checkout dev
-
-# Solo mergea a medusa-update cuando backend apruebe
-git checkout medusa-update
-git merge dev
-```
+**Documentación Backend**: [docs/modules/](docs/modules/) - 13 módulos documentados para el equipo backend
 
 ---
 
-## �🚀 Quick Start
+## 🚀 Quick Start
 
-### Requisitos Previos
+### Prerequisitos
 
-- **Node.js** 18.x o superior
-- **npm** 8.x o superior
-- Acceso al backend Medusa en Render
+- Node.js 18+
+- npm 9+
 
 ### Instalación
 
 ```bash
-# Clonar el repositorio
-git clone https://github.com/Abacus-Consulting-Tech/marketplace-b2b-carrefour-frontend.git
+# Clonar repositorio
+git clone [repository-url]
 cd marketplace-b2b-carrefour-frontend
 
 # Instalar dependencias
@@ -71,253 +46,254 @@ npm install
 
 # Configurar variables de entorno
 cp .env.example .env.local
-# Editar .env.local con tus valores
+# Editar .env.local con tus credenciales
 
 # Iniciar servidor de desarrollo
 npm run dev
 ```
 
-La aplicación estará disponible en [http://localhost:3000](http://localhost:3000)
+Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
-**Guía detallada:** [Getting Started](./docs/setup/GETTING_STARTED.md)
+### 🔑 Credenciales de Prueba (Mock Mode)
 
----
-
-## 🏗️ Tech Stack
-
-### Frontend
-- **Framework:** Next.js 14 (App Router)
-- **Language:** TypeScript 5.0
-- **UI Library:** Shadcn/ui + Tailwind CSS
-- **State Management:** Zustand + TanStack Query (React Query)
-- **Forms:** React Hook Form + Zod validation
-- **Tables:** TanStack Table
-- **API Client:** Axios
-- **Testing:** Vitest + React Testing Library + Playwright
-
-### Backend
-- **Platform:** Medusa 2.x (MercurJS)
-- **Database:** PostgreSQL (Supabase)
-- **Cache:** Redis (Upstash)
-- **Deployment:** Render DEV
-- **Auth:** JWT (Bearer token)
-
-**URL Backend DEV:** `https://marketplace-b2b-backend-dev.onrender.com`
-
----
-
-## 🔧 Environment Configuration
-
-### Proxy por Entornos (Patrón Angular)
-
-El proyecto usa un sistema de configuración de proxy por entornos, similar al patrón Angular:
-
-```bash
-# Development (default) - usa proxy local
-npm run dev
-
-# Staging - usa backend staging
-npm run dev:staging
-
-# Production - llamadas directas (requiere CORS)
-npm run dev:prod
 ```
+Admin:
+  Email: admin@test.com
+  Password: admin123
 
-**Archivos de configuración:**
-- `proxy.dev.conf.js` - Development
-- `proxy.staging.conf.js` - Staging
-- `proxy.prod.conf.js` - Production
+Franquiciado:
+  Email: franchisee@test.com
+  Password: franchisee123
 
-**Documentación:** [Proxy Configuration](./docs/PROXY_CONFIG.md)
-
-### Variables de Entorno
-
-```bash
-# Backend
-NEXT_PUBLIC_API_URL=https://marketplace-b2b-backend-dev.onrender.com
-NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY=pk_xxxxx
-
-# Environment (optional)
-NEXT_PUBLIC_ENV=development  # development | staging | production
-
-# Mock Mode (development)
-NEXT_PUBLIC_MOCK_AUTH=false
+Proveedor:
+  Email: supplier@test.com
+  Password: supplier123
 ```
 
 ---
 
-## 📁 Estructura del Proyecto
+## 📦 Módulos Completados (13/13)
+
+| # | Módulo | Estado Frontend | Docs Backend | Testing |
+|---|--------|----------------|--------------|---------|
+| 1 | **Auth** | ✅ | ✅ | ⏳ |
+| 2 | **Openings + Invitaciones** | ✅ | ✅ | ✅ |
+| 3 | **Categories** | ✅ | ✅ | ⏳ |
+| 4 | **Supplier Orders** | ✅ | ✅ | ⏳ |
+| 5 | **Product Pricing** | ✅ | ✅ | ⏳ |
+| 6 | **Product Management** | ✅ | ✅ | ✅ |
+| 7 | **Franchisee Catalog** | ✅ | N/A | ✅ |
+| 8 | **Franchisee Orders** | ✅ | ✅ | ✅ |
+| 9 | **Admin Orders** | ✅ | ✅ | ✅ |
+| 10 | **Quotes** | ✅ | ✅ | ⏳ |
+| 11 | **Supplier Products** | ✅ | ⏳ | ⏳ |
+| 12 | **Franchisee Management** | ✅ | ⏳ | ⏳ |
+| 13 | **Checkout (Proceso Pago)** | ✅ | ⏳ | ⏳ |
+
+**Total**: ~18,466 líneas de código, 122 endpoints API, 15 documentos backend
+
+---
+
+## 🏗️ Arquitectura
+
+### Stack Tecnológico
+
+- **Framework**: Next.js 14 (App Router)
+- **Lenguaje**: TypeScript (strict mode)
+- **Estilos**: Tailwind CSS + Shadcn/ui
+- **State Management**: Zustand
+- **Backend**: Medusa 2.x + Mercur framework
+- **Autenticación**: JWT tokens
+- **Feature Flags**: Sistema de mock/real switching
+
+### Estructura del Proyecto
 
 ```
 marketplace-b2b-carrefour-frontend/
-├── docs/                      # 📚 Documentación completa
-│   ├── setup/                # Getting started
-│   ├── technical/            # Arquitectura, API, desarrollo
-│   ├── deployment/           # Guías de despliegue
-│   ├── testing/              # Guías de testing
-│   ├── guides/               # Manuales de usuario
-│   ├── medusa/               # Docs backend Medusa
-│   └── postman/              # Colecciones API
 ├── src/
-│   ├── app/                  # Next.js App Router
-│   │   ├── (auth)/          # Rutas autenticación
-│   │   ├── (marketplace)/   # Rutas franquiciados
-│   │   ├── (supplier)/      # Rutas proveedores
-│   │   ├── (backoffice)/    # Rutas admin
-│   │   └── (onboarding)/    # Rutas onboarding
-│   ├── components/           # Componentes reutilizables
-│   │   ├── ui/              # Componentes Shadcn
-│   │   ├── auth/            # Auth components
-│   │   ├── dashboard/       # Dashboard widgets
-│   │   └── navigation/      # Header, Footer
-│   ├── lib/                  # Utilities y helpers
-│   │   ├── api/             # Clientes API
-│   │   └── store/           # Zustand stores
-│   ├── hooks/                # Custom hooks
+│   ├── app/                    # Next.js App Router
+│   │   ├── (auth)/            # Rutas de autenticación
+│   │   ├── (marketplace)/     # Panel franquiciado
+│   │   ├── (supplier)/        # Panel proveedor
+│   │   └── (backoffice)/      # Panel administrador
+│   ├── components/            # Componentes React reutilizables
+│   ├── lib/
+│   │   ├── api/              # Clientes API (mock + real)
+│   │   └── store/            # Zustand stores
 │   ├── types/                # TypeScript types
-│   └── styles/               # Global styles
-├── public/                   # Assets estáticos
-├── scripts/                  # Utility scripts
-├── proxy.dev.conf.js         # Proxy development
-├── proxy.staging.conf.js     # Proxy staging
-├── proxy.prod.conf.js        # Proxy production
-└── next.config.js            # Next.js config
+│   ├── config/               # Configuración (feature flags)
+│   └── styles/               # Estilos globales
+├── docs/                     # 📚 Documentación
+│   ├── PROJECT_STATUS_AND_ROADMAP.md  # ⭐ Documento maestro
+│   ├── modules/              # Docs backend por módulo
+│   ├── technical/            # Guías técnicas
+│   ├── testing/              # Guías de testing
+│   ├── guides/               # Guías de usuario
+│   └── integration/          # Guías de integración
+└── public/                   # Assets estáticos
 ```
 
 ---
 
-## 👥 Roles de Usuario
+## 📚 Documentación Principal
 
-| Rol | Email Pattern | Dashboard | Descripción |
-|-----|---------------|-----------|-------------|
-| **Admin** | `admin@*`, `acano@*` | `/admin/dashboard` | Administradores de plataforma |
-| **Proveedor** | `seller@*`, `mercur@*`, `kickz@*`, `trailhead@*` | `/supplier/dashboard` | Proveedores y vendedores |
-| **Franquiciado** | Otros | `/marketplace/dashboard` | Franquiciados Carrefour (default) |
+### Para Desarrolladores Frontend
 
-**Credenciales DEV:** Ver [Credentials](./docs/medusa/CREDENTIALS.md)
+- **[Estado del Proyecto](docs/PROJECT_STATUS_AND_ROADMAP.md)** - Resumen ejecutivo, módulos completados, roadmap
+- **[Arquitectura Frontend](docs/JUSTIFICACION_ARQUITECTURA_FRONTEND.md)** - Decisiones arquitectónicas
+- **[Guías Técnicas](docs/technical/)** - Desarrollo, API, arquitectura
 
-**Sistema de roles:** [Roles y Redirecciones](./docs/ROLES_Y_REDIRECCIONES.md)
+### Para Backend Team
+
+- **[Módulos Organizados](docs/modules/README.md)** - Índice de 15 documentos backend
+- **[Organización Completa](docs/MODULES_ORGANIZATION.md)** - Mapeo de documentos enviados
+- **Documentos por módulo**: `docs/modules/01-auth/`, `02-openings/`, `03-categories/`, etc.
+
+### Testing & Guías
+
+- **[Testing](docs/testing/)** - 7 guías de testing por módulo
+- **[Guías de Usuario](docs/guides/)** - Manuales completos de usuario
 
 ---
 
-## 🧪 Testing
+## 🔧 Scripts Disponibles
 
 ```bash
-# Unit tests
-npm run test
+# Desarrollo
+npm run dev              # Servidor de desarrollo (http://localhost:3000)
+npm run dev:open         # Servidor de desarrollo + abrir navegador
 
-# E2E tests
-npm run test:e2e
+# Build
+npm run build            # Build de producción
+npm run start            # Servidor de producción
 
-# Coverage
-npm run test:coverage
+# Linting
+npm run lint             # Ejecutar ESLint
+
+# Deployment
+./package-for-deployment.sh  # Crear tarball para deployment
 ```
 
-**Guía completa:** [Testing Guide](./docs/testing/TESTING_GUIDE.md)
+---
+
+## 🌐 Rutas Principales
+
+### Autenticación
+- `/login` - Login multi-rol
+
+### Panel Franquiciado (`/marketplace`)
+- `/marketplace/dashboard` - Dashboard principal
+- `/marketplace` - Catálogo de productos
+- `/marketplace/cart` - Carrito de compras
+- `/marketplace/quotes` - Presupuestos
+- `/marketplace/orders` - Mis pedidos
+
+### Panel Proveedor (`/supplier`)
+- `/supplier/dashboard` - Dashboard del proveedor
+- `/supplier/orders` - Gestión de pedidos recibidos
+- `/supplier/products` - Mis productos
+
+### Panel Admin (`/admin`)
+- `/admin/dashboard` - Dashboard administrativo
+- `/admin/products` - Gestión de productos
+- `/admin/products/pricing` - Cola de aprobación de precios
+- `/admin/orders` - Vista global de pedidos
+- `/admin/openings` - Gestión de aperturas
+- `/admin/categories` - Gestión de categorías
+- `/admin/dev-tools` - 🔧 Herramientas de desarrollo (95 endpoints documentados)
 
 ---
 
-## 📦 Deployment
+## 🔄 Feature Flags
 
-### Opción 1: Vercel (Recomendado)
+El proyecto usa un sistema de feature flags para alternar entre datos mock y APIs reales:
 
-```bash
-# Deploy a Vercel
-vercel deploy
+```typescript
+// src/config/feature-flags.ts
+export const featureFlags = {
+  auth: { useMock: true, backendReady: true },
+  products: { useMock: true, backendReady: false },
+  orders: { useMock: true, backendReady: false },
+  // ... más flags
+}
 ```
 
-**Guía:** [Vercel Deployment](./docs/deployment/VERCEL_DEPLOYMENT.md)
-
-### Opción 2: Servidor Propio (cdmon, etc.)
-
-```bash
-# Build para producción
-npm run build
-
-# Iniciar servidor
-npm start
-```
-
-**Guía completa:** [Deployment Guide](./docs/deployment/DEPLOYMENT_GUIDE.md)
-
-**Quick deployment:** [Quick Guide](./docs/deployment/QUICK_DEPLOYMENT.md)
+**Modo actual**: Mock (desarrollo)  
+**Cambiar a backend real**: Actualizar flags cuando backend esté disponible
 
 ---
 
-## 📚 Documentación
+## 🚦 Estado de Integración Backend
 
-### 🔗 Documentación Principal
+| Módulo | Mock Frontend | Backend API | Integrado |
+|--------|---------------|-------------|-----------|
+| Auth | ✅ | ✅ | ✅ |
+| Productos | ✅ | ⏳ Pendiente | ❌ |
+| Pedidos | ✅ | ⏳ Pendiente | ❌ |
+| Categorías | ✅ | ⏳ Pendiente | ❌ |
+| Aperturas | ✅ | ⏳ Pendiente | ❌ |
+| Presupuestos | ✅ | ⏳ Pendiente | ❌ |
 
-- 📖 **[Índice de Documentación](./docs/README.md)** - Índice completo
-- 🎯 **[Features](./docs/FEATURES.md)** - Funcionalidades detalladas
-- 🏗️ **[Architecture](./docs/technical/ARCHITECTURE.md)** - Arquitectura del sistema
-- 💻 **[Development](./docs/technical/DEVELOPMENT.md)** - Guía de desarrollo
-- 🔌 **[API Specification](./docs/technical/API_SPEC.md)** - Especificación de API
-
-### 🔄 Backend Integration
-
-- 🔗 **[Backend Pendiente](./docs/integration/BACKEND_PENDIENTE.md)** - Estado integración Medusa
-- 🔐 **[Auth Integration](./docs/integration/AUTH_INTEGRATION.md)** - Integración autenticación
-- 🌐 **[Proxy Config](./docs/integration/PROXY_CONFIG.md)** - Configuración proxy por entornos
-- 🏗️ **[Proxy Architecture](./docs/integration/PROXY_ARCHITECTURE.md)** - Arquitectura del proxy
-
-### 📘 Guías Específicas
-
-- 🚀 **[Getting Started](./docs/setup/GETTING_STARTED.md)** - Instalación y setup
-- 📮 **[Postman Collections](./docs/postman/README.md)** - Colecciones API
-- 👤 **[User Guide](./docs/guides/GUIA_USUARIO.md)** - Manual de usuario
+**Ver estado completo**: [docs/PROJECT_STATUS_AND_ROADMAP.md](docs/PROJECT_STATUS_AND_ROADMAP.md)
 
 ---
 
-## 🔗 Backend API
+## 📊 Métricas del Proyecto
 
-### Endpoints Principales
-
-| Endpoint | Descripción | Proxy Dev |
-|----------|-------------|-----------|
-| `POST /auth/user/emailpass` | Login | `/backend/auth/user/emailpass` |
-| `GET /store/regions` | Regiones disponibles | `/backend/store/regions` |
-| `GET /store/products` | Catálogo productos | `/backend/store/products` |
-| `GET /admin/users/me` | Perfil usuario | `/backend/admin/users/me` |
-| `GET /health` | Health check | `/backend/health` |
-
-**Documentación completa:** [API Spec](./docs/technical/API_SPEC.md)
-
-**Smoke tests:** [Checklist](./docs/medusa/smoke-test-checklist.md)
+- **Líneas de Código**: ~9,000+
+- **Componentes React**: 50+
+- **Endpoints API**: 95 documentados
+- **Módulos Completados**: 10/10 (100%)
+- **Módulos con Docs Backend**: 9/10 (90%)
+- **Scripts SQL**: 4 módulos (Categories, Pricing, Orders, Quotes)
+- **Guías de Testing**: 7 documentos
+- **Tiempo de Desarrollo**: ~4 semanas
 
 ---
 
-## 🤝 Contributing
+## 🤝 Contribuir
 
-1. Crear branch desde `main`:
-   ```bash
-   git checkout -b feature/mi-funcionalidad
-   ```
+### Workflow de Desarrollo
 
-2. Hacer commits descriptivos:
-   ```bash
-   git commit -m "feat: add user profile page"
-   ```
+1. Crear rama feature: `git checkout -b feature/nueva-funcionalidad`
+2. Desarrollar y testear localmente
+3. Actualizar documentación relevante
+4. Commit con mensajes descriptivos
+5. Push y crear Pull Request
 
-3. Push y crear Pull Request:
-   ```bash
-   git push origin feature/mi-funcionalidad
-   ```
+### Convenciones de Código
 
-**Convenciones:** Ver [Development Guide](./docs/technical/DEVELOPMENT.md)
+- TypeScript strict mode obligatorio
+- ESLint para linting
+- Prettier para formateo
+- Componentes funcionales con hooks
+- Naming: PascalCase para componentes, camelCase para funciones
 
 ---
 
 ## 📞 Soporte
 
-- **Documentación:** [docs/](./docs/)
-- **Issues:** GitHub Issues
-- **Email:** soporte@carrefour-b2b.com
+- **Documentación**: Ver carpeta `docs/`
+- **API Reference**: [http://localhost:3000/admin/dev-tools](http://localhost:3000/admin/dev-tools)
+- **Estado del Proyecto**: [docs/PROJECT_STATUS_AND_ROADMAP.md](docs/PROJECT_STATUS_AND_ROADMAP.md)
 
 ---
 
-## 📄 License
+## 📄 Licencia
 
-Copyright © 2026 Carrefour - Abacus Consulting. Todos los derechos reservados.
+Ver archivo [LICENSE](LICENSE)
 
-Ver [LICENSE](./LICENSE) para más detalles.
+---
+
+## 🔗 Links Útiles
+
+- **Medusa Documentation**: https://docs.medusajs.com/
+- **Mercur Framework**: https://mercurjs.com/
+- **Next.js Documentation**: https://nextjs.org/docs
+- **Tailwind CSS**: https://tailwindcss.com/docs
+- **Shadcn/ui**: https://ui.shadcn.com/
+
+---
+
+**Desarrollado con ❤️ por el equipo Frontend**  
+**Última actualización**: 25 de Agosto de 2026
