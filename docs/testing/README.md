@@ -56,6 +56,16 @@
    - Perfiles y configuración
    - Activación/desactivación
 
+### Módulos de Openings
+
+8. **[Testing Openings Documents](TESTING_OPENINGS_DOCUMENTS.md)** ⭐ **NUEVO**  
+   Pruebas completas del módulo de Openings (Nuevas Aperturas)
+   - Descarga de documentos técnicos
+   - Filtros por categoría (6 categorías)
+   - Control de acceso granular (Franchisee/Supplier)
+   - Vista de proyectos y documentos
+   - **Estado**: ✅ COMPLETADO AL 100%
+
 ---
 
 ## 🎯 Cobertura de Testing
@@ -69,9 +79,9 @@
 | Invitaciones | ✅ | Manual |
 | Presupuestos | ✅ | Manual |
 | Gestión Franquiciados | ✅ | Manual |
+| **Aperturas (Openings)** | ✅ | Manual |
 | Órdenes (Admin) | ⏳ | Pendiente |
 | Órdenes (Proveedor) | ⏳ | Pendiente |
-| Aperturas | ⏳ | Pendiente |
 
 ---
 
