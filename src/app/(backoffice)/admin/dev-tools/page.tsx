@@ -8,16 +8,18 @@
  * ✅ Admin Orders: 8 endpoints - REAL API (Render DEV)
  * ✅ Supplier/Vendor Orders: 9 endpoints - REAL API (Render DEV)
  * ✅ Pricing Module: 6 endpoints - REAL API (Render DEV)
+ * ✅ Excel Import: 8 endpoints - REAL API (Render DEV) ← NEW
  * ✅ Sellers: 5 endpoints - REAL API (Render DEV)
  * 🎭 Openings: 24 endpoints - MOCK (backend pending)
  * 🎭 Products: 8 endpoints - MOCK (backend pending)
  * 🎭 Checkout: 15 endpoints - MOCK (backend pending)
  * 
- * Endpoint Summary (Total: 150+ endpoints):
+ * Endpoint Summary (Total: 160+ endpoints):
  * - Auth: 4 endpoints (Login Admin/Vendor, Logout, Session) ✅ REAL
  * - Admin Orders: 8 endpoints (List, Detail, Stats, Status, Priority, Refund, Incidents, Notes) ✅ REAL
  * - Supplier Orders: 9 endpoints (CRUD, Stats, Accept/Reject, Tracking, Incidents) ✅ REAL
  * - Pricing: 6 endpoints (Pending Products, Approval, Markup, History) ✅ REAL
+ * - Excel Import: 8 endpoints (Template, Upload, List Jobs, Job Details) ✅ REAL ← NEW
  * - Admin: 5 endpoints (Orders, Users, Sellers) ✅ REAL
  * - Franchisees: 9 endpoints (Medusa Customers + Addresses CRUD)
  * - Openings: 24 endpoints (Projects, Categories, Documents, Invitations, Quotes, Financing, Status)
@@ -880,6 +882,91 @@ export default function DevToolsPage() {
         status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/vendor/custom/sellers/me/markup'
+      },
+      
+      // ========================================================================
+      // EXCEL IMPORT MODULE - ✅ REAL API (Render DEV)
+      // Bulk product import via Excel spreadsheet
+      // ========================================================================
+      {
+        path: '/admin/custom/products/import/template',
+        method: 'GET',
+        module: 'pricing',
+        description: 'Descargar plantilla Excel (admin)',
+        usesRealAPI: !featureFlags.shouldUseMock('pricing'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/custom/products/import/template'
+      },
+      {
+        path: '/admin/custom/products/import',
+        method: 'POST',
+        module: 'pricing',
+        description: 'Subir Excel para carga masiva (admin)',
+        usesRealAPI: !featureFlags.shouldUseMock('pricing'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/custom/products/import'
+      },
+      {
+        path: '/admin/custom/products/import',
+        method: 'GET',
+        module: 'pricing',
+        description: 'Listar jobs de importación (admin)',
+        usesRealAPI: !featureFlags.shouldUseMock('pricing'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/custom/products/import'
+      },
+      {
+        path: '/admin/custom/products/import/:id',
+        method: 'GET',
+        module: 'pricing',
+        description: 'Detalle de job de importación (admin)',
+        usesRealAPI: !featureFlags.shouldUseMock('pricing'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/custom/products/import/:id'
+      },
+      {
+        path: '/vendor/custom/products/import/template',
+        method: 'GET',
+        module: 'pricing',
+        description: 'Descargar plantilla Excel (vendor)',
+        usesRealAPI: !featureFlags.shouldUseMock('pricing'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/custom/products/import/template'
+      },
+      {
+        path: '/vendor/custom/products/import',
+        method: 'POST',
+        module: 'pricing',
+        description: 'Subir Excel para carga masiva (vendor)',
+        usesRealAPI: !featureFlags.shouldUseMock('pricing'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/custom/products/import'
+      },
+      {
+        path: '/vendor/custom/products/import',
+        method: 'GET',
+        module: 'pricing',
+        description: 'Listar mis jobs de importación (vendor)',
+        usesRealAPI: !featureFlags.shouldUseMock('pricing'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/custom/products/import'
+      },
+      {
+        path: '/vendor/custom/products/import/:id',
+        method: 'GET',
+        module: 'pricing',
+        description: 'Detalle de job de importación (vendor)',
+        usesRealAPI: !featureFlags.shouldUseMock('pricing'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/vendor/custom/products/import/:id'
       },
       
       // ========================================================================

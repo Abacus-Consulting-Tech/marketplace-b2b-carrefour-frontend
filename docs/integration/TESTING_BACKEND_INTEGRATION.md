@@ -585,6 +585,144 @@
 
 ---
 
+### Test 13: Excel Import - Vendor Bulk Upload
+
+**Objective**: Verify vendor can upload Excel file and track import job
+
+**Steps**:
+
+1. **Login as vendor**:
+   ```
+   Email: seller@mercur.dev
+   Password: supersecret
+   ```
+
+2. **Navigate to vendor products section** (exact route depends on UI):
+   ```
+   http://localhost:3000/supplier/products
+   (look for "Import Excel" or "Bulk Upload" button)
+   ```
+
+3. **Download Excel template**:
+   - Click "Download Template" button
+   - Check Network tab for:
+   ```
+   ✅ GET .../vendor/custom/products/import/template
+   ✅ Headers: Authorization + x-seller-id
+   ✅ Status: 200 OK
+   ✅ Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+   ```
+
+4. **Upload test Excel file**:
+   - Use provided template: `docs/integration/Plantilla_ejemplo_proveedores_carga_productos.xlsx`
+   - Or create minimal Excel with required columns
+   - Click "Upload" button
+
+5. **Check upload request**:
+   ```
+   ✅ POST .../vendor/custom/products/import
+   ✅ Headers: Authorization + x-seller-id
+   ✅ Content-Type: multipart/form-data
+   ✅ Body contains: file field
+   ```
+
+6. **Check upload response**:
+   ```json
+   ✅ Status: 202 Accepted
+   ✅ Response: {
+     "job_id": "uuid",
+     "status": "queued",
+     "total_rows": 400,
+     "status_url": "/vendor/custom/products/import/{job_id}"
+   }
+   ```
+
+7. **Monitor job progress** (UI should poll every 1-2s):
+   ```
+   ✅ GET .../vendor/custom/products/import/{job_id}
+   ✅ Status transitions: queued → validating → ingesting → success
+   ```
+
+8. **Check final success response**:
+   ```json
+   ✅ {
+     "job": {
+       "status": "success",
+       "processed_rows": 400,
+       "result": {
+         "created_product_ids": ["prod_...", ...]
+       }
+     }
+   }
+   ```
+
+9. **Verify error handling** (optional - requires invalid Excel):
+   - Upload Excel with errors (invalid price, missing SKU)
+   - Check for `status: "failed"` with error details:
+   ```json
+   {
+     "errors": [{
+       "line": 12,
+       "column": "base_price",
+       "reason": "Must be a decimal number > 0",
+       "value": "0"
+     }]
+   }
+   ```
+
+**Expected Result**: ✅ Excel upload creates async job, UI tracks progress, shows success/errors
+
+**Note**: Full import test requires valid Excel with B2B categories. Backend processes 100 products x 4 variants = 400 rows in ~2-5 seconds.
+
+---
+
+### Test 14: Excel Import - Admin Upload for Seller
+
+**Objective**: Verify admin can upload Excel on behalf of a seller
+
+**Steps**:
+
+1. **Login as admin**:
+   ```
+   Email: admin@carrefour.dev
+   Password: supersecret
+   ```
+
+2. **Navigate to admin products or seller management**:
+   ```
+   http://localhost:3000/admin/suppliers
+   (look for seller detail → Import Products)
+   ```
+
+3. **Download template as admin**:
+   ```
+   ✅ GET .../admin/custom/products/import/template
+   ✅ Headers: Authorization (no x-seller-id needed)
+   ```
+
+4. **Upload Excel with seller_id**:
+   ```
+   ✅ POST .../admin/custom/products/import
+   ✅ Form data includes: seller_id + file
+   ✅ seller_id: sel_01M0T3BYTKQF7RV18RX93XEAQD
+   ```
+
+5. **List all import jobs** (admin view):
+   ```
+   ✅ GET .../admin/custom/products/import?seller_id=sel_...&limit=20
+   ✅ Should show all jobs for that seller
+   ```
+
+6. **Filter by status**:
+   ```
+   ✅ GET .../admin/custom/products/import?status=success
+   ✅ GET .../admin/custom/products/import?status=failed
+   ```
+
+**Expected Result**: ✅ Admin can manage Excel imports for any seller, list/filter jobs
+
+---
+
 ## 📊 Test Results Checklist
 
 Mark each test as you complete it:
@@ -601,6 +739,8 @@ Mark each test as you complete it:
 - [ ] ✅ Test 10: Error Handling - 401 Unauthorized
 - [ ] ✅ Test 11: Error Handling - Backend Timeout
 - [ ] ✅ Test 12: Feature Flag Toggle
+- [ ] ✅ Test 13: Excel Import - Vendor Bulk Upload ← NEW
+- [ ] ✅ Test 14: Excel Import - Admin Upload for Seller ← NEW
 
 ---
 
