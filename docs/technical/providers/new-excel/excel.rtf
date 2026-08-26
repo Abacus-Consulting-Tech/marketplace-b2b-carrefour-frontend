@@ -1,0 +1,594 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2822
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fnil\fcharset0 HelveticaNeue;\f1\fmodern\fcharset0 Courier;\f2\fnil\fcharset0 HelveticaNeue-Bold;
+\f3\fmodern\fcharset0 Courier-Bold;}
+{\colortbl;\red255\green255\blue255;\red0\green0\blue0;\red0\green0\blue233;\red192\green68\blue42;
+\red165\green46\blue60;\red24\green62\blue146;}
+{\*\expandedcolortbl;;\cssrgb\c0\c0\c0;\cssrgb\c0\c0\c93333;\cssrgb\c80392\c34902\c21569;
+\cssrgb\c71373\c25882\c29804;\cssrgb\c11765\c32549\c63922;}
+{\*\listtable{\list\listtemplateid1\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}}{\leveltext\leveltemplateid1\'01\'00;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid1}
+{\list\listtemplateid2\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}}{\leveltext\leveltemplateid101\'01\'00;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid2}
+{\list\listtemplateid3\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid201\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{circle\}}{\leveltext\leveltemplateid202\'01\uc0\u9702 ;}{\levelnumbers;}\fi-360\li1440\lin1440 }{\listname ;}\listid3}
+{\list\listtemplateid4\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid301\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{circle\}}{\leveltext\leveltemplateid302\'01\uc0\u9702 ;}{\levelnumbers;}\fi-360\li1440\lin1440 }{\listname ;}\listid4}
+{\list\listtemplateid5\listhybrid{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{disc\}}{\leveltext\leveltemplateid401\'01\uc0\u8226 ;}{\levelnumbers;}\fi-360\li720\lin720 }{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{circle\}}{\leveltext\leveltemplateid402\'01\uc0\u9702 ;}{\levelnumbers;}\fi-360\li1440\lin1440 }{\listlevel\levelnfc23\levelnfcn23\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{square\}}{\leveltext\leveltemplateid403\'01\uc0\u9642 ;}{\levelnumbers;}\fi-360\li2160\lin2160 }{\listname ;}\listid5}
+{\list\listtemplateid6\listhybrid{\listlevel\levelnfc0\levelnfcn0\leveljc0\leveljcn0\levelfollow0\levelstartat1\levelspace360\levelindent0{\*\levelmarker \{decimal\}}{\leveltext\leveltemplateid501\'01\'00;}{\levelnumbers\'01;}\fi-360\li720\lin720 }{\listname ;}\listid6}}
+{\*\listoverridetable{\listoverride\listid1\listoverridecount0\ls1}{\listoverride\listid2\listoverridecount0\ls2}{\listoverride\listid3\listoverridecount0\ls3}{\listoverride\listid4\listoverridecount0\ls4}{\listoverride\listid5\listoverridecount0\ls5}{\listoverride\listid6\listoverridecount0\ls6}}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\deftab720
+\pard\pardeftab720\sa280\partightenfactor0
+
+\f0\fs28 \cf0 \expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Hola Juantxo, te paso el resumen completo del \'faltimo cambio en backend para que puedas montar/probar la parte de front.\
+\'a0\
+Backend DEV:\
+```text\uc0\u8232 {\field{\*\fldinst{HYPERLINK "https://marketplace-b2b-backend-dev.onrender.com/"}}{\fldrslt \cf3 \ul \ulc3 \strokec3 https://marketplace-b2b-backend-dev.onrender.com}}\
+```\
+\'a0\
+Estado actual comprobado:\
+```text\
+GET /health -> 200\
+GET /store/custom -> 200 con x-publishable-api-key\
+GET /admin/custom/products/import?limit=1 sin token -> 401 esperado\
+POST /custom/products/import -> 404 esperado, el bypass p\'fablico est\'e1 eliminado\
+```\
+\'a0\
+Funcionalidad nueva:\
+Carga masiva de productos por Excel. El flujo es:\
+```text\
+Excel -> POST import -> job async -> validaci\'f3n -> creaci\'f3n de productos proposed -> revisi\'f3n/tarificaci\'f3n\
+```\
+\'a0\
+Documentaci\'f3n:\
+```text\
+MANUAL_FRONTEND_CARGA_MASIVA_PRODUCTOS_EXCEL.md\
+```\
+\'a0\
+Excel de ejemplo:\
+```text\
+Plantilla_ejemplo_proveedores_carga_productos.xlsx\
+```\
+\'a0\
+Ese Excel tiene 100 productos B2B de operaci\'f3n Carrefour Express, 400 filas y 4 variantes por producto.\
+\'a0\
+Postman:\
+La colecci\'f3n est\'e1 actualizada con la carpeta:\
+```text\
+8 - Carga masiva productos Excel\
+```\
+\'a0\
+Endpoints admin:\
+\'a0\
+1. Login admin:\
+```http\
+POST /auth/user/emailpass\
+Content-Type: application/json\
+```\
+\'a0\
+Body:\
+```json\
+\{\
+\'a0 "email": "\{\{adminEmail\}\}",\
+\'a0 "password": "\{\{adminPassword\}\}"\
+\}\
+```\
+\'a0\
+Guardar `token` como `adminToken`/`jwtToken`.\
+\'a0\
+2. Descargar plantilla:\
+```http\
+GET /admin/custom/products/import/template\
+Authorization: Bearer <adminToken>\
+```\
+\'a0\
+3. Subir Excel:\
+```http\
+POST /admin/custom/products/import\
+Authorization: Bearer <adminToken>\
+Content-Type: multipart/form-data\
+```\
+\'a0\
+Form data:\
+```text\
+seller_id: <sellerId>\
+file: <xlsx>\
+```\
+\'a0\
+Respuesta:\
+```json\
+\{\
+\'a0 "job_id": "uuid",\
+\'a0 "status": "queued",\
+\'a0 "total_rows": 400,\
+\'a0 "status_url": "/admin/custom/products/import/\{job_id\}"\
+\}\
+```\
+\'a0\
+4. Consultar job:\
+```http\
+GET /admin/custom/products/import/\{job_id\}\
+Authorization: Bearer <adminToken>\
+```\
+\'a0\
+Estados posibles:\
+```text\
+queued\
+validating\
+ingesting\
+success\
+failed\
+```\
+\'a0\
+En `success`:\
+```json\
+\{\
+\'a0 "job": \{\
+\'a0\'a0\'a0 "status": "success",\
+\'a0\'a0\'a0 "processed_rows": 400,\
+\'a0\'a0\'a0 "result": \{\
+\'a0\'a0\'a0\'a0\'a0 "created_product_ids": ["prod_..."]\
+\'a0\'a0\'a0 \}\
+\'a0 \}\
+\}\
+```\
+\'a0\
+En `failed`, mostrar tabla de errores:\
+```json\
+\{\
+\'a0 "line": 12,\
+\'a0 "column": "base_price",\
+\'a0 "reason": "Must be a decimal number > 0",\
+\'a0 "value": "0"\
+\}\
+```\
+\'a0\
+Endpoints vendor:\
+\'a0\
+1. Login proveedor:\
+```http\
+POST /auth/member/emailpass\
+Content-Type: application/json\
+```\
+\'a0\
+2. Subir Excel:\
+```http\
+POST /vendor/custom/products/import\
+Authorization: Bearer <sellerToken>\
+x-seller-id: <sellerId>\
+Content-Type: multipart/form-data\
+```\
+\'a0\
+Form data:\
+```text\
+file: <xlsx>\
+```\
+\'a0\
+3. Consultar job:\
+```http\
+GET /vendor/custom/products/import/\{job_id\}\
+Authorization: Bearer <sellerToken>\
+x-seller-id: <sellerId>\
+```\
+\'a0\
+Para el front:\
+- Montar selector/drag&drop de Excel.\
+- Validar extensi\'f3n `.xlsx`/`.xls`.\
+- En admin pedir `seller_id`.\
+- En vendor no enviar `seller_id`, se toma del `x-seller-id`.\
+- Tras subir, guardar `job_id`.\
+- Hacer polling cada 1-2 segundos al detalle del job hasta `success` o `failed`.\
+- Mostrar estados discretos: `queued`, `validating`, `ingesting`, `success`, `failed`.\
+- En error, mostrar `line`, `column`, `reason`, `value`.\
+- En \'e9xito, enlazar a productos pendientes de tarificaci\'f3n/revisi\'f3n.\
+\'a0\
+Importante:\
+- Para `/store/*`, enviar siempre:\
+```http\
+x-publishable-api-key: <key>\
+```\
+- `MEDUSA_BACKEND_URL` debe ser:\
+```text\uc0\u8232 {\field{\*\fldinst{HYPERLINK "https://marketplace-b2b-backend-dev.onrender.com/"}}{\fldrslt \cf3 \ul \ulc3 \strokec3 https://marketplace-b2b-backend-dev.onrender.com}}\
+```\
+- Si est\'e1s en una preview URL distinta de Vercel y falla CORS, p\'e1samela para a\'f1adirla a `STORE_CORS` / `AUTH_CORS`.\
+\'a0\
+Seguridad:\
+El endpoint p\'fablico temporal ya no existe:\
+```http\
+POST /custom/products/import -> 404\
+```\
+\'a0\
+\'a0\
+\
+\pard\pardeftab720\partightenfactor0
+
+\f1 \cf0 \
+\pard\pardeftab720\sa280\partightenfactor0
+
+\f0 \cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+{\field{\*\fldinst{HYPERLINK "https://abacusconsultingtech-my.sharepoint.com/personal/acano_abacus-consulting_net/Documents/Archivos%20de%20chat%20de%20Microsoft%20Teams/MANUAL_FRONTEND_CARGA_MASIVA_PRODUCTOS_EXCEL.md"}}{\fldrslt \cf3 \ul \ulc3 \strokec3 MANUAL_FRONTEND_CARGA_MASIVA_PRODUCTOS_EXCEL.md}}\
+\pard\pardeftab720\sa280\partightenfactor0
+{\field{\*\fldinst{HYPERLINK "https://abacusconsultingtech-my.sharepoint.com/personal/acano_abacus-consulting_net/Documents/Archivos%20de%20chat%20de%20Microsoft%20Teams/Plantilla_ejemplo_proveedores_carga_productos.xlsx"}}{\fldrslt \cf3 \ul \ulc3 \strokec3 Plantilla_ejemplo_proveedores_carga_productos.xlsx}}\
+\pard\pardeftab720\sa280\partightenfactor0
+{\field{\*\fldinst{HYPERLINK "https://abacusconsultingtech-my.sharepoint.com/personal/acano_abacus-consulting_net/Documents/Archivos%20de%20chat%20de%20Microsoft%20Teams/marketplace-b2b-carrefour.postman_collection%203.json"}}{\fldrslt \cf3 \ul \ulc3 \strokec3 marketplace-b2b-carrefour.postman_collection 3.json}}\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\li800\fi-800\ri800\sa280\partightenfactor0
+
+\f2\b \cf0 Juantxo Cruz
+\f0\b0 \
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 1. Bug en /admin/orders \uc0\u55357 \u56516 \
+Juantxo puedes probar /admin/orders otra vez con el mismo login\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 El servidor de back debe estar ca\'eddo, no deja hacer login ni peticiones, ni en postman ni en la app. \cf4 \strokec4 Backend timeout - el servidor est\'e1 arrancando (30s). Intenta de nuevo o activa MOCK MODE.\cf0 \strokec2 \
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 O se ha parado y est\'e1 arrancando...\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\li800\fi-800\ri800\sa280\partightenfactor0
+
+\f2\b \cf0 Arturo Cano
+\f0\b0 \
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 Juantxo puedes probar /admin/orders otra vez con el mismo login\
+No funciona. Da \{\
+\'a0\'a0\'a0 \cf5 \strokec5 "message"\cf0 \strokec2 : \cf6 \strokec6 "Unauthorized"\cf0 \strokec2 \
+\}\'a0\
+\'bfQu\'e9 te sale en tu postman?\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 Con estas credenciales:\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 Email: admin@carrefour.dev\
+Password: supersecret\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 \'bfNO hay m\'e9todo para listar todos los usuarios de la app?\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 D\'f3nde se ven los permisos de un usuario? El postman est\'e1 sin documentar.\'a0\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 Algo est\'e1 corrupto en los \'faltimos cambios de back en el modulo auth. NO autoriza a entrar. El dashboard est\'e1 intentando obtener \'f3rdenes del backend y recibe 
+\f2\b 401 Unauthorized
+\f0\b0 , lo que dispara el redirect al login.\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 El problema continua.\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls1\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	1	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Bug en auth module.\
+\pard\pardeftab720\sa280\partightenfactor0
+{\field{\*\fldinst{HYPERLINK "https://abacusconsultingtech-my.sharepoint.com/personal/jcruz_abacus-consulting_net/Documents/Archivos%20de%20chat%20de%20Microsoft%20Teams/BUG_ADMIN_ORDERS_UNAUTHORIZED%201.md"}}{\fldrslt \cf3 \ul \ulc3 \strokec3 BUG_ADMIN_ORDERS_UNAUTHORIZED 1.md}}\
+\pard\pardeftab720\partightenfactor0
+\ls2\ilvl0\cf0 {\listtext	1	}\'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 En realidad, todos los gets en POSTMAN devuelven --> \{\
+\'a0\'a0\'a0 \cf5 \strokec5 "message"\cf0 \strokec2 : \cf6 \strokec6 "Unauthorized"\cf0 \strokec2 \
+\}\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 2. M\'f3dulo AUTH con todas las llamadas necesarias.\
+\pard\pardeftab720\sa280\partightenfactor0
+{\field{\*\fldinst{HYPERLINK "https://abacusconsultingtech-my.sharepoint.com/personal/jcruz_abacus-consulting_net/Documents/Archivos%20de%20chat%20de%20Microsoft%20Teams/AUTH_API_SPEC.md"}}{\fldrslt \cf3 \ul \ulc3 \strokec3 AUTH_API_SPEC.md}}\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 3. 1 M\'f3dulo de 
+\f2\b Tarificaci\'f3n y Aprobaci\'f3n de Productos: BACKEND_REQUIREMENTS
+\f0\b0 \
+\pard\pardeftab720\sa280\partightenfactor0
+
+\f2\b \cf0 Contenido:
+\f0\b0 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls3\ilvl0
+\f2\b \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Resumen ejecutivo:
+\f0\b0  Estado actual, prioridades P0/P1/P2\
+\ls3\ilvl0
+\f2\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Arquitectura de datos:
+\f0\b0  3 tablas con SQL completo\
+\pard\tx940\tx1440\pardeftab720\li1440\fi-1440\partightenfactor0
+\ls3\ilvl1
+\f1 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 custom_product_proposals
+\f0  (propuestas de productos)\
+\ls3\ilvl1
+\f1 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 sellers
+\f0  extended (a\'f1adir global_markup_percentage)\
+\ls3\ilvl1
+\f1 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 seller_markup_history
+\f0  (tracking cambios)\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls3\ilvl0
+\f2\b \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 20 endpoints especificados:
+\f0\b0 \
+\pard\tx940\tx1440\pardeftab720\li1440\fi-1440\partightenfactor0
+\ls3\ilvl1\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 4 Auth endpoints\
+\ls3\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 3 Admin standard\
+\ls3\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 6 Admin custom (pricing)\
+\ls3\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 3 Vendor custom (pricing)\
+\ls3\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 4 Store public\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls3\ilvl0
+\f2\b \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Request/Response completos
+\f0\b0  para cada endpoint\
+\ls3\ilvl0
+\f2\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Datos de ejemplo:
+\f0\b0  4 sellers, 10 productos, 5 history entries\
+\ls3\ilvl0
+\f2\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Seguridad:
+\f0\b0  Autenticaci\'f3n, permisos, validaciones, rate limiting\
+\ls3\ilvl0
+\f2\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Testing checklist
+\f0\b0  por fase\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+{\field{\*\fldinst{HYPERLINK "https://abacusconsultingtech-my.sharepoint.com/personal/jcruz_abacus-consulting_net/Documents/Archivos%20de%20chat%20de%20Microsoft%20Teams/BACKEND_REQUIREMENTS.md"}}{\fldrslt \cf3 \ul \ulc3 \strokec3 BACKEND_REQUIREMENTS.md}}\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 3. 2 M\'f3dulo de 
+\f2\b Tarificaci\'f3n y Aprobaci\'f3n de Productos: BACKEND_SQL_MIGRATIONS
+\f0\b0 \
+\pard\pardeftab720\sa280\partightenfactor0
+
+\f2\b \cf0 Contenido:
+\f0\b0 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls4\ilvl0
+\f2\b \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 3 Migrations completas
+\f0\b0  con CREATE TABLE\
+\ls4\ilvl0
+\f2\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Queries optimizadas
+\f0\b0  para cada endpoint (10 queries)\
+\ls4\ilvl0
+\f2\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Triggers & Functions:
+\f0\b0 \
+\pard\tx940\tx1440\pardeftab720\li1440\fi-1440\partightenfactor0
+\ls4\ilvl1\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Auto-update 
+\f1 updated_at
+\f0 \
+\ls4\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Auto-insert markup history\
+\ls4\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Calculate final price\
+\ls4\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Get applied markup\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls4\ilvl0
+\f2\b \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 \'cdndices de performance
+\f0\b0  (12 \'edndices)\
+\ls4\ilvl0
+\f2\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Data seeding scripts:
+\f0\b0 \
+\pard\tx940\tx1440\pardeftab720\li1440\fi-1440\partightenfactor0
+\ls4\ilvl1\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Admin users (2)\
+\ls4\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Sellers (4)\
+\ls4\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Vendor members (4)\
+\ls4\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Product proposals (10)\
+\ls4\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Producto con variantes (ejemplo JSONB)\
+\ls4\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Markup history (5)\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls4\ilvl0
+\f2\b \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Testing queries
+\f0\b0  (EXPLAIN ANALYZE, validaciones)\
+\ls4\ilvl0
+\f2\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Rollback scripts
+\f0\b0 \
+\pard\pardeftab720\sa280\partightenfactor0
+{\field{\*\fldinst{HYPERLINK "https://abacusconsultingtech-my.sharepoint.com/personal/jcruz_abacus-consulting_net/Documents/Archivos%20de%20chat%20de%20Microsoft%20Teams/BACKEND_SQL_MIGRATIONS.md"}}{\fldrslt \cf3 \ul \ulc3 \strokec3 BACKEND_SQL_MIGRATIONS.md}}\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 3.3 M\'f3dulo de 
+\f2\b Tarificaci\'f3n y Aprobaci\'f3n de Productos: BACKEND_CODE_EXAMPLES
+\f0\b0 \
+\pard\pardeftab720\sa280\partightenfactor0
+
+\f2\b \cf0 Contenido:
+\f0\b0 \
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls5\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 \'a0
+\f2\b Estructura de carpetas
+\f0\b0  sugerida\
+\ls5\ilvl0\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 \'a0
+\f2\b 2 Servicios completos:
+\f0\b0 \
+\pard\tx940\tx1440\pardeftab720\li1440\fi-1440\partightenfactor0
+\ls5\ilvl1
+\f1 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 ProductPricingService
+\f0  (~300 l\'edneas)\
+\pard\tx1660\tx2160\pardeftab720\li2160\fi-2160\partightenfactor0
+\ls5\ilvl2\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9642 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 getPendingProducts()\
+\ls5\ilvl2\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9642 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 proposeProduct()\
+\ls5\ilvl2\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9642 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 approveProduct()\
+\ls5\ilvl2\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9642 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 rejectProduct()\
+\ls5\ilvl2\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9642 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 getVendorProducts()\
+\pard\tx940\tx1440\pardeftab720\li1440\fi-1440\partightenfactor0
+\ls5\ilvl1
+\f1 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 SellerMarkupService
+\f0  (~200 l\'edneas)\
+\pard\tx1660\tx2160\pardeftab720\li2160\fi-2160\partightenfactor0
+\ls5\ilvl2\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9642 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 getAllSellers()\
+\ls5\ilvl2\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9642 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 getSellerMarkup()\
+\ls5\ilvl2\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9642 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 updateSellerMarkup()\
+\ls5\ilvl2\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9642 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 getMarkupHistory()\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls5\ilvl0
+\f2\b \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 9 API Routes
+\f0\b0  (Medusa v2 style):\
+\pard\tx940\tx1440\pardeftab720\li1440\fi-1440\partightenfactor0
+\ls5\ilvl1\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 GET /admin/custom/products/pending\
+\ls5\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 PATCH /admin/custom/products/:id/pricing-approval\
+\ls5\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 GET /admin/custom/sellers\
+\ls5\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 GET/PATCH /admin/custom/sellers/:id/markup\
+\ls5\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 GET /admin/custom/sellers/:id/markup/history\
+\ls5\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 GET/POST /vendor/custom/products\
+\ls5\ilvl1\kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u9702 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 GET /vendor/custom/sellers/me/markup\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls5\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 \'a0
+\f2\b Test examples
+\f0\b0  (Jest)\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls5\ilvl0
+\f2\b \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Postman Collection
+\f0\b0  (JSON completo)\
+\ls5\ilvl0
+\f2\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Middleware:
+\f0\b0  Autenticaci\'f3n, rate limiting\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls5\ilvl0\cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	\uc0\u8226 	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 \'a0
+\f2\b Debugging tips
+\f0\b0 \
+\pard\pardeftab720\sa280\partightenfactor0
+{\field{\*\fldinst{HYPERLINK "https://abacusconsultingtech-my.sharepoint.com/personal/jcruz_abacus-consulting_net/Documents/Archivos%20de%20chat%20de%20Microsoft%20Teams/BACKEND_CODE_EXAMPLES.md"}}{\fldrslt \cf3 \ul \ulc3 \strokec3 BACKEND_CODE_EXAMPLES.md}}\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 Juantxo eL m\'f3dulo ya est\'e1 hecho\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0
+\f2\b\fs42 \
+\pard\pardeftab720\sa348\partightenfactor0
+\cf0 Pr\'f3ximos Pasos para Backend\
+\pard\tx220\tx720\pardeftab720\li720\fi-720\partightenfactor0
+\ls6\ilvl0
+\fs28 \cf0 \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	1	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Leer 
+\f3 README.md
+\f0\b0  (5 min)\
+\ls6\ilvl0
+\f2\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	2	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Revisar 
+\f3 BACKEND_CHECKLIST.md
+\f0\b0  (10 min)\
+\ls6\ilvl0
+\f2\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	3	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 D\'eda 1:
+\f0\b0  Fix autenticaci\'f3n 401 \uc0\u8592  
+\f2\b BLOQUEANTE
+\f0\b0 \
+\ls6\ilvl0
+\f2\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	4	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 D\'eda 2-5:
+\f0\b0  Seguir checklist paso a paso\
+\ls6\ilvl0
+\f2\b \kerning1\expnd0\expndtw0 \outl0\strokewidth0 {\listtext	5	}\expnd0\expndtw0\kerning0
+\outl0\strokewidth0 \strokec2 Validar en:
+\f0\b0  {\field{\*\fldinst{HYPERLINK "http://localhost:3000/admin/dev-tools"}}{\fldrslt \cf3 \ul \ulc3 \strokec3 http://localhost:3000/admin/dev-tools}}\
+\pard\pardeftab720\sa280\partightenfactor0
+{\field{\*\fldinst{HYPERLINK "https://abacusconsultingtech-my.sharepoint.com/personal/jcruz_abacus-consulting_net/Documents/Archivos%20de%20chat%20de%20Microsoft%20Teams/README%202.md"}}{\fldrslt \cf3 \ul \ulc3 \strokec3 README 2.md}}\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 As\'ed no se puede trabajar \
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 Una cosa es que mandes errores y otra cosa es que me digas que hay que rehacer el trabajo \
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 El front decidiendo \
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 Nooo, Hay que revisar punto por punto juntos!\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 Terminado el front seg\'fan las especificaciones que vimos esta ma\'f1ana!\'a0\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 hacen falta los endpoints!\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 Lo vemos el lunes. Pero el proceso de aprobaci\'f3n y tarificaci\'f3n en el proceso en teor\'eda funciona est\'e1 probado. Puede haber fallos y necesidades concretas \
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 Y yo a ti no te doy c\'f3digo, por favor no hagas eso\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 Ahora te paso el \'a0front y lo ves. Todo mockup porque el auth fallaba todo el d\'eda y no puedo ni logearme.\'a0\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 Ahh ahora lo entiendo \
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0\
+\pard\pardeftab720\sa280\partightenfactor0
+\cf0 No, as\'ed no\
+\pard\pardeftab720\partightenfactor0
+\cf0 \'a0}

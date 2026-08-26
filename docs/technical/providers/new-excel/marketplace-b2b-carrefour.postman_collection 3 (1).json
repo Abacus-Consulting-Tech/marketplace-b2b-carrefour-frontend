@@ -1,0 +1,1985 @@
+{
+  "info": {
+    "name": "Marketplace B2B Carrefour - Front to Back API",
+    "description": "Collection to validate frontend to backend communication for the Marketplace B2B Carrefour monorepo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_postman_id": "9d5e12c5-3e68-4aa3-8b7f-2ea9ac54a101"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://marketplace-b2b-backend-dev.onrender.com"
+    },
+    {
+      "key": "publishableApiKey",
+      "value": "pk_15f89d436badff43c2366d014c88536fa0307e92aeaeab294a2ee1d29710e1b9"
+    },
+    {
+      "key": "adminEmail",
+      "value": "acano@abacus-consulting.net"
+    },
+    {
+      "key": "adminPassword",
+      "value": ""
+    },
+    {
+      "key": "localReplicaPassword",
+      "value": "supersecret"
+    },
+    {
+      "key": "localAdminEmail",
+      "value": "admin@carrefour.dev"
+    },
+    {
+      "key": "sellerEmail",
+      "value": "seller@mercur.dev"
+    },
+    {
+      "key": "kickzEmail",
+      "value": "kickz@mercur.dev"
+    },
+    {
+      "key": "trailheadEmail",
+      "value": "trailhead@mercur.dev"
+    },
+    {
+      "key": "jwtToken",
+      "value": ""
+    },
+    {
+      "key": "regionId",
+      "value": "reg_01M0AAYKP7T4XSM0PWRYHQF0BE"
+    },
+    {
+      "key": "productId",
+      "value": ""
+    },
+    {
+      "key": "variantId",
+      "value": ""
+    },
+    {
+      "key": "offerId",
+      "value": "offer_01M0A8E9YRDJSM66S4TD4FPHR9"
+    },
+    {
+      "key": "cartId",
+      "value": ""
+    },
+    {
+      "key": "lineItemId",
+      "value": ""
+    },
+    {
+      "key": "shippingOptionId",
+      "value": ""
+    },
+    {
+      "key": "orderId",
+      "value": ""
+    },
+    {
+      "key": "sellerId",
+      "value": "sel_01M0A89ET1F5NBDER95X09ZPES"
+    },
+    {
+      "key": "customerEmail",
+      "value": "franchisee@test.com"
+    },
+    {
+      "key": "registerEmail",
+      "value": "newuser@example.com"
+    },
+    {
+      "key": "registerPassword",
+      "value": "password123"
+    },
+    {
+      "key": "sellerToken",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "sellerPassword",
+      "value": "DevSeller123!",
+      "type": "string"
+    },
+    {
+      "key": "importJobId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "importFilePath",
+      "value": "docs/Plantilla_ejemplo_proveedores_carga_productos.xlsx",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "0 - Health",
+      "item": [
+        {
+          "name": "GET /health",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/health",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "health"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "1 - Auth (frontend)",
+      "item": [
+        {
+          "name": "POST /auth/user/emailpass (login)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = {};",
+                  "try { body = pm.response.json(); } catch (e) {}",
+                  "const token = body.token || body.access_token || body.jwt || '';",
+                  "if (token) {",
+                  "  pm.collectionVariables.set('jwtToken', token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/user/emailpass",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "user",
+                "emailpass"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/forgot-password",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{registerEmail}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/forgot-password",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "forgot-password"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/register",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{registerEmail}}\",\n  \"password\": \"{{registerPassword}}\",\n  \"name\": \"John Doe\",\n  \"phone\": \"+34 600 000 000\",\n  \"role\": \"franchisee\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/register",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "register"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2 - Store Catalog",
+      "item": [
+        {
+          "name": "GET /store/regions",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/store/regions",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "regions"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /store/custom",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/store/custom",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "custom"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /store/products",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = {};",
+                  "try { body = pm.response.json(); } catch (e) {}",
+                  "const first = body.products && body.products[0];",
+                  "if (first && first.id) pm.collectionVariables.set('productId', first.id);",
+                  "const variant = first && first.variants && first.variants[0];",
+                  "if (variant && variant.id) pm.collectionVariables.set('variantId', variant.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/store/products?limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /store/products/{id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/store/products/{{productId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "products",
+                "{{productId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3 - Store Cart and Checkout",
+      "item": [
+        {
+          "name": "POST /store/carts",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = {};",
+                  "try { body = pm.response.json(); } catch (e) {}",
+                  "const cartId = body.cart && body.cart.id;",
+                  "if (cartId) pm.collectionVariables.set('cartId', cartId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"region_id\": \"{{regionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/store/carts",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "carts"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /store/carts/{cartId}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/store/carts/{{cartId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "carts",
+                "{{cartId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /store/carts/{cartId}/line-items",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = {};",
+                  "try { body = pm.response.json(); } catch (e) {}",
+                  "const cart = body.cart || body.parent || {};",
+                  "const first = cart.items && cart.items[0];",
+                  "if (first && first.id) pm.collectionVariables.set('lineItemId', first.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"offer_id\": \"{{offerId}}\",\n  \"quantity\": 2\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/store/carts/{{cartId}}/line-items",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "carts",
+                "{{cartId}}",
+                "line-items"
+              ]
+            },
+            "description": "Mercur cart items are added with offer_id, not variant_id."
+          },
+          "response": []
+        },
+        {
+          "name": "POST /store/carts/{cartId}/line-items/{lineItemId}",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 5\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/store/carts/{{cartId}}/line-items/{{lineItemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "carts",
+                "{{cartId}}",
+                "line-items",
+                "{{lineItemId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "DELETE /store/carts/{cartId}/line-items/{lineItemId}",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/store/carts/{{cartId}}/line-items/{{lineItemId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "carts",
+                "{{cartId}}",
+                "line-items",
+                "{{lineItemId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /store/carts/{cartId}",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{customerEmail}}\",\n  \"shipping_address\": {\n    \"first_name\": \"Juan\",\n    \"last_name\": \"Perez\",\n    \"address_1\": \"Calle Mayor 123\",\n    \"city\": \"Madrid\",\n    \"postal_code\": \"28001\",\n    \"country_code\": \"es\"\n  }\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/store/carts/{{cartId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "carts",
+                "{{cartId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /store/shipping-options?cart_id={cartId}",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = {};",
+                  "try { body = pm.response.json(); } catch (e) {}",
+                  "const grouped = body.shipping_options || {};",
+                  "const groups = Object.keys(grouped);",
+                  "if (!groups.length) return;",
+                  "const firstGroup = grouped[groups[0]] || [];",
+                  "const first = firstGroup[0];",
+                  "if (first && first.id) pm.collectionVariables.set('shippingOptionId', first.id);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/store/shipping-options?cart_id={{cartId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "shipping-options"
+              ],
+              "query": [
+                {
+                  "key": "cart_id",
+                  "value": "{{cartId}}"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /store/carts/{cartId}/shipping-methods",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"option_id\": \"{{shippingOptionId}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/store/carts/{{cartId}}/shipping-methods",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "carts",
+                "{{cartId}}",
+                "shipping-methods"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /store/carts/{cartId}/complete",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = {};",
+                  "try { body = pm.response.json(); } catch (e) {}",
+                  "const orderId = body.order && body.order.id;",
+                  "if (orderId) pm.collectionVariables.set('orderId', orderId);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/store/carts/{{cartId}}/complete",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "carts",
+                "{{cartId}}",
+                "complete"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /store/orders/{id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "x-publishable-api-key",
+                "value": "{{publishableApiKey}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/store/orders/{{orderId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "store",
+                "orders",
+                "{{orderId}}"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4 - Admin",
+      "item": [
+        {
+          "name": "POST /auth/user/emailpass (save jwtToken)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = {};",
+                  "try { body = pm.response.json(); } catch (e) {}",
+                  "const token = body.token || body.access_token || body.jwt || '';",
+                  "if (token) {",
+                  "  pm.collectionVariables.set('jwtToken', token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/user/emailpass",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "user",
+                "emailpass"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/users/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/users/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "users",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/orders",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/orders",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "orders"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/api-keys",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"frontend-dev\",\n  \"type\": \"publishable\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/api-keys",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "api-keys"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/custom",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/custom",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "custom"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "5 - Proveedores",
+      "item": [
+        {
+          "name": "GET /admin/sellers",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/sellers?limit=50",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "sellers"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/sellers/{id}",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/sellers/{{sellerId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "sellers",
+                "{{sellerId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/sellers/{id}/address",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/sellers/{{sellerId}}/address",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "sellers",
+                "{{sellerId}}",
+                "address"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/sellers/{id}/professional-details",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/sellers/{{sellerId}}/professional-details",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "sellers",
+                "{{sellerId}}",
+                "professional-details"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/sellers/{id}/members",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/sellers/{{sellerId}}/members",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "sellers",
+                "{{sellerId}}",
+                "members"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/sellers/{id}/products",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/sellers/{{sellerId}}/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "sellers",
+                "{{sellerId}}",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /vendor/sellers/me",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/sellers/me",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "sellers",
+                "me"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /vendor/sellers/select",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/sellers/select",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "sellers",
+                "select"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "6 - Proveedor: Propuesta de Productos",
+      "item": [
+        {
+          "name": "POST /auth/member/emailpass — Login proveedor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const t = pm.response.json().token;",
+                  "  if (t) pm.collectionVariables.set('sellerToken', t);",
+                  "} catch(e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{sellerEmail}}\",\n  \"password\": \"{{sellerPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/member/emailpass",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "member",
+                "emailpass"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /vendor/sellers — Obtener seller_id",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const id = pm.response.json().seller_members[0].seller_id;",
+                  "  if (id) pm.collectionVariables.set('sellerId', id);",
+                  "} catch(e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sellerToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/sellers",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "sellers"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /vendor/custom/products — Mis productos",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sellerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "x-seller-id",
+                "value": "{{sellerId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/custom/products?limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "custom",
+                "products"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /vendor/custom/products — Proponer producto (sin variantes)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const v = pm.response.json().product.id;",
+                  "  if (v) pm.collectionVariables.set('productId', v);",
+                  "} catch(e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sellerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "x-seller-id",
+                "value": "{{sellerId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Polo Corporativo Carrefour\",\n  \"description\": \"Polo de manga corta con logo bordado. 100% algodón.\",\n  \"base_price\": 18.5,\n  \"units_per_pack\": 1\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/custom/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "custom",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /vendor/custom/products — Proponer producto con variantes",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const v = pm.response.json().product.id;",
+                  "  if (v) pm.collectionVariables.set('productId', v);",
+                  "} catch(e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sellerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "x-seller-id",
+                "value": "{{sellerId}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"Guantes Desechables\",\n  \"description\": \"Caja 100 uds\",\n  \"base_price\": 7.5,\n  \"units_per_pack\": 100,\n  \"variants\": [\n    {\n      \"title\": \"Talla S\",\n      \"base_price\": 7.5,\n      \"sku\": \"GUANTES-S\"\n    },\n    {\n      \"title\": \"Talla M\",\n      \"base_price\": 7.5,\n      \"sku\": \"GUANTES-M\"\n    },\n    {\n      \"title\": \"Talla L\",\n      \"base_price\": 8.0,\n      \"sku\": \"GUANTES-L\"\n    }\n  ]\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/custom/products",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "custom",
+                "products"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "7 - Admin: Tarificación de Productos",
+      "item": [
+        {
+          "name": "POST /auth/user/emailpass — Login admin tarificador",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "try {",
+                  "  const t = pm.response.json().token;",
+                  "  if (t) pm.collectionVariables.set('jwtToken', t);",
+                  "} catch(e) {}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/user/emailpass",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "user",
+                "emailpass"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/custom/products/pending — Productos pendientes de tarificación",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/custom/products/pending?limit=50&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "custom",
+                "products",
+                "pending"
+              ],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "50"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                },
+                {
+                  "key": "seller_id",
+                  "value": "",
+                  "disabled": true,
+                  "description": "Filtrar por proveedor (opcional)"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /admin/custom/products/:id/pricing-approval — APROBAR con markup",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"approved\",\n  \"markup_percentage\": 15\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/custom/products/{{productId}}/pricing-approval",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "custom",
+                "products",
+                "{{productId}}",
+                "pricing-approval"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /admin/custom/products/:id/pricing-approval — RECHAZAR con motivo",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"rejected\",\n  \"rejection_reason\": \"Precio base superior al acuerdo marco. Revisar y reenviar.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/custom/products/{{productId}}/pricing-approval",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "custom",
+                "products",
+                "{{productId}}",
+                "pricing-approval"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/custom/sellers/:id/markup — Ver markup global del seller",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/custom/sellers/{{sellerId}}/markup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "custom",
+                "sellers",
+                "{{sellerId}}",
+                "markup"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH /admin/custom/sellers/:id/markup — Fijar markup global del seller",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"global_markup_percentage\": 10\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/custom/sellers/{{sellerId}}/markup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "custom",
+                "sellers",
+                "{{sellerId}}",
+                "markup"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "8 - Carga masiva productos Excel",
+      "description": "Flujo autenticado de carga masiva: plantilla Excel, upload async, consulta de jobs y cierre del bypass publico.",
+      "item": [
+        {
+          "name": "POST /auth/user/emailpass — Login admin import",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = {};",
+                  "try { body = pm.response.json(); } catch (e) {}",
+                  "const token = body.token || body.access_token || body.jwt || '';",
+                  "if (token) {",
+                  "  pm.collectionVariables.set('jwtToken', token);",
+                  "  pm.environment.set('jwtToken', token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{adminEmail}}\",\n  \"password\": \"{{adminPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/user/emailpass",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "user",
+                "emailpass"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/custom/products/import/template — Descargar plantilla admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/custom/products/import/template",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "custom",
+                "products",
+                "import",
+                "template"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /admin/custom/products/import — Subir Excel admin",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = {};",
+                  "try { body = pm.response.json(); } catch (e) {}",
+                  "if (body.job_id) {",
+                  "  pm.collectionVariables.set('importJobId', body.job_id);",
+                  "  pm.environment.set('importJobId', body.job_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "seller_id",
+                  "value": "{{sellerId}}",
+                  "type": "text"
+                },
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "{{importFilePath}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/admin/custom/products/import",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "custom",
+                "products",
+                "import"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/custom/products/import — Listar jobs admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/custom/products/import?seller_id={{sellerId}}&limit=20&offset=0",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "custom",
+                "products",
+                "import"
+              ],
+              "query": [
+                {
+                  "key": "seller_id",
+                  "value": "{{sellerId}}"
+                },
+                {
+                  "key": "limit",
+                  "value": "20"
+                },
+                {
+                  "key": "offset",
+                  "value": "0"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /admin/custom/products/import/:id — Detalle job admin",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{jwtToken}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/admin/custom/products/import/{{importJobId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "admin",
+                "custom",
+                "products",
+                "import",
+                "{{importJobId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /auth/member/emailpass — Login proveedor import",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = {};",
+                  "try { body = pm.response.json(); } catch (e) {}",
+                  "const token = body.token || body.access_token || body.jwt || '';",
+                  "if (token) {",
+                  "  pm.collectionVariables.set('sellerToken', token);",
+                  "  pm.environment.set('sellerToken', token);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"{{sellerEmail}}\",\n  \"password\": \"{{localReplicaPassword}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/auth/member/emailpass",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "auth",
+                "member",
+                "emailpass"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /vendor/custom/products/import/template — Descargar plantilla proveedor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sellerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "x-seller-id",
+                "value": "{{sellerId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/custom/products/import/template",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "custom",
+                "products",
+                "import",
+                "template"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /vendor/custom/products/import — Subir Excel proveedor",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "let body = {};",
+                  "try { body = pm.response.json(); } catch (e) {}",
+                  "if (body.job_id) {",
+                  "  pm.collectionVariables.set('importJobId', body.job_id);",
+                  "  pm.environment.set('importJobId', body.job_id);",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sellerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "x-seller-id",
+                "value": "{{sellerId}}",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "type": "file",
+                  "src": "{{importFilePath}}"
+                }
+              ]
+            },
+            "url": {
+              "raw": "{{baseUrl}}/vendor/custom/products/import",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "custom",
+                "products",
+                "import"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "GET /vendor/custom/products/import/:id — Detalle job proveedor",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{sellerToken}}",
+                "type": "text"
+              },
+              {
+                "key": "x-seller-id",
+                "value": "{{sellerId}}",
+                "type": "text"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/vendor/custom/products/import/{{importJobId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "vendor",
+                "custom",
+                "products",
+                "import",
+                "{{importJobId}}"
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "POST /custom/products/import — Debe devolver 404",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json",
+                "type": "text"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/custom/products/import",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "custom",
+                "products",
+                "import"
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
