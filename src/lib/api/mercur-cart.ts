@@ -11,8 +11,12 @@ import {
   type MercurCartAddress,
 } from '@/lib/api/mercur-store-client'
 import { mapMercurCartToCartState } from '@/lib/api/mercur-mappers'
+import { featureFlags } from '@/config/feature-flags'
 
-export const isMercurCartEnabled = () => process.env.NEXT_PUBLIC_CART_SOURCE === 'mercur'
+export const isMercurCartEnabled = () =>
+  process.env.NEXT_PUBLIC_CART_SOURCE === 'mercur' &&
+  !featureFlags.shouldUseMock('catalog') &&
+  !featureFlags.shouldUseMock('checkout')
 
 export const addProductToMercurCart = async ({
   product,

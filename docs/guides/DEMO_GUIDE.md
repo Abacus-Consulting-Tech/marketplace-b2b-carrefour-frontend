@@ -48,9 +48,9 @@ Tener a mano estas credenciales para la demo:
 
 | Rol | Email | Password |
 |-----|-------|----------|
-| **Admin** | admin@carrefour.es | admin123 |
-| **Franquiciado** | franchisee@carrefour.es | franchisee123 |
-| **Proveedor / Seller** | seller@mercur.dev | supersecret |
+| **Admin** | admin@test.com | admin123 |
+| **Franquiciado** | franchisee@test.com | franchisee123 |
+| **Proveedor / Supplier** | supplier@test.com | supplier123 |
 
 ### 3. URLs Clave a Favoritar
 
@@ -67,7 +67,7 @@ Tener a mano estas credenciales para la demo:
 
 ### Login
 1. Ir a `http://localhost:3000`
-2. **Email**: `admin@carrefour.es`
+2. **Email**: `admin@test.com`
 3. **Password**: `admin123`
 4. Click **"Iniciar Sesión"**
 
@@ -248,7 +248,7 @@ Tener a mano estas credenciales para la demo:
 
 ### Cerrar sesión de Admin y login como Franquiciado
 
-📧 **Email**: `franchisee@carrefour.es`  
+📧 **Email**: `franchisee@test.com`  
 🔑 **Password**: `franchisee123`
 
 ---
@@ -401,8 +401,8 @@ Tener a mano estas credenciales para la demo:
 
 ### Cerrar sesión y login como Proveedor
 
-📧 **Email**: `seller@mercur.dev`  
-🔑 **Password**: `supersecret`
+📧 **Email**: `supplier@test.com`  
+🔑 **Password**: `supplier123`
 
 ---
 
