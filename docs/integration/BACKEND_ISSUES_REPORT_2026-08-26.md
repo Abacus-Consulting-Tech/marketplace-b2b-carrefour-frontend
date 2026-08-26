@@ -10,12 +10,21 @@
 
 ## Executive Summary
 
-During backend API validation for Orders, Quotes, and Admin modules, we identified **3 critical RBAC permission issues** that are blocking full integration:
+During backend API validation for Orders, Quotes, and Admin modules, we identified **4 critical issues** that are blocking full integration:
 
-- **2 endpoints** return `403 Forbidden` for `/admin/customers/*` (should be accessible by admin users)
+- **2 endpoints** return `403 Forbidden` for `/admin/customers/*` (RBAC issue)
 - **1 endpoint** returns `403 Forbidden` for `/admin/orders/stats` (workaround exists)
+- **ALL endpoints** blocked by CORS policy when accessed from browser at `http://localhost:3000` 🔴 **CRITICAL**
 
-All issues are related to **Role-Based Access Control (RBAC)** configuration. Admin users are being denied access to endpoints they should have permissions for.
+**CORS Issue Impact:**
+- ✅ All endpoints work correctly via curl/Postman (validated 39 endpoints)
+- ❌ Browser blocks ALL requests due to missing CORS headers
+- ❌ Frontend cannot integrate real API in development or production
+- 🔴 **BLOCKER** - Must be fixed before production deployment
+
+**RBAC Issues:**
+- 2 issues related to **Role-Based Access Control (RBAC)** configuration
+- Admin users denied access to endpoints they should have permissions for
 
 ---
 
@@ -145,6 +154,93 @@ curl -X GET 'https://marketplace-b2b-backend-dev.onrender.com/admin/custom/order
 
 ---
 
+### Issue #3: CORS Policy Blocking Browser Requests
+
+**Affected Endpoints:**
+- ALL endpoints when accessed from browser at `http://localhost:3000`
+- Specifically impacting: `/franchisee/orders`, `/admin/orders`, and other frontend features
+
+**Current Behavior:**
+```http
+GET https://marketplace-b2b-backend-dev.onrender.com/franchisee/orders
+Origin: http://localhost:3000
+Authorization: Bearer {token}
+
+Response: 200 OK (but CORS headers missing)
+Error in Browser Console:
+"Origin http://localhost:3000 is not allowed by Access-Control-Allow-Origin"
+```
+
+**Expected Behavior:**
+- Backend should include CORS headers allowing `http://localhost:3000` origin
+- Response should include:
+  ```
+  Access-Control-Allow-Origin: http://localhost:3000
+  Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS
+  Access-Control-Allow-Headers: Authorization, Content-Type, x-seller-id, x-publishable-api-key
+  Access-Control-Allow-Credentials: true
+  ```
+
+**Technical Details:**
+- ✅ Endpoint works correctly via curl/Postman (no CORS enforcement)
+- ✅ Returns proper 200 OK response with valid data
+- ❌ Browser blocks response due to missing CORS headers
+- ❌ Frontend cannot access response data in browser
+
+**Impact:**
+- 🔴 **CRITICAL** - Blocks ALL real API integration from browser
+- ❌ Frontend must remain in mock mode for all modules
+- ❌ End-to-end testing impossible from development environment
+- ⚠️ Will also affect production deployment if not fixed
+
+**Recommended Fix:**
+Add CORS configuration to backend (Medusa/Express):
+
+```typescript
+// medusa-config.js or CORS middleware
+module.exports = {
+  // ... other config
+  projectConfig: {
+    // ... other config
+    store_cors: process.env.STORE_CORS || "http://localhost:3000,http://localhost:8000",
+    admin_cors: process.env.ADMIN_CORS || "http://localhost:3000,http://localhost:7001,http://localhost:9000",
+  },
+  // Or via custom middleware:
+  /*
+  cors: {
+    origin: ["http://localhost:3000", "https://marketplace-b2b-carrefour.vercel.app"],
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Authorization", "Content-Type", "x-seller-id", "x-publishable-api-key"],
+  }
+  */
+}
+```
+
+**Immediate Workaround:**
+- Frontend remains in mock mode until CORS is configured
+- Use `NEXT_PUBLIC_MOCK_ORDERS=true` (default) to keep using mock data
+- API validation continues via curl/server-side testing
+
+**Test Command (shows CORS issue):**
+```bash
+# This works in terminal (no CORS):
+curl -X GET 'https://marketplace-b2b-backend-dev.onrender.com/franchisee/orders' \
+  -H 'Authorization: Bearer {token}'
+# Returns: 200 OK with data
+
+# This fails in browser (CORS enforced):
+# Open browser console at http://localhost:3000 and run:
+fetch('https://marketplace-b2b-backend-dev.onrender.com/franchisee/orders', {
+  headers: { 'Authorization': 'Bearer {token}' }
+})
+# Error: "Origin http://localhost:3000 is not allowed by Access-Control-Allow-Origin"
+```
+
+**Priority:** 🔴 **CRITICAL - Required for production**
+
+---
+
 ## ✅ Working Endpoints (For Reference)
 
 These endpoints work correctly with same admin credentials:
@@ -245,6 +341,14 @@ Frontend team has created automated test script:
 
 ## 📊 Impact Assessment
 
+### Critical Priority (Production Blocker)
+- 🔴 **CORS Policy Missing** - ALL endpoints blocked in browser
+  - Affects: ALL modules trying to use real API
+  - Workaround: Frontend using mock data for all modules
+  - Business Impact: **Cannot deploy to production without CORS fix**
+  - Technical Impact: 39 validated endpoints cannot be used from browser
+  - Status: ✅ Endpoints work (curl validated), ❌ Browser blocked (CORS missing)
+
 ### High Priority (Blocking)
 - ❌ **Franchisee Management** - Cannot access customer data
   - Affects: Admin dashboard, customer CRUD operations
@@ -270,18 +374,25 @@ Frontend team has created automated test script:
 
 ### Immediate Actions Needed
 
-1. **Fix RBAC for `/admin/customers` endpoints** (CRITICAL)
+1. **Fix CORS Configuration** (🔴 CRITICAL - PRODUCTION BLOCKER)
+   - Add `http://localhost:3000` to allowed origins for development
+   - Add `https://marketplace-b2b-carrefour.vercel.app` for production
+   - Configure CORS headers: `Access-Control-Allow-Origin`, `Access-Control-Allow-Headers`, `Access-Control-Allow-Credentials`
+   - Test from browser console to confirm CORS headers present
+   - **Priority:** HIGHEST - Required before any production deployment
+
+2. **Fix RBAC for `/admin/customers` endpoints** (CRITICAL)
    - Grant `customers:read` permission to admin role
    - Test with admin@carrefour.dev credentials
    - Confirm fix by testing both list and detail endpoints
 
-2. **Clarify `/admin/orders/stats` status** (MEDIUM)
+3. **Clarify `/admin/orders/stats` status** (MEDIUM)
    - Option A: Fix RBAC and keep both endpoints
    - Option B: Deprecate `/admin/orders/stats`, document custom endpoint
    - Let frontend team know which endpoint to use long-term
 
-3. **Validation Response**
-   - Test all 3 affected endpoints
+4. **Validation Response**
+   - Test all affected endpoints (CORS + RBAC)
    - Provide updated API documentation
    - Confirm which endpoints should work vs which should be deprecated
 
@@ -290,6 +401,12 @@ Frontend team has created automated test script:
 Please reply with:
 ```markdown
 ## Endpoint Fix Status
+
+### CORS Configuration
+- [ ] Added http://localhost:3000 to allowed origins
+- [ ] Added https://marketplace-b2b-carrefour.vercel.app to allowed origins  
+- [ ] CORS headers configured (Access-Control-Allow-*)
+- [ ] Tested from browser console - CORS errors resolved
 
 ### GET /admin/customers
 - [ ] RBAC permissions updated
