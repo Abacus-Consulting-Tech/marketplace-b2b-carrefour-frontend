@@ -5,21 +5,23 @@
  * Muestra detalles del pedido y próximos pasos
  */
 
+'use client'
+
+import { useEffect } from 'react'
 import Link from 'next/link'
+import { useSearchParams } from 'next/navigation'
 import { CheckCircle, Package, ArrowRight } from 'lucide-react'
+import { useCartStore } from '@/lib/store/cart'
 
-interface SuccessPageProps {
-  searchParams: {
-    orderId?: string
-    display_id?: string
-  }
-}
+export default function CheckoutSuccessPage() {
+  const searchParams = useSearchParams()
+  const clearCart = useCartStore((state) => state.clearCart)
+  const orderId = searchParams.get('orderId') || 'unknown'
+  const displayId = searchParams.get('display_id') || `CF-${orderId.slice(-5).toUpperCase()}`
 
-export default function CheckoutSuccessPage({ searchParams }: SuccessPageProps) {
-  const orderId = searchParams.orderId || 'unknown'
-  const displayId = searchParams.display_id || `CF-${orderId.slice(-5).toUpperCase()}`
-
-  console.log('🎉 Success page loaded (server) with order:', orderId)
+  useEffect(() => {
+    clearCart()
+  }, [clearCart])
 
   return (
     <div className="min-h-screen bg-gray-50 py-16">

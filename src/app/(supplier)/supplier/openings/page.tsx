@@ -183,7 +183,7 @@ export default function SupplierInvitationsPage() {
                       <Button
                         onClick={() =>
                           router.push(
-                            `/supplier/openings/${invitation.category_id}/quote`
+                            `/supplier/openings/${invitation.project_id}/quote/${invitation.category_id}`
                           )
                         }
                         className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -198,7 +198,7 @@ export default function SupplierInvitationsPage() {
                         variant="outline"
                         onClick={() =>
                           router.push(
-                            `/supplier/openings/${invitation.category_id}/quote`
+                            `/supplier/openings/${invitation.project_id}/quote/${invitation.category_id}`
                           )
                         }
                       >

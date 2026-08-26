@@ -14,8 +14,7 @@ import {
   SelectContent,
   SelectItem,
   SelectTrigger,
-  SelectValue,  GET /admin/products/prod_001?expand=variants,images,categories,supplier
-  Authorization: Bearer {token}
+  SelectValue,
 } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { AlertCircle, Save, ArrowLeft } from 'lucide-react';

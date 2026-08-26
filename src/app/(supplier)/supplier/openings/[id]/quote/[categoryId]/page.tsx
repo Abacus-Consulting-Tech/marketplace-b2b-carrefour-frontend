@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { openingsApi } from '@/lib/api/openings-client';
 import { QuoteForm } from '@/components/openings/supplier/QuoteForm';
+import ProjectDocumentsViewer from '@/components/openings/shared/ProjectDocumentsViewer';
 import type { SupplierInvitation, Quote } from '@/types/openings';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 export default function SupplierQuoteFormPage() {
   const params = useParams();
   const router = useRouter();
+  const id = params.id as string;
   const categoryId = params.categoryId as string;
   const { toast } = useToast();
 
@@ -120,8 +122,13 @@ export default function SupplierQuoteFormPage() {
             : 'Tu presupuesto ha sido enviado al administrador',
         });
 
-        // Redirect back to invitations
-        router.push('/supplier/openings');
+        if (isDraft) {
+          router.push('/supplier/openings');
+        } else {
+          const quoteId = response.data?.id;
+          const query = quoteId ? `?quoteId=${quoteId}` : '';
+          router.push(`/supplier/openings/${id}/quote/${categoryId}/success${query}`);
+        }
       } else {
         throw new Error(response.error || 'Error al guardar');
       }
@@ -246,6 +253,25 @@ export default function SupplierQuoteFormPage() {
           )}
         </CardContent>
       </Card>
+
+      {/* Technical Documents */}
+      {id && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Documentos Técnicos del Proyecto</CardTitle>
+            <CardDescription>
+              Especificaciones, planos y documentación técnica disponibles para referencia
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ProjectDocumentsViewer
+              projectId={id}
+              canDownload={true}
+              showCategoryFilter={true}
+            />
+          </CardContent>
+        </Card>
+      )}
 
       {/* Quote Form */}
       <QuoteForm

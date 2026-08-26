@@ -3,11 +3,11 @@
  * 
  * Comprehensive documentation of all Medusa API endpoints used in the application.
  * 
- * Endpoint Summary (Total: 122 endpoints):
+ * Endpoint Summary (Total: 150+ endpoints):
  * - Auth: 4 endpoints (Login, Logout, Session)
  * - Admin: 5 endpoints (Orders, Users, Sellers)
  * - Franchisees: 9 endpoints (Medusa Customers + Addresses CRUD)
- * - Openings: 8 endpoints (Projects, Categories, Quotes, Invitations)
+ * - Openings: 24 endpoints (Projects, Categories, Documents, Invitations, Quotes, Financing, Status)
  * - Pricing: 6 endpoints (Pending Products, Approval, Markup)
  * - Products (Admin): 8 endpoints (CRUD, Stats, Bulk Operations, Inventory)
  * - Catalog (Franchisee): 2 endpoints (Product List + Detail for Marketplace)
@@ -336,6 +336,174 @@ export default function DevToolsPage() {
         status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/admin/openings/projects/:id/quotes'
+      },
+      
+      // Document Management (NEW - 4 endpoints)
+      {
+        path: '/admin/openings/projects/:id/documents',
+        method: 'POST',
+        module: 'openings',
+        description: 'Subir documento/plano técnico al proyecto',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/openings/projects/:id/documents'
+      },
+      {
+        path: '/admin/openings/projects/:id/documents',
+        method: 'GET',
+        module: 'openings',
+        description: 'Listar documentos técnicos del proyecto',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/openings/projects/:id/documents'
+      },
+      {
+        path: '/admin/openings/projects/:id/documents/:documentId',
+        method: 'GET',
+        module: 'openings',
+        description: 'Obtener URL de descarga firmada para documento',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/openings/projects/:id/documents/:documentId'
+      },
+      {
+        path: '/admin/openings/projects/:id/documents/:documentId',
+        method: 'DELETE',
+        module: 'openings',
+        description: 'Eliminar documento del proyecto',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/openings/projects/:id/documents/:documentId'
+      },
+      
+      // Supplier Invitations (NEW - 4 endpoints)
+      {
+        path: '/admin/openings/projects/:id/invitations',
+        method: 'POST',
+        module: 'openings',
+        description: 'Invitar proveedores a proyecto (multiple)',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/openings/projects/:id/invitations'
+      },
+      {
+        path: '/admin/openings/projects/:id/invitations',
+        method: 'GET',
+        module: 'openings',
+        description: 'Listar invitaciones de un proyecto',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/openings/projects/:id/invitations'
+      },
+      {
+        path: '/api/openings/my-invitations',
+        method: 'GET',
+        module: 'openings',
+        description: 'Obtener invitaciones del proveedor actual (con project_id)',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/api/openings/my-invitations'
+      },
+      {
+        path: '/admin/openings/invitations/:id',
+        method: 'DELETE',
+        module: 'openings',
+        description: 'Eliminar invitación',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/openings/invitations/:id'
+      },
+      
+      // Quote Operations (NEW - 4 endpoints)
+      {
+        path: '/admin/openings/quotes/:id/award',
+        method: 'PATCH',
+        module: 'openings',
+        description: 'Adjudicar presupuesto a proveedor',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/openings/quotes/:id/award'
+      },
+      {
+        path: '/admin/openings/quotes/:id/revert',
+        method: 'PATCH',
+        module: 'openings',
+        description: 'Revertir adjudicación de presupuesto',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/openings/quotes/:id/revert'
+      },
+      {
+        path: '/api/openings/quotes/:id/sign',
+        method: 'POST',
+        module: 'openings',
+        description: 'Firmar presupuesto digitalmente',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/api/openings/quotes/:id/sign'
+      },
+      {
+        path: '/api/openings/categories/:id/quotes/comparison',
+        method: 'GET',
+        module: 'openings',
+        description: 'Obtener comparación de presupuestos por categoría',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/api/openings/categories/:id/quotes/comparison'
+      },
+      
+      // Project Status & Financing (NEW - 4 endpoints)
+      {
+        path: '/admin/openings/projects/:id/status',
+        method: 'PATCH',
+        module: 'openings',
+        description: 'Actualizar estado del proyecto',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/openings/projects/:id/status'
+      },
+      {
+        path: '/admin/openings/projects/:id/status-history',
+        method: 'GET',
+        module: 'openings',
+        description: 'Obtener historial de cambios de estado',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/openings/projects/:id/status-history'
+      },
+      {
+        path: '/admin/openings/projects/:id/financing',
+        method: 'POST',
+        module: 'openings',
+        description: 'Solicitar revisión de financiamiento',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/openings/projects/:id/financing'
+      },
+      {
+        path: '/admin/openings/projects/:id/financing/:approvalId',
+        method: 'PATCH',
+        module: 'openings',
+        description: 'Revisar solicitud de financiamiento (approve/reject)',
+        usesRealAPI: !featureFlags.shouldUseMock('openings'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/openings/projects/:id/financing/:approvalId'
       },
       
       // ========================================================================

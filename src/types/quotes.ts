@@ -214,6 +214,12 @@ export interface RejectQuoteRequest {
   reason: string
 }
 
+export interface UpdateQuoteStatusRequest {
+  quote_id: string
+  status: QuoteStatus
+  reason?: string
+}
+
 export interface SignQuoteRequest {
   quote_id: string
   signature_method: SignatureMethod

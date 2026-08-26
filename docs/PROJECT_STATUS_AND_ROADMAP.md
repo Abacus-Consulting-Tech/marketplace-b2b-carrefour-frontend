@@ -1,14 +1,14 @@
 # Estado del Proyecto y Roadmap - Marketplace B2B Carrefour
 
 **Fecha**: 25 de Agosto de 2026  
-**Última Actualización**: Lunes 25 Agosto - 13/13 Módulos Core Completados + Checkout Funcional  
+**Última Actualización**: Miércoles 26 Agosto - 13/13 Módulos Core Completados + fixes demo/checkout  
 **Estado General**: ✅ 13 módulos completados (~19,866 líneas) - Frontend listo para validación
 
 > **📌 FUENTE DE VERDAD (Source of Truth)**  
 > Este documento, junto con [Dev Tools](http://localhost:3000/admin/dev-tools) y [docs/technical/](technical/), son las **3 fuentes oficiales** de verdad del proyecto.  
 > Toda la información del estado actual, módulos completados, roadmap y arquitectura debe consultarse aquí.
 
-**⚠️ BLOQUEADOR ACTUAL**: Success page del checkout no renderiza (ver detalles abajo)
+**✅ INCIDENCIA RESUELTA**: Success page del checkout validada el 26/08. El flujo confirma pedido y renderiza `/marketplace/checkout-new/success?orderId=order_mock_1787743309226&display_id=CF-309226` correctamente.
 
 ---
 
@@ -1032,11 +1032,12 @@
 - Direcciones de prueba autocompletadas
 - Órdenes generadas con display_id único
 
-**Bug resuelto** (mencionado en roadmap):
-- ✅ Success page ahora renderiza correctamente
-- ✅ Redirect funcional tras completar pedido
-- ✅ Carrito se limpia correctamente
-- ✅ Orden se crea y persiste
+**Bug checkout success page**:
+- ⚠️ Incidencia reportada: tras **Confirmar pedido**, la success page no llegaba a renderizar y el flujo volvía al marketplace o quedaba bloqueado.
+- ✅ Fix aplicado (26/08): se evita llamar `clearCart()` antes del redirect; ahora la página `/marketplace/checkout-new/success` limpia el carrito al montar.
+- ✅ Fix aplicado (26/08): el guard de carrito vacío no redirige mientras el pedido se envía/redirige a success, y la navegación usa `router.replace()`.
+- ✅ `npm run type-check` pasa correctamente.
+- ⏳ Pendiente: validación manual del flujo completo en navegador.
 
 **Características destacadas:**
 - ✅ 100% TypeScript con tipos estrictos
@@ -1087,7 +1088,7 @@
 - **Product Management (Admin)**: ✅ **COMPLETO** (24/08/2026) - CRUD completo con testing guide
 - **Catalog (Franchisee)**: ✅ **COMPLETO** (24/08/2026) - Catálogo + detalle + filtros con testing guide
 - **Cart**: ✅ **COMPLETO** (24/08/2026) - Carrito con expansión Medusa y variant-aware
-- **Checkout**: ✅ **COMPLETO** (25/08/2026) - Wizard completo con 15 archivos (~3,366 líneas), success page funcionando
+- **Checkout**: ✅ **COMPLETO** (25/08/2026) - Wizard completo con 15 archivos (~3,366 líneas); success page corregida y validada el 26/08
 - **Quotes**: ✅ **COMPLETO** (25/08/2026) - Sistema completo de presupuestos con 11 archivos (1,500 líneas)
 - **Franchisee Orders (Mis Pedidos)**: ✅ **COMPLETO** (25/08/2026) - Historial y tracking con 9 archivos
 - **Admin Orders (Global)**: ✅ **COMPLETO** (25/08/2026) - Vista global con filtros avanzados, prioridades, incidencias
@@ -1402,9 +1403,9 @@
    - ✅ Wizard multi-paso (3 pasos funcionando)
    - ✅ Validación exhaustiva por paso
    - ✅ Integración Medusa completa
-   - ✅ Success page funcionando correctamente
+  - ✅ Success page corregida y validada el 26/08
    - ✅ 15 archivos (~3,366 líneas)
-   - ✅ Bug de success page resuelto
+  - ✅ Bug de success page resuelto moviendo `clearCart()` a la página success
 
 2. ✅ **Mis Pedidos (Franquiciado)** - Ya completado (ver sección 13)
    - ✅ Historial de pedidos

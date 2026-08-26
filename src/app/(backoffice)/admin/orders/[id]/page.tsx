@@ -17,9 +17,9 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { Textarea } from '@/components/ui/textarea'
+import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import { ArrowLeft, Loader2, Package, AlertCircle, Euro, User, Building2, Edit2 } from 'lucide-react'
-import { toast } from 'sonner'
 
 interface AdminOrderDetailPageProps {
   params: {
@@ -29,6 +29,7 @@ interface AdminOrderDetailPageProps {
 
 export default function AdminOrderDetailPage({ params }: AdminOrderDetailPageProps) {
   const router = useRouter()
+  const { toast } = useToast()
   const [order, setOrder] = useState<AdminOrder | null>(null)
   const [loading, setLoading] = useState(true)
   const [editMode, setEditMode] = useState(false)
@@ -51,7 +52,10 @@ export default function AdminOrderDetailPage({ params }: AdminOrderDetailPagePro
       setAdminNotes(response.order.admin_notes || '')
     } catch (error) {
       console.error('Error al cargar pedido:', error)
-      toast.error('Error al cargar el pedido')
+      toast({
+        title: 'Error al cargar el pedido',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -71,10 +75,15 @@ export default function AdminOrderDetailPage({ params }: AdminOrderDetailPagePro
       
       setOrder(response.order)
       setEditMode(false)
-      toast.success('Estado actualizado correctamente')
+      toast({
+        title: 'Estado actualizado correctamente',
+      })
     } catch (error: any) {
       console.error('Error al actualizar estado:', error)
-      toast.error(error.message || 'Error al actualizar el estado')
+      toast({
+        title: error.message || 'Error al actualizar el estado',
+        variant: 'destructive',
+      })
     } finally {
       setUpdating(false)
     }
@@ -92,10 +101,15 @@ export default function AdminOrderDetailPage({ params }: AdminOrderDetailPagePro
       })
       
       setOrder(response.order)
-      toast.success('Prioridad actualizada')
+      toast({
+        title: 'Prioridad actualizada',
+      })
     } catch (error: any) {
       console.error('Error al actualizar prioridad:', error)
-      toast.error(error.message || 'Error al actualizar la prioridad')
+      toast({
+        title: error.message || 'Error al actualizar la prioridad',
+        variant: 'destructive',
+      })
     } finally {
       setUpdating(false)
     }

@@ -152,6 +152,7 @@ export interface ProjectCategory {
 
 export interface SupplierInvitation {
   id: string;
+  project_id: string;
   category_id: string;
   supplier_id: string;
   status: InvitationStatus;

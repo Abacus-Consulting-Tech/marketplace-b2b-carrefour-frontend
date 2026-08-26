@@ -24,9 +24,9 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { useToast } from '@/hooks/use-toast'
 import Link from 'next/link'
 import { ArrowLeft, Loader2, XCircle, Package } from 'lucide-react'
-import { toast } from 'sonner'
 
 interface OrderDetailPageProps {
   params: {
@@ -36,6 +36,7 @@ interface OrderDetailPageProps {
 
 export default function FranchiseeOrderDetailPage({ params }: OrderDetailPageProps) {
   const router = useRouter()
+  const { toast } = useToast()
   const [order, setOrder] = useState<FranchiseeOrder | null>(null)
   const [loading, setLoading] = useState(true)
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false)
@@ -52,7 +53,10 @@ export default function FranchiseeOrderDetailPage({ params }: OrderDetailPagePro
       setOrder(response.order)
     } catch (error) {
       console.error('Error al cargar pedido:', error)
-      toast.error('Error al cargar el pedido')
+      toast({
+        title: 'Error al cargar el pedido',
+        variant: 'destructive',
+      })
     } finally {
       setLoading(false)
     }
@@ -69,11 +73,16 @@ export default function FranchiseeOrderDetailPage({ params }: OrderDetailPagePro
       })
       
       setOrder(response.order)
-      toast.success('Pedido cancelado correctamente')
+      toast({
+        title: 'Pedido cancelado correctamente',
+      })
       setCancelDialogOpen(false)
     } catch (error: any) {
       console.error('Error al cancelar pedido:', error)
-      toast.error(error.message || 'Error al cancelar el pedido')
+      toast({
+        title: error.message || 'Error al cancelar el pedido',
+        variant: 'destructive',
+      })
     } finally {
       setCancelling(false)
     }

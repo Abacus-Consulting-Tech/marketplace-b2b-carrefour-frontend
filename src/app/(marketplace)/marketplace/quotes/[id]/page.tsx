@@ -8,11 +8,18 @@
 
 import { useState, useEffect } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { Quote, GetQuoteResponse, AwardQuoteRequest, RejectQuoteRequest, SignQuoteRequest } from '@/types/quotes'
+import { Quote, QuoteStatus, GetQuoteResponse, AwardQuoteRequest, RejectQuoteRequest, SignQuoteRequest, UpdateQuoteStatusRequest } from '@/types/quotes'
 import { quotesApi } from '@/lib/api/quotes-client'
 import { QuoteDetail } from '@/components/quotes/QuoteDetail'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -38,6 +45,15 @@ import { ArrowLeft, Loader2 } from 'lucide-react'
 import Link from 'next/link'
 import { useToast } from '@/hooks/use-toast'
 
+const quoteStatusOptions: Array<{ value: QuoteStatus; label: string }> = [
+  { value: 'draft', label: 'Borrador' },
+  { value: 'submitted', label: 'Enviado' },
+  { value: 'under_review', label: 'En Revisión' },
+  { value: 'awarded', label: 'Adjudicado' },
+  { value: 'rejected', label: 'Rechazado' },
+  { value: 'expired', label: 'Expirado' },
+]
+
 export default function QuoteDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -52,11 +68,14 @@ export default function QuoteDetailPage() {
   const [showRejectDialog, setShowRejectDialog] = useState(false)
   const [showSignDialog, setShowSignDialog] = useState(false)
   const [processing, setProcessing] = useState(false)
+  const [statusProcessing, setStatusProcessing] = useState(false)
   
   // Form states
   const [awardNotes, setAwardNotes] = useState('')
   const [rejectReason, setRejectReason] = useState('')
   const [signatureConsent, setSignatureConsent] = useState(false)
+  const [selectedStatus, setSelectedStatus] = useState<QuoteStatus>('submitted')
+  const [statusReason, setStatusReason] = useState('')
   
   useEffect(() => {
     loadQuote()
@@ -76,6 +95,7 @@ export default function QuoteDetailPage() {
         return
       }
       setData(response)
+      setSelectedStatus(response.quote.status)
     } catch (error) {
       console.error('Error loading quote:', error)
       toast({
@@ -85,6 +105,46 @@ export default function QuoteDetailPage() {
       })
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function handleUpdateStatus() {
+    if (!data?.quote || selectedStatus === data.quote.status) return
+    if (selectedStatus === 'rejected' && !statusReason.trim()) {
+      toast({
+        title: 'Motivo requerido',
+        description: 'Indica un motivo para cambiar el presupuesto a rechazado',
+        variant: 'destructive',
+      })
+      return
+    }
+
+    setStatusProcessing(true)
+    try {
+      const request: UpdateQuoteStatusRequest = {
+        quote_id: data.quote.id,
+        status: selectedStatus,
+        reason: statusReason || undefined,
+      }
+
+      await quotesApi.updateQuoteStatus(request)
+
+      toast({
+        title: 'Estado actualizado',
+        description: 'El estado del presupuesto se ha actualizado correctamente',
+      })
+
+      setStatusReason('')
+      await loadQuote()
+    } catch (error) {
+      console.error('Error updating quote status:', error)
+      toast({
+        title: 'Error',
+        description: 'Error al actualizar el estado del presupuesto',
+        variant: 'destructive',
+      })
+    } finally {
+      setStatusProcessing(false)
     }
   }
   
@@ -228,6 +288,61 @@ export default function QuoteDetailPage() {
         onReject={() => setShowRejectDialog(true)}
         onSign={() => setShowSignDialog(true)}
       />
+
+      {/* Status Control */}
+      <Card className="p-6 bg-blue-50 border-blue-200">
+        <div className="space-y-4">
+          <div>
+            <h2 className="text-lg font-semibold text-blue-950">Cambiar estado del presupuesto</h2>
+            <p className="text-sm text-blue-800 mt-1">
+              Permite reabrir, adjudicar, rechazar o expirar el presupuesto durante la demo.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-[220px_1fr_auto] gap-3 items-end">
+            <div className="space-y-2">
+              <Label htmlFor="quote-status">Estado</Label>
+              <Select value={selectedStatus} onValueChange={(value) => setSelectedStatus(value as QuoteStatus)}>
+                <SelectTrigger id="quote-status">
+                  <SelectValue placeholder="Seleccionar estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  {quoteStatusOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="status-reason">Motivo / notas</Label>
+              <Input
+                id="status-reason"
+                value={statusReason}
+                onChange={(event) => setStatusReason(event.target.value)}
+                placeholder={selectedStatus === 'rejected' ? 'Motivo obligatorio para rechazo' : 'Opcional'}
+              />
+            </div>
+
+            <Button
+              onClick={handleUpdateStatus}
+              disabled={statusProcessing || selectedStatus === data.quote.status}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {statusProcessing ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Cambiando...
+                </>
+              ) : (
+                'Cambiar estado'
+              )}
+            </Button>
+          </div>
+        </div>
+      </Card>
       
       {/* Award Dialog */}
       <AlertDialog open={showAwardDialog} onOpenChange={setShowAwardDialog}>

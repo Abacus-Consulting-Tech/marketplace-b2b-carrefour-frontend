@@ -28,6 +28,15 @@ import type {
 
 export const mockSellers: Seller[] = [
   {
+    id: 'seller@mercur.dev',
+    name: 'Mercur Demo Seller',
+    email: 'seller@mercur.dev',
+    global_markup_percentage: 10,
+    total_products: 6,
+    pending_products: 2,
+    approved_products: 3,
+  },
+  {
     id: 'sel_uniformes_corp',
     name: 'Uniformes Corp',
     email: 'contacto@uniformescorp.com',
@@ -316,6 +325,123 @@ export const mockProducts: Product[] = [
     rejected_at: '2026-08-17T16:30:00Z',
     rejected_by: 'admin@carrefour.com',
   },
+  
+  // MERCUR DEMO SELLER PRODUCTS (shown for seller@mercur.dev)
+  {
+    id: 'prod_mercur_001',
+    title: 'Kit Señalética Pasillo Carrefour',
+    description: 'Pack completo de señalética interior para lineales y pasillos de tienda.',
+    base_price: 145.00,
+    units_per_pack: 1,
+    category_id: 'cat_rotulacion',
+    tags: ['senalizacion', 'carteleria', 'tienda'],
+    thumbnail: 'https://placehold.co/400x400/e0f2fe/0369a1?text=Senaletica',
+    seller_id: 'seller@mercur.dev',
+    seller_name: 'Mercur Demo Seller',
+    status: 'pending_approval',
+    ean: '8437001000001',
+    tax_rate: 21,
+    created_at: '2026-08-22T09:00:00Z',
+    updated_at: '2026-08-22T09:00:00Z',
+  },
+  {
+    id: 'prod_mercur_002',
+    title: 'Bolsas Kraft Carrefour Pack 500',
+    description: 'Bolsas kraft reciclables con asa reforzada y logo Carrefour.',
+    base_price: 62.00,
+    units_per_pack: 500,
+    category_id: 'cat_embalaje',
+    tags: ['bolsas', 'kraft', 'reciclable'],
+    thumbnail: 'https://placehold.co/400x400/fef3c7/b45309?text=Bolsas',
+    seller_id: 'seller@mercur.dev',
+    seller_name: 'Mercur Demo Seller',
+    status: 'approved',
+    markup_percentage: null,
+    ean: '8437001000002',
+    tax_rate: 21,
+    created_at: '2026-08-19T11:20:00Z',
+    updated_at: '2026-08-20T10:10:00Z',
+    approved_at: '2026-08-20T10:10:00Z',
+    approved_by: 'admin@carrefour.com',
+  },
+  {
+    id: 'prod_mercur_003',
+    title: 'Uniforme Delantal Frescos',
+    description: 'Delantal técnico para secciones de frescos, lavable y resistente a manchas.',
+    base_price: 21.50,
+    units_per_pack: 20,
+    category_id: 'cat_uniformes',
+    tags: ['uniforme', 'delantal', 'frescos'],
+    thumbnail: 'https://placehold.co/400x400/dcfce7/15803d?text=Delantal',
+    seller_id: 'seller@mercur.dev',
+    seller_name: 'Mercur Demo Seller',
+    status: 'approved',
+    markup_percentage: 12,
+    tax_rate: 21,
+    variants: [
+      { id: 'var_mercur_001', title: 'Azul - M', sku: 'DEL-FRE-AZU-M', base_price: 21.50, options: { Color: 'Azul', Talla: 'M' } },
+      { id: 'var_mercur_002', title: 'Azul - L', sku: 'DEL-FRE-AZU-L', base_price: 22.00, options: { Color: 'Azul', Talla: 'L' } },
+    ],
+    created_at: '2026-08-18T15:45:00Z',
+    updated_at: '2026-08-19T12:15:00Z',
+    approved_at: '2026-08-19T12:15:00Z',
+    approved_by: 'admin@carrefour.com',
+  },
+  {
+    id: 'prod_mercur_004',
+    title: 'Etiquetas Precio Electrónicas Pack 50',
+    description: 'Etiquetas electrónicas para lineales con pantalla e-ink y soporte NFC.',
+    base_price: 1250.00,
+    units_per_pack: 50,
+    category_id: 'cat_tecnologia',
+    tags: ['etiquetas', 'precio', 'electronica'],
+    thumbnail: 'https://placehold.co/400x400/ede9fe/6d28d9?text=Etiquetas',
+    seller_id: 'seller@mercur.dev',
+    seller_name: 'Mercur Demo Seller',
+    status: 'pending_approval',
+    ean: '8437001000004',
+    tax_rate: 21,
+    created_at: '2026-08-23T08:30:00Z',
+    updated_at: '2026-08-23T08:30:00Z',
+  },
+  {
+    id: 'prod_mercur_005',
+    title: 'Display Promocional Cartón XL',
+    description: 'Display de suelo para campañas promocionales, personalizable a color.',
+    base_price: 38.90,
+    units_per_pack: 10,
+    category_id: 'cat_rotulacion',
+    tags: ['display', 'promocional', 'carton'],
+    thumbnail: 'https://placehold.co/400x400/fce7f3/be185d?text=Display',
+    seller_id: 'seller@mercur.dev',
+    seller_name: 'Mercur Demo Seller',
+    status: 'approved',
+    markup_percentage: null,
+    tax_rate: 21,
+    created_at: '2026-08-16T13:00:00Z',
+    updated_at: '2026-08-17T16:00:00Z',
+    approved_at: '2026-08-17T16:00:00Z',
+    approved_by: 'admin@carrefour.com',
+  },
+  {
+    id: 'prod_mercur_006',
+    title: 'Totem Premium Doble Cara',
+    description: 'Tótem rígido de doble cara para entrada de tienda y campañas estacionales.',
+    base_price: 980.00,
+    units_per_pack: 1,
+    category_id: 'cat_rotulacion',
+    tags: ['totem', 'premium', 'campana'],
+    thumbnail: 'https://placehold.co/400x400/fee2e2/b91c1c?text=Totem',
+    seller_id: 'seller@mercur.dev',
+    seller_name: 'Mercur Demo Seller',
+    status: 'rejected',
+    rejection_reason: 'Precio base demasiado alto para la campaña actual. Reenviar propuesta con alternativa económica.',
+    tax_rate: 21,
+    created_at: '2026-08-14T09:00:00Z',
+    updated_at: '2026-08-15T10:00:00Z',
+    rejected_at: '2026-08-15T10:00:00Z',
+    rejected_by: 'admin@carrefour.com',
+  },
 ];
 
 // ============================================================================
@@ -331,6 +457,19 @@ const delay = (ms: number = 300) => new Promise(resolve => setTimeout(resolve, m
 
 // Helper: Generate ID
 const generateId = () => `prod_${Date.now()}_${Math.random().toString(36).substring(7)}`;
+
+const sellerAliases: Record<string, string> = {
+  'supplier@test.com': 'sel_uniformes_corp',
+  'supplier@carrefour.es': 'sel_uniformes_corp',
+  'seller@mercur.dev': 'seller@mercur.dev',
+};
+
+const resolveSellerId = (sellerId: string) => sellerAliases[sellerId] || sellerId;
+
+const getSellerById = (sellerId: string) => {
+  const resolvedSellerId = resolveSellerId(sellerId);
+  return mockSellersStore.find(s => s.id === resolvedSellerId);
+};
 
 /**
  * Mock: Propose new product (Supplier)
@@ -351,8 +490,8 @@ export async function mockProposeProduct(
     tags: request.tags,
     thumbnail: request.thumbnail,
     images: request.images,
-    seller_id: request.sellerId,
-    seller_name: mockSellersStore.find(s => s.id === request.sellerId)?.name,
+    seller_id: resolveSellerId(request.sellerId),
+    seller_name: getSellerById(request.sellerId)?.name,
     status: 'pending_approval',
     variants: request.variants,
     ean: request.ean,
@@ -377,7 +516,8 @@ export async function mockProposeProduct(
 export async function mockGetMyProducts(sellerId: string): Promise<ApiResponse<Product[]>> {
   await delay();
 
-  const products = mockProductsStore.filter(p => p.seller_id === sellerId);
+  const resolvedSellerId = resolveSellerId(sellerId);
+  const products = mockProductsStore.filter(p => p.seller_id === resolvedSellerId);
 
   return {
     data: products,
@@ -397,7 +537,8 @@ export async function mockGetPendingProducts(
 
   // Apply filters
   if (filters?.seller_id) {
-    products = products.filter(p => p.seller_id === filters.seller_id);
+    const resolvedSellerId = resolveSellerId(filters.seller_id);
+    products = products.filter(p => p.seller_id === resolvedSellerId);
   }
 
   if (filters?.category_id) {
@@ -497,12 +638,54 @@ export async function mockRejectProduct(
 }
 
 /**
+ * Mock: Resubmit rejected product for approval (Supplier)
+ */
+export async function mockResubmitRejectedProduct(
+  productId: string,
+  sellerId: string
+): Promise<ApiResponse<PricingApprovalResponse>> {
+  await delay();
+
+  const resolvedSellerId = resolveSellerId(sellerId);
+  const productIndex = mockProductsStore.findIndex(
+    p => p.id === productId && p.seller_id === resolvedSellerId
+  );
+
+  if (productIndex === -1) {
+    return {
+      data: null as any,
+      error: 'Producto no encontrado',
+    };
+  }
+
+  const product = mockProductsStore[productIndex];
+  const updatedProduct: Product = {
+    ...product,
+    status: 'pending_approval',
+    rejection_reason: undefined,
+    rejected_at: undefined,
+    rejected_by: undefined,
+    updated_at: new Date().toISOString(),
+  };
+
+  mockProductsStore[productIndex] = updatedProduct;
+
+  return {
+    data: {
+      product: updatedProduct,
+      message: 'Producto reenviado a aprobación',
+    },
+  };
+}
+
+/**
  * Mock: Get seller markup
  */
 export async function mockGetSellerMarkup(sellerId: string): Promise<ApiResponse<SellerMarkup>> {
   await delay();
 
-  const seller = mockSellersStore.find(s => s.id === sellerId);
+  const resolvedSellerId = resolveSellerId(sellerId);
+  const seller = mockSellersStore.find(s => s.id === resolvedSellerId);
 
   if (!seller) {
     return {
@@ -513,7 +696,7 @@ export async function mockGetSellerMarkup(sellerId: string): Promise<ApiResponse
 
   return {
     data: {
-      seller_id: sellerId,
+      seller_id: resolvedSellerId,
       global_markup_percentage: seller.global_markup_percentage,
       updated_at: new Date().toISOString(),
     },
@@ -530,7 +713,8 @@ export async function mockUpdateSellerMarkup(
 ): Promise<ApiResponse<UpdateSellerMarkupResponse>> {
   await delay();
 
-  const sellerIndex = mockSellersStore.findIndex(s => s.id === sellerId);
+  const resolvedSellerId = resolveSellerId(sellerId);
+  const sellerIndex = mockSellersStore.findIndex(s => s.id === resolvedSellerId);
 
   if (sellerIndex === -1) {
     return {
@@ -547,13 +731,13 @@ export async function mockUpdateSellerMarkup(
 
   // Count products using global markup (markup_percentage = null)
   const affectedProducts = mockProductsStore.filter(
-    p => p.seller_id === sellerId && p.markup_percentage === null
+    p => p.seller_id === resolvedSellerId && p.markup_percentage === null
   ).length;
 
   // Add to history
   const historyEntry: SellerMarkupHistory = {
     id: `history_${Date.now()}`,
-    seller_id: sellerId,
+    seller_id: resolvedSellerId,
     previous_markup: previousMarkup,
     new_markup: markup,
     changed_by: 'admin@carrefour.dev', // TODO: Get from auth context
@@ -567,7 +751,7 @@ export async function mockUpdateSellerMarkup(
   return {
     data: {
       seller_markup: {
-        seller_id: sellerId,
+        seller_id: resolvedSellerId,
         global_markup_percentage: markup,
         updated_at: new Date().toISOString(),
       },
@@ -585,7 +769,8 @@ export async function mockGetSellerMarkupHistory(
 ): Promise<ApiResponse<GetSellerMarkupHistoryResponse>> {
   await delay();
 
-  const seller = mockSellersStore.find(s => s.id === request.seller_id);
+  const resolvedSellerId = resolveSellerId(request.seller_id);
+  const seller = mockSellersStore.find(s => s.id === resolvedSellerId);
 
   if (!seller) {
     return {
@@ -596,7 +781,7 @@ export async function mockGetSellerMarkupHistory(
 
   // Filter history for this seller
   const sellerHistory = mockSellerMarkupHistoryStore
-    .filter(h => h.seller_id === request.seller_id)
+    .filter(h => h.seller_id === resolvedSellerId)
     .sort((a, b) => new Date(b.changed_at).getTime() - new Date(a.changed_at).getTime());
 
   // Pagination
@@ -663,8 +848,8 @@ export async function mockBulkProposeProducts(
       subcategory: proposal.subcategory,
       tags: proposal.tags,
       thumbnail: proposal.thumbnail,
-      seller_id: sellerId,
-      seller_name: mockSellersStore.find(s => s.id === sellerId)?.name,
+      seller_id: resolveSellerId(sellerId),
+      seller_name: getSellerById(sellerId)?.name,
       status: 'pending_approval',
       ean: proposal.ean,
       tax_rate: proposal.tax_rate || 21,

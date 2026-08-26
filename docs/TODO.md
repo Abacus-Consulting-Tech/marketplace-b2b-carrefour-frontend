@@ -1,6 +1,6 @@
 # TODO - Marketplace B2B Carrefour
 
-**Actualizado:** 25 Agosto 2026
+**Actualizado:** 26 Agosto 2026
 
 ---
 
@@ -9,7 +9,7 @@
 ### Checkout Success Page No Carga
 **Priority:** CRÍTICO  
 **Time Spent:** 1 hora  
-**Status:** BLOCKED
+**Status:** RESUELTO Y VALIDADO
 
 **Problema:**
 - Checkout completa correctamente (orden creada en mock mode)
@@ -19,15 +19,21 @@
 - Probado: `router.push()`, `window.location.href`, Server Component, Client Component con Suspense
 - Nada funciona
 
+**Fix aplicado (26/08/2026):**
+- Root cause probable: `clearCart()` se ejecutaba antes del redirect y disparaba el guard de carrito vacío (`items.length === 0`) hacia `/marketplace`.
+- Cambio: `clearCart()` se mueve a `/marketplace/checkout-new/success` después de montar la página.
+- Cambio adicional: el guard de carrito vacío ahora se desactiva mientras el pedido se está enviando o redirigiendo a success.
+- Cambio adicional: navegación a success usa `router.replace()` en lugar de `window.location.href`.
+- `npm run type-check` pasa correctamente.
+- Validado en navegador: `/marketplace/checkout-new/success?orderId=order_mock_1787743309226&display_id=CF-309226` renderiza correctamente.
+
 **Workaround Temporal:**
-- Usar checkout anterior (si existe) o
-- Mostrar success inline en el checkout mismo
+- No necesario. Bug resuelto.
 
 **Próximos Pasos:**
-- [ ] Revisar middleware que pueda estar interceptando
-- [ ] Revisar layout que pueda causar redirect
-- [ ] Probar sin clearCart() antes del redirect
-- [ ] Considerar Modal de confirmación inline en vez de página separada
+- [x] Probar sin clearCart() antes del redirect
+- [x] Validar flujo completo en navegador
+- [x] Confirmar success page renderizada
 
 ---
 

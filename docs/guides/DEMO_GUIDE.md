@@ -50,7 +50,7 @@ Tener a mano estas credenciales para la demo:
 |-----|-------|----------|
 | **Admin** | admin@carrefour.es | admin123 |
 | **Franquiciado** | franchisee@carrefour.es | franchisee123 |
-| **Proveedor** | supplier@carrefour.es | supplier123 |
+| **Proveedor / Seller** | seller@mercur.dev | supersecret |
 
 ### 3. URLs Clave a Favoritar
 
@@ -99,7 +99,7 @@ Tener a mano estas credenciales para la demo:
 **Qué mostrar:**
 
 **A. Lista de Proyectos**
-- 10 proyectos de apertura en diferentes estados
+- 4 proyectos de apertura en diferentes estados
 - Estados: draft, submitted, approved, in_progress, completed
 - Filtros por estado y búsqueda
 - **Ejemplo destacado**: "Barcelona Sur" (approved)
@@ -155,7 +155,9 @@ Tener a mano estas credenciales para la demo:
 
 ### 4️⃣ Aprobación de Precios
 
-📍 `http://localhost:3000/admin/products/pricing`
+📍 `http://localhost:3000/admin/pricing/approval-queue`
+
+**NOTA IMPORTANTE**: La ruta antigua (`/admin/products/pricing`) ya no existe. Usar `/admin/pricing/approval-queue`.
 
 **Qué mostrar:**
 - Cola de productos pendientes de aprobación
@@ -165,7 +167,7 @@ Tener a mano estas credenciales para la demo:
   - Markup sugerido (20%)
   - Precio final calculado
   - Aprobar/Rechazar con razón
-- Filtros por proveedor y estado
+- Filtros por proveedor y categoría
 - Estadísticas de pendientes
 
 **Mensaje clave**: *"Control total de márgenes - el admin revisa y aprueba precios antes de que sean visibles en el catálogo"*
@@ -219,24 +221,26 @@ Tener a mano estas credenciales para la demo:
 - Estadísticas: Total, Activos, Inactivos
 - **Crear franquiciado** (formulario completo)
 - **Detalle**: Estadísticas de pedidos, productos favoritos
-- **Acciones**: Activar/Desactivar cuenta
+- **Acciones**: Ver detalle, editar y eliminar franquiciado
+- **Estado de cuenta**: Activar/Desactivar desde **Editar** → switch **Cuenta Activa**
 
 **Mensaje clave**: *"Gestión completa de la red de franquiciados desde un único panel"*
 
 ---
 
-### 7️⃣ Presupuestos Globales
+### 7️⃣ Presupuestos de Aperturas
 
-📍 `http://localhost:3000/admin/quotes`
+📍 `http://localhost:3000/admin/openings` → abrir un proyecto → tab **Presupuestos**
+
+**Nota**: No existe página global `/admin/quotes` en la implementación actual; esa URL devuelve 404 y no aparece en el menú lateral.
 
 **Qué mostrar:**
-- Vista de todos los presupuestos de la plataforma
-- 7 presupuestos en diferentes estados
-- Comparación entre múltiples proveedores
-- Sistema de firmas digitales
-- Seguimiento de adjudicaciones
+- Acceso a presupuestos desde el detalle de cada proyecto de apertura
+- Tab **Proveedores** para invitar proveedores por categoría
+- Tab **Documentos** para subir documentación técnica que usarán los proveedores para cotizar
+- Tab **Presupuestos** visible en el proyecto, actualmente marcada como funcionalidad en desarrollo
 
-**Mensaje clave**: *"Supervisión completa del proceso de cotización para proyectos de apertura"*
+**Mensaje clave**: *"El flujo de cotización se gestiona desde cada proyecto de apertura; la vista global admin de presupuestos todavía no está implementada"*
 
 ---
 
@@ -312,15 +316,20 @@ Tener a mano estas credenciales para la demo:
 📍 `http://localhost:3000/marketplace/quotes`
 
 **Qué mostrar:**
-- Presupuestos recibidos para mis proyectos
-- Comparación lado a lado
-- **Acciones**:
-  - Adjudicar presupuesto
-  - Rechazar con razón
-  - Firma digital del adjudicado
-- Sistema de expiración (30 días)
+- Presupuestos recibidos para mis proyectos en cards de ancho completo
+- Búsqueda por proyecto, categoría o proveedor
+- Filtro por estado: enviados, en revisión, adjudicados, rechazados
+- Click en una card para abrir el detalle del presupuesto
+- **Acciones en detalle**:
+  - Adjudicar presupuesto (solo estados submitted/under_review)
+  - Rechazar con razón (solo estados submitted/under_review)
+  - Ver motivo de rechazo si el presupuesto ya está rechazado
+  - Ver información de firma si el presupuesto ya está firmado
+- **Cambiar estado**: selector visual + botón **Cambiar estado** para reabrir, adjudicar, rechazar o expirar el presupuesto durante la demo
+- **Firma digital**: aparece en presupuestos adjudicados sin firma; en mock data también se puede mostrar el presupuesto ya firmado `quote_bcn_mob_001`.
+- Sistema de expiración visible por fecha de validez/expirado
 
-**Mensaje clave**: *"El franquiciado compara, adjudica y firma presupuestos digitalmente"*
+**Mensaje clave**: *"El franquiciado revisa presupuestos por proyecto, abre el detalle y toma decisiones cuando el estado lo permite"*
 
 ---
 
@@ -354,7 +363,9 @@ Tener a mano estas credenciales para la demo:
 
 ### 5️⃣ Checkout Process
 
-📍 `http://localhost:3000/marketplace/checkout-new`
+📍 `http://localhost:3000/marketplace/cart` → botón **Proceder al Pago** → `http://localhost:3000/marketplace/checkout-new`
+
+**Nota**: No hay enlace directo al checkout en el sidebar. Se accede desde **Mi Carrito** y solo tiene sentido con productos añadidos.
 
 **Qué mostrar (flujo completo):**
 
@@ -380,6 +391,7 @@ Tener a mano estas credenciales para la demo:
 - Resumen del pedido
 - Estado y siguiente paso
 - Botón: "Ver mis pedidos"
+- **Validado**: success page renderiza correctamente tras confirmar pedido (`/marketplace/checkout-new/success?...`).
 
 **Mensaje clave**: *"Proceso de checkout completo con múltiples métodos de pago y confirmación inmediata"*
 
@@ -389,8 +401,8 @@ Tener a mano estas credenciales para la demo:
 
 ### Cerrar sesión y login como Proveedor
 
-📧 **Email**: `supplier@carrefour.es`  
-🔑 **Password**: `supplier123`
+📧 **Email**: `seller@mercur.dev`  
+🔑 **Password**: `supersecret`
 
 ---
 
@@ -405,21 +417,25 @@ Tener a mano estas credenciales para la demo:
 - Estados: draft, pending_approval, approved, rejected
 - Filtros por estado
 - Estadísticas del proveedor
+- Si un producto está rechazado, abrir el detalle: debajo de la alerta roja aparece una tarjeta de acción con **Reenviar a aprobación**
+- Al hacer click, el producto vuelve a `pending_approval` y se limpia el motivo de rechazo; refrescar la página si el estado visual no cambia inmediatamente
 
 **B. Crear Producto**
 📍 `http://localhost:3000/supplier/products/new`
 - Formulario completo
 - Información básica (nombre, descripción, SKU)
-- Precios (coste base, precio sugerido)
-- Preview de precio final con markup
+- Precio propuesto por el proveedor
 - **Enviar a aprobación**
 
 **C. Carga Masiva**
 📍 `http://localhost:3000/supplier/products/bulk-upload`
-- Upload de CSV/Excel
-- Template descargable
-- Validación de formato
-- Importar múltiples productos
+- Click en **Descargar Plantilla** para bajar `plantilla_productos.csv`
+- Abrir la plantilla en Excel/Numbers/Sheets y completar los productos
+- Mantener las 22 columnas del layout: Producto ID, título, categoría, SKU, variantes, unidades por pack, precio proveedor, IVA, stock e imágenes
+- Para variantes, repetir el mismo **Producto ID** en varias filas y cambiar SKU/opciones (ej: Talla, Color)
+- Guardar/exportar como `.csv` y subirlo con **Click para seleccionar archivo** o arrastrar al área de carga
+- Revisar la vista previa: productos válidos/errores de validación
+- Click en **Importar Productos** para crear múltiples productos en estado pendiente de aprobación
 
 **Mensaje clave**: *"Los proveedores proponen productos que pasan por aprobación del admin antes de ser visibles"*
 
@@ -443,21 +459,21 @@ Tener a mano estas credenciales para la demo:
 - Filtros por estado
 - Búsqueda por número o cliente
 
-**C. Detalle de Pedido** (Click en "ORD-2026-001")
+**C. Detalle de Pedido**
 - Información del cliente (franquiciado)
 - Items pedidos
 - Totales
-- **Acciones**:
-  - ✅ Aceptar pedido
-  - ❌ Rechazar pedido
-  - 🚚 Añadir tracking de envío
-  - 📦 Cambiar estado (confirmed → in_preparation → shipped)
+- **Acciones visibles según estado**:
+  - `ORD-2026-001` (pending): botones **Aceptar Pedido** y **Rechazar**
+  - `ORD-2026-002` (confirmed): botón **Iniciar Preparación**
+  - `ORD-2026-003` (in_preparation): botón **Marcar como Enviado** para añadir tracking
+  - `ORD-2026-004` (shipped): muestra datos de tracking si ya existen
 
-**D. Añadir Tracking** (Click botón "Añadir Tracking")
+**D. Añadir Tracking** (en pedido `in_preparation`, botón **Marcar como Enviado**)
 - Proveedor de envío (SEUR, MRW, Correos Express)
 - Número de seguimiento
-- Fecha estimada de entrega
-- Guardar
+- URL de seguimiento opcional
+- Guardar y marcar pedido como enviado
 
 **Mensaje clave**: *"Control completo del ciclo de vida del pedido desde recepción hasta entrega"*
 
@@ -475,20 +491,22 @@ Tener a mano estas credenciales para la demo:
 - Estados: pending, viewed, quote_submitted
 - Deadline de respuesta
 
-**B. Detalle de Proyecto** (Click en proyecto)
+**B. Detalle / Presupuesto** (Click en **Ver mi presupuesto**)
 - Información del proyecto
-- **Tab Documentos Técnicos**: 🆕
+- **Card Documentos Técnicos del Proyecto**: 🆕
   - **Ver y descargar planos** para cotizar
   - Solo si está invitado al proyecto
   - Categorías relevantes a su especialidad
   - Preparar presupuesto basado en planos
 
 **C. Crear Presupuesto**
+📍 Misma ruta del botón **Ver mi presupuesto**: `http://localhost:3000/supplier/openings/proj_001/quote/cat_001`
 - Formulario completo
 - Items detallados (descripción, cantidad, precio)
 - Términos de pago y entrega
 - Garantía
-- **Enviar presupuesto**
+- **Enviar presupuesto** → redirige a success page: `/supplier/openings/proj_001/quote/cat_001/success`
+- Página de confirmación con resumen del envío y botones **Volver a invitaciones** / **Ver proyecto**
 
 **Mensaje clave**: *"Los proveedores acceden a documentación técnica completa para preparar cotizaciones precisas"*
 

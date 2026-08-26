@@ -20,21 +20,22 @@ import type { CheckoutStep, ShippingAddress, PaymentMethod } from '@/types/check
 
 export default function CheckoutNewPage() {
   const router = useRouter()
-  const { items, getTotal, clearCart, cartId } = useCartStore()
+  const { items, cartId } = useCartStore()
   
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('address')
   const [completedSteps, setCompletedSteps] = useState<CheckoutStep[]>([])
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null)
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isRedirectingToSuccess, setIsRedirectingToSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Redirect if cart is empty
   useEffect(() => {
-    if (items.length === 0) {
+    if (items.length === 0 && !isSubmitting && !isRedirectingToSuccess) {
       router.push('/marketplace')
     }
-  }, [items, router])
+  }, [items, isSubmitting, isRedirectingToSuccess, router])
 
   // Convert cart items to checkout format
   const checkoutItems = items.map(item => ({
@@ -84,9 +85,6 @@ export default function CheckoutNewPage() {
         cartId // 🌐 Medusa cart ID from Zustand store
       )
 
-      // Clear cart
-      clearCart()
-
       // Mark review as completed
       setCompletedSteps(prev => [...new Set([...prev, 'review'])])
 
@@ -98,11 +96,12 @@ export default function CheckoutNewPage() {
         fullUrl: `/marketplace/checkout-new/success?orderId=${order.id}&display_id=${order.display_id}`
       })
 
-      // Force full page navigation (not router.push) to avoid issues with cart clearing
-      window.location.href = `/marketplace/checkout-new/success?orderId=${order.id}&display_id=${order.display_id}`
+      setIsRedirectingToSuccess(true)
+      router.replace(`/marketplace/checkout-new/success?orderId=${order.id}&display_id=${order.display_id}`)
     } catch (err) {
       console.error('Error completing order:', err)
       setError(err instanceof Error ? err.message : 'Error al procesar el pedido. Por favor, intenta de nuevo.')
+      setIsRedirectingToSuccess(false)
     } finally {
       setIsSubmitting(false)
     }
@@ -136,7 +135,7 @@ export default function CheckoutNewPage() {
     setCurrentStep('payment')
   }
 
-  if (items.length === 0) {
+  if (items.length === 0 && !isSubmitting && !isRedirectingToSuccess) {
     return null
   }
 

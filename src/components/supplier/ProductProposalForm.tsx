@@ -190,7 +190,7 @@ export function ProductProposalForm({
                 <p className="text-sm text-red-500">{errors.base_price.message}</p>
               )}
               <p className="text-sm text-gray-500">
-                Precio de proveedor sin markup
+                Precio de venta propuesto por el proveedor
               </p>
             </div>
 

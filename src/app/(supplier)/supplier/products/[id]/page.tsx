@@ -8,7 +8,6 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { pricingApi } from '@/lib/api/products-pricing-client';
-import { calculateFinalPrice } from '@/lib/utils/pricing-calculator';
 import { ProductStatusBadge } from '@/components/supplier/ProductStatusBadge';
 import { useAuthStore } from '@/lib/store/auth';
 import type { Product } from '@/types/products-pricing';
@@ -26,6 +25,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock,
+  RotateCcw,
 } from 'lucide-react';
 
 export default function ProductDetailPage() {
@@ -35,8 +35,8 @@ export default function ProductDetailPage() {
   const { user } = useAuthStore();
   
   const [product, setProduct] = useState<Product | null>(null);
-  const [sellerMarkup, setSellerMarkup] = useState<number>(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isResubmitting, setIsResubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const productId = params.id as string;
@@ -71,14 +71,6 @@ export default function ProductDetailPage() {
       }
 
       setProduct(foundProduct);
-
-      // Fetch seller markup
-      try {
-        const markupResponse = await pricingApi.getSellerMarkup(user.id);
-        setSellerMarkup(markupResponse.data.global_markup_percentage);
-      } catch (markupError) {
-        console.error('Error fetching markup:', markupError);
-      }
     } catch (err) {
       console.error('Error fetching product:', err);
       setError(err instanceof Error ? err.message : 'Error al cargar el producto');
@@ -99,12 +91,27 @@ export default function ProductDetailPage() {
     }).format(price);
   };
 
-  const getAppliedMarkup = (): number => {
-    if (!product) return 0;
-    if (product.markup_percentage !== null && product.markup_percentage !== undefined) {
-      return product.markup_percentage;
+  const handleResubmitRejectedProduct = async () => {
+    if (!user || !product) return;
+
+    try {
+      setIsResubmitting(true);
+      const response = await pricingApi.resubmitRejectedProduct(product.id, user.id);
+      setProduct(response.data.product);
+      toast({
+        title: 'Producto reenviado',
+        description: 'El producto vuelve a estar pendiente de aprobación.',
+      });
+    } catch (err) {
+      console.error('Error resubmitting product:', err);
+      toast({
+        title: 'Error al reenviar producto',
+        description: 'No se pudo reenviar el producto a aprobación.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsResubmitting(false);
     }
-    return sellerMarkup;
   };
 
   if (isLoading) {
@@ -144,9 +151,7 @@ export default function ProductDetailPage() {
     );
   }
 
-  const appliedMarkup = getAppliedMarkup();
-  const isCustomMarkup = product.markup_percentage !== null && product.markup_percentage !== undefined;
-  const finalPriceCalc = calculateFinalPrice(product.base_price, appliedMarkup);
+  const canResubmitProduct = product.status === 'rejected' || Boolean(product.rejection_reason || product.rejected_at);
 
   return (
     <div className="container mx-auto py-8">
@@ -164,13 +169,40 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Rejection Alert */}
-      {product.status === 'rejected' && product.rejection_reason && (
+      {canResubmitProduct && (
         <Alert variant="destructive" className="mb-6">
           <XCircle className="h-4 w-4" />
           <AlertDescription>
-            <strong>Motivo del rechazo:</strong> {product.rejection_reason}
+            <strong>Motivo del rechazo:</strong> {product.rejection_reason || 'No especificado'}
           </AlertDescription>
         </Alert>
+      )}
+
+      {canResubmitProduct && (
+        <Card className="mb-6 border-red-200 bg-red-50">
+          <CardContent className="p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <p className="font-semibold text-red-900">Producto rechazado</p>
+              <p className="text-sm text-red-700">
+                Puedes corregir la propuesta y reenviarla para una nueva revisión.
+              </p>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleResubmitRejectedProduct}
+              disabled={isResubmitting}
+              className="border-red-300 bg-white text-red-700 hover:bg-red-50"
+            >
+              {isResubmitting ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <RotateCcw className="h-4 w-4 mr-2" />
+              )}
+              Reenviar a aprobación
+            </Button>
+          </CardContent>
+        </Card>
       )}
 
       {/* Pending Alert */}
@@ -230,7 +262,7 @@ export default function ProductDetailPage() {
               
               <div className="grid gap-4 sm:grid-cols-2">
                 <div className="rounded-lg border p-4">
-                  <div className="text-sm text-gray-500 mb-1">Precio Base (Pack)</div>
+                  <div className="text-sm text-gray-500 mb-1">Precio Propuesto (Pack)</div>
                   <div className="text-2xl font-bold">{formatPrice(product.base_price)}</div>
                   <div className="text-sm text-gray-600 mt-1">
                     {formatPrice(product.base_price / product.units_per_pack)} por unidad
@@ -242,42 +274,7 @@ export default function ProductDetailPage() {
                   <div className="text-2xl font-bold">{product.units_per_pack}</div>
                   <div className="text-sm text-gray-600 mt-1">unidades</div>
                 </div>
-
-                {product.status === 'approved' && (
-                  <>
-                    <div className="rounded-lg border p-4 bg-blue-50">
-                      <div className="text-sm text-gray-600 mb-1 flex items-center gap-1">
-                        <Percent className="h-4 w-4" />
-                        Markup Aplicado
-                      </div>
-                      <div className="text-2xl font-bold text-blue-700">{appliedMarkup}%</div>
-                      <Badge variant={isCustomMarkup ? "default" : "secondary"} className="mt-2">
-                        {isCustomMarkup ? 'Markup Específico' : 'Markup Global'}
-                      </Badge>
-                    </div>
-
-                    <div className="rounded-lg border p-4 bg-green-50">
-                      <div className="text-sm text-gray-600 mb-1">Precio Final (Pack)</div>
-                      <div className="text-2xl font-bold text-green-700">
-                        {formatPrice(finalPriceCalc.finalPrice)}
-                      </div>
-                      <div className="text-sm text-gray-600 mt-1">
-                        {formatPrice(finalPriceCalc.finalPrice / product.units_per_pack)} por unidad
-                      </div>
-                    </div>
-                  </>
-                )}
               </div>
-
-              {product.status === 'approved' && (
-                <Alert className="mt-4 bg-gray-50">
-                  <AlertDescription className="text-sm">
-                    <strong>Desglose:</strong> Precio base {formatPrice(product.base_price)} + 
-                    Markup {appliedMarkup}% ({formatPrice(finalPriceCalc.markupAmount)}) = 
-                    Total {formatPrice(finalPriceCalc.finalPrice)}
-                  </AlertDescription>
-                </Alert>
-              )}
             </div>
 
             {/* Additional Info */}

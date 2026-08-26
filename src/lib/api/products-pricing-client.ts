@@ -32,6 +32,7 @@ import {
   mockGetPendingProducts,
   mockApproveProduct,
   mockRejectProduct,
+  mockResubmitRejectedProduct,
   mockGetSellerMarkup,
   mockUpdateSellerMarkup,
   mockGetSellerMarkupHistory,
@@ -315,6 +316,32 @@ export const pricingApi = {
           status: 'rejected',
           rejection_reason: reason,
         }),
+      }
+    );
+  },
+
+  /**
+   * Resubmit a rejected product for approval (Supplier)
+   * PATCH /vendor/custom/products/:id/resubmit
+   * 
+   * @param productId - Product ID
+   * @param sellerId - Seller ID
+   * @returns Updated product with pending_approval status
+   */
+  async resubmitRejectedProduct(
+    productId: string,
+    sellerId: string
+  ): Promise<ApiResponse<PricingApprovalResponse>> {
+    if (isMockMode) {
+      return mockResubmitRejectedProduct(productId, sellerId);
+    }
+
+    return apiRequest<PricingApprovalResponse>(
+      `/vendor/custom/products/${productId}/resubmit`,
+      {
+        method: 'PATCH',
+        headers: createHeaders(sellerId),
+        body: JSON.stringify({ status: 'pending_approval' }),
       }
     );
   },

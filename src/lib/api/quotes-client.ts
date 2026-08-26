@@ -7,6 +7,7 @@
 
 import {
   Quote,
+  QuoteStatus,
   SupplierInvitation,
   QuoteSignature,
   QuoteSearchParams,
@@ -19,6 +20,7 @@ import {
   SubmitQuoteRequest,
   AwardQuoteRequest,
   RejectQuoteRequest,
+  UpdateQuoteStatusRequest,
   SignQuoteRequest,
   DeclineInvitationRequest,
 } from '@/types/quotes'
@@ -159,16 +161,20 @@ async function mockAwardQuote(request: AwardQuoteRequest): Promise<Quote> {
   
   const quote = getMockQuoteById(request.quote_id)
   if (!quote) throw new Error('Quote not found')
+  const quoteIndex = mockQuotes.findIndex(q => q.id === request.quote_id)
   
-  // Simular actualización
   const updated: Quote = {
     ...quote,
     status: 'awarded',
     is_awarded: true,
+    rejection_reason: undefined,
+    rejected_at: undefined,
     internal_notes: request.internal_notes || quote.internal_notes,
     awarded_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }
+
+  mockQuotes[quoteIndex] = updated
   
   return updated
 }
@@ -178,16 +184,53 @@ async function mockRejectQuote(request: RejectQuoteRequest): Promise<Quote> {
   
   const quote = getMockQuoteById(request.quote_id)
   if (!quote) throw new Error('Quote not found')
+  const quoteIndex = mockQuotes.findIndex(q => q.id === request.quote_id)
   
   const updated: Quote = {
     ...quote,
     status: 'rejected',
     is_awarded: false,
     rejection_reason: request.reason,
+    awarded_at: undefined,
     rejected_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
   }
+
+  mockQuotes[quoteIndex] = updated
   
+  return updated
+}
+
+async function mockUpdateQuoteStatus(request: UpdateQuoteStatusRequest): Promise<Quote> {
+  await new Promise(resolve => setTimeout(resolve, 400))
+
+  const quoteIndex = mockQuotes.findIndex(q => q.id === request.quote_id)
+  if (quoteIndex === -1) throw new Error('Quote not found')
+
+  const quote = mockQuotes[quoteIndex]
+  const now = new Date().toISOString()
+  const updated: Quote = {
+    ...quote,
+    status: request.status,
+    is_awarded: request.status === 'awarded',
+    rejection_reason: request.status === 'rejected'
+      ? request.reason || quote.rejection_reason || 'Cambio manual de estado'
+      : undefined,
+    submitted_at: request.status === 'draft' ? undefined : quote.submitted_at || now,
+    awarded_at: request.status === 'awarded' ? quote.awarded_at || now : undefined,
+    rejected_at: request.status === 'rejected' ? quote.rejected_at || now : undefined,
+    updated_at: now,
+  }
+
+  mockQuotes[quoteIndex] = updated
+
+  if (request.status !== 'awarded') {
+    const signatureIndex = mockSignatures.findIndex(s => s.quote_id === request.quote_id)
+    if (signatureIndex !== -1) {
+      mockSignatures.splice(signatureIndex, 1)
+    }
+  }
+
   return updated
 }
 
@@ -210,6 +253,8 @@ async function mockSignQuote(request: SignQuoteRequest): Promise<QuoteSignature>
     terms_version: request.terms_version,
     consent_text: request.consent_text,
   }
+
+  mockSignatures.push(signature)
   
   return signature
 }
@@ -418,6 +463,15 @@ export const quotesApi = {
       body: JSON.stringify(request),
     })
     if (!response.ok) throw new Error('Failed to reject quote')
+    return response.json()
+  },
+  updateQuoteStatus: USE_MOCK ? mockUpdateQuoteStatus : async (request: UpdateQuoteStatusRequest) => {
+    const response = await fetch(`${API_BASE_URL}/store/quotes/${request.quote_id}/status`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(request),
+    })
+    if (!response.ok) throw new Error('Failed to update quote status')
     return response.json()
   },
   signQuote: USE_MOCK ? mockSignQuote : async (request: SignQuoteRequest) => {

@@ -19,20 +19,16 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useToast } from '@/hooks/use-toast';
 import { pricingApi } from '@/lib/api/products-pricing-client';
 import { ProductStatusBadge } from './ProductStatusBadge';
-import { calculateFinalPrice } from '@/lib/utils/pricing-calculator';
-import type { Product, PricingStatus, Seller } from '@/types/products-pricing';
+import type { Product, PricingStatus } from '@/types/products-pricing';
 import { 
   Search, 
   Package, 
   Eye, 
   AlertCircle, 
   Loader2, 
-  Percent,
-  TrendingUp,
   CheckCircle2,
   XCircle,
   Clock,
-  Info,
 } from 'lucide-react';
 
 interface ProductsListProps {
@@ -43,7 +39,6 @@ export function ProductsList({ sellerId }: ProductsListProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [products, setProducts] = useState<Product[]>([]);
-  const [seller, setSeller] = useState<Seller | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
@@ -62,25 +57,6 @@ export function ProductsList({ sellerId }: ProductsListProps) {
       // Fetch products
       const productsResponse = await pricingApi.getMyProducts(sellerId);
       setProducts(productsResponse.data);
-      
-      // Fetch seller markup info
-      try {
-        const markupResponse = await pricingApi.getSellerMarkup(sellerId);
-        // Create a basic Seller object with the markup data
-        const sellerData: Seller = {
-          id: sellerId,
-          name: 'Mi Empresa', // This would come from auth context in real app
-          email: '',
-          global_markup_percentage: markupResponse.data.global_markup_percentage,
-          total_products: productsResponse.data.length,
-          pending_products: productsResponse.data.filter(p => p.status === 'pending_approval').length,
-          approved_products: productsResponse.data.filter(p => p.status === 'approved').length,
-        };
-        setSeller(sellerData);
-      } catch (markupError) {
-        console.error('Error fetching markup:', markupError);
-        // Continue without markup info
-      }
     } catch (err) {
       console.error('Error fetching products:', err);
       setError(err instanceof Error ? err.message : 'Error al cargar productos');
@@ -120,13 +96,6 @@ export function ProductsList({ sellerId }: ProductsListProps) {
     }).format(price);
   };
 
-  const getAppliedMarkup = (product: Product): number => {
-    if (product.markup_percentage !== null && product.markup_percentage !== undefined) {
-      return product.markup_percentage;
-    }
-    return seller?.global_markup_percentage || 0;
-  };
-
   if (isLoading) {
     return (
       <Card>
@@ -151,47 +120,6 @@ export function ProductsList({ sellerId }: ProductsListProps) {
 
   return (
     <div className="space-y-6">
-      {/* Markup Info Card */}
-      {seller && (
-        <Card className="bg-gradient-to-r from-blue-50 to-blue-100 border-blue-200">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Percent className="h-5 w-5 text-blue-600" />
-              Mi Markup Global
-            </CardTitle>
-            <CardDescription>
-              Este markup se aplica automáticamente a todos tus productos (salvo excepciones)
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="text-3xl font-bold text-blue-700">
-                  {seller.global_markup_percentage}%
-                </div>
-                <p className="text-sm text-blue-600 mt-1">
-                  Markup aplicado por defecto
-                </p>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-gray-600">
-                  Productos usando markup global:
-                </div>
-                <div className="text-lg font-semibold text-gray-800">
-                  {products.filter(p => p.markup_percentage === null).length} de {products.length}
-                </div>
-              </div>
-            </div>
-            <Alert className="mt-4 bg-blue-50 border-blue-200">
-              <Info className="h-4 w-4 text-blue-600" />
-              <AlertDescription className="text-blue-800">
-                El equipo de Carrefour puede establecer un markup específico para productos individuales al aprobarlos.
-              </AlertDescription>
-            </Alert>
-          </CardContent>
-        </Card>
-      )}
-
       {/* Stats Cards */}
       <div className="grid gap-4 md:grid-cols-4">
         <Card>
@@ -306,21 +234,14 @@ export function ProductsList({ sellerId }: ProductsListProps) {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Producto</TableHead>
-                    <TableHead>Precio Base</TableHead>
-                    <TableHead>Markup</TableHead>
-                    <TableHead>Precio Final</TableHead>
+                    <TableHead>Precio Propuesto</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead>Fecha</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {filteredProducts.map((product) => {
-                    const appliedMarkup = getAppliedMarkup(product);
-                    const finalPriceCalc = calculateFinalPrice(product.base_price, appliedMarkup);
-                    const isCustomMarkup = product.markup_percentage !== null && product.markup_percentage !== undefined;
-
-                    return (
+                  {filteredProducts.map((product) => (
                       <TableRow key={product.id}>
                         <TableCell>
                           <div className="flex items-center gap-3">
@@ -348,32 +269,6 @@ export function ProductsList({ sellerId }: ProductsListProps) {
                           <div className="text-xs text-gray-500">
                             {formatPrice(product.base_price / product.units_per_pack)}/ud
                           </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-1">
-                            <Percent className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">{appliedMarkup}%</span>
-                          </div>
-                          {product.status === 'approved' && (
-                            <Badge variant={isCustomMarkup ? "default" : "secondary"} className="text-xs mt-1">
-                              {isCustomMarkup ? 'Específico' : 'Global'}
-                            </Badge>
-                          )}
-                        </TableCell>
-                        <TableCell>
-                          {product.status === 'approved' ? (
-                            <div>
-                              <div className="flex items-center gap-1 font-medium text-green-600">
-                                <TrendingUp className="h-4 w-4" />
-                                {formatPrice(finalPriceCalc.finalPrice)}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                {formatPrice(finalPriceCalc.finalPrice / product.units_per_pack)}/ud
-                              </div>
-                            </div>
-                          ) : (
-                            <span className="text-gray-400">—</span>
-                          )}
                         </TableCell>
                         <TableCell>
                           <ProductStatusBadge status={product.status} />
@@ -404,8 +299,7 @@ export function ProductsList({ sellerId }: ProductsListProps) {
                           </Button>
                         </TableCell>
                       </TableRow>
-                    );
-                  })}
+                    ))}
                 </TableBody>
               </Table>
             </div>

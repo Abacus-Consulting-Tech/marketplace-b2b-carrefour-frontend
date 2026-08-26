@@ -9,6 +9,7 @@ import {
   Upload,
   ShoppingBag,
   User,
+  FileText,
 } from "lucide-react";
 
 interface NavItemProps {
@@ -94,6 +95,12 @@ export function SupplierSidebar() {
 
         {/* Gestión */}
         <NavSection title="Gestión">
+          <NavItem
+            href="/supplier/openings"
+            icon={<FileText className="h-5 w-5" />}
+            label="Invitaciones"
+            isActive={isActive("/supplier/openings")}
+          />
           <NavItem
             href="/supplier/orders"
             icon={<ShoppingBag className="h-5 w-5" />}
