@@ -3,6 +3,19 @@
  * 
  * Handles order operations for suppliers following Medusa/MercurJS conventions
  * 
+ * Backend Integration (Render DEV):
+ * - GET /vendor/orders - List supplier's orders
+ * - GET /vendor/orders/:id - Order detail
+ * - GET /vendor/orders/stats - Order statistics
+ * - POST /vendor/orders/:id/accept - Accept order
+ * - POST /vendor/orders/:id/reject - Reject order
+ * - PATCH /vendor/orders/:id/status - Update status
+ * - POST /vendor/orders/:id/tracking - Add tracking
+ * 
+ * All endpoints require:
+ * - Authorization: Bearer {token}
+ * - x-seller-id: {seller_id}
+ * 
  * Mode controlled by feature flags:
  * - Mock mode: Returns realistic test data with simulated delays
  * - Real mode: Calls Medusa backend endpoints
@@ -15,7 +28,7 @@
  */
 
 import { featureFlags } from '@/config/feature-flags'
-import { apiClient } from './client'
+import { apiRequest, buildQueryString, logApiMode } from './api-utils'
 import type {
   SupplierOrder,
   SupplierOrderFilters,
@@ -47,15 +60,10 @@ import {
 // ============================================================================
 
 const isMockMode = featureFlags.shouldUseMock('orders')
-const API_BASE_URL = featureFlags.getApiBaseUrl('orders') || '/api/supplier/orders'
+const isBackendReady = featureFlags.isBackendReady('orders')
 
 // Log mode on initialization
-if (typeof window !== 'undefined') {
-  console.log(
-    `${isMockMode ? '🎭' : '🌐'} Supplier Orders API Mode: ${isMockMode ? 'MOCK' : 'REAL'}`,
-    `(Backend Ready: ${featureFlags.isBackendReady('orders') ? 'Yes ✅' : 'No ⏳'})`
-  )
-}
+logApiMode('Supplier Orders', isMockMode, isBackendReady)
 
 // Simulate network delay in mock mode
 const MOCK_DELAY_MS = 400
@@ -124,11 +132,27 @@ export const supplierOrdersApi = {
       })
     }
     
-    // Real API call to Medusa
-    const response = await apiClient.get<SupplierOrdersResponse>(API_BASE_URL, {
-      params: filters,
-    })
-    return response.data
+    // Real API call to Medusa backend
+    // Note: seller_id is automatically added by api-utils from auth storage
+    const queryParams: Record<string, any> = {}
+    if (filters?.status) {
+      queryParams.status = Array.isArray(filters.status) ? filters.status.join(',') : filters.status
+    }
+    if (filters?.search) queryParams.q = filters.search
+    if (filters?.dateFrom) queryParams.date_from = filters.dateFrom
+    if (filters?.dateTo) queryParams.date_to = filters.dateTo
+    if (filters?.limit) queryParams.limit = filters.limit
+    if (filters?.page) queryParams.offset = (filters.page - 1) * (filters.limit || 20)
+    
+    const queryString = buildQueryString(queryParams)
+    const data = await apiRequest<any>(`/vendor/orders${queryString}`)
+    
+    return {
+      orders: data.orders || [],
+      count: data.count || 0,
+      offset: data.offset || 0,
+      limit: data.limit || 20,
+    }
   },
 
   /**
@@ -144,24 +168,8 @@ export const supplierOrdersApi = {
     }
     
     // Real API call to Medusa
-    const response = await apiClient.get<SupplierOrderResponse>(`${API_BASE_URL}/${orderId}`)
-    return response.data.order
-  },
-
-  /**
-   * Get order statistics for supplier dashboard
-   * 
-   * @returns Statistics summary
-   */
-  async getOrderStats(): Promise<SupplierOrderStats> {
-    if (isMockMode) {
-      const stats = getMockOrderStats()
-      return mockDelay(stats)
-    }
-    
-    // Real API call to Medusa
-    const response = await apiClient.get<SupplierOrderStatsResponse>(`${API_BASE_URL}/stats`)
-    return response.data.stats
+    const data = await apiRequest<any>('/vendor/orders/stats')
+    return data.stats || data
   },
 
   /**
@@ -181,14 +189,14 @@ export const supplierOrdersApi = {
     }
     
     // Real API call to Medusa
-    const response = await apiClient.post<SupplierOrderResponse>(
-      `${API_BASE_URL}/${request.orderId}/accept`,
-      {
+    const data = await apiRequest<any>(`/vendor/orders/${request.orderId}/accept`, {
+      method: 'POST',
+      body: JSON.stringify({
         estimated_delivery: request.estimatedDelivery,
         notes: request.notes,
-      }
-    )
-    return response.data.order
+      }),
+    })
+    return data.order || data
   },
 
   /**
@@ -207,14 +215,14 @@ export const supplierOrdersApi = {
     }
     
     // Real API call to Medusa
-    const response = await apiClient.post<SupplierOrderResponse>(
-      `${API_BASE_URL}/${request.orderId}/reject`,
-      {
+    const data = await apiRequest<any>(`/vendor/orders/${request.orderId}/reject`, {
+      method: 'POST',
+      body: JSON.stringify({
         reason: request.reason,
         notes: request.notes,
-      }
-    )
-    return response.data.order
+      }),
+    })
+    return data.order || data
   },
 
   /**
@@ -246,14 +254,14 @@ export const supplierOrdersApi = {
     }
     
     // Real API call to Medusa
-    const response = await apiClient.patch<SupplierOrderResponse>(
-      `${API_BASE_URL}/${request.orderId}/status`,
-      {
+    const data = await apiRequest<any>(`/vendor/orders/${request.orderId}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({
         status: request.status,
         notes: request.notes,
-      }
-    )
-    return response.data.order
+      }),
+    })
+    return data.order || data
   },
 
   /**
@@ -271,6 +279,22 @@ export const supplierOrdersApi = {
         carrier: request.carrier,
         estimatedDelivery: request.estimatedDelivery,
         shipped_at: new Date().toISOString(),
+        supplierNotes: `Pedido enviado. Transportista: ${request.carrier}. Número de seguimiento: ${request.trackingNumber}`,
+      })
+      return mockDelay(updated)
+    }
+    
+    // Real API call to Medusa
+    const data = await apiRequest<any>(`/vendor/orders/${request.orderId}/tracking`, {
+      method: 'POST',
+      body: JSON.stringify({
+        tracking_number: request.trackingNumber,
+        tracking_url: request.trackingUrl,
+        carrier: request.carrier,
+        estimated_delivery: request.estimatedDelivery,
+      }),
+    })
+    return data.order || data.toISOString(),
         supplierNotes: `Pedido enviado. Transportista: ${request.carrier}. Número de seguimiento: ${request.trackingNumber}`,
       })
       return mockDelay(updated)

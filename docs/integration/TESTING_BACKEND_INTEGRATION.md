@@ -326,9 +326,123 @@
 
 ---
 
-### Test 7: Vendor Markup Info
+### Test 7: Vendor Orders List
 
-**Objective**: Verify vendor can see their own markup
+**Objective**: Verify vendor can see their orders from real backend
+
+**Steps**:
+
+1. **Login as vendor**:
+   ```
+   Email: seller@mercur.dev
+   Password: supersecret
+   ```
+
+2. **Navigate to vendor orders page**:
+   ```
+   http://localhost:3000/supplier/orders
+   (or wherever your vendor orders list is)
+   ```
+
+3. **Check Console**:
+   ```
+   ✅ Look for:
+   🌐 Supplier Orders API Mode: REAL (Backend Ready: Yes ✅)
+   ```
+
+4. **Check Network tab**:
+   ```
+   ✅ Look for:
+   GET https://marketplace-b2b-backend-dev.onrender.com/vendor/orders?limit=20
+   Headers:
+     - Authorization: Bearer eyJ...
+     - x-seller-id: sel_01M0T3BYTKQF7RV18RX93XEAQD
+   Status: 200 OK
+   Response: {"orders": [...], "count": 0, "limit": 20, "offset": 0}
+   ```
+
+5. **Verify orders display**:
+   ```
+   ✅ Should show vendor's orders (may be empty if no test data)
+   ✅ Check order numbers, franchisee names, amounts
+   ```
+
+6. **Check order statistics** (if displayed on page):
+   ```
+   ✅ Network tab should show:
+   GET https://marketplace-b2b-backend-dev.onrender.com/vendor/orders/stats
+   Headers: Authorization + x-seller-id
+   Response: {"stats": {"pendingCount": 0, "confirmedCount": 0, ...}}
+   ```
+
+**Expected Result**: ✅ Vendor orders loaded from real backend with x-seller-id header
+
+**Note**: Backend may have no orders for test vendor. Check response shows `count: 0` which is valid.
+
+---
+
+### Test 8: Vendor Order Actions (if test data available)
+
+**Objective**: Verify vendor can accept/reject/update orders
+
+**Prerequisites**: Need at least one test order assigned to seller@mercur.dev
+
+**Steps** (if order available):
+
+1. **Login as vendor**
+
+2. **Go to orders list, click on a pending order**
+
+3. **Try accepting the order**:
+   - Click "Accept Order" button
+   - Fill in estimated delivery date
+   - Submit
+
+4. **Check Network tab**:
+   ```
+   ✅ Look for:
+   POST https://marketplace-b2b-backend-dev.onrender.com/vendor/orders/{order_id}/accept
+   Headers:
+     - Authorization: Bearer eyJ...
+     - x-seller-id: sel_01M0T3BYTKQF7RV18RX93XEAQD
+   Body: {"estimated_delivery": "2026-09-15", "notes": "..."}
+   Status: 200 OK
+   ```
+
+5. **Try updating order status** (if available):
+   - Change status to "In Preparation"
+   - Submit
+
+6. **Check Network**:
+   ```
+   ✅ Look for:
+   PATCH https://marketplace-b2b-backend-dev.onrender.com/vendor/orders/{order_id}/status
+   Body: {"status": "in_preparation", "notes": "..."}
+   ```
+
+7. **Try adding tracking** (if available):
+   - Mark as shipped
+   - Add tracking number, carrier
+   - Submit
+
+8. **Check Network**:
+   ```
+   ✅ Look for:
+   POST https://marketplace-b2b-backend-dev.onrender.com/vendor/orders/{order_id}/tracking
+   Body: {"tracking_number": "...", "carrier": "...", ...}
+   ```
+
+**Expected Result**: ✅ Order actions work with real backend
+
+**If No Test Data**:
+- Actions endpoints validated by backend team (return 404 for non-existent orders)
+- UI may show empty state - this is expected and valid
+
+---
+
+### Test 9: Vendor Markup Info
+
+**Old Test 7 - renumbered**
 
 **Steps**:
 
@@ -389,9 +503,9 @@
 
 ---
 
-### Test 9: Error Handling - Backend Timeout
+### Test 11: Error Handling - Backend Timeout
 
-**Objective**: Verify app handles slow backend gracefully
+**Old Test 9 - renumbered**
 
 **Steps**:
 
@@ -424,9 +538,9 @@
 
 ---
 
-### Test 10: Feature Flag Toggle
+### Test 12: Feature Flag Toggle
 
-**Objective**: Verify mock mode still works as fallback
+**Old Test 10 - renumbered**
 
 **Steps**:
 
@@ -481,10 +595,12 @@ Mark each test as you complete it:
 - [ ] ✅ Test 4: Pricing Module - Pending Products
 - [ ] ✅ Test 5: Seller Markup Management
 - [ ] ✅ Test 6: Vendor Products List
-- [ ] ✅ Test 7: Vendor Markup Info
-- [ ] ✅ Test 8: Error Handling - 401 Unauthorized
-- [ ] ✅ Test 9: Error Handling - Backend Timeout
-- [ ] ✅ Test 10: Feature Flag Toggle
+- [ ] ✅ Test 7: Vendor Orders List
+- [ ] ✅ Test 8: Vendor Order Actions (if test data available)
+- [ ] ✅ Test 9: Vendor Markup Info
+- [ ] ✅ Test 10: Error Handling - 401 Unauthorized
+- [ ] ✅ Test 11: Error Handling - Backend Timeout
+- [ ] ✅ Test 12: Feature Flag Toggle
 
 ---
 
