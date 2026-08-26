@@ -88,30 +88,51 @@ curl -X POST https://marketplace-b2b-backend-dev.onrender.com/auth/member/emailp
 
 ### 2. Orders Module
 
-**List Orders (Admin)**:
+> **⚠️ IMPORTANT**: JWT tokens expire after 24 hours. Always get a fresh token first!
+
+**Step 1: Get Fresh Token**:
 ```bash
+# Login as admin and save token to variable
+TOKEN=$(curl -s -X POST https://marketplace-b2b-backend-dev.onrender.com/auth/user/emailpass \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@carrefour.dev","password":"supersecret"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+
+echo "Token: $TOKEN"
+```
+
+**Step 2: List Orders (Admin)**:
+```bash
+# Use the fresh token
 curl -X GET "https://marketplace-b2b-backend-dev.onrender.com/admin/orders?limit=10" \
-  -H "Authorization: Bearer <admin_token>"
+  -H "Authorization: Bearer $TOKEN"
+
+# Expected: {"orders": [...], "count": 10, "limit": 10, "offset": 0}
 ```
 
 **Order Detail**:
 ```bash
 curl -X GET "https://marketplace-b2b-backend-dev.onrender.com/admin/orders/<order_id>" \
-  -H "Authorization: Bearer <admin_token>"
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 ### 3. Sellers Module
 
 **List Sellers (Admin)**:
 ```bash
+# Use admin token from step 1
 curl -X GET "https://marketplace-b2b-backend-dev.onrender.com/admin/sellers?limit=50" \
-  -H "Authorization: Bearer <admin_token>"
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 **My Seller Info (Vendor)**:
 ```bash
+# Get vendor token first
+VENDOR_TOKEN=$(curl -s -X POST https://marketplace-b2b-backend-dev.onrender.com/auth/member/emailpass \
+  -H "Content-Type: application/json" \
+  -d '{"email":"seller@mercur.dev","password":"supersecret"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+
 curl -X GET "https://marketplace-b2b-backend-dev.onrender.com/vendor/sellers/me" \
-  -H "Authorization: Bearer <vendor_token>" \
+  -H "Authorization: Bearer $VENDOR_TOKEN" \
   -H "x-seller-id: sel_01M0T3BYTKQF7RV18RX93XEAQD"
 ```
 
@@ -119,35 +140,37 @@ curl -X GET "https://marketplace-b2b-backend-dev.onrender.com/vendor/sellers/me"
 
 **Pending Products (Admin)**:
 ```bash
+# Use admin token from step 1
 curl -X GET "https://marketplace-b2b-backend-dev.onrender.com/admin/custom/products/pending?limit=5" \
-  -H "Authorization: Bearer <admin_token>"
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 **Get Seller Markup (Admin)**:
 ```bash
 curl -X GET "https://marketplace-b2b-backend-dev.onrender.com/admin/custom/sellers/<seller_id>/markup" \
-  -H "Authorization: Bearer <admin_token>"
+  -H "Authorization: Bearer $TOKEN"
 ```
 
 **Update Seller Markup (Admin)**:
 ```bash
 curl -X PATCH "https://marketplace-b2b-backend-dev.onrender.com/admin/custom/sellers/<seller_id>/markup" \
-  -H "Authorization: Bearer <admin_token>" \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"markup_percentage":15.0,"reason":"Ajuste trimestral"}'
 ```
 
 **My Products (Vendor)**:
 ```bash
+# Use vendor token from sellers module section
 curl -X GET "https://marketplace-b2b-backend-dev.onrender.com/vendor/custom/products?limit=5" \
-  -H "Authorization: Bearer <vendor_token>" \
+  -H "Authorization: Bearer $VENDOR_TOKEN" \
   -H "x-seller-id: sel_01M0T3BYTKQF7RV18RX93XEAQD"
 ```
 
 **Propose Product (Vendor)**:
 ```bash
 curl -X POST "https://marketplace-b2b-backend-dev.onrender.com/vendor/custom/products" \
-  -H "Authorization: Bearer <vendor_token>" \
+  -H "Authorization: Bearer $VENDOR_TOKEN" \
   -H "x-seller-id: sel_01M0T3BYTKQF7RV18RX93XEAQD" \
   -H "Content-Type: application/json" \
   -d '{
@@ -220,12 +243,18 @@ curl -X POST "https://marketplace-b2b-backend-dev.onrender.com/vendor/custom/pro
 
 ### Current Limitations
 
-1. **Render Free Tier Cold Starts**:
+1. **JWT Token Expiration**:
+   - Tokens expire after 24 hours
+   - Frontend: Automatically handled by 401 response → logout → redirect to login
+   - API testing: Always get fresh token before testing
+   - No automatic token refresh implemented yet
+
+2. **Render Free Tier Cold Starts**:
    - Backend may sleep after inactivity
    - First request may take 30+ seconds
    - Implemented 30s timeout with user feedback
 
-2. **Store Endpoints**:
+3. **Store Endpoints**:
    - `/store/*` endpoints require `x-publishable-api-key`
    - Not yet fully integrated (catalog, checkout still in mock mode)
 
@@ -240,15 +269,29 @@ curl -X POST "https://marketplace-b2b-backend-dev.onrender.com/vendor/custom/pro
 
 ### Troubleshooting
 
-**401 Unauthorized**:
-- Clear localStorage and login again
-- Check JWT expiration
+**401 Unauthorized / {"message":"Unauthorized"}**:
+- **Most common cause**: Expired JWT token (tokens expire after 24 hours)
+- **Solution**: Get a fresh token by logging in again
+- In frontend: Clear localStorage and login again
+- In curl/API testing: Run the login curl command to get new token
+- Check JWT expiration: tokens contain `exp` claim (Unix timestamp)
 - Verify correct endpoint for role (user vs member)
+
+**Testing with curl - Common mistake**:
+```bash
+# ❌ WRONG - Using hardcoded/expired token
+curl -H "Authorization: Bearer eyJold_token..."
+
+# ✅ CORRECT - Get fresh token first
+TOKEN=$(curl -s -X POST .../auth/user/emailpass ... | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+curl -H "Authorization: Bearer $TOKEN" ...
+```
 
 **Missing x-seller-id**:
 - Check auth-storage in localStorage
 - Verify seller_id was fetched during login
 - Check Network tab for missing header
+- Required for all `/vendor/*` endpoints
 
 **CORS Errors**:
 - Backend should have CORS configured

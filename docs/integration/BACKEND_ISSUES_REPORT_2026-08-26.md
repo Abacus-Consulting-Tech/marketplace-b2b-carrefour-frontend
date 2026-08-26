@@ -19,6 +19,32 @@ All issues are related to **Role-Based Access Control (RBAC)** configuration. Ad
 
 ---
 
+## ⚠️ Important: Authentication Testing Notes
+
+**JWT Token Expiration:**
+- JWT tokens expire after **24 hours**
+- Error `{"message":"Unauthorized"}` typically means expired token
+- **Always get a fresh token before testing:**
+
+```bash
+# Get fresh admin token
+TOKEN=$(curl -s -X POST https://marketplace-b2b-backend-dev.onrender.com/auth/user/emailpass \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@carrefour.dev","password":"supersecret"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4)
+
+# Then use it in your requests
+curl -H "Authorization: Bearer $TOKEN" ...
+```
+
+**Common Testing Mistakes:**
+- ❌ Using hardcoded/old token from documentation → 401 Unauthorized
+- ❌ Copy-pasting token from previous test → May be expired
+- ✅ Always login first to get fresh token before testing
+
+**All test commands in this report assume you have a fresh valid token.**
+
+---
+
 ## 🔴 Critical Issues (403 Forbidden)
 
 ### Issue #1: Admin Customers Endpoints - RBAC Permission Denied
