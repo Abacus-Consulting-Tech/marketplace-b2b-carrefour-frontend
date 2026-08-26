@@ -3,9 +3,20 @@
  * 
  * Dual mode client (mock/real) for product proposal & pricing approval workflow
  * Mode controlled by feature flags in @/config/feature-flags
+ * 
+ * Backend Integration (Render DEV):
+ * - GET /admin/custom/products/pending - Pending products queue
+ * - PATCH /admin/custom/products/:id/pricing-approval - Approve/reject product pricing
+ * - GET /admin/custom/sellers/:id/markup - Get seller markup
+ * - PATCH /admin/custom/sellers/:id/markup - Update seller markup
+ * - GET /admin/custom/sellers/:id/markup/history - Markup change history
+ * - POST /vendor/custom/products - Propose new product
+ * - GET /vendor/custom/products - My products list
+ * - GET /vendor/custom/sellers/me/markup - My markup info
  */
 
 import { featureFlags } from '@/config/feature-flags';
+import { apiRequest, buildQueryString, logApiMode } from './api-utils';
 import type {
   Product,
   Seller,
@@ -45,73 +56,10 @@ import {
 // ============================================================================
 
 const isMockMode = featureFlags.shouldUseMock('pricing');
-const API_BASE_URL = featureFlags.getApiBaseUrl('pricing') || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
+const isBackendReady = featureFlags.isBackendReady('pricing');
 
 // Log mode on initialization
-if (typeof window !== 'undefined') {
-  console.log(
-    `${isMockMode ? '🎭' : '🌐'} Pricing API Mode: ${isMockMode ? 'MOCK' : 'REAL'}`,
-    `(Backend Ready: ${featureFlags.isBackendReady('pricing') ? 'Yes ✅' : 'No ⏳'})`
-  );
-}
-
-/**
- * Get auth token from storage or context
- * TODO: Replace with actual auth implementation
- */
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('auth_token') || null;
-}
-
-/**
- * Create headers for API requests
- */
-function createHeaders(sellerId?: string): Record<string, string> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  const token = getAuthToken();
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  if (sellerId) {
-    headers['x-seller-id'] = sellerId;
-  }
-
-  return headers;
-}
-
-/**
- * Generic API request handler
- */
-async function apiRequest<T>(
-  endpoint: string,
-  options: RequestInit = {}
-): Promise<ApiResponse<T>> {
-  try {
-    const url = `${API_BASE_URL}${endpoint}`;
-    const response = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-      },
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `API Error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    return data;
-  } catch (error) {
-    console.error('API Request Error:', error);
-    throw error;
-  }
-}
+logApiMode('Pricing', isMockMode, isBackendReady);
 
 // ============================================================================
 // API Client
@@ -141,9 +89,9 @@ export const pricingApi = {
       return mockProposeProduct(request);
     }
 
-    return apiRequest<ProposeProductResponse>('/vendor/custom/products', {
+    const data = await apiRequest<ProposeProductResponse>('/vendor/custom/products', {
       method: 'POST',
-      headers: createHeaders(request.sellerId),
+      sellerId: request.sellerId,
       body: JSON.stringify({
         title: request.title,
         description: request.description,
@@ -159,6 +107,8 @@ export const pricingApi = {
         tax_rate: request.tax_rate,
       }),
     });
+    
+    return { data };
   },
 
   /**
@@ -173,10 +123,12 @@ export const pricingApi = {
       return mockGetMyProducts(sellerId);
     }
 
-    return apiRequest<Product[]>('/vendor/custom/products', {
+    const data = await apiRequest<Product[]>('/vendor/custom/products?limit=100', {
       method: 'GET',
-      headers: createHeaders(sellerId),
+      sellerId,
     });
+    
+    return { data: Array.isArray(data) ? data : [] };
   },
 
   /**

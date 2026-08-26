@@ -3,9 +3,14 @@
  * 
  * Cliente API para gestión global de pedidos desde administración
  * Vista completa de todos los pedidos de la plataforma
+ * 
+ * Backend Integration (Render DEV):
+ * - GET /admin/orders?limit=N - List orders
+ * - GET /admin/orders/:id - Order detail
  */
 
 import { featureFlags } from '@/config/feature-flags'
+import { apiRequest, buildQueryString, logApiMode } from './api-utils'
 import {
   AdminOrder,
   AdminOrderSearchParams,
@@ -32,6 +37,9 @@ import {
   getMockOrderIncidents,
   getMockAdminOrderStats
 } from './orders-admin-mock'
+
+// Log mode on initialization
+logApiMode('Orders (Admin)', featureFlags.shouldUseMock('orders'), featureFlags.isBackendReady('orders'))
 
 // ============================================================================
 // Mock API Functions
@@ -222,53 +230,63 @@ async function mockAddAdminNote(request: AddAdminNoteRequest): Promise<GetAdminO
 }
 
 // ============================================================================
-// Real API Functions (to be implemented)
+// Real API Functions
 // ============================================================================
 
 async function realGetAdminOrders(params: AdminOrderSearchParams = {}): Promise<GetAdminOrdersResponse> {
-  const queryParams = new URLSearchParams()
+  const queryParams: Record<string, any> = {}
   
-  // Add filters to query params
+  // Add filters
   if (params.status) {
-    const statuses = Array.isArray(params.status) ? params.status : [params.status]
-    statuses.forEach(status => queryParams.append('status', status))
+    queryParams.status = Array.isArray(params.status) ? params.status.join(',') : params.status
   }
+  if (params.customer_id) queryParams.customer_id = params.customer_id
+  if (params.supplier_id) queryParams.supplier_id = params.supplier_id
+  if (params.priority) queryParams.priority = params.priority
+  if (params.has_incidents !== undefined) queryParams.has_incidents = params.has_incidents
+  if (params.search) queryParams.q = params.search
+  if (params.limit) queryParams.limit = params.limit
+  if (params.page) queryParams.offset = (params.page - 1) * (params.limit || 10)
   
-  // ... (similar to franchisee implementation)
+  const queryString = buildQueryString(queryParams)
+  const data = await apiRequest<any>(`/admin/orders${queryString}`)
   
-  const response = await fetch(`/admin/orders?${queryParams.toString()}`, {
-    headers: { 'Content-Type': 'application/json' },
-  })
-  
-  if (!response.ok) throw new Error('Error al obtener pedidos')
-  return await response.json()
+  // Transform Medusa response to our format
+  return {
+    orders: data.orders || [],
+    count: data.count || 0,
+    total: data.count || 0,
+    page: params.page || 1,
+    limit: params.limit || 10
+  }
 }
 
 async function realGetAdminOrderById(id: string): Promise<GetAdminOrderResponse> {
-  const response = await fetch(`/admin/orders/${id}`)
-  if (!response.ok) throw new Error('Error al obtener pedido')
-  return await response.json()
+  const data = await apiRequest<any>(`/admin/orders/${id}`)
+  return { order: data.order || data }
 }
 
 async function realUpdateOrderStatus(request: UpdateOrderStatusRequest): Promise<UpdateOrderStatusResponse> {
-  const response = await fetch(`/admin/orders/${request.order_id}/status`, {
+  // Note: Medusa may not have this exact endpoint - this is a placeholder
+  const data = await apiRequest<any>(`/admin/orders/${request.order_id}/status`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
-      new_status: request.new_status,
+      status: request.new_status,
       reason: request.reason,
       admin_notes: request.admin_notes
     })
   })
   
-  if (!response.ok) throw new Error('Error al actualizar estado')
-  return await response.json()
+  return {
+    order: data.order || data,
+    success: true
+  }
 }
 
 async function realGetAdminOrderStats(): Promise<AdminOrderStats> {
-  const response = await fetch('/admin/orders/stats')
-  if (!response.ok) throw new Error('Error al obtener estadísticas')
-  return await response.json()
+  // Note: This may need to be a custom endpoint or aggregated from orders list
+  const data = await apiRequest<any>('/admin/orders/stats')
+  return data
 }
 
 // ============================================================================

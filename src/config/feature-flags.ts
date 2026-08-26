@@ -52,10 +52,10 @@ export const featureFlags = {
     
     pricing: {
       useMock: process.env.NEXT_PUBLIC_MOCK_PRICING !== 'false', // Default to true
-      backendReady: false,
-      apiBaseUrl: '/api/products/pricing',
-      notes: 'UI complete, backend API in progress',
-      lastUpdated: '2026-08-21',
+      backendReady: true, // ✅ Render DEV validated 2026-08-24
+      apiBaseUrl: '/admin/custom',
+      notes: 'Pricing API validated - GET /admin/custom/products/pending, PATCH /admin/custom/products/:id/pricing-approval, GET/PATCH /admin/custom/sellers/:id/markup',
+      lastUpdated: '2026-08-26',
     } satisfies ModuleConfig,
     
     openings: {
@@ -75,11 +75,11 @@ export const featureFlags = {
     } satisfies ModuleConfig,
 
     suppliers: {
-      useMock: true,
-      backendReady: false,
-      apiBaseUrl: '/api/suppliers',
-      notes: 'Planned for next sprint',
-      lastUpdated: '2026-08-21',
+      useMock: process.env.NEXT_PUBLIC_MOCK_SUPPLIERS !== 'false', // Default to true
+      backendReady: true, // ✅ Render DEV validated 2026-08-24
+      apiBaseUrl: '/admin',
+      notes: 'Sellers API validated - GET /admin/sellers, GET /admin/custom/sellers, GET /vendor/sellers/me',
+      lastUpdated: '2026-08-26',
     } satisfies ModuleConfig,
 
     categories: {
@@ -99,11 +99,11 @@ export const featureFlags = {
     } satisfies ModuleConfig,
 
     orders: {
-      useMock: true,
-      backendReady: false,
-      apiBaseUrl: '/api/supplier/orders',
-      notes: 'Order management - Supplier orders (receive) and Franchisee orders (my orders) - UI ready with mock data, backend pending',
-      lastUpdated: '2026-08-25',
+      useMock: process.env.NEXT_PUBLIC_MOCK_ORDERS !== 'false', // Default to true
+      backendReady: true, // ✅ Render DEV validated 2026-08-24
+      apiBaseUrl: '/admin/orders',
+      notes: 'Orders API validated - GET /admin/orders, GET /vendor/orders (requires x-seller-id header)',
+      lastUpdated: '2026-08-26',
     } satisfies ModuleConfig,
 
     franchisees: {

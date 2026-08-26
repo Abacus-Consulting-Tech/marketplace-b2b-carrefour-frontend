@@ -25,6 +25,11 @@ export interface User {
   status: 'active' | 'inactive' | 'pending'
   createdAt: string
   updatedAt: string
+  
+  // JWT claims from Render DEV backend
+  actor_type?: 'user' | 'member'  // 'user' for admin, 'member' for vendor/supplier
+  actor_id?: string  // User or member ID from backend
+  seller_id?: string  // Seller ID for vendor/supplier (required for /vendor/* endpoints)
 }
 
 // Supplier types
