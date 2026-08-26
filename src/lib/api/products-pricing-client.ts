@@ -16,7 +16,7 @@
  */
 
 import { featureFlags } from '@/config/feature-flags';
-import { apiRequest, buildQueryString, logApiMode } from './api-utils';
+import { apiRequest, buildQueryString, logApiMode, createApiHeaders } from './api-utils';
 import type {
   Product,
   Seller,
@@ -154,7 +154,7 @@ export const pricingApi = {
 
     return apiRequest<Product>(`/vendor/custom/products/${productId}`, {
       method: 'GET',
-      headers: createHeaders(sellerId),
+      headers: createApiHeaders({ sellerId }),
     });
   },
 
@@ -176,7 +176,7 @@ export const pricingApi = {
 
     return apiRequest<BulkUploadResult>('/vendor/custom/products/bulk', {
       method: 'POST',
-      headers: createHeaders(sellerId),
+      headers: createApiHeaders({ sellerId }),
       body: JSON.stringify({ products }),
     });
   },
@@ -210,7 +210,7 @@ export const pricingApi = {
 
     return apiRequest<PendingProductsResponse>(endpoint, {
       method: 'GET',
-      headers: createHeaders(),
+      headers: createApiHeaders(),
     });
   },
 
@@ -234,7 +234,7 @@ export const pricingApi = {
       `/admin/custom/products/${productId}/pricing-approval`,
       {
         method: 'PATCH',
-        headers: createHeaders(),
+        headers: createApiHeaders(),
         body: JSON.stringify({
           status: 'approved',
           markup_percentage: markup,
@@ -263,7 +263,7 @@ export const pricingApi = {
       `/admin/custom/products/${productId}/pricing-approval`,
       {
         method: 'PATCH',
-        headers: createHeaders(),
+        headers: createApiHeaders(),
         body: JSON.stringify({
           status: 'rejected',
           rejection_reason: reason,
@@ -292,7 +292,7 @@ export const pricingApi = {
       `/vendor/custom/products/${productId}/resubmit`,
       {
         method: 'PATCH',
-        headers: createHeaders(sellerId),
+        headers: createApiHeaders({ sellerId }),
         body: JSON.stringify({ status: 'pending_approval' }),
       }
     );
@@ -312,7 +312,7 @@ export const pricingApi = {
 
     return apiRequest<SellerMarkup>(`/admin/custom/sellers/${sellerId}/markup`, {
       method: 'GET',
-      headers: createHeaders(),
+      headers: createApiHeaders(),
     });
   },
 
@@ -336,7 +336,7 @@ export const pricingApi = {
       `/admin/custom/sellers/${sellerId}/markup`,
       {
         method: 'PATCH',
-        headers: createHeaders(),
+        headers: createApiHeaders(),
         body: JSON.stringify(request),
       }
     );
@@ -365,7 +365,7 @@ export const pricingApi = {
 
     return apiRequest<GetSellerMarkupHistoryResponse>(endpoint, {
       method: 'GET',
-      headers: createHeaders(),
+      headers: createApiHeaders(),
     });
   },
 
@@ -382,7 +382,7 @@ export const pricingApi = {
 
     return apiRequest<Seller[]>('/admin/custom/sellers', {
       method: 'GET',
-      headers: createHeaders(),
+      headers: createApiHeaders(),
     });
   },
 };
