@@ -6,11 +6,307 @@
 
 ## 📋 Tabla de Contenidos
 
-1. [Resumen Ejecutivo](#-resumen-ejecutivo)
-2. [Preparación de la Demo](#-preparación-de-la-demo)
-3. [Demostración por Rol](#-demostración-por-rol)
-4. [Puntos Clave a Destacar](#-puntos-clave-a-destacar)
-5. [Preguntas Frecuentes](#-preguntas-frecuentes)
+1. [Preguntas Clave para Carrefour](#-preguntas-clave-para-carrefour)
+2. [Resumen Ejecutivo](#-resumen-ejecutivo)
+3. [Preparación de la Demo](#-preparación-de-la-demo)
+4. [Demostración por Rol](#-demostración-por-rol)
+5. [Puntos Clave a Destacar](#-puntos-clave-a-destacar)
+6. [Preguntas Frecuentes](#-preguntas-frecuentes)
+
+---
+
+## ❓ Preguntas Clave para Carrefour
+
+Esta sección recoge las principales dudas técnicas y de negocio que necesitamos resolver con Carrefour para completar la integración del sistema.
+
+---
+
+### 📦 1. DATOS DE PRODUCTOS Y CATÁLOGO
+
+#### Catálogo Inicial
+- **¿Cuántos productos debe tener el catálogo inicial?** ¿Miles, decenas de miles?
+- **¿De dónde provienen los datos actuales?** ¿Existe un sistema legacy del que exportar?
+- **¿Qué formato de datos pueden proporcionar?** (CSV, Excel, API, base de datos directa)
+- **¿Qué campos son obligatorios para cada producto?**
+  - Título, descripción, SKU, EAN/código de barras
+  - Imágenes (¿cuántas mínimo/máximo por producto?)
+  - Categorías y subcategorías (¿jerarquía definida?)
+  - Precio base, IVA, unidades por pack
+  - Dimensiones, peso (¿obligatorios para logística?)
+
+#### Estructura de Categorías
+- **¿Tienen definida una taxonomía de categorías?** Necesitamos el árbol completo
+- **¿Cuántos niveles de categorización?** (ej: Alimentación → Frescos → Lácteos → Quesos)
+- **¿Las categorías son diferentes por región/país?**
+
+#### Imágenes y Multimedia
+- **¿Dónde se alojarán las imágenes?** CDN propio, Amazon S3, otro servicio
+- **¿Qué tamaños/resoluciones requieren?** (thumbnail, galería, zoom)
+- **¿Quién gestiona la calidad/aprobación de imágenes?** ¿Equipo Carrefour o proveedores?
+
+---
+
+### 🏢 2. GESTIÓN DE PROVEEDORES
+
+#### Onboarding de Proveedores
+- **¿Cuántos proveedores esperan tener inicialmente?** ¿10, 50, 200?
+- **¿Existe una base de datos de proveedores actual?** Nombre, CIF, contacto, categorías que suministran
+- **¿Qué información fiscal/legal es obligatoria?**
+  - CIF/NIF verificado
+  - Certificados (ISO, calidad alimentaria, etc.)
+  - Seguros de responsabilidad
+  - Cuenta bancaria para pagos
+
+#### Proceso de Alta
+- **¿Cómo se validan los proveedores?** ¿Equipo de compras, departamento legal?
+- **¿Qué documentos deben adjuntar?** (Registro mercantil, licencias, certificaciones)
+- **¿Existen proveedores preferentes o exclusivos?** ¿Necesitan un tag especial?
+
+#### Categorías y Permisos
+- **¿Un proveedor puede suministrar múltiples categorías?** (ej: equipamiento + uniformes)
+- **¿Hay proveedores exclusivos por región?** (ej: solo península, solo Baleares)
+
+---
+
+### 🏪 3. GESTIÓN DE FRANQUICIADOS
+
+#### Base de Franquiciados
+- **¿Cuántas franquicias Carrefour operan actualmente?** Express, Market, otros formatos
+- **¿Existe un sistema CRM/ERP con datos de franquiciados?** ¿Podemos integrarnos?
+- **¿Qué datos tenemos de cada franquicia?**
+  - Razón social, CIF, dirección fiscal
+  - Persona de contacto, email, teléfono
+  - Formato de tienda, m², ubicación
+  - Condiciones comerciales (crédito, descuentos, plazos de pago)
+
+#### Condiciones Comerciales
+- **¿Hay descuentos por volumen?** ¿Cómo se calculan? (por franquicia, por compra, anual)
+- **¿Qué plazos de pago se manejan?** 30, 60, 90 días - ¿varía por franquicia?
+- **¿Tienen límites de crédito?** ¿Cómo se gestionan y actualizan?
+- **¿Existen franquicias con condiciones especiales?** (VIP, nuevas, en observación)
+
+#### Multisede
+- **¿Hay franquiciados con múltiples tiendas?** ¿Necesitan gestión centralizada?
+- **¿Los pedidos se hacen por tienda o por franquiciado?** ¿Entregas separadas?
+
+---
+
+### 💳 4. PAGOS Y FINANCIACIÓN
+
+#### Métodos de Pago
+- **¿Qué métodos de pago aceptan?**
+  - Transferencia bancaria (¿siempre a crédito?)
+  - Tarjeta de crédito/débito (¿para qué casos?)
+  - Confirming o factoring (¿gestionado por Carrefour?)
+  - Pagarés, cheques (¿aún en uso?)
+
+#### Stripe y Pasarelas
+- **¿Ya tienen cuenta Stripe?** Necesitamos credenciales de producción
+- **¿Prefieren otra pasarela de pago?** Redsys, PayPal, otra
+- **¿Los pagos son directos o a través de Carrefour?** (modelo marketplace vs distribuidor)
+
+#### Condiciones B2B
+- **¿Los precios incluyen o excluyen IVA?** ¿Varía por producto/categoría?
+- **¿Hay recargos por pago aplazado?** ¿Descuentos por pronto pago?
+- **¿Cómo se gestionan las facturas?** ¿Sistema contable integrado? (SAP, Sage, otro)
+
+#### Financiación de Aperturas
+- **¿Carrefour financia las nuevas aperturas?** ¿Qué importes y condiciones?
+- **¿Quién aprueba la financiación?** ¿Departamento financiero central?
+- **¿Qué documentación requieren para aprobar presupuestos?** (proyecto, viabilidad, garantías)
+
+---
+
+### 📧 5. COMUNICACIONES Y NOTIFICACIONES
+
+#### Email Transaccional
+- **¿Tienen servidor SMTP corporativo?** Necesitamos host, puerto, credenciales
+- **¿Prefieren servicio externo?** SendGrid, Mailgun, Amazon SES
+- **¿Qué dirección de envío usar?** (ej: `marketplace@carrefour.es`, `pedidos@carrefour.es`)
+- **¿Necesitan firma digital corporativa?** Logo, disclaimer legal
+
+#### Plantillas de Email
+- **¿Existen plantillas corporativas de Carrefour?** HTML, estilos, logo
+- **¿Qué emails son obligatorios?**
+  - Confirmación de pedido (franquiciado)
+  - Notificación de nuevo pedido (proveedor)
+  - Estado de envío (franquiciado)
+  - Producto aprobado/rechazado (proveedor)
+  - Nueva invitación a proyecto de apertura (proveedor)
+  - Presupuesto recibido (admin/franquiciado)
+
+#### Notificaciones en App
+- **¿Prefieren notificaciones push?** (si se desarrolla app móvil)
+- **¿Notificaciones SMS para eventos críticos?** (pedido urgente, problema con entrega)
+- **¿Quién gestiona el contenido de las notificaciones?** ¿Equipo marketing/comunicación?
+
+---
+
+### 🌍 6. REGIONES Y LOGÍSTICA
+
+#### Cobertura Geográfica
+- **¿Operan solo en España?** ¿O también Portugal, Francia, otros países?
+- **¿Las regiones afectan al catálogo?** (productos diferentes por zona)
+- **¿Hay proveedores con cobertura limitada?** (solo península, solo islas, etc.)
+
+#### Zonas de Entrega
+- **¿Cómo se definen las zonas de entrega?** Código postal, provincia, ciudad
+- **¿Hay recargos por zona?** Islas, zonas remotas
+- **¿Plazos de entrega estándar?** 24h, 48h, 72h - ¿varía por producto/proveedor?
+
+#### Almacenes y Stock
+- **¿Dónde se almacenan los productos?** ¿Almacenes centrales de Carrefour o de cada proveedor?
+- **¿Necesitan gestión de inventario en tiempo real?** ¿Integración con sistema de almacén?
+- **¿Dropshipping?** ¿Los proveedores envían directamente a franquicias?
+
+---
+
+### 🔐 7. SEGURIDAD Y AUTENTICACIÓN
+
+#### Gestión de Usuarios
+- **¿Integración con Active Directory corporativo?** SSO, LDAP
+- **¿Autenticación de dos factores (2FA) obligatoria?** ¿Para todos los roles o solo admin?
+- **¿Quién gestiona altas/bajas de usuarios?** ¿RRHH, IT, departamento específico?
+
+#### Roles y Permisos
+- **¿Necesitan más roles además de Admin, Franquiciado y Proveedor?**
+  - Comercial, Financiero, Logística, Soporte
+  - Roles regionales (admin por zona)
+- **¿Permisos granulares?** (ej: ver pedidos pero no aprobar, proponer productos pero no precios)
+
+#### Auditoría
+- **¿Necesitan logs de auditoría?** Quién hizo qué y cuándo
+- **¿Deben cumplir alguna normativa específica?** GDPR, PCI-DSS, ISO 27001
+- **¿Cuánto tiempo retener datos históricos?** 1 año, 5 años, indefinido
+
+---
+
+### 📊 8. INTEGRACIONES CON SISTEMAS EXISTENTES
+
+#### ERP/Contabilidad
+- **¿Qué ERP utilizan?** SAP, Microsoft Dynamics, Sage, otro
+- **¿Necesitan sincronización automática?** Pedidos, facturas, pagos, inventario
+- **¿API disponible?** Documentación, credenciales
+
+#### CRM
+- **¿Sistema CRM activo?** Salesforce, HubSpot, otro
+- **¿Los franquiciados y proveedores están en el CRM?** ¿Sincronización bidireccional?
+
+#### Sistema de Almacén (WMS)
+- **¿Software de gestión de almacén?** ¿Necesitan integración para picking/packing?
+- **¿Control de stock en tiempo real?** ¿API de consulta de disponibilidad?
+
+#### Facturación Electrónica
+- **¿Usan facturación electrónica obligatoria?** FACe, TicketBAI (País Vasco), otro
+- **¿Quién emite las facturas?** ¿Carrefour o cada proveedor?
+
+---
+
+### 📈 9. MODELO DE NEGOCIO Y PRICING
+
+#### Comisiones y Markup
+- **¿Carrefour cobra comisión sobre ventas?** ¿Porcentaje fijo o variable?
+- **¿El markup lo define Carrefour o cada proveedor?** ¿Rango permitido (ej: 10%-30%)?
+- **¿Hay markup diferente por categoría?** (productos frescos vs equipamiento)
+
+#### Descuentos y Promociones
+- **¿Quién crea las promociones?** ¿Equipo marketing central o cada proveedor?
+- **¿Qué tipos de descuentos manejan?**
+  - Por volumen (más de X unidades)
+  - Por importe (más de X€)
+  - Por temporada
+  - Por franquicia VIP
+- **¿Cómo se aplican?** Automático o manual con código
+
+#### Precios Dinámicos
+- **¿Los precios cambian con frecuencia?** ¿Semanal, mensual, según mercado?
+- **¿Necesitan histórico de precios?** Para análisis, auditoría
+- **¿Precios diferentes por franquicia?** (según volumen, zona, acuerdo)
+
+---
+
+### 🏗️ 10. MÓDULO DE NUEVAS APERTURAS
+
+#### Proceso de Apertura Actual
+- **¿Cuántas aperturas planean al año?** 10, 50, 100
+- **¿Qué departamentos intervienen?** Expansión, obra, compras, legal, finanzas
+- **¿Existe un proceso documentado?** Manual, workflow, checklist
+
+#### Presupuestos y Categorías
+- **¿Qué categorías incluye una apertura?**
+  - Obra y construcción
+  - Equipamiento (frío, estanterías, cajas)
+  - Señalización y rotulación
+  - IT (TPVs, redes, cámaras)
+  - Mobiliario
+  - Seguridad (alarmas, extintores)
+  - Uniformes del personal
+- **¿Presupuestos cerrados o abiertos?** ¿Límite por categoría?
+- **¿Cuántos proveedores pueden cotizar por categoría?** Mínimo/máximo
+
+#### Aprobaciones
+- **¿Quién aprueba cada etapa?**
+  - Selección de proveedores → ¿Compras?
+  - Presupuesto total → ¿Finanzas?
+  - Firma de contratos → ¿Legal?
+- **¿Umbrales de aprobación?** (ej: >50k€ requiere dirección general)
+
+#### Documentación
+- **¿Qué documentos se generan?**
+  - Planos de la tienda
+  - Contratos con proveedores
+  - Permisos de obra
+  - Licencias municipales
+- **¿Dónde se almacenan?** ¿Sistema documental existente?
+
+---
+
+### 🎯 11. PRIORIDADES Y ROADMAP
+
+#### Fases de Implementación
+- **¿Qué módulos son críticos para el MVP?**
+  1. Catálogo y pedidos (franquiciados)
+  2. Gestión de productos (proveedores)
+  3. Aperturas
+  4. Otros
+- **¿Cuándo planean el lanzamiento?** Beta cerrada, piloto, producción completa
+- **¿Habrá fase de pruebas con usuarios reales?** ¿Cuántas franquicias/proveedores?
+
+#### Volumen Esperado
+- **¿Cuántos pedidos mensuales esperan?** Estimación inicial
+- **¿Cuántos usuarios concurrentes?** Para dimensionar infraestructura
+- **¿Crecimiento proyectado?** Año 1, año 2, año 3
+
+---
+
+### 🛠️ 12. SOPORTE Y MANTENIMIENTO
+
+#### Equipo de Soporte
+- **¿Quién atenderá incidencias?** ¿Equipo Carrefour interno o externo?
+- **¿Horario de soporte?** Laborable 9-18h, 24/7, fines de semana
+- **¿Canal de soporte?** Email, teléfono, chat en vivo, tickets
+
+#### SLA y Disponibilidad
+- **¿Qué disponibilidad requieren?** 99%, 99.9%, 99.99%
+- **¿Horarios críticos?** (ej: lunes mañana alta carga de pedidos)
+- **¿Plan de contingencia?** Backup, disaster recovery
+
+#### Formación
+- **¿Necesitan formación para usuarios?** Manuales, videos, sesiones en vivo
+- **¿Quién capacita a franquiciados y proveedores?** ¿Equipo Carrefour o nosotros?
+
+---
+
+## 📞 Próximos Pasos
+
+Para avanzar eficientemente, necesitamos:
+
+1. **Reunión de alineación técnica** con los equipos de IT, Compras, Finanzas y Expansión de Carrefour
+2. **Acceso a sistemas legacy** para evaluar integración y migración de datos
+3. **Definición de prioridades** para planificar el roadmap de desarrollo
+4. **Datos de prueba reales** (anonimizados) para validar volúmenes y casos de uso
+
+**Contacto sugerido:** Crear un canal de comunicación directo (Slack, Teams, email) para resolver dudas rápidamente.
 
 ---
 
