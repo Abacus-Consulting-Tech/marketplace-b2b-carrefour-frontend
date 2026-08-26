@@ -36,14 +36,14 @@ import type {
  */
 function toMedusaAddress(address: ShippingAddress): MercurCartAddress {
   return {
-    first_name: address.firstName,
-    last_name: address.lastName,
-    address_1: address.address1,
-    address_2: address.address2 || null,
+    first_name: address.firstName || address.first_name || '',
+    last_name: address.lastName || address.last_name || '',
+    address_1: address.address1 || address.address_1 || '',
+    address_2: address.address2 || address.address_2 || null,
     city: address.city,
     province: address.province,
-    postal_code: address.postalCode,
-    country_code: address.countryCode,
+    postal_code: address.postalCode || address.postal_code || '',
+    country_code: address.countryCode || address.country_code || 'ES',
     phone: address.phone,
   }
 }
@@ -58,7 +58,7 @@ function fromMedusaOrder(medusaOrder: MercurOrder): Order {
     email: medusaOrder.email || '',
     status: medusaOrder.status as 'pending' | 'processing' | 'shipped' | 'completed' | 'cancelled',
     payment_status: medusaOrder.payment_status as 'pending' | 'awaiting' | 'captured' | 'authorized',
-    fulfillment_status: medusaOrder.fulfillment_status as 'not_fulfilled' | 'fulfilled' | 'shipped' | undefined,
+    fulfillment_status: (medusaOrder.fulfillment_status || 'not_fulfilled') as 'not_fulfilled' | 'fulfilled' | 'shipped',
     subtotal: medusaOrder.subtotal,
     tax_total: medusaOrder.tax_total,
     shipping_total: medusaOrder.shipping_total,
@@ -67,26 +67,39 @@ function fromMedusaOrder(medusaOrder: MercurOrder): Order {
     currency_code: medusaOrder.currency_code,
     items: medusaOrder.items.map(item => ({
       id: item.id,
+      order_id: medusaOrder.id,
+      product_id: item.variant_id || item.id,
       title: item.title,
       quantity: item.quantity,
       unit_price: item.unit_price,
       subtotal: item.subtotal || item.unit_price * item.quantity,
+      tax_total: item.tax_total || 0,
+      total: item.total || item.subtotal || item.unit_price * item.quantity,
       variant_id: item.variant_id || undefined,
       thumbnail: item.thumbnail || undefined,
     })),
     shipping_address: medusaOrder.shipping_address ? {
-      firstName: medusaOrder.shipping_address.first_name || '',
-      lastName: medusaOrder.shipping_address.last_name || '',
+      first_name: medusaOrder.shipping_address.first_name || '',
+      last_name: medusaOrder.shipping_address.last_name || '',
       company: '',
-      address1: medusaOrder.shipping_address.address_1 || '',
-      address2: medusaOrder.shipping_address.address_2 || undefined,
+      address_1: medusaOrder.shipping_address.address_1 || '',
+      address_2: medusaOrder.shipping_address.address_2 || undefined,
       city: medusaOrder.shipping_address.city || '',
       province: medusaOrder.shipping_address.province || '',
-      postalCode: medusaOrder.shipping_address.postal_code || '',
-      countryCode: medusaOrder.shipping_address.country_code || 'ES',
+      postal_code: medusaOrder.shipping_address.postal_code || '',
+      country_code: medusaOrder.shipping_address.country_code || 'ES',
       phone: medusaOrder.shipping_address.phone || '',
-    } : undefined,
+    } : {
+      first_name: '',
+      last_name: '',
+      address_1: '',
+      city: '',
+      postal_code: '',
+      country_code: 'ES',
+      phone: '',
+    },
     created_at: medusaOrder.created_at,
+    updated_at: medusaOrder.created_at,
   }
 }
 
@@ -108,10 +121,14 @@ function createMockOrder(
   
   const orderItems: OrderItem[] = cartItems.map((item, index) => ({
     id: `item_mock_${index + 1}`,
+    order_id: `order_mock_${Date.now()}`,
+    product_id: item.productId,
     title: item.title,
     quantity: item.quantity,
     unit_price: item.price,
     subtotal: item.price * item.quantity,
+    tax_total: Math.round(item.price * item.quantity * 0.21),
+    total: item.price * item.quantity + Math.round(item.price * item.quantity * 0.21),
     variant_id: item.variantId,
     thumbnail: item.thumbnail,
   }))
@@ -123,7 +140,7 @@ function createMockOrder(
   return {
     id: `order_mock_${Date.now()}`,
     display_id: generateMockDisplayId(),
-    email: `${shippingAddress.firstName.toLowerCase()}.${shippingAddress.lastName.toLowerCase()}@carrefour.es`,
+    email: `${(shippingAddress.firstName || shippingAddress.first_name || 'cliente').toLowerCase()}.${(shippingAddress.lastName || shippingAddress.last_name || 'carrefour').toLowerCase()}@carrefour.es`,
     status: 'pending',
     payment_status: paymentMethod.type === 'card' ? 'captured' : 'awaiting',
     fulfillment_status: 'not_fulfilled',
@@ -135,7 +152,9 @@ function createMockOrder(
     currency_code: 'eur',
     items: orderItems,
     shipping_address: shippingAddress,
+    region_id: 'reg_mock_es',
     created_at: now,
+    updated_at: now,
   }
 }
 
@@ -179,7 +198,7 @@ export async function completeCart(
     // 1. Update cart with shipping address and email
     console.log('📦 Step 1: Updating cart with shipping address...')
     const medusaAddress = toMedusaAddress(request.shippingAddress)
-    const email = `${request.shippingAddress.firstName.toLowerCase()}.${request.shippingAddress.lastName.toLowerCase()}@carrefour.es`
+    const email = `${(request.shippingAddress.firstName || request.shippingAddress.first_name || 'cliente').toLowerCase()}.${(request.shippingAddress.lastName || request.shippingAddress.last_name || 'carrefour').toLowerCase()}@carrefour.es`
     
     await medusaUpdateCart(cartId, {
       shipping_address: medusaAddress,

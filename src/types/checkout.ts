@@ -11,16 +11,22 @@
 
 export interface ShippingAddress {
   id?: string
-  first_name: string
-  last_name: string
+  first_name?: string
+  last_name?: string
   company?: string
-  address_1: string
+  address_1?: string
   address_2?: string
   city: string
   province?: string
-  postal_code: string
-  country_code: string // ISO 2-letter code (e.g., "es")
+  postal_code?: string
+  country_code?: string // ISO 2-letter code (e.g., "es")
   phone: string
+  firstName?: string
+  lastName?: string
+  address1?: string
+  address2?: string
+  postalCode?: string
+  countryCode?: string
   metadata?: Record<string, any>
 }
 
@@ -32,10 +38,25 @@ export interface BillingAddress extends ShippingAddress {
 // Payment Types
 // ============================================================================
 
-export type PaymentMethod = 'card' | 'transfer' | 'invoice' | 'cash'
+export type PaymentMethodType = 'card' | 'bank_transfer' | 'transfer' | 'invoice' | 'cash'
+
+export interface PaymentMethod {
+  type: PaymentMethodType
+  cardNumber?: string
+  cardHolder?: string
+  expiryDate?: string
+  cvv?: string
+  card_number?: string
+  card_holder?: string
+  expiry_date?: string
+  bank_reference?: string
+  invoice_address?: BillingAddress
+  tax_id?: string
+  metadata?: Record<string, any>
+}
 
 export interface PaymentDetails {
-  method: PaymentMethod
+  method: PaymentMethodType
   // Card payment
   card_number?: string
   card_holder?: string
@@ -71,8 +92,8 @@ export interface CheckoutState {
 
 export interface OrderItem {
   id: string
-  order_id: string
-  product_id: string
+  order_id?: string
+  product_id?: string
   variant_id?: string
   title: string
   description?: string
@@ -80,8 +101,8 @@ export interface OrderItem {
   quantity: number
   unit_price: number
   subtotal: number
-  tax_total: number
-  total: number
+  tax_total?: number
+  total?: number
   metadata?: Record<string, any>
 }
 
@@ -104,12 +125,15 @@ export type OrderStatus =
   | 'processing'
   | 'shipped'
   | 'delivered'
+  | 'completed'
   | 'cancelled'
   | 'refunded'
 
 export type PaymentStatus =
+  | 'pending'
   | 'awaiting'
   | 'captured'
+  | 'authorized'
   | 'partially_refunded'
   | 'refunded'
   | 'cancelled'
@@ -128,7 +152,7 @@ export interface Order {
   status: OrderStatus
   email: string
   customer_id?: string
-  region_id: string
+  region_id?: string
   currency_code: string
   
   // Items
@@ -155,7 +179,7 @@ export interface Order {
   
   // Timestamps
   created_at: string
-  updated_at: string
+  updated_at?: string
   cancelled_at?: string
   completed_at?: string
 }
@@ -168,7 +192,7 @@ export interface CompleteCartRequest {
   cart_id: string
   shipping_address: ShippingAddress
   billing_address?: BillingAddress
-  payment_method: PaymentMethod
+  payment_method: PaymentMethodType
   payment_details?: Record<string, any>
   notes?: string
 }
@@ -186,7 +210,7 @@ export interface CreateOrderRequest {
     variant_id: string
     quantity: number
   }[]
-  payment_method: PaymentMethod
+  payment_method: PaymentMethodType
   notes?: string
 }
 
@@ -198,8 +222,14 @@ export interface AddressValidationErrors {
   first_name?: string
   last_name?: string
   address_1?: string
+  firstName?: string
+  lastName?: string
+  company?: string
+  address1?: string
   city?: string
+  province?: string
   postal_code?: string
+  postalCode?: string
   country_code?: string
   phone?: string
 }
@@ -209,6 +239,9 @@ export interface PaymentValidationErrors {
   card_number?: string
   card_holder?: string
   expiry_date?: string
+  cardNumber?: string
+  cardHolder?: string
+  expiryDate?: string
   cvv?: string
   bank_reference?: string
   tax_id?: string
