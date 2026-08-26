@@ -315,7 +315,7 @@ export default function AdminOrderDetailPage({ params }: AdminOrderDetailPagePro
       </Card>
 
       {/* Order Detail */}
-      <OrderDetail order={order} />
+      <OrderDetail order={{ ...order, can_return: false }} />
     </div>
   )
 }

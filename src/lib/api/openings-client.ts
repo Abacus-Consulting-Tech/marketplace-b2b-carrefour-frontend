@@ -425,6 +425,7 @@ export const openingsApi = {
     data: InviteSuppliersRequest
   ): Promise<ApiResponse<SupplierInvitation[]>> {
     if (isMockMode) {
+      const category = mockCategories.find(c => c.id === categoryId);
       const newInvitations: SupplierInvitation[] = data.supplier_ids.map((supplierId) => ({
         id: `inv_${Date.now()}_${supplierId}`,
         project_id: category?.project_id || 'proj_001',
