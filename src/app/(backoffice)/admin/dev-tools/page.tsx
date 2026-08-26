@@ -129,7 +129,7 @@ export default function DevToolsPage() {
         module: 'admin',
         description: 'Obtener usuario actual (admin)',
         usesRealAPI: !featureFlags.shouldUseMock('auth'),
-        status: 'broken',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/admin/users/me'
       },
@@ -139,7 +139,7 @@ export default function DevToolsPage() {
         module: 'suppliers',
         description: 'Listar sellers (MercurJS)',
         usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
-        status: 'untested',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/admin/sellers'
       },
@@ -149,21 +149,22 @@ export default function DevToolsPage() {
         module: 'suppliers',
         description: 'Detalle de seller',
         usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
-        status: 'untested',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/admin/sellers/:id'
       },
       
       // ========================================================================
-      // FRANCHISEES MODULE (Medusa Customers)
+      // FRANCHISEES MODULE (Medusa Customers) - RBAC ISSUE
+      // Note: Returns 403 Forbidden - permission issue in backend
       // ========================================================================
       {
         path: '/admin/customers',
         method: 'GET',
         module: 'franchisees',
-        description: 'Listar franquiciados',
+        description: 'Listar franquiciados (403 - RBAC)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'broken',
         requiresAuth: true,
         medusaEndpoint: '/admin/customers'
       },
@@ -171,9 +172,9 @@ export default function DevToolsPage() {
         path: '/admin/customers/:id',
         method: 'GET',
         module: 'franchisees',
-        description: 'Detalle de franquiciado',
+        description: 'Detalle de franquiciado (403 - RBAC)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'broken',
         requiresAuth: true,
         medusaEndpoint: '/admin/customers/:id'
       },
