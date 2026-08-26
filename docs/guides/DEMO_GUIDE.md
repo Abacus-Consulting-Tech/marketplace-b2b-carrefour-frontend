@@ -19,32 +19,25 @@
 ### Lo que tenemos HOY (25 Agosto 2026)
 
 ✅ **13 módulos completados** (~19,866 líneas de código funcional)  
-✅ **122 endpoints API** documentados y funcionales  
+✅ **Flujos principales preparados para demostración**  
 ✅ **3 roles de usuario** completamente implementados  
 ✅ **Sistema completo** listo para validación con usuarios reales
 
 ### Tecnologías
 
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS, Shadcn/ui
-- **Backend**: Medusa 2.x con Mercurjs framework
-- **Estado**: Mock data con arquitectura lista para integración real
+- **Aplicación web**: experiencia responsive para Admin, Franquiciado y Proveedor
+- **Base ecommerce**: arquitectura preparada para integrarse con Medusa/Mercur
+- **Estado**: Entorno de demostración preparado para validación funcional
 
 ---
 
 ## 🚀 Preparación de la Demo
 
-### 1. Arrancar el Servidor
+### 1. Abrir la Aplicación
 
-```bash
-cd marketplace-b2b-carrefour-frontend
-npm run dev
-```
-
-Abrir: `http://localhost:3000`
+📍 `https://marketplace-b2b-carrefour.vercel.app`
 
 ### 2. Credenciales de Prueba
-
-**LOCALHOST MOCK MODE CREDENTIALS** (`NEXT_PUBLIC_MOCK_AUTH=true`)
 
 Tener a mano estas credenciales para la demo:
 
@@ -56,10 +49,10 @@ Tener a mano estas credenciales para la demo:
 
 ### 3. URLs Clave a Favoritar
 
-- **Dev Tools**: http://localhost:3000/admin/dev-tools
-- **Admin Dashboard**: http://localhost:3000/admin/dashboard
-- **Franquiciado**: http://localhost:3000/marketplace/dashboard
-- **Proveedor**: http://localhost:3000/supplier/dashboard
+- **Panel Admin**: https://marketplace-b2b-carrefour.vercel.app/admin/dashboard
+- **Admin Aperturas**: https://marketplace-b2b-carrefour.vercel.app/admin/openings
+- **Franquiciado**: https://marketplace-b2b-carrefour.vercel.app/marketplace/dashboard
+- **Proveedor**: https://marketplace-b2b-carrefour.vercel.app/supplier/dashboard
 
 ---
 
@@ -68,35 +61,32 @@ Tener a mano estas credenciales para la demo:
 ## 🔴 PARTE 1: Panel de Administrador (Admin)
 
 ### Login
-1. Ir a `http://localhost:3000`
+1. Ir a `https://marketplace-b2b-carrefour.vercel.app`
 2. **Email**: `admin@test.com`
 3. **Password**: `admin123`
 4. Click **"Iniciar Sesión"**
 
 ---
 
-### 1️⃣ Dashboard & Dev Tools
+### 1️⃣ Dashboard Admin
 
-**Empezar aquí para dar contexto técnico**
+**Empezar aquí para dar contexto general**
 
-📍 `http://localhost:3000/admin/dev-tools`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/dashboard`
 
 **Qué mostrar:**
-- ✅ **122 endpoints** documentados por módulo
-- ✅ Estado de feature flags (Mock vs Real)
-- ✅ Desglose por módulo:
-  - Auth (4), Openings (8), Categories (6)
-  - Quotes (10), Orders (24 total)
-  - Products (14), Checkout (15)
-- ✅ Credenciales de prueba disponibles
+- Vista de entrada del administrador
+- Acceso al menú lateral: Aperturas, Productos, Pedidos, Franquiciados y Tarificación
+- Cambio rápido entre secciones desde navegación
+- Roles diferenciados para Admin, Franquiciado y Proveedor
 
-**Mensaje clave**: *"Tenemos 122 endpoints organizados en 13 módulos completamente funcionales"*
+**Mensaje clave**: *"El administrador tiene una visión centralizada para gestionar la operativa del marketplace"*
 
 ---
 
 ### 2️⃣ Gestión de Aperturas (Openings)
 
-📍 `http://localhost:3000/admin/openings`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/openings`
 
 **Qué mostrar:**
 
@@ -126,7 +116,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 3️⃣ Gestión de Productos
 
-📍 `http://localhost:3000/admin/products`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/products`
 
 **Qué mostrar:**
 
@@ -157,9 +147,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 4️⃣ Aprobación de Precios
 
-📍 `http://localhost:3000/admin/pricing/approval-queue`
-
-**NOTA IMPORTANTE**: La ruta antigua (`/admin/products/pricing`) ya no existe. Usar `/admin/pricing/approval-queue`.
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/pricing/approval-queue`
 
 **Qué mostrar:**
 - Cola de productos pendientes de aprobación
@@ -178,7 +166,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 5️⃣ Vista Global de Pedidos
 
-📍 `http://localhost:3000/admin/orders`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/orders`
 
 **Qué mostrar:**
 
@@ -216,7 +204,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 6️⃣ Gestión de Franquiciados
 
-📍 `http://localhost:3000/admin/franchisees`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/franchisees`
 
 **Qué mostrar:**
 - Lista de franquiciados registrados
@@ -232,9 +220,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 7️⃣ Presupuestos de Aperturas
 
-📍 `http://localhost:3000/admin/openings` → abrir un proyecto → tab **Presupuestos**
-
-**Nota**: No existe página global `/admin/quotes` en la implementación actual; esa URL devuelve 404 y no aparece en el menú lateral.
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/openings` → abrir un proyecto → tab **Presupuestos**
 
 **Qué mostrar:**
 - Acceso a presupuestos desde el detalle de cada proyecto de apertura
@@ -257,7 +243,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 1️⃣ Catálogo de Productos
 
-📍 `http://localhost:3000/marketplace`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace`
 
 **Qué mostrar:**
 
@@ -277,7 +263,7 @@ Tener a mano estas credenciales para la demo:
 - **Añadir al carrito**
 
 **C. Carrito de Compras**
-📍 `http://localhost:3000/marketplace/cart`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/cart`
 - Items agregados con expansión completa
 - Variantes mostradas por separado
 - SKU y stock por variante
@@ -291,7 +277,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 2️⃣ Mis Aperturas (Proyectos) 🆕
 
-📍 `http://localhost:3000/marketplace/openings`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/openings`
 
 **Qué mostrar:**
 
@@ -315,7 +301,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 3️⃣ Presupuestos
 
-📍 `http://localhost:3000/marketplace/quotes`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/quotes`
 
 **Qué mostrar:**
 - Presupuestos recibidos para mis proyectos en cards de ancho completo
@@ -328,7 +314,7 @@ Tener a mano estas credenciales para la demo:
   - Ver motivo de rechazo si el presupuesto ya está rechazado
   - Ver información de firma si el presupuesto ya está firmado
 - **Cambiar estado**: selector visual + botón **Cambiar estado** para reabrir, adjudicar, rechazar o expirar el presupuesto durante la demo
-- **Firma digital**: aparece en presupuestos adjudicados sin firma; en mock data también se puede mostrar el presupuesto ya firmado `quote_bcn_mob_001`.
+- **Firma digital**: aparece en presupuestos adjudicados sin firma; también se puede mostrar un presupuesto ya firmado como ejemplo.
 - Sistema de expiración visible por fecha de validez/expirado
 
 **Mensaje clave**: *"El franquiciado revisa presupuestos por proyecto, abre el detalle y toma decisiones cuando el estado lo permite"*
@@ -337,7 +323,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 4️⃣ Mis Pedidos
 
-📍 `http://localhost:3000/marketplace/orders`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/orders`
 
 **Qué mostrar:**
 
@@ -365,7 +351,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 5️⃣ Checkout Process
 
-📍 `http://localhost:3000/marketplace/cart` → botón **Proceder al Pago** → `http://localhost:3000/marketplace/checkout-new`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/cart` → botón **Proceder al Pago** → `https://marketplace-b2b-carrefour.vercel.app/marketplace/checkout-new`
 
 **Nota**: No hay enlace directo al checkout en el sidebar. Se accede desde **Mi Carrito** y solo tiene sentido con productos añadidos.
 
@@ -393,7 +379,7 @@ Tener a mano estas credenciales para la demo:
 - Resumen del pedido
 - Estado y siguiente paso
 - Botón: "Ver mis pedidos"
-- **Validado**: success page renderiza correctamente tras confirmar pedido (`/marketplace/checkout-new/success?...`).
+- Página de confirmación tras completar el pedido
 
 **Mensaje clave**: *"Proceso de checkout completo con múltiples métodos de pago y confirmación inmediata"*
 
@@ -410,7 +396,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 1️⃣ Mis Productos
 
-📍 `http://localhost:3000/supplier/products`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/products`
 
 **Qué mostrar:**
 
@@ -423,14 +409,14 @@ Tener a mano estas credenciales para la demo:
 - Al hacer click, el producto vuelve a `pending_approval` y se limpia el motivo de rechazo; refrescar la página si el estado visual no cambia inmediatamente
 
 **B. Crear Producto**
-📍 `http://localhost:3000/supplier/products/new`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/products/new`
 - Formulario completo
 - Información básica (nombre, descripción, SKU)
 - Precio propuesto por el proveedor
 - **Enviar a aprobación**
 
 **C. Carga Masiva**
-📍 `http://localhost:3000/supplier/products/bulk-upload`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/products/bulk-upload`
 - Click en **Descargar Plantilla** para bajar `plantilla_productos.csv`
 - Abrir la plantilla en Excel/Numbers/Sheets y completar los productos
 - Mantener las 22 columnas del layout: Producto ID, título, categoría, SKU, variantes, unidades por pack, precio proveedor, IVA, stock e imágenes
@@ -445,7 +431,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 2️⃣ Pedidos Recibidos
 
-📍 `http://localhost:3000/supplier/orders`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/orders`
 
 **Qué mostrar:**
 
@@ -483,7 +469,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 3️⃣ Invitaciones a Proyectos 🆕
 
-📍 `http://localhost:3000/supplier/openings`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/openings`
 
 **Qué mostrar:**
 
@@ -502,12 +488,12 @@ Tener a mano estas credenciales para la demo:
   - Preparar presupuesto basado en planos
 
 **C. Crear Presupuesto**
-📍 Misma ruta del botón **Ver mi presupuesto**: `http://localhost:3000/supplier/openings/proj_001/quote/cat_001`
+📍 Misma ruta del botón **Ver mi presupuesto**: `https://marketplace-b2b-carrefour.vercel.app/supplier/openings/proj_001/quote/cat_001`
 - Formulario completo
 - Items detallados (descripción, cantidad, precio)
 - Términos de pago y entrega
 - Garantía
-- **Enviar presupuesto** → redirige a success page: `/supplier/openings/proj_001/quote/cat_001/success`
+- **Enviar presupuesto** → redirige a la página de confirmación del presupuesto
 - Página de confirmación con resumen del envío y botones **Volver a invitaciones** / **Ver proyecto**
 
 **Mensaje clave**: *"Los proveedores acceden a documentación técnica completa para preparar cotizaciones precisas"*
@@ -526,20 +512,10 @@ Tener a mano estas credenciales para la demo:
 
 ### 2. Arquitectura Escalable
 
-✅ **Feature Flags Mock/Real**
-```typescript
-// Fácil migración a backend real
-const flags = {
-  auth: 'real',      // Ya usando Medusa
-  products: 'mock',  // Listo para cambiar
-  orders: 'mock',    // Un solo cambio de flag
-}
-```
-
-✅ **122 Endpoints Documentados**
-- API client preparada para cada módulo
-- Tipos TypeScript estrictos
-- Documentación para backend en `docs/modules/`
+✅ **Preparado para Crecer**
+- Separación clara entre roles y módulos
+- Flujos preparados para conectarse progresivamente con servicios reales
+- Documentación técnica disponible para el equipo de integración
 
 ### 3. Experiencia de Usuario
 
@@ -556,11 +532,11 @@ const flags = {
 
 ### 4. Datos Realistas
 
-✅ **Mock Data de Producción**
+✅ **Datos Realistas de Demostración**
 - 10 proyectos de apertura
 - 7 productos con variantes
 - 5 pedidos por rol
-- 6 proveedores mock
+- 6 proveedores de ejemplo
 - 5 franquiciados
 - Precios en centavos (alineado con Medusa)
 
@@ -591,11 +567,11 @@ const flags = {
 ### P: ¿Cuánto falta para producción?
 
 **R**: El frontend está **100% listo**. Falta:
-1. **Backend Medusa**: Implementar endpoints según docs en `docs/modules/`
-2. **Testing E2E**: Playwright tests (1 semana)
-3. **Integración**: Cambiar feature flags de mock → real (gradual por módulo)
+1. Conectar progresivamente los servicios finales de Medusa/Mercur
+2. Ejecutar pruebas automáticas de los flujos críticos
+3. Validar con usuarios reales y ajustar detalles operativos
 
-**Tiempo estimado**: 2-3 semanas con equipo backend completo.
+**Tiempo estimado**: 2-3 semanas con el equipo de integración completo.
 
 ---
 
@@ -672,15 +648,15 @@ Abrir de antemano:
 
 ### 2. Historia a Contar
 
-**Inicio** → "Tenemos 13 módulos completos con 122 endpoints"  
+**Inicio** → "Tenemos 13 módulos completos y recorribles por rol"  
 **Admin** → "Control total: productos, pedidos, aperturas, presupuestos"  
 **Franquiciado** → "Experiencia de compra B2B optimizada"  
 **Proveedor** → "Gestión completa desde propuesta hasta entrega"  
-**Cierre** → "Sistema production-ready esperando integración backend"
+**Cierre** → "Sistema listo para validación funcional y siguiente fase de integración"
 
 ### 3. Evitar
 
-❌ No mencionar "esto es mock" constantemente  
+❌ No entrar en detalles técnicos salvo que los pregunten  
 ❌ No disculparse por funcionalidad faltante  
 ✅ Enfocarse en lo que **SÍ funciona**  
 ✅ Mostrar la **profundidad** del desarrollo
@@ -697,7 +673,7 @@ Abrir de antemano:
 
 ## ✅ Checklist Pre-Demo
 
-- [ ] Servidor corriendo en `http://localhost:3000`
+- [ ] URL de demo abierta: `https://marketplace-b2b-carrefour.vercel.app`
 - [ ] Pestañas preparadas
 - [ ] Credenciales a mano
 - [ ] Carrito vacío (limpiar localStorage si necesario)
@@ -710,7 +686,7 @@ Abrir de antemano:
 
 ## 🎯 Mensaje Final
 
-> "Hemos construido un sistema B2B completo y funcional en tiempo récord. Con 13 módulos, 122 endpoints y ~19,866 líneas de código, tenemos una plataforma production-ready que solo espera la integración con el backend Medusa. Cada flujo está pensado, validado y testeado. Esto no es un prototipo - es software real listo para usuarios reales."
+> "Hemos construido una plataforma B2B completa y funcional en tiempo récord. Con 13 módulos y flujos completos para Admin, Franquiciado y Proveedor, Carrefour puede validar la experiencia operativa de punta a punta. Cada flujo está pensado, validado y preparado para la siguiente fase de integración."
 
 ---
 
