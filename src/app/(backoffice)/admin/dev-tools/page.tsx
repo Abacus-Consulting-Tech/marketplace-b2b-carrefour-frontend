@@ -124,26 +124,6 @@ export default function DevToolsPage() {
       // ADMIN MODULE - Standard Medusa
       // ========================================================================
       {
-        path: '/admin/orders',
-        method: 'GET',
-        module: 'admin',
-        description: 'Listar órdenes (admin)',
-        usesRealAPI: false,
-        status: 'broken',
-        requiresAuth: true,
-        medusaEndpoint: '/admin/orders'
-      },
-      {
-        path: '/admin/orders/:id',
-        method: 'GET',
-        module: 'admin',
-        description: 'Detalle de orden',
-        usesRealAPI: false,
-        status: 'untested',
-        requiresAuth: true,
-        medusaEndpoint: '/admin/orders/:id'
-      },
-      {
         path: '/admin/users/me',
         method: 'GET',
         module: 'admin',
