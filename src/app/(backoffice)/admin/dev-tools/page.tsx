@@ -3,29 +3,41 @@
  * 
  * Comprehensive documentation of all Medusa API endpoints used in the application.
  * 
+ * 🌐 BACKEND INTEGRATION STATUS (Updated 2026-08-26):
+ * ✅ Auth: 4 endpoints - REAL API (Render DEV)
+ * ✅ Admin Orders: 8 endpoints - REAL API (Render DEV)
+ * ✅ Supplier/Vendor Orders: 9 endpoints - REAL API (Render DEV)
+ * ✅ Pricing Module: 6 endpoints - REAL API (Render DEV)
+ * ✅ Sellers: 5 endpoints - REAL API (Render DEV)
+ * 🎭 Openings: 24 endpoints - MOCK (backend pending)
+ * 🎭 Products: 8 endpoints - MOCK (backend pending)
+ * 🎭 Checkout: 15 endpoints - MOCK (backend pending)
+ * 
  * Endpoint Summary (Total: 150+ endpoints):
- * - Auth: 4 endpoints (Login, Logout, Session)
- * - Admin: 5 endpoints (Orders, Users, Sellers)
+ * - Auth: 4 endpoints (Login Admin/Vendor, Logout, Session) ✅ REAL
+ * - Admin Orders: 8 endpoints (List, Detail, Stats, Status, Priority, Refund, Incidents, Notes) ✅ REAL
+ * - Supplier Orders: 9 endpoints (CRUD, Stats, Accept/Reject, Tracking, Incidents) ✅ REAL
+ * - Pricing: 6 endpoints (Pending Products, Approval, Markup, History) ✅ REAL
+ * - Admin: 5 endpoints (Orders, Users, Sellers) ✅ REAL
  * - Franchisees: 9 endpoints (Medusa Customers + Addresses CRUD)
  * - Openings: 24 endpoints (Projects, Categories, Documents, Invitations, Quotes, Financing, Status)
- * - Pricing: 6 endpoints (Pending Products, Approval, Markup)
  * - Products (Admin): 8 endpoints (CRUD, Stats, Bulk Operations, Inventory)
  * - Catalog (Franchisee): 2 endpoints (Product List + Detail for Marketplace)
  * - Checkout: 15 endpoints (Cart, Address, Shipping, Payment Sessions, Complete, Order)
  * - Store: 11 endpoints (Regions, Cart Operations, Shipping, Customer)
- * - Vendor: 5 endpoints (Products, Bulk Upload, Markup)
- * - Supplier Orders: 9 endpoints (CRUD, Stats, Accept/Reject, Tracking, Incidents)
+ * - Vendor: 5 endpoints (Products, Bulk Upload, Markup) ✅ REAL
  * - Supplier Products: 6 endpoints (CRUD, Bulk Upload, Images)
  * - Franchisee Orders: 4 endpoints (List, Detail, Stats, Cancel)
  * - Franchisee Management: 6 endpoints (CRUD, Activate/Deactivate, Stats)
- * - Admin Orders: 8 endpoints (List, Detail, Stats, Update Status, Priority, Refund, Incidents, Notes)
  * - Quotes (Franchisee): 6 endpoints (List, Detail, Award, Reject, Sign, Stats)
  * - Quotes (Supplier): 7 endpoints (Invitations, Create, Update, Submit, Decline, List, Detail)
+ * 
+ * Backend: https://marketplace-b2b-backend-dev.onrender.com
  * 
  * Features:
  * - Filter by module
  * - Status tracking (working/broken/untested)
- * - Mock vs Real API indicator
+ * - Mock vs Real API indicator (✅ = Real, 🎭 = Mock)
  * - Feature flags configuration
  * - Environment variables
  * - Test credentials
@@ -507,7 +519,7 @@ export default function DevToolsPage() {
       },
       
       // ========================================================================
-      // PRICING MODULE (Custom)
+      // PRICING MODULE (Custom) - ✅ REAL API (Render DEV)
       // ========================================================================
       {
         path: '/admin/custom/products/pending',
@@ -515,7 +527,7 @@ export default function DevToolsPage() {
         module: 'pricing',
         description: 'Productos pendientes de tarificación',
         usesRealAPI: !featureFlags.shouldUseMock('pricing'),
-        status: 'untested',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/admin/custom/products/pending'
       },
@@ -525,7 +537,7 @@ export default function DevToolsPage() {
         module: 'pricing',
         description: 'Aprobar/rechazar tarificación',
         usesRealAPI: !featureFlags.shouldUseMock('pricing'),
-        status: 'untested',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/admin/custom/products/:id/pricing-approval'
       },
@@ -535,7 +547,7 @@ export default function DevToolsPage() {
         module: 'pricing',
         description: 'Listar sellers con markup info',
         usesRealAPI: !featureFlags.shouldUseMock('pricing'),
-        status: 'untested',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/admin/custom/sellers'
       },
@@ -545,7 +557,7 @@ export default function DevToolsPage() {
         module: 'pricing',
         description: 'Obtener markup global de seller',
         usesRealAPI: !featureFlags.shouldUseMock('pricing'),
-        status: 'untested',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/admin/custom/sellers/:id/markup'
       },
@@ -555,7 +567,7 @@ export default function DevToolsPage() {
         module: 'pricing',
         description: 'Actualizar markup global de seller',
         usesRealAPI: !featureFlags.shouldUseMock('pricing'),
-        status: 'untested',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/admin/custom/sellers/:id/markup'
       },
@@ -565,7 +577,7 @@ export default function DevToolsPage() {
         module: 'pricing',
         description: 'Historial de cambios de markup',
         usesRealAPI: !featureFlags.shouldUseMock('pricing'),
-        status: 'untested',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/admin/custom/sellers/:id/markup/history'
       },
@@ -871,7 +883,8 @@ export default function DevToolsPage() {
       },
       
       // ========================================================================
-      // SUPPLIER ORDERS MODULE
+      // SUPPLIER ORDERS MODULE - ✅ REAL API (Render DEV)
+      // Requires: Authorization + x-seller-id headers
       // ========================================================================
       {
         path: '/vendor/orders',
@@ -1009,7 +1022,7 @@ export default function DevToolsPage() {
       },
 
       // ========================================================================
-      // ADMIN ORDERS MODULE (Global Order Management)
+      // ADMIN ORDERS MODULE (Global Order Management) - ✅ REAL API (Render DEV)
       // ========================================================================
       {
         path: '/admin/orders',
