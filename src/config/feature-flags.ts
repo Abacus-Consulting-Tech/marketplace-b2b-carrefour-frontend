@@ -34,8 +34,6 @@ export interface ModuleConfig {
 
 type ModuleName = 'auth' | 'pricing' | 'openings' | 'products' | 'suppliers' | 'categories' | 'quotes' | 'orders' | 'franchisees' | 'catalog' | 'checkout';
 
-const isExplicitlyFalse = (value: string | undefined) => value === 'false';
-
 export const featureFlags = {
   /**
    * Module configurations
@@ -45,15 +43,15 @@ export const featureFlags = {
    */
   modules: {
     auth: {
-      useMock: !isExplicitlyFalse(process.env.NEXT_PUBLIC_MOCK_AUTH),
+      useMock: true,
       backendReady: false,
       apiBaseUrl: '/api/auth',
-      notes: 'Mock branch: local mock auth by default. Set NEXT_PUBLIC_MOCK_AUTH=false to use real auth.',
+      notes: 'Mock branch: auth is forced to local mock data regardless of .env.local overrides.',
       lastUpdated: '2026-08-26',
     } satisfies ModuleConfig,
     
     pricing: {
-      useMock: !isExplicitlyFalse(process.env.NEXT_PUBLIC_MOCK_PRICING),
+      useMock: true,
       backendReady: false,
       apiBaseUrl: '/api/products/pricing',
       notes: 'Mock branch: product pricing approval uses local mock data',
@@ -69,7 +67,7 @@ export const featureFlags = {
     } satisfies ModuleConfig,
     
     products: {
-      useMock: !isExplicitlyFalse(process.env.NEXT_PUBLIC_MOCK_PRODUCTS),
+      useMock: true,
       backendReady: false,
       apiBaseUrl: '/api/products',
       notes: 'Mock branch: products use local mock data',
@@ -117,7 +115,7 @@ export const featureFlags = {
     } satisfies ModuleConfig,
 
     catalog: {
-      useMock: !isExplicitlyFalse(process.env.NEXT_PUBLIC_MOCK_CATALOG),
+      useMock: true,
       backendReady: false,
       apiBaseUrl: '/store/products',
       notes: 'Mock branch: franchisee catalog uses local mock data',
@@ -125,7 +123,7 @@ export const featureFlags = {
     } satisfies ModuleConfig,
 
     checkout: {
-      useMock: !isExplicitlyFalse(process.env.NEXT_PUBLIC_MOCK_CHECKOUT),
+      useMock: true,
       backendReady: false,
       apiBaseUrl: '/store',
       notes: 'Mock branch: checkout and order creation use local mock data',
