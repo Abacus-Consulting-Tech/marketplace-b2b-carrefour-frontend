@@ -425,8 +425,10 @@ export const openingsApi = {
     data: InviteSuppliersRequest
   ): Promise<ApiResponse<SupplierInvitation[]>> {
     if (isMockMode) {
+      const category = mockCategories.find(c => c.id === categoryId);
       const newInvitations: SupplierInvitation[] = data.supplier_ids.map((supplierId) => ({
         id: `inv_${Date.now()}_${supplierId}`,
+        project_id: category?.project_id || 'proj_001',
         category_id: categoryId,
         supplier_id: supplierId,
         status: 'pending',
@@ -989,6 +991,7 @@ export const openingsApi = {
 
         const invitation: SupplierInvitation = {
           id: `inv_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          project_id: category.project_id,
           category_id: data.category_id,
           supplier_id: supplierId,
           status: 'pending',

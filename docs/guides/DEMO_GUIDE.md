@@ -6,11 +6,593 @@
 
 ## 📋 Tabla de Contenidos
 
-1. [Resumen Ejecutivo](#-resumen-ejecutivo)
-2. [Preparación de la Demo](#-preparación-de-la-demo)
-3. [Demostración por Rol](#-demostración-por-rol)
-4. [Puntos Clave a Destacar](#-puntos-clave-a-destacar)
-5. [Preguntas Frecuentes](#-preguntas-frecuentes)
+1. [Preguntas Clave para Carrefour](#-preguntas-clave-para-carrefour)
+2. [Resumen Ejecutivo](#-resumen-ejecutivo)
+3. [Preparación de la Demo](#-preparación-de-la-demo)
+4. [Demostración por Rol](#-demostración-por-rol)
+5. [Puntos Clave a Destacar](#-puntos-clave-a-destacar)
+6. [Preguntas Frecuentes](#-preguntas-frecuentes)
+
+---
+
+## ❓ Preguntas Clave para Carrefour
+
+**Basado en la Especificación Técnica v1.0 (20 julio 2026)**
+
+Esta sección recoge las **decisiones abiertas críticas** y datos operativos necesarios para completar la integración. Las decisiones marcadas como **BLOQUEANTES** (D-01 a D-06) deben resolverse en Sprint 0.
+
+---
+
+### 🔴 DECISIONES BLOQUEANTES (Sprint 0)
+
+Estas preguntas **bloquean el desarrollo** del conector contable y motor de liquidaciones:
+
+#### D-01: Versión exacta de Odoo (BLOQUEANTE)
+**Pregunta:** ¿Qué versión, edición y hosting de Odoo utiliza la gestoría?
+- ¿Odoo 19, 18, 17 o anterior?
+- ¿Community o Enterprise?
+- ¿Odoo Online, Odoo.sh u on-premise?
+- ¿Está disponible la External JSON-2 API? (solo Odoo 19+)
+- ¿Usuario técnico y API keys disponibles?
+
+**Impacto:** Define si usamos JSON-2 (preferido), JSON-RPC clásico o módulo custom.
+
+#### D-02: Emisor legal de facturas (BLOQUEANTE - Fiscal)
+**Pregunta:** ¿Quién emite legalmente la factura de producto al franquiciado?
+- **Opción A:** Proveedor factura directamente → plataforma solo archiva
+- **Opción B:** Infocus revende → Odoo emite factura
+- **Opción C:** Autofacturación
+
+**Impacto:** Afecta flujo de facturación, IVA, Odoo y Stripe.
+
+#### D-03: Modelo económico de Infocus (BLOQUEANTE)
+**Pregunta:** ¿Infocus actúa como intermediario o revendedor?
+- **Intermediario:** Cobra y transfiere; proveedor factura
+- **Revendedor:** Compra y revende; Infocus factura
+
+**Impacto:** Arquitectura económica, Stripe Connect, comisiones y contabilidad.
+
+#### D-04: Registro contable de cobros (BLOQUEANTE - Odoo)
+**Pregunta:** ¿Cómo se registra en Odoo el cobro por cuenta de terceros?
+- ¿Cuenta transitoria?
+- ¿Diarios específicos?
+- ¿Mapping de contrapartidas?
+
+**Impacto:** Mapeo del conector, asientos y conciliación.
+
+#### D-05: Costes Stripe y chargebacks (BLOQUEANTE)
+**Pregunta:** ¿Quién soporta la comisión de Stripe, refunds y chargebacks?
+- ¿Infocus absorbe todo?
+- ¿Se descuenta de liquidación del proveedor?
+- ¿Reparto según regla?
+
+**Impacto:** Cálculo de liquidaciones y motor de settlement.
+
+#### D-06: Periodicidad de liquidaciones (BLOQUEANTE)
+**Pregunta:** ¿Cuándo se liquida a proveedores?
+- ¿Quincenal, mensual, semanal?
+- ¿Ventana de incidencias? (ej: 7 días tras entrega)
+- ¿Aprobación manual o automática?
+
+**Impacto:** Motor de settlement, flujo de aprobación.
+
+---
+
+### 🟡 DECISIONES DE CONFIGURACIÓN (Resolubles post-Sprint 0)
+
+#### D-07: Comisión de Infocus a proveedores
+**Pregunta:** ¿Qué comisión cobra Infocus sobre ventas?
+- ¿Porcentaje fijo o variable?
+- ¿Varía por categoría o proveedor?
+
+**Impacto:** Reglas de comisión y contratos.
+
+#### D-08: Base del variable de Abacus
+**Pregunta:** ¿Cómo se calcula el componente variable del coste operativo de Abacus?
+- ¿% sobre GMV neto?
+- ¿% sobre cuotas cobradas?
+- ¿Fijo + variable?
+
+**Impacto:** Reporting y factura mensual Abacus → Infocus.
+
+#### D-09: Modelo de cuota anual
+**Pregunta:** ¿La cuota se cobra por sociedad, por tienda o por franquiciado?
+- ¿Importe fijo o variable según nº tiendas?
+- ¿Descuentos por volumen?
+
+**Impacto:** Subscription model en Stripe Billing.
+
+#### D-10: Renovación y periodo de gracia
+**Pregunta:** ¿Renovación automática?
+- ¿Cuántos días de gracia si falla el pago? (ej: 7, 15, 30)
+- ¿Suspensión automática o manual?
+- ¿Avisos D-30, D-7, D+3?
+
+**Impacto:** Billing y gestión de estados.
+
+#### D-11: Doble aprobación financiera
+**Pregunta:** ¿Se requiere doble aprobación para reembolsos y liquidaciones?
+- ¿Umbrales? (ej: >5.000€ requiere INFOCUS_FINANCE)
+- ¿Separación de funciones?
+
+**Impacto:** Seguridad financiera y workflows.
+
+#### D-12: Emisión de PDFs contables
+**Pregunta:** ¿Odoo emite los PDFs o solo contabiliza documentos externos?
+- ¿La gestoría genera facturas en PDF?
+- ¿El marketplace solo almacena/expone?
+
+**Impacto:** Gestión documental y responsabilidad.
+
+#### D-13: Integración futura con Carrefour
+**Pregunta:** ¿Existe roadmap de integración con sistemas Carrefour?
+- ¿POS, cajas, ERP corporativo?
+- ¿Single Sign-On?
+
+**Impacto:** Arquitectura y compatibilidad futura.
+
+#### D-14: SLA y soporte
+**Pregunta:** ¿Qué SLA y horarios de soporte se requieren?
+- ¿P1: checkout indisponible → respuesta/resolución?
+- ¿24/7, L-V 9-18h, horario ampliado?
+- ¿Idiomas del soporte?
+
+**Impacto:** Operación y dimensionamiento del equipo.
+
+#### D-15: Volumen y dimensionamiento
+**Pregunta:** ¿Estimación de volumen inicial y crecimiento?
+- **Franquiciados:** ¿Cuántas sociedades? ¿Cuántas tiendas?
+- **Proveedores:** ¿10, 50, 200?
+- **Catálogo:** ¿Decenas, cientos, miles de SKUs?
+- **Pedidos:** ¿Mensuales estimados?
+
+**Impacto:** Sizing de infraestructura, costes y testing de carga.
+
+---
+
+### 📦 1. DATOS DE PRODUCTOS Y CATÁLOGO
+
+**Contexto:** Según spec, España + EUR en fase inicial. No incluye mercancía para reventa a consumidor final.
+
+#### Catálogo Inicial
+- **¿Cuántos productos/SKUs esperan inicialmente?** ¿Cientos, miles, decenas de miles? (→ **D-15**)
+- **¿De dónde provienen los datos actuales?** ¿Existe un catálogo legacy del que migrar?
+- **¿Qué formato de carga prefieren?** El sistema soporta CSV/Excel bulk upload y API
+- **Campos obligatorios confirmados:**
+  - Título, descripción, SKU, EAN (opcional)
+  - Precio base (en céntimos), IVA (21%, 10%, 4%, 0%)
+  - Unidades por pack
+  - Categoría (taxonomía a definir)
+  - Proveedor
+
+#### Estructura de Categorías
+- **¿Taxonomía definida?** Necesitamos árbol completo de categorías/subcategorías
+- **¿Niveles de profundidad?** (ej: Equipamiento → Mobiliario → Estanterías)
+- **Confirmado:** Solo España en fase inicial; categorías internacionales en fase posterior
+
+#### Imágenes y Multimedia
+- **Almacenamiento:** S3-compatible (según spec)
+- **¿Tamaños/resoluciones requeridos?** (thumbnail 200x200, galería 800x800, zoom 1200x1200)
+- **¿Quién valida calidad de imágenes?** ¿Infocus aprueba o proveedor auto-publica?
+
+---
+
+### 🏢 2. GESTIÓN DE PROVEEDORES
+
+**Contexto técnico:** Stripe Connect (Express accounts) para KYC y cuentas bancarias. Separate charges and transfers.
+
+#### Onboarding de Proveedores
+- **¿Cuántos proveedores iniciales?** ¿10, 50, 200? (→ **D-15**)
+- **¿Base de datos de proveedores actual?** Necesitamos: razón social, CIF, contacto, categorías
+- **KYC gestionado por Stripe:** El onboarding bancario/fiscal lo realiza Stripe Connect
+- **Marketplace almacena:** Solo identificadores, estado y datos comerciales
+
+#### Proceso de Homologación
+- **¿Quién aprueba proveedores?** ¿Infocus Admin, departamento compras?
+- **¿Documentos a adjuntar?** (Registro mercantil, certificados, póliza seguro)
+- **¿Homologación por categoría?** ¿Un proveedor puede servir múltiples categorías?
+- **¿Contratos comerciales?** ¿Se firman fuera de la plataforma o integrados?
+
+#### Territorios y Cobertura
+- **Confirmado:** España inicial; internacional en fases posteriores
+- **¿Proveedores con cobertura limitada?** (solo península, solo islas, solo zona)
+- **¿Recargos por zona?** Península, Baleares, Canarias, Ceuta/Melilla
+
+---
+
+### 🏪 3. GESTIÓN DE FRANQUICIADOS
+
+**Contexto técnico:** Modelo Organization (sociedad) → Store (tienda) → User. Stripe Customer por organización.
+
+#### Base de Franquiciados
+- **¿Cuántas franquicias operan actualmente?** Express, Market, Hipermercado (→ **D-15**)
+- **¿Sistema CRM/ERP existente?** ¿Podemos exportar datos?
+- **Datos requeridos por sociedad:**
+  - Razón social, CIF (único por país)
+  - Dirección fiscal
+  - Contacto principal (nombre, email, teléfono)
+  - Tiendas asociadas (código, nombre, dirección, formato, m²)
+
+#### Condiciones Comerciales
+- **⚠️ IMPORTANTE:** Modelo actual **NO incluye crédito ni pago aplazado** (fuera de MVP)
+- **Pago exclusivo con tarjeta** en checkout (Stripe Payment Intents)
+- **¿Descuentos por volumen?** ¿Necesitan implementarse en fase inicial?
+- **¿Condiciones especiales por franquicia?** Tags: VIP, nuevo, test
+
+#### Modelo Multisede
+- **Confirmado:** Una sociedad puede tener múltiples tiendas
+- **¿Pedidos centralizados o por tienda?** ¿Dirección de entrega por tienda?
+- **¿Usuarios compartidos o por tienda?** Roles: FRANCHISE_ADMIN, BUYER
+
+---
+
+### 💳 4. PAGOS Y FINANCIACIÓN
+
+**Contexto técnico:** Stripe Billing (cuotas) + Payment Intents (pedidos) + Connect (liquidaciones).
+
+#### Métodos de Pago CONFIRMADOS
+- **✅ Cuota anual:** Tarjeta vía Stripe Billing (renovación automática)
+- **✅ Pedidos:** Tarjeta con SCA en checkout (Payment Intents)
+- **❌ NO incluido en MVP:** Transferencia, crédito, pago aplazado, confirming
+- **Infocus es merchant of record** (sujeto a validación fiscal → **D-02, D-03**)
+
+#### Stripe - Información Requerida
+- **¿Cuenta Stripe existente?** Necesitamos credenciales de producción
+- **Confirmado:** Stripe como única pasarela en MVP
+- **¿Account ID de Infocus?** Para configurar dashboard y Connect
+- **¿Webhook endpoint?** Para producción
+
+#### Precios e IVA
+- **Precios:** Almacenados en céntimos, moneda EUR
+- **IVA:** 21%, 10%, 4%, 0% (configurable por producto)
+- **¿Precios mostrados incluyen o excluyen IVA?** (B2B típicamente sin IVA)
+- **¿Inversión del sujeto pasivo?** ¿Aplica en algún caso?
+
+#### Facturación (ver **D-02** - BLOQUEANTE)
+- **¿Quién emite factura al franquiciado?** Proveedor / Infocus / Autofactura
+- **¿Odoo como emisor?** ¿O solo registra facturas externas?
+- **¿Numeración oficial?** ¿La gestoría controla serie/número?
+
+---
+
+### 📧 5. COMUNICACIONES Y NOTIFICACIONES
+
+**Contexto técnico:** Resend o SMTP para emails transaccionales (según spec).
+
+#### Email Transaccional
+- **¿SMTP corporativo?** Host, puerto, usuario, password, TLS
+- **¿O preferencia por servicio externo?** Resend (propuesto), SendGrid, Amazon SES
+- **Dirección de envío:** `noreply@marketplace-carrefour.es` o similar
+- **Firma corporativa:** Logo Carrefour, disclaimer legal
+
+#### Plantillas Obligatorias
+- **Franquiciado:**
+  - Alta aprobada y cuota cobrada
+  - Confirmación de pedido (+ subpedidos por proveedor)
+  - Estado de envío y entrega
+  - Renovación próxima (D-30, D-7)
+  - Fallo de pago y suspensión
+- **Proveedor:**
+  - Homologación aprobada/rechazada
+  - Nuevo pedido recibido
+  - Producto aprobado/rechazado
+  - Liquidación generada/pagada
+- **Admin:**
+  - Nuevo proveedor pendiente aprobación
+  - Incidencia abierta
+  - Error sincronización Odoo
+
+#### Notificaciones NO Incluidas en MVP
+- ❌ Push notifications (app nativa fuera de alcance)
+- ❌ SMS (evaluar en fase posterior)
+
+---
+
+### 🌍 6. LOGÍSTICA Y FULFILLMENT
+
+**Contexto técnico:** Fuera de alcance gestión logística propia de Infocus. Proveedores gestionan picking, envío y entrega.
+
+#### Modelo Logístico CONFIRMADO
+- **✅ Dropshipping:** Proveedor envía directamente a franquicia
+- **❌ NO:** Almacén central Carrefour/Infocus
+- **❌ NO:** Integración con WMS en MVP
+
+#### Cobertura Geográfica
+- **Confirmado:** Solo **España** en fase inicial, **EUR** como moneda única
+- **¿Hay proveedores con cobertura limitada?** Península / Islas / Nacional
+- **Fases posteriores:** Portugal, Francia (requiere internacionalización)
+
+#### Gestión de Entregas
+- **¿Plazos estándar por proveedor?** 24h, 48h, 72h, 5-7 días
+- **¿Recargos por zona?** Península vs Baleares vs Canarias vs Ceuta/Melilla
+- **¿Quién gestiona tracking?** ¿URL de seguimiento del proveedor?
+- **¿Prueba de entrega requerida?** ¿Foto, firma, albarán firmado?
+
+#### Gestión de Stock
+- **¿Inventario en tiempo real?** ¿O stock ilimitado/bajo pedido?
+- **¿MOQ (cantidad mínima)?** ¿Por producto o proveedor?
+- **¿Validación de disponibilidad en checkout?** ¿O aceptación proveedor posterior?
+
+---
+
+### 🔐 7. SEGURIDAD Y AUTENTICACIÓN
+
+**Contexto técnico:** MFA obligatorio para roles financieros. PCI-DSS vía Stripe hosted fields. GDPR aplicable.
+
+#### Autenticación CONFIRMADA
+- **OIDC/OAuth2** o autenticación Medusa con sesiones seguras
+- **MFA obligatorio para:**
+  - INFOCUS_FINANCE
+  - SUPER_ADMIN_ABACUS
+  - Gestores con acceso a Stripe/Odoo
+- **¿Integración con AD/SSO corporativo?** ¿O gestión independiente?
+
+#### Roles DEFINIDOS (según spec)
+- **Abacus:** SUPER_ADMIN_ABACUS, OPS_ABACUS
+- **Infocus:** INFOCUS_ADMIN, INFOCUS_FINANCE
+- **Gestoría:** GESTORIA (lectura + resolución errores Odoo)
+- **Proveedor:** SUPPLIER_ADMIN, SUPPLIER_OPERATOR
+- **Franquiciado:** FRANCHISE_ADMIN, BUYER, VIEWER
+
+**¿Necesitan roles adicionales?** Comercial, Logística, Soporte regional
+
+#### Auditoría y Cumplimiento
+- **✅ AuditLog inmutable:** Cambios económicos, permisos, decisiones
+- **✅ RGPD:** Minimización, DPA, derechos de acceso/supresión
+- **✅ PCI-DSS:** Stripe-hosted fields, no almacenamiento de PAN/CVC
+- **Retención:** ¿1 año, 5 años, 7 años (fiscal)?
+
+---
+
+### 📊 8. INTEGRACIÓN CONTABLE - ODOO (CRÍTICO)
+
+**Contexto técnico:** Odoo de la gestoría es el **sistema maestro contable**. El marketplace tiene subledger operacional.
+
+#### Información BLOQUEANTE (**D-01**)
+- **¿Versión exacta?** Odoo 19, 18, 17... (define API disponible)
+- **¿Edición?** Community o Enterprise
+- **¿Hosting?** Odoo Online, Odoo.sh, on-premise
+- **¿Base de datos y compañía?** Contexto multiempresa
+- **¿Plan contable?** Español estándar, personalizado
+- **¿Usuario técnico creado?** API key, permisos
+- **¿Entorno de pruebas?** Para desarrollo y UAT
+
+#### Integración Propuesta (según spec)
+1. **Preferencia:** External JSON-2 API (Odoo 19+)
+2. **Alternativa:** JSON-RPC clásico (versiones anteriores)
+3. **Última opción:** Módulo custom Odoo
+
+#### Objetos a Sincronizar
+- **Partners:** Franquiciados (clientes) y proveedores
+- **Facturas:** Cuota anual, productos (según modelo fiscal **D-02**)
+- **Cobros:** Pagos Stripe confirmados
+- **Abonos:** Reembolsos y devoluciones
+- **Liquidaciones:** Transferencias a proveedores
+- **Facturas Abacus:** Coste operativo mensual
+
+#### Patrón de Sincronización CONFIRMADO
+- **Outbox transaccional:** Eventos económicos en misma TX PostgreSQL
+- **Worker con reintentos:** Exponencial backoff, dead-letter queue
+- **Idempotencia:** External keys, búsqueda previa
+- **Reconciliación nocturna:** Dashboard de diferencias
+
+#### Facturación Electrónica
+- **¿FACe, TicketBAI u otro?** ¿Requerido en fase inicial?
+- **¿Odoo gestiona o es externo?** ¿Facturae XML?
+
+---
+
+### 📈 9. MODELO ECONÓMICO Y COMISIONES
+
+**Contexto técnico:** Motor de comisiones configurable (CommissionRule). Infocus como merchant of record.
+
+#### Comisiones (**D-07** - Pendiente)
+- **¿Infocus cobra comisión a proveedores?** ¿Qué %?
+- **¿Fija o variable?** ¿Por categoría, proveedor, volumen?
+- **¿Se descuenta de liquidación?** ¿O factura aparte?
+
+#### Cuota Anual (**D-09** - Pendiente)
+- **¿Importe fijo por sociedad?** ¿O variable por nº tiendas?
+- **¿Descuentos por volumen?** (ej: >10 tiendas = -20%)
+- **¿Promociones de lanzamiento?** ¿Primer año gratis?
+
+#### Costes Stripe (**D-05** - BLOQUEANTE)
+- **¿Quién absorbe comisión Stripe?** (~1.5% + 0.25€)
+  - Infocus
+  - Proveedor (descuento en liquidación)
+  - Franquiciado (recargo)
+- **¿Chargebacks?** ¿Quién asume el riesgo?
+
+#### Descuentos y Promociones (Fuera de MVP inicial)
+- **¿Necesarios en fase 1?** O posterior
+- **Tipos:** Volumen, importe, cupón, franquicia VIP
+- **¿Quién los crea?** Infocus Admin, proveedor
+
+#### Precio Histórico
+- **¿Auditoría de cambios de precio?** ¿Para análisis/compliance?
+- **¿Precios diferenciados?** ¿Por franquicia, zona, acuerdo especial?
+
+### 🏗️ 10. MÓDULO DE NUEVAS APERTURAS (OPENINGS)
+
+**Contexto:** Módulo implementado en frontend. Backend pendiente según roadmap.
+
+#### Volumen y Proceso
+- **¿Cuántas aperturas anuales?** ¿10, 50, 100? (dimensiona el sistema)
+- **¿Departamentos involucrados?** Expansión, obra, compras, legal, finanzas
+- **¿Proceso actual documentado?** ¿Workflow manual, Excel, otro sistema?
+
+#### Categorías de Apertura CONFIRMADAS (según módulo)
+El módulo soporta categorías configurables. Ejemplos implementados:
+- Mobiliario y equipamiento retail
+- Señalización y rotulación
+- Soluciones IT y TPV
+- Equipamiento de frío
+- Sistemas de seguridad
+- Uniformes y merchandising
+
+**¿Categorías definitivas?** ¿Presupuestos estimados por categoría?
+
+#### Flujo de Aprobación
+1. **Admin crea proyecto** → invita proveedores por categoría
+2. **Proveedores envían presupuestos**
+3. **Franquiciado/Admin selecciona ganador**
+4. **Aprobación financiera** (si aplica)
+5. **Firma digital** (DocuSign, Adobe Sign, otro)
+6. **Tracking de ejecución**
+
+**¿Quién aprueba cada etapa?** ¿Umbrales? (ej: >50k€ → INFOCUS_FINANCE)
+
+#### Gestión Documental
+- **Planos de tienda:** ¿PDF, CAD, imagen?
+- **Contratos:** ¿Firma digital integrada o externa?
+- **Licencias y permisos:** ¿Carrefour gestiona o franquiciado?
+- **Almacenamiento:** S3 compatible (confirmado)
+
+---
+
+### 🎯 11. ROADMAP Y GO-LIVE
+
+**Contexto:** Spec define 7 fases técnicas desde Sprint 0 hasta piloto y producción.
+
+#### Fases CONFIRMADAS (según spec)
+- **Sprint 0:** Decisiones fiscales, PoC Odoo/Stripe, arquitectura cerrada
+- **Fase 1:** Identidad, organizaciones, proveedores, catálogo, admin
+- **Fase 2:** Storefront, carrito, pedidos (sin pago real)
+- **Fase 3:** Stripe Billing, Payment Intents end-to-end
+- **Fase 4:** Fulfillment, incidencias, refunds
+- **Fase 5:** Odoo: partners, facturas, cobros, abonos
+- **Fase 6:** Liquidaciones y Stripe Connect
+- **Fase 7:** Reporting, hardening, UAT, release candidate
+- **Piloto:** 2 proveedores + grupo reducido franquiciados
+- **Go-live:** Migración, formación, soporte reforzado
+
+#### Prioridades MVP
+1. **Catálogo y pedidos** (franquiciados)
+2. **Gestión productos** (proveedores)
+3. **Cuota anual** (Stripe Billing)
+4. **Integración Odoo** (facturación)
+5. **Liquidaciones** (Stripe Connect)
+
+**¿Aperturas en MVP?** ¿O fase posterior?
+
+#### Piloto y Lanzamiento
+- **¿Fecha objetivo go-live?** ¿Q4 2026, Q1 2027?
+- **¿Cuántos participantes en piloto?** ¿2-3 proveedores, 5-10 franquicias?
+- **¿Criterios de éxito del piloto?** KPIs, transacciones mínimas
+
+---
+
+### 🛠️ 12. OPERACIÓN Y SOPORTE
+
+**Contexto:** Abacus operará la plataforma. SLA a definir (**D-14** - Pendiente).
+
+#### Servicios Operativos Abacus (según spec)
+- Monitorización 24/7 y respuesta a alertas
+- Soporte funcional de primer nivel (alcance a acordar)
+- Soporte técnico L2/L3
+- Gestión de catálogos/proveedores (alcance a acordar)
+- Conciliación técnica Stripe-Marketplace-Odoo
+- Preparación de liquidaciones e informes
+- Mantenimiento correctivo, preventivo, seguridad
+- Gestión de releases y evolutivos
+
+#### SLA a Definir (**D-14**)
+- **P1 (Crítico):** Checkout indisponible, cobro incorrecto → ¿Respuesta? ¿Resolución?
+- **P2 (Alto):** Pedidos/proveedor bloqueados → ¿Tiempos?
+- **P3 (Medio):** Error parcial, workaround disponible
+- **P4 (Bajo):** Consulta, mejora → Planificada
+
+**¿Horario de soporte?** L-V 9-18h CET, guardias, 24/7
+
+#### Disponibilidad Objetivo (según spec)
+- **Objetivo MVP:** 99.5% mensual (excluyendo mantenimiento programado)
+- **RTO:** ≤4h para PostgreSQL
+- **RPO:** ≤15min para base de datos
+
+#### Formación
+- **¿Manuales de usuario?** ¿Videos tutoriales?
+- **¿Sesiones en vivo?** Onboarding franquiciados/proveedores
+- **¿Quién imparte formación?** Infocus, Abacus, combinado
+
+---
+
+---
+
+## 📞 Próximos Pasos
+
+### Sprint 0 - BLOQUEANTE (Estimado: 2 semanas)
+
+**Objetivo:** Cerrar las 6 decisiones bloqueantes (D-01 a D-06) antes de iniciar desarrollo del conector Odoo y liquidaciones.
+
+**Participantes requeridos:**
+- **Gestoría:** Información Odoo (versión, API, plan contable)
+- **Infocus:** Modelo económico y fiscal
+- **Asesoría fiscal:** Emisor de facturas, tratamiento de fondos
+- **Abacus:** Arquitectura y PoC técnico
+
+**Entregables Sprint 0:**
+1. ✅ Documento técnico cerrado (versión final de este spec)
+2. ✅ PoC Stripe Billing + Connect funcional
+3. ✅ PoC Odoo: conexión, crear partner, crear factura
+4. ✅ Decisiones D-01 a D-06 documentadas y aprobadas
+5. ✅ Repositorios, CI/CD y entornos DEV/PRE/PRO configurados
+
+### Reuniones Clave
+
+1. **Alineación técnica Odoo** (1-2h)
+   - Participantes: Gestoría (técnico Odoo), Infocus, Abacus
+   - Agenda: Versión, API, plan contable, mapeo, entorno pruebas
+   
+2. **Decisión fiscal y económica** (2h)
+   - Participantes: Infocus (finanzas/legal), Asesoría fiscal, Abacus
+   - Agenda: Emisor facturas (D-02), intermediario/revendedor (D-03), costes Stripe (D-05), comisiones (D-07)
+
+3. **Definición operativa** (1h)
+   - Participantes: Infocus (producto/operaciones), Abacus
+   - Agenda: Liquidaciones (D-06), cuotas (D-09), SLA (D-14), volúmenes (D-15)
+
+### Accesos y Datos Requeridos
+
+**Gestoría:**
+- Acceso a entorno Odoo de pruebas
+- Usuario técnico con permisos API
+- Contacto funcional para validación de asientos
+
+**Infocus:**
+- Cuenta Stripe (live + test) - credenciales
+- Logo, plantillas email corporativas
+- Lista inicial de franquiciados (anonimizada para piloto)
+- Lista inicial de proveedores homologados
+
+**Datos de Prueba:**
+- 5-10 sociedades franquiciadas con tiendas (datos reales anonimizados)
+- 3-5 proveedores con catálogo (50-100 productos ejemplo)
+- Taxonomía de categorías definitiva
+- Presupuestos ejemplo para nuevas aperturas (si entra en MVP)
+
+### Canal de Comunicación
+
+**Propuesta:** Crear canal Slack/Teams compartido Infocus-Abacus-Gestoría para:
+- Resolución rápida de dudas técnicas
+- Coordinación de accesos y pruebas
+- Validación de mapeos Odoo
+- Seguimiento de hitos Sprint 0
+
+**Contacto:** 
+- **Infocus (Producto/Negocio):** [A definir]
+- **Gestoría (Técnico Odoo):** [A definir]
+- **Abacus (Técnico Lead):** [A definir]
+
+---
+
+**📅 Calendario propuesto:**
+- **Semana 1 Sprint 0:** Reuniones de alineación + PoC Odoo/Stripe
+- **Semana 2 Sprint 0:** Cierre decisiones + documento final + go/no-go Fase 1
+- **Semanas 3-6:** Fase 1 (Identidad, proveedores, catálogo, admin)
+- **Semanas 7-10:** Fase 2 (Storefront, carrito, pedidos)
+- **Semanas 11-14:** Fase 3 (Stripe Billing + Payment Intents)
+- **Semanas 15-20:** Fases 4-7 (Fulfillment, Odoo, Liquidaciones, Hardening)
+- **Semana 21+:** Piloto con 2-3 proveedores y 5-10 franquicias
 
 ---
 
@@ -19,28 +601,23 @@
 ### Lo que tenemos HOY (25 Agosto 2026)
 
 ✅ **13 módulos completados** (~19,866 líneas de código funcional)  
-✅ **122 endpoints API** documentados y funcionales  
+✅ **Flujos principales preparados para demostración**  
 ✅ **3 roles de usuario** completamente implementados  
 ✅ **Sistema completo** listo para validación con usuarios reales
 
 ### Tecnologías
 
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS, Shadcn/ui
-- **Backend**: Medusa 2.x con Mercurjs framework
-- **Estado**: Mock data con arquitectura lista para integración real
+- **Aplicación web**: experiencia responsive para Admin, Franquiciado y Proveedor
+- **Base ecommerce**: arquitectura preparada para integrarse con Medusa/Mercur
+- **Estado**: Entorno de demostración preparado para validación funcional
 
 ---
 
 ## 🚀 Preparación de la Demo
 
-### 1. Arrancar el Servidor
+### 1. Abrir la Aplicación
 
-```bash
-cd marketplace-b2b-carrefour-frontend
-npm run dev
-```
-
-Abrir: `http://localhost:3000`
+📍 `https://marketplace-b2b-carrefour.vercel.app`
 
 ### 2. Credenciales de Prueba
 
@@ -48,16 +625,16 @@ Tener a mano estas credenciales para la demo:
 
 | Rol | Email | Password |
 |-----|-------|----------|
-| **Admin** | admin@carrefour.es | admin123 |
-| **Franquiciado** | franchisee@carrefour.es | franchisee123 |
-| **Proveedor / Seller** | seller@mercur.dev | supersecret |
+| **Admin** | admin@test.com | admin123 |
+| **Franquiciado** | franchisee@test.com | franchisee123 |
+| **Proveedor / Supplier** | supplier@test.com | supplier123 |
 
 ### 3. URLs Clave a Favoritar
 
-- **Dev Tools**: http://localhost:3000/admin/dev-tools
-- **Admin Dashboard**: http://localhost:3000/admin/dashboard
-- **Franquiciado**: http://localhost:3000/marketplace/dashboard
-- **Proveedor**: http://localhost:3000/supplier/dashboard
+- **Panel Admin**: https://marketplace-b2b-carrefour.vercel.app/admin/dashboard
+- **Admin Aperturas**: https://marketplace-b2b-carrefour.vercel.app/admin/openings
+- **Franquiciado**: https://marketplace-b2b-carrefour.vercel.app/marketplace/dashboard
+- **Proveedor**: https://marketplace-b2b-carrefour.vercel.app/supplier/dashboard
 
 ---
 
@@ -66,35 +643,32 @@ Tener a mano estas credenciales para la demo:
 ## 🔴 PARTE 1: Panel de Administrador (Admin)
 
 ### Login
-1. Ir a `http://localhost:3000`
-2. **Email**: `admin@carrefour.es`
+1. Ir a `https://marketplace-b2b-carrefour.vercel.app`
+2. **Email**: `admin@test.com`
 3. **Password**: `admin123`
 4. Click **"Iniciar Sesión"**
 
 ---
 
-### 1️⃣ Dashboard & Dev Tools
+### 1️⃣ Dashboard Admin
 
-**Empezar aquí para dar contexto técnico**
+**Empezar aquí para dar contexto general**
 
-📍 `http://localhost:3000/admin/dev-tools`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/dashboard`
 
 **Qué mostrar:**
-- ✅ **122 endpoints** documentados por módulo
-- ✅ Estado de feature flags (Mock vs Real)
-- ✅ Desglose por módulo:
-  - Auth (4), Openings (8), Categories (6)
-  - Quotes (10), Orders (24 total)
-  - Products (14), Checkout (15)
-- ✅ Credenciales de prueba disponibles
+- Vista de entrada del administrador
+- Acceso al menú lateral: Aperturas, Productos, Pedidos, Franquiciados y Tarificación
+- Cambio rápido entre secciones desde navegación
+- Roles diferenciados para Admin, Franquiciado y Proveedor
 
-**Mensaje clave**: *"Tenemos 122 endpoints organizados en 13 módulos completamente funcionales"*
+**Mensaje clave**: *"El administrador tiene una visión centralizada para gestionar la operativa del marketplace"*
 
 ---
 
 ### 2️⃣ Gestión de Aperturas (Openings)
 
-📍 `http://localhost:3000/admin/openings`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/openings`
 
 **Qué mostrar:**
 
@@ -124,7 +698,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 3️⃣ Gestión de Productos
 
-📍 `http://localhost:3000/admin/products`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/products`
 
 **Qué mostrar:**
 
@@ -155,9 +729,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 4️⃣ Aprobación de Precios
 
-📍 `http://localhost:3000/admin/pricing/approval-queue`
-
-**NOTA IMPORTANTE**: La ruta antigua (`/admin/products/pricing`) ya no existe. Usar `/admin/pricing/approval-queue`.
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/pricing/approval-queue`
 
 **Qué mostrar:**
 - Cola de productos pendientes de aprobación
@@ -176,7 +748,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 5️⃣ Vista Global de Pedidos
 
-📍 `http://localhost:3000/admin/orders`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/orders`
 
 **Qué mostrar:**
 
@@ -214,7 +786,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 6️⃣ Gestión de Franquiciados
 
-📍 `http://localhost:3000/admin/franchisees`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/franchisees`
 
 **Qué mostrar:**
 - Lista de franquiciados registrados
@@ -230,9 +802,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 7️⃣ Presupuestos de Aperturas
 
-📍 `http://localhost:3000/admin/openings` → abrir un proyecto → tab **Presupuestos**
-
-**Nota**: No existe página global `/admin/quotes` en la implementación actual; esa URL devuelve 404 y no aparece en el menú lateral.
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/openings` → abrir un proyecto → tab **Presupuestos**
 
 **Qué mostrar:**
 - Acceso a presupuestos desde el detalle de cada proyecto de apertura
@@ -248,14 +818,14 @@ Tener a mano estas credenciales para la demo:
 
 ### Cerrar sesión de Admin y login como Franquiciado
 
-📧 **Email**: `franchisee@carrefour.es`  
+📧 **Email**: `franchisee@test.com`  
 🔑 **Password**: `franchisee123`
 
 ---
 
 ### 1️⃣ Catálogo de Productos
 
-📍 `http://localhost:3000/marketplace`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace`
 
 **Qué mostrar:**
 
@@ -275,7 +845,7 @@ Tener a mano estas credenciales para la demo:
 - **Añadir al carrito**
 
 **C. Carrito de Compras**
-📍 `http://localhost:3000/marketplace/cart`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/cart`
 - Items agregados con expansión completa
 - Variantes mostradas por separado
 - SKU y stock por variante
@@ -289,7 +859,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 2️⃣ Mis Aperturas (Proyectos) 🆕
 
-📍 `http://localhost:3000/marketplace/openings`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/openings`
 
 **Qué mostrar:**
 
@@ -313,7 +883,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 3️⃣ Presupuestos
 
-📍 `http://localhost:3000/marketplace/quotes`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/quotes`
 
 **Qué mostrar:**
 - Presupuestos recibidos para mis proyectos en cards de ancho completo
@@ -326,7 +896,7 @@ Tener a mano estas credenciales para la demo:
   - Ver motivo de rechazo si el presupuesto ya está rechazado
   - Ver información de firma si el presupuesto ya está firmado
 - **Cambiar estado**: selector visual + botón **Cambiar estado** para reabrir, adjudicar, rechazar o expirar el presupuesto durante la demo
-- **Firma digital**: aparece en presupuestos adjudicados sin firma; en mock data también se puede mostrar el presupuesto ya firmado `quote_bcn_mob_001`.
+- **Firma digital**: aparece en presupuestos adjudicados sin firma; también se puede mostrar un presupuesto ya firmado como ejemplo.
 - Sistema de expiración visible por fecha de validez/expirado
 
 **Mensaje clave**: *"El franquiciado revisa presupuestos por proyecto, abre el detalle y toma decisiones cuando el estado lo permite"*
@@ -335,7 +905,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 4️⃣ Mis Pedidos
 
-📍 `http://localhost:3000/marketplace/orders`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/orders`
 
 **Qué mostrar:**
 
@@ -363,7 +933,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 5️⃣ Checkout Process
 
-📍 `http://localhost:3000/marketplace/cart` → botón **Proceder al Pago** → `http://localhost:3000/marketplace/checkout-new`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/cart` → botón **Proceder al Pago** → `https://marketplace-b2b-carrefour.vercel.app/marketplace/checkout-new`
 
 **Nota**: No hay enlace directo al checkout en el sidebar. Se accede desde **Mi Carrito** y solo tiene sentido con productos añadidos.
 
@@ -391,7 +961,7 @@ Tener a mano estas credenciales para la demo:
 - Resumen del pedido
 - Estado y siguiente paso
 - Botón: "Ver mis pedidos"
-- **Validado**: success page renderiza correctamente tras confirmar pedido (`/marketplace/checkout-new/success?...`).
+- Página de confirmación tras completar el pedido
 
 **Mensaje clave**: *"Proceso de checkout completo con múltiples métodos de pago y confirmación inmediata"*
 
@@ -401,14 +971,14 @@ Tener a mano estas credenciales para la demo:
 
 ### Cerrar sesión y login como Proveedor
 
-📧 **Email**: `seller@mercur.dev`  
-🔑 **Password**: `supersecret`
+📧 **Email**: `supplier@test.com`  
+🔑 **Password**: `supplier123`
 
 ---
 
 ### 1️⃣ Mis Productos
 
-📍 `http://localhost:3000/supplier/products`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/products`
 
 **Qué mostrar:**
 
@@ -421,14 +991,14 @@ Tener a mano estas credenciales para la demo:
 - Al hacer click, el producto vuelve a `pending_approval` y se limpia el motivo de rechazo; refrescar la página si el estado visual no cambia inmediatamente
 
 **B. Crear Producto**
-📍 `http://localhost:3000/supplier/products/new`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/products/new`
 - Formulario completo
 - Información básica (nombre, descripción, SKU)
 - Precio propuesto por el proveedor
 - **Enviar a aprobación**
 
 **C. Carga Masiva**
-📍 `http://localhost:3000/supplier/products/bulk-upload`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/products/bulk-upload`
 - Click en **Descargar Plantilla** para bajar `plantilla_productos.csv`
 - Abrir la plantilla en Excel/Numbers/Sheets y completar los productos
 - Mantener las 22 columnas del layout: Producto ID, título, categoría, SKU, variantes, unidades por pack, precio proveedor, IVA, stock e imágenes
@@ -443,7 +1013,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 2️⃣ Pedidos Recibidos
 
-📍 `http://localhost:3000/supplier/orders`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/orders`
 
 **Qué mostrar:**
 
@@ -481,7 +1051,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 3️⃣ Invitaciones a Proyectos 🆕
 
-📍 `http://localhost:3000/supplier/openings`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/openings`
 
 **Qué mostrar:**
 
@@ -500,12 +1070,12 @@ Tener a mano estas credenciales para la demo:
   - Preparar presupuesto basado en planos
 
 **C. Crear Presupuesto**
-📍 Misma ruta del botón **Ver mi presupuesto**: `http://localhost:3000/supplier/openings/proj_001/quote/cat_001`
+📍 Misma ruta del botón **Ver mi presupuesto**: `https://marketplace-b2b-carrefour.vercel.app/supplier/openings/proj_001/quote/cat_001`
 - Formulario completo
 - Items detallados (descripción, cantidad, precio)
 - Términos de pago y entrega
 - Garantía
-- **Enviar presupuesto** → redirige a success page: `/supplier/openings/proj_001/quote/cat_001/success`
+- **Enviar presupuesto** → redirige a la página de confirmación del presupuesto
 - Página de confirmación con resumen del envío y botones **Volver a invitaciones** / **Ver proyecto**
 
 **Mensaje clave**: *"Los proveedores acceden a documentación técnica completa para preparar cotizaciones precisas"*
@@ -524,20 +1094,10 @@ Tener a mano estas credenciales para la demo:
 
 ### 2. Arquitectura Escalable
 
-✅ **Feature Flags Mock/Real**
-```typescript
-// Fácil migración a backend real
-const flags = {
-  auth: 'real',      // Ya usando Medusa
-  products: 'mock',  // Listo para cambiar
-  orders: 'mock',    // Un solo cambio de flag
-}
-```
-
-✅ **122 Endpoints Documentados**
-- API client preparada para cada módulo
-- Tipos TypeScript estrictos
-- Documentación para backend en `docs/modules/`
+✅ **Preparado para Crecer**
+- Separación clara entre roles y módulos
+- Flujos preparados para conectarse progresivamente con servicios reales
+- Documentación técnica disponible para el equipo de integración
 
 ### 3. Experiencia de Usuario
 
@@ -554,11 +1114,11 @@ const flags = {
 
 ### 4. Datos Realistas
 
-✅ **Mock Data de Producción**
+✅ **Datos Realistas de Demostración**
 - 10 proyectos de apertura
 - 7 productos con variantes
 - 5 pedidos por rol
-- 6 proveedores mock
+- 6 proveedores de ejemplo
 - 5 franquiciados
 - Precios en centavos (alineado con Medusa)
 
@@ -589,11 +1149,11 @@ const flags = {
 ### P: ¿Cuánto falta para producción?
 
 **R**: El frontend está **100% listo**. Falta:
-1. **Backend Medusa**: Implementar endpoints según docs en `docs/modules/`
-2. **Testing E2E**: Playwright tests (1 semana)
-3. **Integración**: Cambiar feature flags de mock → real (gradual por módulo)
+1. Conectar progresivamente los servicios finales de Medusa/Mercur
+2. Ejecutar pruebas automáticas de los flujos críticos
+3. Validar con usuarios reales y ajustar detalles operativos
 
-**Tiempo estimado**: 2-3 semanas con equipo backend completo.
+**Tiempo estimado**: 2-3 semanas con el equipo de integración completo.
 
 ---
 
@@ -670,15 +1230,15 @@ Abrir de antemano:
 
 ### 2. Historia a Contar
 
-**Inicio** → "Tenemos 13 módulos completos con 122 endpoints"  
+**Inicio** → "Tenemos 13 módulos completos y recorribles por rol"  
 **Admin** → "Control total: productos, pedidos, aperturas, presupuestos"  
 **Franquiciado** → "Experiencia de compra B2B optimizada"  
 **Proveedor** → "Gestión completa desde propuesta hasta entrega"  
-**Cierre** → "Sistema production-ready esperando integración backend"
+**Cierre** → "Sistema listo para validación funcional y siguiente fase de integración"
 
 ### 3. Evitar
 
-❌ No mencionar "esto es mock" constantemente  
+❌ No entrar en detalles técnicos salvo que los pregunten  
 ❌ No disculparse por funcionalidad faltante  
 ✅ Enfocarse en lo que **SÍ funciona**  
 ✅ Mostrar la **profundidad** del desarrollo
@@ -695,7 +1255,7 @@ Abrir de antemano:
 
 ## ✅ Checklist Pre-Demo
 
-- [ ] Servidor corriendo en `http://localhost:3000`
+- [ ] URL de demo abierta: `https://marketplace-b2b-carrefour.vercel.app`
 - [ ] Pestañas preparadas
 - [ ] Credenciales a mano
 - [ ] Carrito vacío (limpiar localStorage si necesario)
@@ -708,7 +1268,7 @@ Abrir de antemano:
 
 ## 🎯 Mensaje Final
 
-> "Hemos construido un sistema B2B completo y funcional en tiempo récord. Con 13 módulos, 122 endpoints y ~19,866 líneas de código, tenemos una plataforma production-ready que solo espera la integración con el backend Medusa. Cada flujo está pensado, validado y testeado. Esto no es un prototipo - es software real listo para usuarios reales."
+> "Hemos construido una plataforma B2B completa y funcional en tiempo récord. Con 13 módulos y flujos completos para Admin, Franquiciado y Proveedor, Carrefour puede validar la experiencia operativa de punta a punta. Cada flujo está pensado, validado y preparado para la siguiente fase de integración."
 
 ---
 

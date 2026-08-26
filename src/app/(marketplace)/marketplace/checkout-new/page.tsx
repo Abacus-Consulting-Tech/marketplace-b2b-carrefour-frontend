@@ -42,7 +42,7 @@ export default function CheckoutNewPage() {
     productId: item.productId,
     variantId: item.variantId,
     title: item.name,
-    description: item.description,
+    description: undefined,
     thumbnail: item.image,
     quantity: item.quantity,
     price: item.price, // already in cents
@@ -51,7 +51,7 @@ export default function CheckoutNewPage() {
   // Handle address form submission
   const handleAddressSubmit = (address: ShippingAddress) => {
     setShippingAddress(address)
-    setCompletedSteps(prev => [...new Set([...prev, 'address'])])
+    setCompletedSteps(prev => Array.from(new Set<CheckoutStep>([...prev, 'address'])))
     setCurrentStep('payment')
     setError(null)
   }
@@ -59,7 +59,7 @@ export default function CheckoutNewPage() {
   // Handle payment form submission
   const handlePaymentSubmit = (payment: PaymentMethod) => {
     setPaymentMethod(payment)
-    setCompletedSteps(prev => [...new Set([...prev, 'payment'])])
+    setCompletedSteps(prev => Array.from(new Set<CheckoutStep>([...prev, 'payment'])))
     setCurrentStep('review')
     setError(null)
   }
@@ -86,7 +86,7 @@ export default function CheckoutNewPage() {
       )
 
       // Mark review as completed
-      setCompletedSteps(prev => [...new Set([...prev, 'review'])])
+      setCompletedSteps(prev => Array.from(new Set<CheckoutStep>([...prev, 'review'])))
 
       // Debug: Log order details
       console.log('✅ Order created:', order)

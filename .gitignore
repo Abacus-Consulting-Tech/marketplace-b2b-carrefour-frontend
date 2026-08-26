@@ -71,6 +71,7 @@ web_modules/
 .env.development.local
 .env.test.local
 .env.production.local
+!.env.local.mock
 !.env.example
 
 # parcel-bundler cache (https://parceljs.org/)

@@ -1,8 +1,8 @@
 # Marketplace B2B Carrefour - Índice de Documentación
 
-**Última actualización**: 25 de Agosto de 2026
+**Última actualización**: 26 de Agosto de 2026
 
-Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carrefour.
+Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carrefour, reorganizada para mejor navegación.
 
 ---
 
@@ -10,19 +10,45 @@ Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carref
 
 Para información actualizada del proyecto, consultar estas **3 fuentes oficiales**:
 
-1. **📊 [Estado y Roadmap](PROJECT_STATUS_AND_ROADMAP.md)** - Documento maestro con estado actual, módulos completados y roadmap
-2. **🔧 [Dev Tools Panel](http://localhost:3000/admin/dev-tools)** - Panel en vivo con 95 endpoints API documentados
+1. **📊 [Estado y Roadmap](PROJECT_STATUS_AND_ROADMAP.md)** ⭐ - Documento maestro con estado actual, módulos completados, roadmap y alineación con Especificación Técnica v1.0
+2. **🔧 [Dev Tools Panel](http://localhost:3000/admin/dev-tools)** - Panel en vivo con 122 endpoints API documentados
 3. **📚 [Documentación Técnica](technical/)** - Guías técnicas detalladas por módulo
 
 ---
 
-## 📁 Estructura de Documentación
+## 📁 Estructura de Documentación (Reorganizada 26/08/2026)
 
-### ⭐ Documentos Maestros
+### ⭐ Documentos Maestros (Raíz)
 
-- **[PROJECT_STATUS_AND_ROADMAP.md](PROJECT_STATUS_AND_ROADMAP.md)** - 📊 Estado del proyecto, roadmap, métricas
-- **[TODO.md](TODO.md)** - Tareas pendientes consolidadas
-- **[MODULES_ORGANIZATION.md](MODULES_ORGANIZATION.md)** - Mapeo de organización de documentación
+- **[PROJECT_STATUS_AND_ROADMAP.md](PROJECT_STATUS_AND_ROADMAP.md)** - 📊 Estado del proyecto, roadmap completo, alineación con spec
+- **[TODO.md](TODO.md)** - 📝 Tareas pendientes consolidadas
+
+### 📋 [specs/](specs/) - Especificaciones y Requisitos
+
+Documentos de especificación funcional y técnica del proyecto.
+
+- **[FEATURES.md](specs/FEATURES.md)** - Lista completa de features del marketplace
+- **[MODULES_ORGANIZATION.md](specs/MODULES_ORGANIZATION.md)** - Organización de módulos
+- **[ADMIN_ORDERS_SPEC.md](specs/ADMIN_ORDERS_SPEC.md)** - Especificación módulo Admin Orders
+- **Especificación Técnica v1.0** (PDF 23 páginas) - Documento oficial Infocus/Abacus con 18 módulos, 7 fases, 6 decisiones bloqueantes
+
+### ✅ [completed/](completed/) - Módulos Completados
+
+Documentación de módulos ya implementados y testeados.
+
+- **[ADMIN_ORDERS_COMPLETED.md](completed/ADMIN_ORDERS_COMPLETED.md)** - Vista global de pedidos (7 archivos, 1,800 líneas)
+- **[FRANCHISEE_ORDERS_COMPLETED.md](completed/FRANCHISEE_ORDERS_COMPLETED.md)** - Mis Pedidos franchisee (9 archivos, 1,890 líneas)
+- **[QUOTES_COMPLETADO.md](completed/QUOTES_COMPLETADO.md)** - Sistema de presupuestos (11 archivos, 1,500 líneas)
+- **[QUOTES_MODULE_COMPLETED.md](completed/QUOTES_MODULE_COMPLETED.md)** - Documentación técnica completa quotes
+- **[FRANCHISEE_MANAGEMENT_PROGRESS.md](completed/FRANCHISEE_MANAGEMENT_PROGRESS.md)** - Gestión de franquiciados (10 archivos, 2,511 líneas)
+
+### 🏗️ [architecture/](architecture/) - Decisiones de Arquitectura
+
+Documentos sobre decisiones técnicas, alineación con backend y reuniones.
+
+- **[JUSTIFICACION_ARQUITECTURA_FRONTEND.md](architecture/JUSTIFICACION_ARQUITECTURA_FRONTEND.md)** - Defensa de arquitectura custom vs plantilla
+- **[BACKEND_ROADMAP.md](architecture/BACKEND_ROADMAP.md)** - Roadmap de integración con backend Medusa/MercurJS
+- **[MEETING_NOTES_BACKEND_ALIGNMENT.md](architecture/MEETING_NOTES_BACKEND_ALIGNMENT.md)** - Notas de reuniones técnicas y alineación
 
 ### 📦 Documentación Backend (Para Backend Team)
 

@@ -108,7 +108,7 @@ export function SupplierInvitationsList({ supplierId, className = '' }: Supplier
                     </p>
                     {invitation.message && (
                       <p className="text-sm text-gray-500 italic mt-2">
-                        "{invitation.message}"
+                        &ldquo;{invitation.message}&rdquo;
                       </p>
                     )}
                   </div>

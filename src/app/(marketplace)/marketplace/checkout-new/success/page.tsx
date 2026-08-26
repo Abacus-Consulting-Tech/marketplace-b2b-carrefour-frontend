@@ -112,7 +112,7 @@ export default function CheckoutSuccessPage() {
             </li>
             <li className="flex items-start gap-2">
               <span className="mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-600"></span>
-              <span>Puedes hacer seguimiento en la sección "Mis Pedidos"</span>
+              <span>Puedes hacer seguimiento en la sección &ldquo;Mis Pedidos&rdquo;</span>
             </li>
           </ul>
         </div>

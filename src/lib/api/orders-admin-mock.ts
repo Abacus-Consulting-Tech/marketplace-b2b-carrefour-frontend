@@ -51,6 +51,7 @@ const mockIncidents: OrderIncident[] = [
 export const mockAdminOrders: AdminOrder[] = mockFranchiseeOrders.map((order, index) => ({
   ...order,
   // Customer info
+  customer_id: order.customer_id || order.id,
   customer_name: 'Juan García',
   customer_email: 'franquicia.barcelona@carrefour.es',
   franchisee_company: 'Carrefour Barcelona Norte',

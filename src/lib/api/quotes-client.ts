@@ -46,7 +46,7 @@ import { featureFlags } from '@/config/feature-flags'
 // ============================================================================
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000'
-const USE_MOCK = featureFlags.quotes?.useMock ?? true
+const USE_MOCK = featureFlags.shouldUseMock('quotes')
 
 // ============================================================================
 // Utility Functions
@@ -307,6 +307,11 @@ async function mockCreateQuote(request: CreateQuoteRequest): Promise<Quote> {
   const newQuote: Quote = {
     id: `quote_${Date.now()}`,
     ...request,
+    items: request.items?.map((item, index) => ({
+      ...item,
+      id: `item_${Date.now()}_${index}`,
+      quote_id: `quote_${Date.now()}`,
+    })),
     supplier_id: 'mock_supplier',
     supplier_name: 'Mock Supplier',
     supplier_email: 'supplier@example.com',
@@ -332,6 +337,11 @@ async function mockUpdateQuote(quoteId: string, request: UpdateQuoteRequest): Pr
   const updated: Quote = {
     ...quote,
     ...request,
+    items: request.items?.map((item, index) => ({
+      ...item,
+      id: `item_${quoteId}_${index}`,
+      quote_id: quoteId,
+    })) || quote.items,
     updated_at: new Date().toISOString(),
   }
   

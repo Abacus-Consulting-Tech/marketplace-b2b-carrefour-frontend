@@ -137,13 +137,13 @@ export default function LoginPage() {
           Accede a tu cuenta de franquiciado o proveedor
         </CardDescription>
         
-        {/* Development credentials helper */}
-        {process.env.NODE_ENV === 'development' && (
+        {/* Mock credentials helper */}
+        {isMockMode && (
           <Alert className="mt-4">
             <AlertDescription>
               <div className="flex items-center justify-between">
                 <span className="text-sm">
-                  {isMockMode ? "🧪 Modo Mock" : "🔌 Backend Real (DEV)"}
+                  🧪 Modo Mock
                 </span>
                 <Button
                   variant="ghost"
@@ -156,31 +156,15 @@ export default function LoginPage() {
               </div>
               {showMockInfo && (
                 <div className="mt-3 space-y-2 text-xs">
-                  {isMockMode ? (
-                    <>
-                      <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                        <strong>Admin:</strong> admin@test.com / admin123
-                      </div>
-                      <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                        <strong>Franchisee:</strong> franchisee@test.com / franchisee123
-                      </div>
-                      <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
-                        <strong>Supplier:</strong> supplier@test.com / supplier123
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div className="font-mono bg-green-100 dark:bg-green-900 p-2 rounded border border-green-300">
-                        <strong>✅ Admin:</strong> admin@carrefour.dev / supersecret
-                      </div>
-                      <div className="font-mono bg-green-100 dark:bg-green-900 p-2 rounded border border-green-300">
-                        <strong>✅ Seller:</strong> seller@mercur.dev / supersecret
-                      </div>
-                      <div className="font-mono bg-green-100 dark:bg-green-900 p-2 rounded border border-green-300">
-                        <strong>✅ Franchisee:</strong> franchisee@carrefour.dev / supersecret
-                      </div>
-                    </>
-                  )}
+                  <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                    <strong>Admin:</strong> admin@test.com / admin123
+                  </div>
+                  <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                    <strong>Franchisee:</strong> franchisee@test.com / franchisee123
+                  </div>
+                  <div className="font-mono bg-gray-100 dark:bg-gray-800 p-2 rounded">
+                    <strong>Supplier:</strong> supplier@test.com / supplier123
+                  </div>
                 </div>
               )}
             </AlertDescription>

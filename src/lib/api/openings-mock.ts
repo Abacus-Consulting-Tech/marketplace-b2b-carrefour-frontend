@@ -846,7 +846,7 @@ export let mockProjectDocuments: ProjectDocument[] = [
   {
     id: 'doc_008',
     project_id: 'proj_001',
-    category: 'obras_rotulacion',
+    category: 'obras_general',
     subcategory: null,
     name: 'Proyecto Rotulación Exterior',
     description: 'Señalización exterior, rótulos luminosos y vinilos de fachada',
@@ -911,7 +911,7 @@ export let mockProjectDocuments: ProjectDocument[] = [
   {
     id: 'doc_012',
     project_id: 'proj_002',
-    category: 'informatica',
+    category: 'equipamientos',
     subcategory: null,
     name: 'Infraestructura IT y Seguridad',
     description: 'Especificaciones de servidores, cajas, sistemas de vigilancia y control de acceso',
