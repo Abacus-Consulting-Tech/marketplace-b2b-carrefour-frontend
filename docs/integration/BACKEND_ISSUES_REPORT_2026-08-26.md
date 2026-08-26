@@ -157,6 +157,9 @@ These endpoints work correctly with same admin credentials:
 | /admin/custom/orders/stats | GET | ✅ 200 | Order statistics (workaround) |
 | /admin/sellers | GET | ✅ 200 | Lists all sellers |
 | /admin/sellers/:id | GET | ✅ 200 | Seller detail |
+| /admin/custom/sellers/:id/markup | GET | ✅ 200 | Get seller markup ✨ TESTED |
+| /admin/custom/sellers/:id/markup | PATCH | ✅ 200 | Update seller markup ✨ TESTED |
+| /admin/custom/products/pending | GET | ✅ 200 | Pending products ✨ TESTED |
 | /admin/quotes | GET | ✅ 200 | Lists all quotes |
 | /admin/quotes/stats | GET | ✅ 200 | Quote statistics |
 | /franchisee/orders | GET | ✅ 200 | Franchisee orders |
@@ -165,6 +168,15 @@ These endpoints work correctly with same admin credentials:
 | /quotes/:id | GET | ✅ 200 | Quote detail |
 | /seller/quotes | GET | ✅ 200 | Seller quotes |
 | /seller/invitations | GET | ✅ 200 | Seller invitations |
+| /vendor/custom/products | GET | ✅ 200 | Vendor products list ✨ TESTED |
+| /vendor/custom/products | POST | ✅ 201 | Propose product ✨ TESTED |
+
+**✨ Workflow Validated End-to-End:**
+1. Vendor proposes product → 201 Created ✅
+2. Product appears in pending list → 200 OK ✅
+3. Admin can see/manage pending products → 200 OK ✅
+4. Admin can get/update seller markup → 200 OK ✅
+5. Duplicate detection working → Proper error handling ✅
 
 ---
 
