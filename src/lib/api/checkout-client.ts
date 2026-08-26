@@ -22,6 +22,7 @@ import type {
   ShippingAddress,
   PaymentMethod,
   Order,
+  OrderAddress,
   OrderItem,
   AddressValidationErrors,
   PaymentValidationErrors,
@@ -40,6 +41,21 @@ function toMedusaAddress(address: ShippingAddress): MercurCartAddress {
     last_name: address.lastName || address.last_name || '',
     address_1: address.address1 || address.address_1 || '',
     address_2: address.address2 || address.address_2 || null,
+    city: address.city,
+    province: address.province,
+    postal_code: address.postalCode || address.postal_code || '',
+    country_code: address.countryCode || address.country_code || 'ES',
+    phone: address.phone,
+  }
+}
+
+function toOrderAddress(address: ShippingAddress): OrderAddress {
+  return {
+    first_name: address.firstName || address.first_name || '',
+    last_name: address.lastName || address.last_name || '',
+    company: address.company,
+    address_1: address.address1 || address.address_1 || '',
+    address_2: address.address2 || address.address_2,
     city: address.city,
     province: address.province,
     postal_code: address.postalCode || address.postal_code || '',
@@ -73,7 +89,7 @@ function fromMedusaOrder(medusaOrder: MercurOrder): Order {
       quantity: item.quantity,
       unit_price: item.unit_price,
       subtotal: item.subtotal || item.unit_price * item.quantity,
-      tax_total: item.tax_total || 0,
+      tax_total: 0,
       total: item.total || item.subtotal || item.unit_price * item.quantity,
       variant_id: item.variant_id || undefined,
       thumbnail: item.thumbnail || undefined,
@@ -121,7 +137,7 @@ function createMockOrder(
   
   const orderItems: OrderItem[] = cartItems.map((item, index) => ({
     id: `item_mock_${index + 1}`,
-    order_id: `order_mock_${Date.now()}`,
+    order_id: 'order_mock_pending',
     product_id: item.productId,
     title: item.title,
     quantity: item.quantity,
@@ -151,7 +167,7 @@ function createMockOrder(
     total,
     currency_code: 'eur',
     items: orderItems,
-    shipping_address: shippingAddress,
+    shipping_address: toOrderAddress(shippingAddress),
     region_id: 'reg_mock_es',
     created_at: now,
     updated_at: now,

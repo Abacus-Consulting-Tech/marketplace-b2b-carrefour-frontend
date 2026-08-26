@@ -28,7 +28,7 @@ export function PaymentForm({
   isSubmitting = false,
 }: PaymentFormProps) {
   const [paymentType, setPaymentType] = useState<PaymentType>(
-    initialPayment?.type || 'card'
+    initialPayment?.type === 'bank_transfer' ? 'bank_transfer' : 'card'
   )
 
   const [formData, setFormData] = useState<PaymentMethod>(

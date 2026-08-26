@@ -115,7 +115,7 @@ export function OrderDetail({ order }: OrderDetailProps) {
 
                   {/* Price */}
                   <div className="text-right">
-                    <p className="font-semibold">{formatPrice(item.total)}</p>
+                    <p className="font-semibold">{formatPrice(item.total ?? item.subtotal)}</p>
                     <p className="text-sm text-gray-600">IVA incluido</p>
                   </div>
                 </div>

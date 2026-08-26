@@ -219,6 +219,7 @@ export interface CreateOrderRequest {
 // ============================================================================
 
 export interface AddressValidationErrors {
+  [key: string]: string | undefined
   first_name?: string
   last_name?: string
   address_1?: string
@@ -235,6 +236,7 @@ export interface AddressValidationErrors {
 }
 
 export interface PaymentValidationErrors {
+  [key: string]: string | undefined
   method?: string
   card_number?: string
   card_holder?: string

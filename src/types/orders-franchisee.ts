@@ -161,6 +161,11 @@ export const ORDER_STATUS_CONFIG: Record<OrderStatus, OrderStatusBadgeConfig> = 
     variant: 'default',
     className: 'bg-green-500 text-white'
   },
+  completed: {
+    label: 'Completado',
+    variant: 'default',
+    className: 'bg-green-600 text-white'
+  },
   cancelled: {
     label: 'Cancelado',
     variant: 'destructive',
@@ -174,6 +179,11 @@ export const ORDER_STATUS_CONFIG: Record<OrderStatus, OrderStatusBadgeConfig> = 
 }
 
 export const PAYMENT_STATUS_CONFIG: Record<PaymentStatus, OrderStatusBadgeConfig> = {
+  pending: {
+    label: 'Pago pendiente',
+    variant: 'outline',
+    className: 'border-yellow-500 text-yellow-700'
+  },
   awaiting: {
     label: 'Pendiente de pago',
     variant: 'outline',
@@ -183,6 +193,11 @@ export const PAYMENT_STATUS_CONFIG: Record<PaymentStatus, OrderStatusBadgeConfig
     label: 'Pagado',
     variant: 'default',
     className: 'bg-green-500 text-white'
+  },
+  authorized: {
+    label: 'Autorizado',
+    variant: 'default',
+    className: 'bg-blue-500 text-white'
   },
   partially_refunded: {
     label: 'Parcialmente reembolsado',
