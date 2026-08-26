@@ -91,18 +91,18 @@ export const featureFlags = {
     } satisfies ModuleConfig,
 
     quotes: {
-      useMock: true,
-      backendReady: false,
-      apiBaseUrl: '/api/quotes',
-      notes: 'Quotes module for opening projects - UI complete with mock data, aligned with Medusa + Mercur framework, backend pending',
-      lastUpdated: '2026-08-25',
+      useMock: process.env.NEXT_PUBLIC_MOCK_QUOTES !== 'false', // Default to true
+      backendReady: true, // ✅ Render DEV validated 2026-08-26
+      apiBaseUrl: '/quotes',
+      notes: 'Quotes API validated - GET /quotes, /admin/quotes, /seller/quotes, /seller/invitations (partial integration)',
+      lastUpdated: '2026-08-26',
     } satisfies ModuleConfig,
 
     orders: {
       useMock: process.env.NEXT_PUBLIC_MOCK_ORDERS !== 'false', // Default to true
-      backendReady: true, // ✅ Render DEV validated 2026-08-24
+      backendReady: true, // ✅ Render DEV validated 2026-08-26
       apiBaseUrl: '/admin/orders',
-      notes: 'Orders API validated - GET /admin/orders, GET /vendor/orders (requires x-seller-id header)',
+      notes: 'Orders API validated - GET /admin/orders, /admin/custom/orders/stats, /franchisee/orders, /vendor/orders (all integrated)',
       lastUpdated: '2026-08-26',
     } satisfies ModuleConfig,
 

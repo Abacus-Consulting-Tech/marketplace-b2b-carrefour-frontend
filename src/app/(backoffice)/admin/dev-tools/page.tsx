@@ -1065,47 +1065,48 @@ export default function DevToolsPage() {
       },
       
       // ========================================================================
-      // FRANCHISEE ORDERS MODULE (My Orders)
+      // FRANCHISEE ORDERS MODULE (My Orders) - ✅ REAL API (Render DEV)
+      // Backend Report 2026-08-26: Using /franchisee/orders endpoints
       // ========================================================================
       {
-        path: '/store/orders',
+        path: '/franchisee/orders',
         method: 'GET',
         module: 'orders',
         description: 'Listar mis pedidos (franquiciado)',
         usesRealAPI: !featureFlags.shouldUseMock('orders'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/store/orders'
+        medusaEndpoint: '/franchisee/orders'
       },
       {
-        path: '/store/orders/:id',
+        path: '/franchisee/orders/:id',
         method: 'GET',
         module: 'orders',
         description: 'Detalle de mi pedido',
         usesRealAPI: !featureFlags.shouldUseMock('orders'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/store/orders/:id'
+        medusaEndpoint: '/franchisee/orders/:id'
       },
       {
-        path: '/store/orders/stats',
+        path: '/franchisee/orders/stats',
         method: 'GET',
         module: 'orders',
         description: 'Estadísticas de mis pedidos',
         usesRealAPI: !featureFlags.shouldUseMock('orders'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/store/orders/stats'
+        medusaEndpoint: '/franchisee/orders/stats'
       },
       {
-        path: '/store/orders/:id/cancel',
+        path: '/franchisee/orders/:id/cancel',
         method: 'POST',
         module: 'orders',
         description: 'Cancelar mi pedido',
         usesRealAPI: !featureFlags.shouldUseMock('orders'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/store/orders/:id/cancel'
+        medusaEndpoint: '/franchisee/orders/:id/cancel'
       },
 
       // ========================================================================
@@ -1132,12 +1133,22 @@ export default function DevToolsPage() {
         medusaEndpoint: '/admin/orders/:id'
       },
       {
+        path: '/admin/custom/orders/stats',
+        method: 'GET',
+        module: 'orders',
+        description: 'Estadísticas globales de pedidos (USAR ESTA)',
+        usesRealAPI: !featureFlags.shouldUseMock('orders'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/custom/orders/stats'
+      },
+      {
         path: '/admin/orders/stats',
         method: 'GET',
         module: 'orders',
-        description: 'Estadísticas globales de pedidos',
+        description: 'Estadísticas (legacy - puede dar 403)',
         usesRealAPI: !featureFlags.shouldUseMock('orders'),
-        status: 'working',
+        status: 'broken',
         requiresAuth: true,
         medusaEndpoint: '/admin/orders/stats'
       },
@@ -1193,71 +1204,84 @@ export default function DevToolsPage() {
       },
 
       // ========================================================================
-      // QUOTES MODULE - FRANCHISEE (Opening Projects)
+      // QUOTES MODULE - FRANCHISEE (Opening Projects) - ✅ REAL API (Render DEV)
+      // Backend Report 2026-08-26: Using /quotes endpoints
       // ========================================================================
       {
-        path: '/store/quotes',
+        path: '/quotes',
         method: 'GET',
         module: 'quotes',
         description: 'Listar presupuestos del franquiciado',
         usesRealAPI: !featureFlags.shouldUseMock('quotes'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/store/quotes'
+        medusaEndpoint: '/quotes'
       },
       {
-        path: '/store/quotes/:id',
+        path: '/quotes/:id',
         method: 'GET',
         module: 'quotes',
         description: 'Detalle de presupuesto',
         usesRealAPI: !featureFlags.shouldUseMock('quotes'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/store/quotes/:id'
+        medusaEndpoint: '/quotes/:id'
       },
       {
-        path: '/store/quotes/:id/award',
+        path: '/quotes/:id/award',
         method: 'POST',
         module: 'quotes',
         description: 'Adjudicar presupuesto a proveedor',
         usesRealAPI: !featureFlags.shouldUseMock('quotes'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
-        medusaEndpoint: '/store/quotes/:id/award'
+        medusaEndpoint: '/quotes/:id/award'
       },
       {
-        path: '/store/quotes/:id/reject',
+        path: '/quotes/:id/reject',
         method: 'POST',
         module: 'quotes',
         description: 'Rechazar presupuesto',
         usesRealAPI: !featureFlags.shouldUseMock('quotes'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
-        medusaEndpoint: '/store/quotes/:id/reject'
+        medusaEndpoint: '/quotes/:id/reject'
       },
       {
-        path: '/store/quotes/:id/sign',
+        path: '/quotes/:id/sign',
         method: 'POST',
         module: 'quotes',
         description: 'Firmar presupuesto adjudicado',
         usesRealAPI: !featureFlags.shouldUseMock('quotes'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
-        medusaEndpoint: '/store/quotes/:id/sign'
+        medusaEndpoint: '/quotes/:id/sign'
       },
+      
+      // Admin Quotes
       {
-        path: '/store/quotes/stats',
+        path: '/admin/quotes',
         method: 'GET',
         module: 'quotes',
-        description: 'Estadísticas de presupuestos',
+        description: 'Listar todos los presupuestos (admin)',
         usesRealAPI: !featureFlags.shouldUseMock('quotes'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/store/quotes/stats'
+        medusaEndpoint: '/admin/quotes'
+      },
+      {
+        path: '/admin/quotes/stats',
+        method: 'GET',
+        module: 'quotes',
+        description: 'Estadísticas de presupuestos (admin)',
+        usesRealAPI: !featureFlags.shouldUseMock('quotes'),
+        status: 'working',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/quotes/stats'
       },
 
       // ========================================================================
-      // QUOTES MODULE - SUPPLIER (Vendor Panel)
+      // QUOTES MODULE - SUPPLIER (Vendor Panel) - ✅ REAL API (Render DEV)
       // ========================================================================
       {
         path: '/seller/invitations',
