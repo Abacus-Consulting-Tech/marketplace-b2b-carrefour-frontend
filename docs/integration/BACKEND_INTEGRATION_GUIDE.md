@@ -131,9 +131,12 @@ VENDOR_TOKEN=$(curl -s -X POST https://marketplace-b2b-backend-dev.onrender.com/
   -H "Content-Type: application/json" \
   -d '{"email":"seller@mercur.dev","password":"supersecret"}' | grep -o '"token":"[^"]*' | cut -d'"' -f4)
 
+# Important: Use all args on same line or proper line continuations
 curl -X GET "https://marketplace-b2b-backend-dev.onrender.com/vendor/sellers/me" \
   -H "Authorization: Bearer $VENDOR_TOKEN" \
   -H "x-seller-id: sel_01M0T3BYTKQF7RV18RX93XEAQD"
+
+# Expected: Returns seller details for Sole Society
 ```
 
 ### 4. Pricing Module
@@ -147,16 +150,19 @@ curl -X GET "https://marketplace-b2b-backend-dev.onrender.com/admin/custom/produ
 
 **Get Seller Markup (Admin)**:
 ```bash
-curl -X GET "https://marketplace-b2b-backend-dev.onrender.com/admin/custom/sellers/<seller_id>/markup" \
+# Use a real seller ID from GET /admin/sellers response
+# Example: sel_01M0A89ET1F5NBDER95X09ZPES (Uniformes Corporativos S.L.)
+curl -X GET "https://marketplace-b2b-backend-dev.onrender.com/admin/custom/sellers/sel_01M0A89ET1F5NBDER95X09ZPES/markup" \
   -H "Authorization: Bearer $TOKEN"
 ```
 
 **Update Seller Markup (Admin)**:
 ```bash
-curl -X PATCH "https://marketplace-b2b-backend-dev.onrender.com/admin/custom/sellers/<seller_id>/markup" \
+# Note: API expects 'global_markup_percentage' not 'markup_percentage'
+curl -X PATCH "https://marketplace-b2b-backend-dev.onrender.com/admin/custom/sellers/sel_01M0A89ET1F5NBDER95X09ZPES/markup" \
   -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{"markup_percentage":15.0,"reason":"Ajuste trimestral"}'
+  -d '{"global_markup_percentage":15.0,"reason":"Ajuste trimestral"}'
 ```
 
 **My Products (Vendor)**:
