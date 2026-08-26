@@ -44,6 +44,8 @@ Abrir: `http://localhost:3000`
 
 ### 2. Credenciales de Prueba
 
+**LOCALHOST MOCK MODE CREDENTIALS** (`NEXT_PUBLIC_MOCK_AUTH=true`)
+
 Tener a mano estas credenciales para la demo:
 
 | Rol | Email | Password |
