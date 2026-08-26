@@ -1,12 +1,15 @@
 # Estado del Proyecto y Roadmap - Marketplace B2B Carrefour
 
-**Fecha**: 25 de Agosto de 2026  
-**Última Actualización**: Miércoles 26 Agosto - 13/13 Módulos Core Completados + fixes demo/checkout  
-**Estado General**: ✅ 13 módulos completados (~19,866 líneas) - Frontend listo para validación
+**Fecha**: 26 de Agosto de 2026  
+**Última Actualización**: Martes 26 Agosto - Alineación con Especificación Técnica v1.0  
+**Estado General**: 🟡 Frontend UI 85% | Integraciones Críticas 5% | MVP Funcional 45%
 
 > **📌 FUENTE DE VERDAD (Source of Truth)**  
-> Este documento, junto con [Dev Tools](http://localhost:3000/admin/dev-tools) y [docs/technical/](technical/), son las **3 fuentes oficiales** de verdad del proyecto.  
+> Este documento, junto con la **Especificación Técnica v1.0** (PDF 23 páginas) y [Dev Tools](http://localhost:3000/admin/dev-tools), son las **fuentes oficiales** de verdad del proyecto.  
 > Toda la información del estado actual, módulos completados, roadmap y arquitectura debe consultarse aquí.
+
+> **⚠️ ACTUALIZACIÓN CRÍTICA (26/08/2026)**  
+> Tras comparar con la Especificación Técnica oficial, hemos identificado **gaps significativos** en integraciones críticas (Stripe, Odoo, liquidaciones). El roadmap ha sido actualizado con las **7 fases + Sprint 0** del spec y las **6 decisiones bloqueantes** que deben resolverse antes de desarrollo backend.
 
 **✅ INCIDENCIA RESUELTA**: Success page del checkout validada el 26/08. El flujo confirma pedido y renderiza `/marketplace/checkout-new/success?orderId=order_mock_1787743309226&display_id=CF-309226` correctamente.
 
@@ -14,24 +17,101 @@
 
 ## 📊 Resumen Ejecutivo
 
-### Lo que tenemos funcionando HOY:
-- ✅ 10 módulos con UI completa (mock data)
-- ✅ Sistema de autenticación multi-rol
+### ✅ Lo que tenemos COMPLETADO (Frontend UI):
+- ✅ **13 módulos UI** con mock data (~19,866 líneas)
+- ✅ Sistema de autenticación multi-rol (login funcional)
 - ✅ Feature flags para mock/real switching
-- ✅ 9,000+ líneas de código funcional
-- ✅ Sistema listo para validar con usuarios
+- ✅ Next.js 14 + TypeScript strict mode
 - ✅ CRUD completo de productos con validación avanzada
-- ✅ Catálogo de franquiciado con carrito variant-aware TESTEADO
-- ✅ Testing manual completo del flujo de compra (catálogo → carrito)
-- ✅ **Franchisee Orders** - Historial y tracking completo (25/08/2026)
-- ✅ **Admin Orders** - Vista global con prioridades e incidencias (25/08/2026)
-- ✅ **Quotes** - Sistema de presupuestos con firmas digitales (25/08/2026)
+- ✅ Catálogo de franquiciado con carrito variant-aware
+- ✅ **Franchisee Orders** - Historial y tracking completo
+- ✅ **Admin Orders** - Vista global con prioridades e incidencias
+- ✅ **Quotes** - Sistema de presupuestos con firmas digitales
 - ✅ **Supplier Products** - CRUD completo con carga masiva
-- ✅ **Franchisee Management** - CRUD completo con 10 archivos
-- ✅ **Checkout** - Wizard multi-paso con 15 archivos (~3,366 líneas)
-- ✅ **13/13 módulos core completados** con ~19,866 líneas de código
+- ✅ **Franchisee Management** - CRUD completo
+- ✅ **Checkout** - Wizard multi-paso (15 archivos, ~3,366 líneas)
+- ✅ **Openings** - Gestión de aperturas con documentos técnicos
 
-### Módulos completos (funcionalidad CRUD completa):
+### 🔴 Lo que FALTA (Integraciones Críticas):
+- ❌ **Stripe Billing** - Suscripción anual (M02 del spec) - **BLOQUEANTE**
+- ❌ **Stripe Connect** - Cuentas proveedores (M03) - **BLOQUEANTE**
+- ❌ **Stripe PaymentIntents** - Checkout real (M07) - **BLOQUEANTE**
+- ❌ **Odoo Connector** - Facturación/contabilidad (M13) - **BLOQUEANTE**
+- ❌ **Settlement Engine** - Liquidaciones (M12) - **BLOQUEANTE**
+- ❌ **Refunds** - Reembolsos (M11)
+- ❌ **Incidents** - Sistema tickets (M10)
+- ❌ **AuditLog** - Auditoría inmutable (M17)
+- ❌ **Document Service** - S3, facturas, albaranes (M18)
+- ❌ **Event-driven architecture** - Eventos de dominio
+- ❌ **MFA** - Autenticación multi-factor para roles financieros
+
+### 📊 Cobertura Real vs Especificación Técnica:
+- **Frontend UI Mock**: 85% completo (13 de 18 módulos del spec)
+- **Integraciones Backend**: 5% completo (solo Auth parcial)
+- **MVP Funcional End-to-End**: 45% completo
+- **Módulos del Spec Implementados**: 8 de 18 (44%)
+
+---
+
+## 🔍 Comparativa: Implementación vs Especificación Técnica v1.0
+
+### 📋 18 Módulos del Spec - Estado Actual
+
+| ID | Módulo Spec | Estado | Completitud | Gap Crítico |
+|----|------------|--------|-------------|-------------|
+| M01 | Onboarding franquiciado | 🟡 60% | UI completa, falta Stripe Customer + cuota | Stripe Billing |
+| **M02** | **Suscripción anual** | **❌ 0%** | **NO IMPLEMENTADO** | **🔴 BLOQUEANTE - Stripe Billing** |
+| **M03** | **Proveedores** | **🟡 70%** | CRUD OK, falta Connect KYC | **🔴 BLOQUEANTE - Stripe Connect** |
+| M04 | Catálogo | ✅ 100% | CRUD completo + aprobación | - |
+| M05 | Búsqueda | ✅ 100% | Integrado en catálogo | - |
+| M06 | Carrito B2B | ✅ 100% | Variant-aware, multi-proveedor | - |
+| M07 | Checkout | 🟡 80% | UI completa, falta PaymentIntent real | Stripe PaymentIntents |
+| M08 | Pedidos | ✅ 95% | 3 vistas (Admin/Supplier/Franchisee), falta split backend | - |
+| M09 | Fulfillment | ✅ 90% | Tracking OK, falta prueba de entrega | - |
+| **M10** | **Incidencias** | **❌ 0%** | **NO IMPLEMENTADO** | **Sistema de tickets SLA** |
+| **M11** | **Reembolsos** | **❌ 0%** | **NO IMPLEMENTADO** | **Stripe refunds + abono Odoo** |
+| **M12** | **Liquidaciones** | **❌ 0%** | **NO IMPLEMENTADO** | **🔴 BLOQUEANTE - Settlement Engine** |
+| **M13** | **Facturación/Odoo** | **❌ 0%** | **NO IMPLEMENTADO** | **🔴 BLOQUEANTE - Odoo Connector** |
+| **M14** | **Comisión Abacus** | **❌ 0%** | **NO IMPLEMENTADO** | **Cálculo variable + factura** |
+| M15 | Reporting | 🟡 30% | Dashboards básicos, faltan KPIs | - |
+| M16 | Configuración | 🟡 40% | Feature flags OK, falta resto | - |
+| **M17** | **Auditoría** | **❌ 0%** | **NO IMPLEMENTADO** | **AuditLog inmutable** |
+| **M18** | **Gestión documental** | **🟡 20%** | Solo docs openings, falta S3/facturas | **Document Service + S3** |
+
+**Resumen por Estado:**
+- ✅ **Completo (100%)**: 4 módulos (M04, M05, M06, M08)
+- 🟡 **Parcial (20-95%)**: 6 módulos (M01, M03, M07, M09, M15, M16, M18)
+- ❌ **No Iniciado (0%)**: 8 módulos (M02, M10, M11, M12, M13, M14, M17 + parcial M18)
+
+**Módulos Bloqueantes para Sprint 0**: M02, M03 (Connect), M12, M13
+
+---
+
+## 🚨 6 DECISIONES BLOQUEANTES (Sprint 0)
+
+Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones deben resolverse **ANTES** de desarrollar el conector Odoo y el motor de liquidaciones:
+
+| ID | Decisión | Impacto | Responsable | Estado |
+|----|----------|---------|-------------|--------|
+| **D-01** | ¿Qué versión, edición y hosting de Odoo utiliza la gestoría? | **BLOQUEANTE** para conector | Gestoría | ⏳ Pendiente |
+| **D-02** | ¿Quién emite legalmente la factura de producto? | **BLOQUEANTE** fiscal | Infocus/Asesoría | ⏳ Pendiente |
+| **D-03** | ¿Infocus actúa como intermediario o revendedor? | **BLOQUEANTE** arquitectura económica | Infocus | ⏳ Pendiente |
+| **D-04** | ¿Cómo se registra en Odoo el cobro por cuenta de terceros? | **BLOQUEANTE** contable | Gestoría | ⏳ Pendiente |
+| **D-05** | ¿Quién soporta comisión Stripe, refunds y chargebacks? | Reglas de liquidación | Infocus | ⏳ Pendiente |
+| **D-06** | ¿Periodicidad y ventana de liquidación? | Motor de settlement | Infocus | ⏳ Pendiente |
+
+**Otras Decisiones (D-07 a D-15)**: Implementables mediante configuración con valores provisionales.
+
+**Próximos Pasos Sprint 0:**
+1. 📅 **Reunión técnica Odoo** - Alineación con gestoría (resolver D-01, D-04)
+2. 📅 **Reunión fiscal/económica** - Clarificar modelo legal (resolver D-02, D-03, D-05)
+3. 🔬 **PoC Stripe + Odoo** - Validar integración técnica
+4. 🏗️ **Arquitectura event-driven** - Outbox pattern, webhooks
+5. 🚀 **CI/CD completo** - 4 entornos (LOCAL, DEV, PRE, PRO)
+
+---
+
+### Módulos completos Frontend UI (funcionalidad CRUD completa):
 1. ✅ **Auth** - Login multi-rol, sessions, protected routes
 2. ✅ **Openings** - Gestión de aperturas con descarga de documentos técnicos
 3. ✅ **Categories** - Gestión de categorías de productos y aperturas
