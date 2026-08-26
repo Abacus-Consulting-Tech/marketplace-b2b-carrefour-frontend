@@ -17,296 +17,582 @@
 
 ## ❓ Preguntas Clave para Carrefour
 
-Esta sección recoge las principales dudas técnicas y de negocio que necesitamos resolver con Carrefour para completar la integración del sistema.
+**Basado en la Especificación Técnica v1.0 (20 julio 2026)**
+
+Esta sección recoge las **decisiones abiertas críticas** y datos operativos necesarios para completar la integración. Las decisiones marcadas como **BLOQUEANTES** (D-01 a D-06) deben resolverse en Sprint 0.
+
+---
+
+### 🔴 DECISIONES BLOQUEANTES (Sprint 0)
+
+Estas preguntas **bloquean el desarrollo** del conector contable y motor de liquidaciones:
+
+#### D-01: Versión exacta de Odoo (BLOQUEANTE)
+**Pregunta:** ¿Qué versión, edición y hosting de Odoo utiliza la gestoría?
+- ¿Odoo 19, 18, 17 o anterior?
+- ¿Community o Enterprise?
+- ¿Odoo Online, Odoo.sh u on-premise?
+- ¿Está disponible la External JSON-2 API? (solo Odoo 19+)
+- ¿Usuario técnico y API keys disponibles?
+
+**Impacto:** Define si usamos JSON-2 (preferido), JSON-RPC clásico o módulo custom.
+
+#### D-02: Emisor legal de facturas (BLOQUEANTE - Fiscal)
+**Pregunta:** ¿Quién emite legalmente la factura de producto al franquiciado?
+- **Opción A:** Proveedor factura directamente → plataforma solo archiva
+- **Opción B:** Infocus revende → Odoo emite factura
+- **Opción C:** Autofacturación
+
+**Impacto:** Afecta flujo de facturación, IVA, Odoo y Stripe.
+
+#### D-03: Modelo económico de Infocus (BLOQUEANTE)
+**Pregunta:** ¿Infocus actúa como intermediario o revendedor?
+- **Intermediario:** Cobra y transfiere; proveedor factura
+- **Revendedor:** Compra y revende; Infocus factura
+
+**Impacto:** Arquitectura económica, Stripe Connect, comisiones y contabilidad.
+
+#### D-04: Registro contable de cobros (BLOQUEANTE - Odoo)
+**Pregunta:** ¿Cómo se registra en Odoo el cobro por cuenta de terceros?
+- ¿Cuenta transitoria?
+- ¿Diarios específicos?
+- ¿Mapping de contrapartidas?
+
+**Impacto:** Mapeo del conector, asientos y conciliación.
+
+#### D-05: Costes Stripe y chargebacks (BLOQUEANTE)
+**Pregunta:** ¿Quién soporta la comisión de Stripe, refunds y chargebacks?
+- ¿Infocus absorbe todo?
+- ¿Se descuenta de liquidación del proveedor?
+- ¿Reparto según regla?
+
+**Impacto:** Cálculo de liquidaciones y motor de settlement.
+
+#### D-06: Periodicidad de liquidaciones (BLOQUEANTE)
+**Pregunta:** ¿Cuándo se liquida a proveedores?
+- ¿Quincenal, mensual, semanal?
+- ¿Ventana de incidencias? (ej: 7 días tras entrega)
+- ¿Aprobación manual o automática?
+
+**Impacto:** Motor de settlement, flujo de aprobación.
+
+---
+
+### 🟡 DECISIONES DE CONFIGURACIÓN (Resolubles post-Sprint 0)
+
+#### D-07: Comisión de Infocus a proveedores
+**Pregunta:** ¿Qué comisión cobra Infocus sobre ventas?
+- ¿Porcentaje fijo o variable?
+- ¿Varía por categoría o proveedor?
+
+**Impacto:** Reglas de comisión y contratos.
+
+#### D-08: Base del variable de Abacus
+**Pregunta:** ¿Cómo se calcula el componente variable del coste operativo de Abacus?
+- ¿% sobre GMV neto?
+- ¿% sobre cuotas cobradas?
+- ¿Fijo + variable?
+
+**Impacto:** Reporting y factura mensual Abacus → Infocus.
+
+#### D-09: Modelo de cuota anual
+**Pregunta:** ¿La cuota se cobra por sociedad, por tienda o por franquiciado?
+- ¿Importe fijo o variable según nº tiendas?
+- ¿Descuentos por volumen?
+
+**Impacto:** Subscription model en Stripe Billing.
+
+#### D-10: Renovación y periodo de gracia
+**Pregunta:** ¿Renovación automática?
+- ¿Cuántos días de gracia si falla el pago? (ej: 7, 15, 30)
+- ¿Suspensión automática o manual?
+- ¿Avisos D-30, D-7, D+3?
+
+**Impacto:** Billing y gestión de estados.
+
+#### D-11: Doble aprobación financiera
+**Pregunta:** ¿Se requiere doble aprobación para reembolsos y liquidaciones?
+- ¿Umbrales? (ej: >5.000€ requiere INFOCUS_FINANCE)
+- ¿Separación de funciones?
+
+**Impacto:** Seguridad financiera y workflows.
+
+#### D-12: Emisión de PDFs contables
+**Pregunta:** ¿Odoo emite los PDFs o solo contabiliza documentos externos?
+- ¿La gestoría genera facturas en PDF?
+- ¿El marketplace solo almacena/expone?
+
+**Impacto:** Gestión documental y responsabilidad.
+
+#### D-13: Integración futura con Carrefour
+**Pregunta:** ¿Existe roadmap de integración con sistemas Carrefour?
+- ¿POS, cajas, ERP corporativo?
+- ¿Single Sign-On?
+
+**Impacto:** Arquitectura y compatibilidad futura.
+
+#### D-14: SLA y soporte
+**Pregunta:** ¿Qué SLA y horarios de soporte se requieren?
+- ¿P1: checkout indisponible → respuesta/resolución?
+- ¿24/7, L-V 9-18h, horario ampliado?
+- ¿Idiomas del soporte?
+
+**Impacto:** Operación y dimensionamiento del equipo.
+
+#### D-15: Volumen y dimensionamiento
+**Pregunta:** ¿Estimación de volumen inicial y crecimiento?
+- **Franquiciados:** ¿Cuántas sociedades? ¿Cuántas tiendas?
+- **Proveedores:** ¿10, 50, 200?
+- **Catálogo:** ¿Decenas, cientos, miles de SKUs?
+- **Pedidos:** ¿Mensuales estimados?
+
+**Impacto:** Sizing de infraestructura, costes y testing de carga.
 
 ---
 
 ### 📦 1. DATOS DE PRODUCTOS Y CATÁLOGO
 
+**Contexto:** Según spec, España + EUR en fase inicial. No incluye mercancía para reventa a consumidor final.
+
 #### Catálogo Inicial
-- **¿Cuántos productos debe tener el catálogo inicial?** ¿Miles, decenas de miles?
-- **¿De dónde provienen los datos actuales?** ¿Existe un sistema legacy del que exportar?
-- **¿Qué formato de datos pueden proporcionar?** (CSV, Excel, API, base de datos directa)
-- **¿Qué campos son obligatorios para cada producto?**
-  - Título, descripción, SKU, EAN/código de barras
-  - Imágenes (¿cuántas mínimo/máximo por producto?)
-  - Categorías y subcategorías (¿jerarquía definida?)
-  - Precio base, IVA, unidades por pack
-  - Dimensiones, peso (¿obligatorios para logística?)
+- **¿Cuántos productos/SKUs esperan inicialmente?** ¿Cientos, miles, decenas de miles? (→ **D-15**)
+- **¿De dónde provienen los datos actuales?** ¿Existe un catálogo legacy del que migrar?
+- **¿Qué formato de carga prefieren?** El sistema soporta CSV/Excel bulk upload y API
+- **Campos obligatorios confirmados:**
+  - Título, descripción, SKU, EAN (opcional)
+  - Precio base (en céntimos), IVA (21%, 10%, 4%, 0%)
+  - Unidades por pack
+  - Categoría (taxonomía a definir)
+  - Proveedor
 
 #### Estructura de Categorías
-- **¿Tienen definida una taxonomía de categorías?** Necesitamos el árbol completo
-- **¿Cuántos niveles de categorización?** (ej: Alimentación → Frescos → Lácteos → Quesos)
-- **¿Las categorías son diferentes por región/país?**
+- **¿Taxonomía definida?** Necesitamos árbol completo de categorías/subcategorías
+- **¿Niveles de profundidad?** (ej: Equipamiento → Mobiliario → Estanterías)
+- **Confirmado:** Solo España en fase inicial; categorías internacionales en fase posterior
 
 #### Imágenes y Multimedia
-- **¿Dónde se alojarán las imágenes?** CDN propio, Amazon S3, otro servicio
-- **¿Qué tamaños/resoluciones requieren?** (thumbnail, galería, zoom)
-- **¿Quién gestiona la calidad/aprobación de imágenes?** ¿Equipo Carrefour o proveedores?
+- **Almacenamiento:** S3-compatible (según spec)
+- **¿Tamaños/resoluciones requeridos?** (thumbnail 200x200, galería 800x800, zoom 1200x1200)
+- **¿Quién valida calidad de imágenes?** ¿Infocus aprueba o proveedor auto-publica?
 
 ---
 
 ### 🏢 2. GESTIÓN DE PROVEEDORES
 
+**Contexto técnico:** Stripe Connect (Express accounts) para KYC y cuentas bancarias. Separate charges and transfers.
+
 #### Onboarding de Proveedores
-- **¿Cuántos proveedores esperan tener inicialmente?** ¿10, 50, 200?
-- **¿Existe una base de datos de proveedores actual?** Nombre, CIF, contacto, categorías que suministran
-- **¿Qué información fiscal/legal es obligatoria?**
-  - CIF/NIF verificado
-  - Certificados (ISO, calidad alimentaria, etc.)
-  - Seguros de responsabilidad
-  - Cuenta bancaria para pagos
+- **¿Cuántos proveedores iniciales?** ¿10, 50, 200? (→ **D-15**)
+- **¿Base de datos de proveedores actual?** Necesitamos: razón social, CIF, contacto, categorías
+- **KYC gestionado por Stripe:** El onboarding bancario/fiscal lo realiza Stripe Connect
+- **Marketplace almacena:** Solo identificadores, estado y datos comerciales
 
-#### Proceso de Alta
-- **¿Cómo se validan los proveedores?** ¿Equipo de compras, departamento legal?
-- **¿Qué documentos deben adjuntar?** (Registro mercantil, licencias, certificaciones)
-- **¿Existen proveedores preferentes o exclusivos?** ¿Necesitan un tag especial?
+#### Proceso de Homologación
+- **¿Quién aprueba proveedores?** ¿Infocus Admin, departamento compras?
+- **¿Documentos a adjuntar?** (Registro mercantil, certificados, póliza seguro)
+- **¿Homologación por categoría?** ¿Un proveedor puede servir múltiples categorías?
+- **¿Contratos comerciales?** ¿Se firman fuera de la plataforma o integrados?
 
-#### Categorías y Permisos
-- **¿Un proveedor puede suministrar múltiples categorías?** (ej: equipamiento + uniformes)
-- **¿Hay proveedores exclusivos por región?** (ej: solo península, solo Baleares)
+#### Territorios y Cobertura
+- **Confirmado:** España inicial; internacional en fases posteriores
+- **¿Proveedores con cobertura limitada?** (solo península, solo islas, solo zona)
+- **¿Recargos por zona?** Península, Baleares, Canarias, Ceuta/Melilla
 
 ---
 
 ### 🏪 3. GESTIÓN DE FRANQUICIADOS
 
+**Contexto técnico:** Modelo Organization (sociedad) → Store (tienda) → User. Stripe Customer por organización.
+
 #### Base de Franquiciados
-- **¿Cuántas franquicias Carrefour operan actualmente?** Express, Market, otros formatos
-- **¿Existe un sistema CRM/ERP con datos de franquiciados?** ¿Podemos integrarnos?
-- **¿Qué datos tenemos de cada franquicia?**
-  - Razón social, CIF, dirección fiscal
-  - Persona de contacto, email, teléfono
-  - Formato de tienda, m², ubicación
-  - Condiciones comerciales (crédito, descuentos, plazos de pago)
+- **¿Cuántas franquicias operan actualmente?** Express, Market, Hipermercado (→ **D-15**)
+- **¿Sistema CRM/ERP existente?** ¿Podemos exportar datos?
+- **Datos requeridos por sociedad:**
+  - Razón social, CIF (único por país)
+  - Dirección fiscal
+  - Contacto principal (nombre, email, teléfono)
+  - Tiendas asociadas (código, nombre, dirección, formato, m²)
 
 #### Condiciones Comerciales
-- **¿Hay descuentos por volumen?** ¿Cómo se calculan? (por franquicia, por compra, anual)
-- **¿Qué plazos de pago se manejan?** 30, 60, 90 días - ¿varía por franquicia?
-- **¿Tienen límites de crédito?** ¿Cómo se gestionan y actualizan?
-- **¿Existen franquicias con condiciones especiales?** (VIP, nuevas, en observación)
+- **⚠️ IMPORTANTE:** Modelo actual **NO incluye crédito ni pago aplazado** (fuera de MVP)
+- **Pago exclusivo con tarjeta** en checkout (Stripe Payment Intents)
+- **¿Descuentos por volumen?** ¿Necesitan implementarse en fase inicial?
+- **¿Condiciones especiales por franquicia?** Tags: VIP, nuevo, test
 
-#### Multisede
-- **¿Hay franquiciados con múltiples tiendas?** ¿Necesitan gestión centralizada?
-- **¿Los pedidos se hacen por tienda o por franquiciado?** ¿Entregas separadas?
+#### Modelo Multisede
+- **Confirmado:** Una sociedad puede tener múltiples tiendas
+- **¿Pedidos centralizados o por tienda?** ¿Dirección de entrega por tienda?
+- **¿Usuarios compartidos o por tienda?** Roles: FRANCHISE_ADMIN, BUYER
 
 ---
 
 ### 💳 4. PAGOS Y FINANCIACIÓN
 
-#### Métodos de Pago
-- **¿Qué métodos de pago aceptan?**
-  - Transferencia bancaria (¿siempre a crédito?)
-  - Tarjeta de crédito/débito (¿para qué casos?)
-  - Confirming o factoring (¿gestionado por Carrefour?)
-  - Pagarés, cheques (¿aún en uso?)
+**Contexto técnico:** Stripe Billing (cuotas) + Payment Intents (pedidos) + Connect (liquidaciones).
 
-#### Stripe y Pasarelas
-- **¿Ya tienen cuenta Stripe?** Necesitamos credenciales de producción
-- **¿Prefieren otra pasarela de pago?** Redsys, PayPal, otra
-- **¿Los pagos son directos o a través de Carrefour?** (modelo marketplace vs distribuidor)
+#### Métodos de Pago CONFIRMADOS
+- **✅ Cuota anual:** Tarjeta vía Stripe Billing (renovación automática)
+- **✅ Pedidos:** Tarjeta con SCA en checkout (Payment Intents)
+- **❌ NO incluido en MVP:** Transferencia, crédito, pago aplazado, confirming
+- **Infocus es merchant of record** (sujeto a validación fiscal → **D-02, D-03**)
 
-#### Condiciones B2B
-- **¿Los precios incluyen o excluyen IVA?** ¿Varía por producto/categoría?
-- **¿Hay recargos por pago aplazado?** ¿Descuentos por pronto pago?
-- **¿Cómo se gestionan las facturas?** ¿Sistema contable integrado? (SAP, Sage, otro)
+#### Stripe - Información Requerida
+- **¿Cuenta Stripe existente?** Necesitamos credenciales de producción
+- **Confirmado:** Stripe como única pasarela en MVP
+- **¿Account ID de Infocus?** Para configurar dashboard y Connect
+- **¿Webhook endpoint?** Para producción
 
-#### Financiación de Aperturas
-- **¿Carrefour financia las nuevas aperturas?** ¿Qué importes y condiciones?
-- **¿Quién aprueba la financiación?** ¿Departamento financiero central?
-- **¿Qué documentación requieren para aprobar presupuestos?** (proyecto, viabilidad, garantías)
+#### Precios e IVA
+- **Precios:** Almacenados en céntimos, moneda EUR
+- **IVA:** 21%, 10%, 4%, 0% (configurable por producto)
+- **¿Precios mostrados incluyen o excluyen IVA?** (B2B típicamente sin IVA)
+- **¿Inversión del sujeto pasivo?** ¿Aplica en algún caso?
+
+#### Facturación (ver **D-02** - BLOQUEANTE)
+- **¿Quién emite factura al franquiciado?** Proveedor / Infocus / Autofactura
+- **¿Odoo como emisor?** ¿O solo registra facturas externas?
+- **¿Numeración oficial?** ¿La gestoría controla serie/número?
 
 ---
 
 ### 📧 5. COMUNICACIONES Y NOTIFICACIONES
 
+**Contexto técnico:** Resend o SMTP para emails transaccionales (según spec).
+
 #### Email Transaccional
-- **¿Tienen servidor SMTP corporativo?** Necesitamos host, puerto, credenciales
-- **¿Prefieren servicio externo?** SendGrid, Mailgun, Amazon SES
-- **¿Qué dirección de envío usar?** (ej: `marketplace@carrefour.es`, `pedidos@carrefour.es`)
-- **¿Necesitan firma digital corporativa?** Logo, disclaimer legal
+- **¿SMTP corporativo?** Host, puerto, usuario, password, TLS
+- **¿O preferencia por servicio externo?** Resend (propuesto), SendGrid, Amazon SES
+- **Dirección de envío:** `noreply@marketplace-carrefour.es` o similar
+- **Firma corporativa:** Logo Carrefour, disclaimer legal
 
-#### Plantillas de Email
-- **¿Existen plantillas corporativas de Carrefour?** HTML, estilos, logo
-- **¿Qué emails son obligatorios?**
-  - Confirmación de pedido (franquiciado)
-  - Notificación de nuevo pedido (proveedor)
-  - Estado de envío (franquiciado)
-  - Producto aprobado/rechazado (proveedor)
-  - Nueva invitación a proyecto de apertura (proveedor)
-  - Presupuesto recibido (admin/franquiciado)
+#### Plantillas Obligatorias
+- **Franquiciado:**
+  - Alta aprobada y cuota cobrada
+  - Confirmación de pedido (+ subpedidos por proveedor)
+  - Estado de envío y entrega
+  - Renovación próxima (D-30, D-7)
+  - Fallo de pago y suspensión
+- **Proveedor:**
+  - Homologación aprobada/rechazada
+  - Nuevo pedido recibido
+  - Producto aprobado/rechazado
+  - Liquidación generada/pagada
+- **Admin:**
+  - Nuevo proveedor pendiente aprobación
+  - Incidencia abierta
+  - Error sincronización Odoo
 
-#### Notificaciones en App
-- **¿Prefieren notificaciones push?** (si se desarrolla app móvil)
-- **¿Notificaciones SMS para eventos críticos?** (pedido urgente, problema con entrega)
-- **¿Quién gestiona el contenido de las notificaciones?** ¿Equipo marketing/comunicación?
+#### Notificaciones NO Incluidas en MVP
+- ❌ Push notifications (app nativa fuera de alcance)
+- ❌ SMS (evaluar en fase posterior)
 
 ---
 
-### 🌍 6. REGIONES Y LOGÍSTICA
+### 🌍 6. LOGÍSTICA Y FULFILLMENT
+
+**Contexto técnico:** Fuera de alcance gestión logística propia de Infocus. Proveedores gestionan picking, envío y entrega.
+
+#### Modelo Logístico CONFIRMADO
+- **✅ Dropshipping:** Proveedor envía directamente a franquicia
+- **❌ NO:** Almacén central Carrefour/Infocus
+- **❌ NO:** Integración con WMS en MVP
 
 #### Cobertura Geográfica
-- **¿Operan solo en España?** ¿O también Portugal, Francia, otros países?
-- **¿Las regiones afectan al catálogo?** (productos diferentes por zona)
-- **¿Hay proveedores con cobertura limitada?** (solo península, solo islas, etc.)
+- **Confirmado:** Solo **España** en fase inicial, **EUR** como moneda única
+- **¿Hay proveedores con cobertura limitada?** Península / Islas / Nacional
+- **Fases posteriores:** Portugal, Francia (requiere internacionalización)
 
-#### Zonas de Entrega
-- **¿Cómo se definen las zonas de entrega?** Código postal, provincia, ciudad
-- **¿Hay recargos por zona?** Islas, zonas remotas
-- **¿Plazos de entrega estándar?** 24h, 48h, 72h - ¿varía por producto/proveedor?
+#### Gestión de Entregas
+- **¿Plazos estándar por proveedor?** 24h, 48h, 72h, 5-7 días
+- **¿Recargos por zona?** Península vs Baleares vs Canarias vs Ceuta/Melilla
+- **¿Quién gestiona tracking?** ¿URL de seguimiento del proveedor?
+- **¿Prueba de entrega requerida?** ¿Foto, firma, albarán firmado?
 
-#### Almacenes y Stock
-- **¿Dónde se almacenan los productos?** ¿Almacenes centrales de Carrefour o de cada proveedor?
-- **¿Necesitan gestión de inventario en tiempo real?** ¿Integración con sistema de almacén?
-- **¿Dropshipping?** ¿Los proveedores envían directamente a franquicias?
+#### Gestión de Stock
+- **¿Inventario en tiempo real?** ¿O stock ilimitado/bajo pedido?
+- **¿MOQ (cantidad mínima)?** ¿Por producto o proveedor?
+- **¿Validación de disponibilidad en checkout?** ¿O aceptación proveedor posterior?
 
 ---
 
 ### 🔐 7. SEGURIDAD Y AUTENTICACIÓN
 
-#### Gestión de Usuarios
-- **¿Integración con Active Directory corporativo?** SSO, LDAP
-- **¿Autenticación de dos factores (2FA) obligatoria?** ¿Para todos los roles o solo admin?
-- **¿Quién gestiona altas/bajas de usuarios?** ¿RRHH, IT, departamento específico?
+**Contexto técnico:** MFA obligatorio para roles financieros. PCI-DSS vía Stripe hosted fields. GDPR aplicable.
 
-#### Roles y Permisos
-- **¿Necesitan más roles además de Admin, Franquiciado y Proveedor?**
-  - Comercial, Financiero, Logística, Soporte
-  - Roles regionales (admin por zona)
-- **¿Permisos granulares?** (ej: ver pedidos pero no aprobar, proponer productos pero no precios)
+#### Autenticación CONFIRMADA
+- **OIDC/OAuth2** o autenticación Medusa con sesiones seguras
+- **MFA obligatorio para:**
+  - INFOCUS_FINANCE
+  - SUPER_ADMIN_ABACUS
+  - Gestores con acceso a Stripe/Odoo
+- **¿Integración con AD/SSO corporativo?** ¿O gestión independiente?
 
-#### Auditoría
-- **¿Necesitan logs de auditoría?** Quién hizo qué y cuándo
-- **¿Deben cumplir alguna normativa específica?** GDPR, PCI-DSS, ISO 27001
-- **¿Cuánto tiempo retener datos históricos?** 1 año, 5 años, indefinido
+#### Roles DEFINIDOS (según spec)
+- **Abacus:** SUPER_ADMIN_ABACUS, OPS_ABACUS
+- **Infocus:** INFOCUS_ADMIN, INFOCUS_FINANCE
+- **Gestoría:** GESTORIA (lectura + resolución errores Odoo)
+- **Proveedor:** SUPPLIER_ADMIN, SUPPLIER_OPERATOR
+- **Franquiciado:** FRANCHISE_ADMIN, BUYER, VIEWER
+
+**¿Necesitan roles adicionales?** Comercial, Logística, Soporte regional
+
+#### Auditoría y Cumplimiento
+- **✅ AuditLog inmutable:** Cambios económicos, permisos, decisiones
+- **✅ RGPD:** Minimización, DPA, derechos de acceso/supresión
+- **✅ PCI-DSS:** Stripe-hosted fields, no almacenamiento de PAN/CVC
+- **Retención:** ¿1 año, 5 años, 7 años (fiscal)?
 
 ---
 
-### 📊 8. INTEGRACIONES CON SISTEMAS EXISTENTES
+### 📊 8. INTEGRACIÓN CONTABLE - ODOO (CRÍTICO)
 
-#### ERP/Contabilidad
-- **¿Qué ERP utilizan?** SAP, Microsoft Dynamics, Sage, otro
-- **¿Necesitan sincronización automática?** Pedidos, facturas, pagos, inventario
-- **¿API disponible?** Documentación, credenciales
+**Contexto técnico:** Odoo de la gestoría es el **sistema maestro contable**. El marketplace tiene subledger operacional.
 
-#### CRM
-- **¿Sistema CRM activo?** Salesforce, HubSpot, otro
-- **¿Los franquiciados y proveedores están en el CRM?** ¿Sincronización bidireccional?
+#### Información BLOQUEANTE (**D-01**)
+- **¿Versión exacta?** Odoo 19, 18, 17... (define API disponible)
+- **¿Edición?** Community o Enterprise
+- **¿Hosting?** Odoo Online, Odoo.sh, on-premise
+- **¿Base de datos y compañía?** Contexto multiempresa
+- **¿Plan contable?** Español estándar, personalizado
+- **¿Usuario técnico creado?** API key, permisos
+- **¿Entorno de pruebas?** Para desarrollo y UAT
 
-#### Sistema de Almacén (WMS)
-- **¿Software de gestión de almacén?** ¿Necesitan integración para picking/packing?
-- **¿Control de stock en tiempo real?** ¿API de consulta de disponibilidad?
+#### Integración Propuesta (según spec)
+1. **Preferencia:** External JSON-2 API (Odoo 19+)
+2. **Alternativa:** JSON-RPC clásico (versiones anteriores)
+3. **Última opción:** Módulo custom Odoo
+
+#### Objetos a Sincronizar
+- **Partners:** Franquiciados (clientes) y proveedores
+- **Facturas:** Cuota anual, productos (según modelo fiscal **D-02**)
+- **Cobros:** Pagos Stripe confirmados
+- **Abonos:** Reembolsos y devoluciones
+- **Liquidaciones:** Transferencias a proveedores
+- **Facturas Abacus:** Coste operativo mensual
+
+#### Patrón de Sincronización CONFIRMADO
+- **Outbox transaccional:** Eventos económicos en misma TX PostgreSQL
+- **Worker con reintentos:** Exponencial backoff, dead-letter queue
+- **Idempotencia:** External keys, búsqueda previa
+- **Reconciliación nocturna:** Dashboard de diferencias
 
 #### Facturación Electrónica
-- **¿Usan facturación electrónica obligatoria?** FACe, TicketBAI (País Vasco), otro
-- **¿Quién emite las facturas?** ¿Carrefour o cada proveedor?
+- **¿FACe, TicketBAI u otro?** ¿Requerido en fase inicial?
+- **¿Odoo gestiona o es externo?** ¿Facturae XML?
 
 ---
 
-### 📈 9. MODELO DE NEGOCIO Y PRICING
+### 📈 9. MODELO ECONÓMICO Y COMISIONES
 
-#### Comisiones y Markup
-- **¿Carrefour cobra comisión sobre ventas?** ¿Porcentaje fijo o variable?
-- **¿El markup lo define Carrefour o cada proveedor?** ¿Rango permitido (ej: 10%-30%)?
-- **¿Hay markup diferente por categoría?** (productos frescos vs equipamiento)
+**Contexto técnico:** Motor de comisiones configurable (CommissionRule). Infocus como merchant of record.
 
-#### Descuentos y Promociones
-- **¿Quién crea las promociones?** ¿Equipo marketing central o cada proveedor?
-- **¿Qué tipos de descuentos manejan?**
-  - Por volumen (más de X unidades)
-  - Por importe (más de X€)
-  - Por temporada
-  - Por franquicia VIP
-- **¿Cómo se aplican?** Automático o manual con código
+#### Comisiones (**D-07** - Pendiente)
+- **¿Infocus cobra comisión a proveedores?** ¿Qué %?
+- **¿Fija o variable?** ¿Por categoría, proveedor, volumen?
+- **¿Se descuenta de liquidación?** ¿O factura aparte?
 
-#### Precios Dinámicos
-- **¿Los precios cambian con frecuencia?** ¿Semanal, mensual, según mercado?
-- **¿Necesitan histórico de precios?** Para análisis, auditoría
-- **¿Precios diferentes por franquicia?** (según volumen, zona, acuerdo)
+#### Cuota Anual (**D-09** - Pendiente)
+- **¿Importe fijo por sociedad?** ¿O variable por nº tiendas?
+- **¿Descuentos por volumen?** (ej: >10 tiendas = -20%)
+- **¿Promociones de lanzamiento?** ¿Primer año gratis?
 
----
+#### Costes Stripe (**D-05** - BLOQUEANTE)
+- **¿Quién absorbe comisión Stripe?** (~1.5% + 0.25€)
+  - Infocus
+  - Proveedor (descuento en liquidación)
+  - Franquiciado (recargo)
+- **¿Chargebacks?** ¿Quién asume el riesgo?
 
-### 🏗️ 10. MÓDULO DE NUEVAS APERTURAS
+#### Descuentos y Promociones (Fuera de MVP inicial)
+- **¿Necesarios en fase 1?** O posterior
+- **Tipos:** Volumen, importe, cupón, franquicia VIP
+- **¿Quién los crea?** Infocus Admin, proveedor
 
-#### Proceso de Apertura Actual
-- **¿Cuántas aperturas planean al año?** 10, 50, 100
-- **¿Qué departamentos intervienen?** Expansión, obra, compras, legal, finanzas
-- **¿Existe un proceso documentado?** Manual, workflow, checklist
+#### Precio Histórico
+- **¿Auditoría de cambios de precio?** ¿Para análisis/compliance?
+- **¿Precios diferenciados?** ¿Por franquicia, zona, acuerdo especial?
 
-#### Presupuestos y Categorías
-- **¿Qué categorías incluye una apertura?**
-  - Obra y construcción
-  - Equipamiento (frío, estanterías, cajas)
-  - Señalización y rotulación
-  - IT (TPVs, redes, cámaras)
-  - Mobiliario
-  - Seguridad (alarmas, extintores)
-  - Uniformes del personal
-- **¿Presupuestos cerrados o abiertos?** ¿Límite por categoría?
-- **¿Cuántos proveedores pueden cotizar por categoría?** Mínimo/máximo
+### 🏗️ 10. MÓDULO DE NUEVAS APERTURAS (OPENINGS)
 
-#### Aprobaciones
-- **¿Quién aprueba cada etapa?**
-  - Selección de proveedores → ¿Compras?
-  - Presupuesto total → ¿Finanzas?
-  - Firma de contratos → ¿Legal?
-- **¿Umbrales de aprobación?** (ej: >50k€ requiere dirección general)
+**Contexto:** Módulo implementado en frontend. Backend pendiente según roadmap.
 
-#### Documentación
-- **¿Qué documentos se generan?**
-  - Planos de la tienda
-  - Contratos con proveedores
-  - Permisos de obra
-  - Licencias municipales
-- **¿Dónde se almacenan?** ¿Sistema documental existente?
+#### Volumen y Proceso
+- **¿Cuántas aperturas anuales?** ¿10, 50, 100? (dimensiona el sistema)
+- **¿Departamentos involucrados?** Expansión, obra, compras, legal, finanzas
+- **¿Proceso actual documentado?** ¿Workflow manual, Excel, otro sistema?
 
----
+#### Categorías de Apertura CONFIRMADAS (según módulo)
+El módulo soporta categorías configurables. Ejemplos implementados:
+- Mobiliario y equipamiento retail
+- Señalización y rotulación
+- Soluciones IT y TPV
+- Equipamiento de frío
+- Sistemas de seguridad
+- Uniformes y merchandising
 
-### 🎯 11. PRIORIDADES Y ROADMAP
+**¿Categorías definitivas?** ¿Presupuestos estimados por categoría?
 
-#### Fases de Implementación
-- **¿Qué módulos son críticos para el MVP?**
-  1. Catálogo y pedidos (franquiciados)
-  2. Gestión de productos (proveedores)
-  3. Aperturas
-  4. Otros
-- **¿Cuándo planean el lanzamiento?** Beta cerrada, piloto, producción completa
-- **¿Habrá fase de pruebas con usuarios reales?** ¿Cuántas franquicias/proveedores?
+#### Flujo de Aprobación
+1. **Admin crea proyecto** → invita proveedores por categoría
+2. **Proveedores envían presupuestos**
+3. **Franquiciado/Admin selecciona ganador**
+4. **Aprobación financiera** (si aplica)
+5. **Firma digital** (DocuSign, Adobe Sign, otro)
+6. **Tracking de ejecución**
 
-#### Volumen Esperado
-- **¿Cuántos pedidos mensuales esperan?** Estimación inicial
-- **¿Cuántos usuarios concurrentes?** Para dimensionar infraestructura
-- **¿Crecimiento proyectado?** Año 1, año 2, año 3
+**¿Quién aprueba cada etapa?** ¿Umbrales? (ej: >50k€ → INFOCUS_FINANCE)
+
+#### Gestión Documental
+- **Planos de tienda:** ¿PDF, CAD, imagen?
+- **Contratos:** ¿Firma digital integrada o externa?
+- **Licencias y permisos:** ¿Carrefour gestiona o franquiciado?
+- **Almacenamiento:** S3 compatible (confirmado)
 
 ---
 
-### 🛠️ 12. SOPORTE Y MANTENIMIENTO
+### 🎯 11. ROADMAP Y GO-LIVE
 
-#### Equipo de Soporte
-- **¿Quién atenderá incidencias?** ¿Equipo Carrefour interno o externo?
-- **¿Horario de soporte?** Laborable 9-18h, 24/7, fines de semana
-- **¿Canal de soporte?** Email, teléfono, chat en vivo, tickets
+**Contexto:** Spec define 7 fases técnicas desde Sprint 0 hasta piloto y producción.
 
-#### SLA y Disponibilidad
-- **¿Qué disponibilidad requieren?** 99%, 99.9%, 99.99%
-- **¿Horarios críticos?** (ej: lunes mañana alta carga de pedidos)
-- **¿Plan de contingencia?** Backup, disaster recovery
+#### Fases CONFIRMADAS (según spec)
+- **Sprint 0:** Decisiones fiscales, PoC Odoo/Stripe, arquitectura cerrada
+- **Fase 1:** Identidad, organizaciones, proveedores, catálogo, admin
+- **Fase 2:** Storefront, carrito, pedidos (sin pago real)
+- **Fase 3:** Stripe Billing, Payment Intents end-to-end
+- **Fase 4:** Fulfillment, incidencias, refunds
+- **Fase 5:** Odoo: partners, facturas, cobros, abonos
+- **Fase 6:** Liquidaciones y Stripe Connect
+- **Fase 7:** Reporting, hardening, UAT, release candidate
+- **Piloto:** 2 proveedores + grupo reducido franquiciados
+- **Go-live:** Migración, formación, soporte reforzado
+
+#### Prioridades MVP
+1. **Catálogo y pedidos** (franquiciados)
+2. **Gestión productos** (proveedores)
+3. **Cuota anual** (Stripe Billing)
+4. **Integración Odoo** (facturación)
+5. **Liquidaciones** (Stripe Connect)
+
+**¿Aperturas en MVP?** ¿O fase posterior?
+
+#### Piloto y Lanzamiento
+- **¿Fecha objetivo go-live?** ¿Q4 2026, Q1 2027?
+- **¿Cuántos participantes en piloto?** ¿2-3 proveedores, 5-10 franquicias?
+- **¿Criterios de éxito del piloto?** KPIs, transacciones mínimas
+
+---
+
+### 🛠️ 12. OPERACIÓN Y SOPORTE
+
+**Contexto:** Abacus operará la plataforma. SLA a definir (**D-14** - Pendiente).
+
+#### Servicios Operativos Abacus (según spec)
+- Monitorización 24/7 y respuesta a alertas
+- Soporte funcional de primer nivel (alcance a acordar)
+- Soporte técnico L2/L3
+- Gestión de catálogos/proveedores (alcance a acordar)
+- Conciliación técnica Stripe-Marketplace-Odoo
+- Preparación de liquidaciones e informes
+- Mantenimiento correctivo, preventivo, seguridad
+- Gestión de releases y evolutivos
+
+#### SLA a Definir (**D-14**)
+- **P1 (Crítico):** Checkout indisponible, cobro incorrecto → ¿Respuesta? ¿Resolución?
+- **P2 (Alto):** Pedidos/proveedor bloqueados → ¿Tiempos?
+- **P3 (Medio):** Error parcial, workaround disponible
+- **P4 (Bajo):** Consulta, mejora → Planificada
+
+**¿Horario de soporte?** L-V 9-18h CET, guardias, 24/7
+
+#### Disponibilidad Objetivo (según spec)
+- **Objetivo MVP:** 99.5% mensual (excluyendo mantenimiento programado)
+- **RTO:** ≤4h para PostgreSQL
+- **RPO:** ≤15min para base de datos
 
 #### Formación
-- **¿Necesitan formación para usuarios?** Manuales, videos, sesiones en vivo
-- **¿Quién capacita a franquiciados y proveedores?** ¿Equipo Carrefour o nosotros?
+- **¿Manuales de usuario?** ¿Videos tutoriales?
+- **¿Sesiones en vivo?** Onboarding franquiciados/proveedores
+- **¿Quién imparte formación?** Infocus, Abacus, combinado
+
+---
 
 ---
 
 ## 📞 Próximos Pasos
 
-Para avanzar eficientemente, necesitamos:
+### Sprint 0 - BLOQUEANTE (Estimado: 2 semanas)
 
-1. **Reunión de alineación técnica** con los equipos de IT, Compras, Finanzas y Expansión de Carrefour
-2. **Acceso a sistemas legacy** para evaluar integración y migración de datos
-3. **Definición de prioridades** para planificar el roadmap de desarrollo
-4. **Datos de prueba reales** (anonimizados) para validar volúmenes y casos de uso
+**Objetivo:** Cerrar las 6 decisiones bloqueantes (D-01 a D-06) antes de iniciar desarrollo del conector Odoo y liquidaciones.
 
-**Contacto sugerido:** Crear un canal de comunicación directo (Slack, Teams, email) para resolver dudas rápidamente.
+**Participantes requeridos:**
+- **Gestoría:** Información Odoo (versión, API, plan contable)
+- **Infocus:** Modelo económico y fiscal
+- **Asesoría fiscal:** Emisor de facturas, tratamiento de fondos
+- **Abacus:** Arquitectura y PoC técnico
+
+**Entregables Sprint 0:**
+1. ✅ Documento técnico cerrado (versión final de este spec)
+2. ✅ PoC Stripe Billing + Connect funcional
+3. ✅ PoC Odoo: conexión, crear partner, crear factura
+4. ✅ Decisiones D-01 a D-06 documentadas y aprobadas
+5. ✅ Repositorios, CI/CD y entornos DEV/PRE/PRO configurados
+
+### Reuniones Clave
+
+1. **Alineación técnica Odoo** (1-2h)
+   - Participantes: Gestoría (técnico Odoo), Infocus, Abacus
+   - Agenda: Versión, API, plan contable, mapeo, entorno pruebas
+   
+2. **Decisión fiscal y económica** (2h)
+   - Participantes: Infocus (finanzas/legal), Asesoría fiscal, Abacus
+   - Agenda: Emisor facturas (D-02), intermediario/revendedor (D-03), costes Stripe (D-05), comisiones (D-07)
+
+3. **Definición operativa** (1h)
+   - Participantes: Infocus (producto/operaciones), Abacus
+   - Agenda: Liquidaciones (D-06), cuotas (D-09), SLA (D-14), volúmenes (D-15)
+
+### Accesos y Datos Requeridos
+
+**Gestoría:**
+- Acceso a entorno Odoo de pruebas
+- Usuario técnico con permisos API
+- Contacto funcional para validación de asientos
+
+**Infocus:**
+- Cuenta Stripe (live + test) - credenciales
+- Logo, plantillas email corporativas
+- Lista inicial de franquiciados (anonimizada para piloto)
+- Lista inicial de proveedores homologados
+
+**Datos de Prueba:**
+- 5-10 sociedades franquiciadas con tiendas (datos reales anonimizados)
+- 3-5 proveedores con catálogo (50-100 productos ejemplo)
+- Taxonomía de categorías definitiva
+- Presupuestos ejemplo para nuevas aperturas (si entra en MVP)
+
+### Canal de Comunicación
+
+**Propuesta:** Crear canal Slack/Teams compartido Infocus-Abacus-Gestoría para:
+- Resolución rápida de dudas técnicas
+- Coordinación de accesos y pruebas
+- Validación de mapeos Odoo
+- Seguimiento de hitos Sprint 0
+
+**Contacto:** 
+- **Infocus (Producto/Negocio):** [A definir]
+- **Gestoría (Técnico Odoo):** [A definir]
+- **Abacus (Técnico Lead):** [A definir]
+
+---
+
+**📅 Calendario propuesto:**
+- **Semana 1 Sprint 0:** Reuniones de alineación + PoC Odoo/Stripe
+- **Semana 2 Sprint 0:** Cierre decisiones + documento final + go/no-go Fase 1
+- **Semanas 3-6:** Fase 1 (Identidad, proveedores, catálogo, admin)
+- **Semanas 7-10:** Fase 2 (Storefront, carrito, pedidos)
+- **Semanas 11-14:** Fase 3 (Stripe Billing + Payment Intents)
+- **Semanas 15-20:** Fases 4-7 (Fulfillment, Odoo, Liquidaciones, Hardening)
+- **Semana 21+:** Piloto con 2-3 proveedores y 5-10 franquicias
 
 ---
 
