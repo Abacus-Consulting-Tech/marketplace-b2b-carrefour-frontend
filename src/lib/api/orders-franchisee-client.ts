@@ -3,9 +3,16 @@
  * 
  * Cliente API para gestión de pedidos del franquiciado
  * Soporta modo mock y real API según feature flags
+ * 
+ * Backend Integration (Render DEV):
+ * - GET /franchisee/orders - List franchisee's orders
+ * - GET /franchisee/orders/{id} - Order detail
+ * - GET /franchisee/orders/stats - Order statistics
+ * - POST /franchisee/orders/{id}/cancel - Cancel order
  */
 
 import { featureFlags } from '@/config/feature-flags'
+import { apiRequest, buildQueryString, logApiMode } from './api-utils'
 import {
   FranchiseeOrder,
   OrderSearchParams,
@@ -163,88 +170,45 @@ async function mockGetOrderStats(): Promise<OrderStats> {
 }
 
 // ============================================================================
-// Real API Functions (to be implemented when backend is ready)
+// Real API Functions - Backend Integration (Render DEV)
+// Backend Report 2026-08-26: Using /franchisee/orders endpoints
 // ============================================================================
 
 async function realGetOrders(params: OrderSearchParams = {}): Promise<GetOrdersResponse> {
-  const queryParams = new URLSearchParams()
+  logApiMode('Franchisee Orders', featureFlags.shouldUseMock('orders'))
   
-  if (params.status) {
-    const statuses = Array.isArray(params.status) ? params.status : [params.status]
-    statuses.forEach(status => queryParams.append('status', status))
-  }
+  const queryString = buildQueryString(params)
+  const data = await apiRequest<GetOrdersResponse>(`/franchisee/orders${queryString}`)
   
-  if (params.supplier_id) queryParams.append('supplier_id', params.supplier_id)
-  if (params.date_from) queryParams.append('date_from', params.date_from)
-  if (params.date_to) queryParams.append('date_to', params.date_to)
-  if (params.min_amount) queryParams.append('min_amount', params.min_amount.toString())
-  if (params.max_amount) queryParams.append('max_amount', params.max_amount.toString())
-  if (params.search) queryParams.append('search', params.search)
-  if (params.sort_by) queryParams.append('sort_by', params.sort_by)
-  if (params.sort_order) queryParams.append('sort_order', params.sort_order)
-  if (params.page) queryParams.append('page', params.page.toString())
-  if (params.limit) queryParams.append('limit', params.limit.toString())
-  
-  const response = await fetch(`/store/orders?${queryParams.toString()}`, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-  
-  if (!response.ok) {
-    throw new Error('Error al obtener los pedidos')
-  }
-  
-  const data = await response.json()
   return data
 }
 
 async function realGetOrderById(id: string): Promise<GetOrderResponse> {
-  const response = await fetch(`/store/orders/${id}`, {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
+  const data = await apiRequest<any>(`/franchisee/orders/${id}`)
   
-  if (!response.ok) {
-    throw new Error('Error al obtener el pedido')
+  return {
+    order: data.order || data,
+    success: true
   }
-  
-  const data = await response.json()
-  return data
 }
 
 async function realCancelOrder(request: CancelOrderRequest): Promise<CancelOrderResponse> {
-  const response = await fetch(`/store/orders/${request.order_id}/cancel`, {
+  const data = await apiRequest<any>(`/franchisee/orders/${request.order_id}/cancel`, {
     method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
     body: JSON.stringify({
       reason: request.reason
-    }),
+    })
   })
   
-  if (!response.ok) {
-    throw new Error('Error al cancelar el pedido')
+  return {
+    success: true,
+    message: data.message || 'Pedido cancelado correctamente',
+    order: data.order
   }
-  
-  const data = await response.json()
-  return data
 }
 
 async function realGetOrderStats(): Promise<OrderStats> {
-  const response = await fetch('/store/orders/stats', {
-    headers: {
-      'Content-Type': 'application/json',
-    },
-  })
-  
-  if (!response.ok) {
-    throw new Error('Error al obtener estadísticas de pedidos')
-  }
-  
-  const data = await response.json()
+  const data = await apiRequest<OrderStats>('/franchisee/orders/stats')
   return data
 }
 

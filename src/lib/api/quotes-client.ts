@@ -3,6 +3,19 @@
  * 
  * Cliente API para quotes con soporte mock/real
  * Alineado con Medusa + Mercur framework
+ * 
+ * Backend Integration (Render DEV):
+ * Customer/Franchisee:
+ * - GET /quotes - List quotes
+ * - GET /quotes/{id} - Quote detail
+ * 
+ * Admin:
+ * - GET /admin/quotes - List all quotes
+ * - GET /admin/quotes/stats - Quote statistics
+ * 
+ * Seller:
+ * - GET /seller/quotes - List seller's quotes
+ * - GET /seller/invitations - List seller's invitations
  */
 
 import {
@@ -40,6 +53,7 @@ import {
 } from './quotes-mock'
 
 import { featureFlags } from '@/config/feature-flags'
+import { apiRequest, buildQueryString, logApiMode } from './api-utils'
 
 // ============================================================================
 // Configuration
@@ -416,34 +430,62 @@ async function getMockQuoteStatsAPI(): Promise<GetQuoteStatsResponse> {
 }
 
 // ============================================================================
-// Real API Functions - To be implemented
+// Real API Functions - Backend Integration (Render DEV)
+// Backend Report 2026-08-26: Using /quotes, /admin/quotes, /seller/quotes
 // ============================================================================
 
 async function getRealQuotesForFranchisee(
   franchiseeId: string,
   params?: QuoteSearchParams
 ): Promise<GetQuotesResponse> {
-  const response = await fetch(`${API_BASE_URL}/store/quotes?${new URLSearchParams(params as any)}`)
-  if (!response.ok) throw new Error('Failed to fetch quotes')
-  return response.json()
+  logApiMode('Quotes (Franchisee)', featureFlags.shouldUseMock('quotes'))
+  
+  const queryString = buildQueryString(params || {})
+  const data = await apiRequest<GetQuotesResponse>(`/quotes${queryString}`)
+  return data
 }
 
 async function getRealQuotesForSupplier(
   supplierId: string,
   params?: QuoteSearchParams
 ): Promise<GetQuotesResponse> {
-  const response = await fetch(`${API_BASE_URL}/seller/quotes?${new URLSearchParams(params as any)}`)
-  if (!response.ok) throw new Error('Failed to fetch quotes')
-  return response.json()
+  logApiMode('Quotes (Seller)', featureFlags.shouldUseMock('quotes'))
+  
+  const queryString = buildQueryString(params || {})
+  const data = await apiRequest<GetQuotesResponse>(`/seller/quotes${queryString}`)
+  return data
 }
 
 async function getRealAllQuotes(params?: QuoteSearchParams): Promise<GetQuotesResponse> {
-  const response = await fetch(`${API_BASE_URL}/admin/quotes?${new URLSearchParams(params as any)}`)
-  if (!response.ok) throw new Error('Failed to fetch quotes')
-  return response.json()
+  logApiMode('Quotes (Admin)', featureFlags.shouldUseMock('quotes'))
+  
+  const queryString = buildQueryString(params || {})
+  const data = await apiRequest<GetQuotesResponse>(`/admin/quotes${queryString}`)
+  return data
 }
 
-// ... other real API functions
+async function getRealQuoteById(id: string): Promise<GetQuoteResponse | null> {
+  try {
+    const data = await apiRequest<any>(`/quotes/${id}`)
+    return {
+      quote: data.quote || data,
+      invitation: data.invitation,
+      signature: data.signature,
+    }
+  } catch (error) {
+    return null
+  }
+}
+
+async function getRealQuoteStats(): Promise<GetQuoteStatsResponse> {
+  const data = await apiRequest<GetQuoteStatsResponse>('/admin/quotes/stats')
+  return data
+}
+
+async function getRealInvitationsForSupplier(supplierId: string): Promise<GetInvitationsResponse> {
+  const data = await apiRequest<GetInvitationsResponse>('/seller/invitations')
+  return data
+}
 
 // ============================================================================
 // Exported API - Auto-switching based on feature flags

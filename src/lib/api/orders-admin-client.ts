@@ -284,8 +284,9 @@ async function realUpdateOrderStatus(request: UpdateOrderStatusRequest): Promise
 }
 
 async function realGetAdminOrderStats(): Promise<AdminOrderStats> {
-  // Note: This may need to be a custom endpoint or aggregated from orders list
-  const data = await apiRequest<any>('/admin/orders/stats')
+  // Note: Using /admin/custom/orders/stats to avoid RBAC 403 on legacy endpoint
+  // Backend report 2026-08-26: /admin/orders/stats may return 403, use custom route instead
+  const data = await apiRequest<any>('/admin/custom/orders/stats')
   return data
 }
 
