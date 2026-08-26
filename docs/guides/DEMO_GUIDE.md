@@ -6,11 +6,307 @@
 
 ## 📋 Tabla de Contenidos
 
-1. [Resumen Ejecutivo](#-resumen-ejecutivo)
-2. [Preparación de la Demo](#-preparación-de-la-demo)
-3. [Demostración por Rol](#-demostración-por-rol)
-4. [Puntos Clave a Destacar](#-puntos-clave-a-destacar)
-5. [Preguntas Frecuentes](#-preguntas-frecuentes)
+1. [Preguntas Clave para Carrefour](#-preguntas-clave-para-carrefour)
+2. [Resumen Ejecutivo](#-resumen-ejecutivo)
+3. [Preparación de la Demo](#-preparación-de-la-demo)
+4. [Demostración por Rol](#-demostración-por-rol)
+5. [Puntos Clave a Destacar](#-puntos-clave-a-destacar)
+6. [Preguntas Frecuentes](#-preguntas-frecuentes)
+
+---
+
+## ❓ Preguntas Clave para Carrefour
+
+Esta sección recoge las principales dudas técnicas y de negocio que necesitamos resolver con Carrefour para completar la integración del sistema.
+
+---
+
+### 📦 1. DATOS DE PRODUCTOS Y CATÁLOGO
+
+#### Catálogo Inicial
+- **¿Cuántos productos debe tener el catálogo inicial?** ¿Miles, decenas de miles?
+- **¿De dónde provienen los datos actuales?** ¿Existe un sistema legacy del que exportar?
+- **¿Qué formato de datos pueden proporcionar?** (CSV, Excel, API, base de datos directa)
+- **¿Qué campos son obligatorios para cada producto?**
+  - Título, descripción, SKU, EAN/código de barras
+  - Imágenes (¿cuántas mínimo/máximo por producto?)
+  - Categorías y subcategorías (¿jerarquía definida?)
+  - Precio base, IVA, unidades por pack
+  - Dimensiones, peso (¿obligatorios para logística?)
+
+#### Estructura de Categorías
+- **¿Tienen definida una taxonomía de categorías?** Necesitamos el árbol completo
+- **¿Cuántos niveles de categorización?** (ej: Alimentación → Frescos → Lácteos → Quesos)
+- **¿Las categorías son diferentes por región/país?**
+
+#### Imágenes y Multimedia
+- **¿Dónde se alojarán las imágenes?** CDN propio, Amazon S3, otro servicio
+- **¿Qué tamaños/resoluciones requieren?** (thumbnail, galería, zoom)
+- **¿Quién gestiona la calidad/aprobación de imágenes?** ¿Equipo Carrefour o proveedores?
+
+---
+
+### 🏢 2. GESTIÓN DE PROVEEDORES
+
+#### Onboarding de Proveedores
+- **¿Cuántos proveedores esperan tener inicialmente?** ¿10, 50, 200?
+- **¿Existe una base de datos de proveedores actual?** Nombre, CIF, contacto, categorías que suministran
+- **¿Qué información fiscal/legal es obligatoria?**
+  - CIF/NIF verificado
+  - Certificados (ISO, calidad alimentaria, etc.)
+  - Seguros de responsabilidad
+  - Cuenta bancaria para pagos
+
+#### Proceso de Alta
+- **¿Cómo se validan los proveedores?** ¿Equipo de compras, departamento legal?
+- **¿Qué documentos deben adjuntar?** (Registro mercantil, licencias, certificaciones)
+- **¿Existen proveedores preferentes o exclusivos?** ¿Necesitan un tag especial?
+
+#### Categorías y Permisos
+- **¿Un proveedor puede suministrar múltiples categorías?** (ej: equipamiento + uniformes)
+- **¿Hay proveedores exclusivos por región?** (ej: solo península, solo Baleares)
+
+---
+
+### 🏪 3. GESTIÓN DE FRANQUICIADOS
+
+#### Base de Franquiciados
+- **¿Cuántas franquicias Carrefour operan actualmente?** Express, Market, otros formatos
+- **¿Existe un sistema CRM/ERP con datos de franquiciados?** ¿Podemos integrarnos?
+- **¿Qué datos tenemos de cada franquicia?**
+  - Razón social, CIF, dirección fiscal
+  - Persona de contacto, email, teléfono
+  - Formato de tienda, m², ubicación
+  - Condiciones comerciales (crédito, descuentos, plazos de pago)
+
+#### Condiciones Comerciales
+- **¿Hay descuentos por volumen?** ¿Cómo se calculan? (por franquicia, por compra, anual)
+- **¿Qué plazos de pago se manejan?** 30, 60, 90 días - ¿varía por franquicia?
+- **¿Tienen límites de crédito?** ¿Cómo se gestionan y actualizan?
+- **¿Existen franquicias con condiciones especiales?** (VIP, nuevas, en observación)
+
+#### Multisede
+- **¿Hay franquiciados con múltiples tiendas?** ¿Necesitan gestión centralizada?
+- **¿Los pedidos se hacen por tienda o por franquiciado?** ¿Entregas separadas?
+
+---
+
+### 💳 4. PAGOS Y FINANCIACIÓN
+
+#### Métodos de Pago
+- **¿Qué métodos de pago aceptan?**
+  - Transferencia bancaria (¿siempre a crédito?)
+  - Tarjeta de crédito/débito (¿para qué casos?)
+  - Confirming o factoring (¿gestionado por Carrefour?)
+  - Pagarés, cheques (¿aún en uso?)
+
+#### Stripe y Pasarelas
+- **¿Ya tienen cuenta Stripe?** Necesitamos credenciales de producción
+- **¿Prefieren otra pasarela de pago?** Redsys, PayPal, otra
+- **¿Los pagos son directos o a través de Carrefour?** (modelo marketplace vs distribuidor)
+
+#### Condiciones B2B
+- **¿Los precios incluyen o excluyen IVA?** ¿Varía por producto/categoría?
+- **¿Hay recargos por pago aplazado?** ¿Descuentos por pronto pago?
+- **¿Cómo se gestionan las facturas?** ¿Sistema contable integrado? (SAP, Sage, otro)
+
+#### Financiación de Aperturas
+- **¿Carrefour financia las nuevas aperturas?** ¿Qué importes y condiciones?
+- **¿Quién aprueba la financiación?** ¿Departamento financiero central?
+- **¿Qué documentación requieren para aprobar presupuestos?** (proyecto, viabilidad, garantías)
+
+---
+
+### 📧 5. COMUNICACIONES Y NOTIFICACIONES
+
+#### Email Transaccional
+- **¿Tienen servidor SMTP corporativo?** Necesitamos host, puerto, credenciales
+- **¿Prefieren servicio externo?** SendGrid, Mailgun, Amazon SES
+- **¿Qué dirección de envío usar?** (ej: `marketplace@carrefour.es`, `pedidos@carrefour.es`)
+- **¿Necesitan firma digital corporativa?** Logo, disclaimer legal
+
+#### Plantillas de Email
+- **¿Existen plantillas corporativas de Carrefour?** HTML, estilos, logo
+- **¿Qué emails son obligatorios?**
+  - Confirmación de pedido (franquiciado)
+  - Notificación de nuevo pedido (proveedor)
+  - Estado de envío (franquiciado)
+  - Producto aprobado/rechazado (proveedor)
+  - Nueva invitación a proyecto de apertura (proveedor)
+  - Presupuesto recibido (admin/franquiciado)
+
+#### Notificaciones en App
+- **¿Prefieren notificaciones push?** (si se desarrolla app móvil)
+- **¿Notificaciones SMS para eventos críticos?** (pedido urgente, problema con entrega)
+- **¿Quién gestiona el contenido de las notificaciones?** ¿Equipo marketing/comunicación?
+
+---
+
+### 🌍 6. REGIONES Y LOGÍSTICA
+
+#### Cobertura Geográfica
+- **¿Operan solo en España?** ¿O también Portugal, Francia, otros países?
+- **¿Las regiones afectan al catálogo?** (productos diferentes por zona)
+- **¿Hay proveedores con cobertura limitada?** (solo península, solo islas, etc.)
+
+#### Zonas de Entrega
+- **¿Cómo se definen las zonas de entrega?** Código postal, provincia, ciudad
+- **¿Hay recargos por zona?** Islas, zonas remotas
+- **¿Plazos de entrega estándar?** 24h, 48h, 72h - ¿varía por producto/proveedor?
+
+#### Almacenes y Stock
+- **¿Dónde se almacenan los productos?** ¿Almacenes centrales de Carrefour o de cada proveedor?
+- **¿Necesitan gestión de inventario en tiempo real?** ¿Integración con sistema de almacén?
+- **¿Dropshipping?** ¿Los proveedores envían directamente a franquicias?
+
+---
+
+### 🔐 7. SEGURIDAD Y AUTENTICACIÓN
+
+#### Gestión de Usuarios
+- **¿Integración con Active Directory corporativo?** SSO, LDAP
+- **¿Autenticación de dos factores (2FA) obligatoria?** ¿Para todos los roles o solo admin?
+- **¿Quién gestiona altas/bajas de usuarios?** ¿RRHH, IT, departamento específico?
+
+#### Roles y Permisos
+- **¿Necesitan más roles además de Admin, Franquiciado y Proveedor?**
+  - Comercial, Financiero, Logística, Soporte
+  - Roles regionales (admin por zona)
+- **¿Permisos granulares?** (ej: ver pedidos pero no aprobar, proponer productos pero no precios)
+
+#### Auditoría
+- **¿Necesitan logs de auditoría?** Quién hizo qué y cuándo
+- **¿Deben cumplir alguna normativa específica?** GDPR, PCI-DSS, ISO 27001
+- **¿Cuánto tiempo retener datos históricos?** 1 año, 5 años, indefinido
+
+---
+
+### 📊 8. INTEGRACIONES CON SISTEMAS EXISTENTES
+
+#### ERP/Contabilidad
+- **¿Qué ERP utilizan?** SAP, Microsoft Dynamics, Sage, otro
+- **¿Necesitan sincronización automática?** Pedidos, facturas, pagos, inventario
+- **¿API disponible?** Documentación, credenciales
+
+#### CRM
+- **¿Sistema CRM activo?** Salesforce, HubSpot, otro
+- **¿Los franquiciados y proveedores están en el CRM?** ¿Sincronización bidireccional?
+
+#### Sistema de Almacén (WMS)
+- **¿Software de gestión de almacén?** ¿Necesitan integración para picking/packing?
+- **¿Control de stock en tiempo real?** ¿API de consulta de disponibilidad?
+
+#### Facturación Electrónica
+- **¿Usan facturación electrónica obligatoria?** FACe, TicketBAI (País Vasco), otro
+- **¿Quién emite las facturas?** ¿Carrefour o cada proveedor?
+
+---
+
+### 📈 9. MODELO DE NEGOCIO Y PRICING
+
+#### Comisiones y Markup
+- **¿Carrefour cobra comisión sobre ventas?** ¿Porcentaje fijo o variable?
+- **¿El markup lo define Carrefour o cada proveedor?** ¿Rango permitido (ej: 10%-30%)?
+- **¿Hay markup diferente por categoría?** (productos frescos vs equipamiento)
+
+#### Descuentos y Promociones
+- **¿Quién crea las promociones?** ¿Equipo marketing central o cada proveedor?
+- **¿Qué tipos de descuentos manejan?**
+  - Por volumen (más de X unidades)
+  - Por importe (más de X€)
+  - Por temporada
+  - Por franquicia VIP
+- **¿Cómo se aplican?** Automático o manual con código
+
+#### Precios Dinámicos
+- **¿Los precios cambian con frecuencia?** ¿Semanal, mensual, según mercado?
+- **¿Necesitan histórico de precios?** Para análisis, auditoría
+- **¿Precios diferentes por franquicia?** (según volumen, zona, acuerdo)
+
+---
+
+### 🏗️ 10. MÓDULO DE NUEVAS APERTURAS
+
+#### Proceso de Apertura Actual
+- **¿Cuántas aperturas planean al año?** 10, 50, 100
+- **¿Qué departamentos intervienen?** Expansión, obra, compras, legal, finanzas
+- **¿Existe un proceso documentado?** Manual, workflow, checklist
+
+#### Presupuestos y Categorías
+- **¿Qué categorías incluye una apertura?**
+  - Obra y construcción
+  - Equipamiento (frío, estanterías, cajas)
+  - Señalización y rotulación
+  - IT (TPVs, redes, cámaras)
+  - Mobiliario
+  - Seguridad (alarmas, extintores)
+  - Uniformes del personal
+- **¿Presupuestos cerrados o abiertos?** ¿Límite por categoría?
+- **¿Cuántos proveedores pueden cotizar por categoría?** Mínimo/máximo
+
+#### Aprobaciones
+- **¿Quién aprueba cada etapa?**
+  - Selección de proveedores → ¿Compras?
+  - Presupuesto total → ¿Finanzas?
+  - Firma de contratos → ¿Legal?
+- **¿Umbrales de aprobación?** (ej: >50k€ requiere dirección general)
+
+#### Documentación
+- **¿Qué documentos se generan?**
+  - Planos de la tienda
+  - Contratos con proveedores
+  - Permisos de obra
+  - Licencias municipales
+- **¿Dónde se almacenan?** ¿Sistema documental existente?
+
+---
+
+### 🎯 11. PRIORIDADES Y ROADMAP
+
+#### Fases de Implementación
+- **¿Qué módulos son críticos para el MVP?**
+  1. Catálogo y pedidos (franquiciados)
+  2. Gestión de productos (proveedores)
+  3. Aperturas
+  4. Otros
+- **¿Cuándo planean el lanzamiento?** Beta cerrada, piloto, producción completa
+- **¿Habrá fase de pruebas con usuarios reales?** ¿Cuántas franquicias/proveedores?
+
+#### Volumen Esperado
+- **¿Cuántos pedidos mensuales esperan?** Estimación inicial
+- **¿Cuántos usuarios concurrentes?** Para dimensionar infraestructura
+- **¿Crecimiento proyectado?** Año 1, año 2, año 3
+
+---
+
+### 🛠️ 12. SOPORTE Y MANTENIMIENTO
+
+#### Equipo de Soporte
+- **¿Quién atenderá incidencias?** ¿Equipo Carrefour interno o externo?
+- **¿Horario de soporte?** Laborable 9-18h, 24/7, fines de semana
+- **¿Canal de soporte?** Email, teléfono, chat en vivo, tickets
+
+#### SLA y Disponibilidad
+- **¿Qué disponibilidad requieren?** 99%, 99.9%, 99.99%
+- **¿Horarios críticos?** (ej: lunes mañana alta carga de pedidos)
+- **¿Plan de contingencia?** Backup, disaster recovery
+
+#### Formación
+- **¿Necesitan formación para usuarios?** Manuales, videos, sesiones en vivo
+- **¿Quién capacita a franquiciados y proveedores?** ¿Equipo Carrefour o nosotros?
+
+---
+
+## 📞 Próximos Pasos
+
+Para avanzar eficientemente, necesitamos:
+
+1. **Reunión de alineación técnica** con los equipos de IT, Compras, Finanzas y Expansión de Carrefour
+2. **Acceso a sistemas legacy** para evaluar integración y migración de datos
+3. **Definición de prioridades** para planificar el roadmap de desarrollo
+4. **Datos de prueba reales** (anonimizados) para validar volúmenes y casos de uso
+
+**Contacto sugerido:** Crear un canal de comunicación directo (Slack, Teams, email) para resolver dudas rápidamente.
 
 ---
 
@@ -19,32 +315,25 @@
 ### Lo que tenemos HOY (25 Agosto 2026)
 
 ✅ **13 módulos completados** (~19,866 líneas de código funcional)  
-✅ **122 endpoints API** documentados y funcionales  
+✅ **Flujos principales preparados para demostración**  
 ✅ **3 roles de usuario** completamente implementados  
 ✅ **Sistema completo** listo para validación con usuarios reales
 
 ### Tecnologías
 
-- **Frontend**: Next.js 14, TypeScript, Tailwind CSS, Shadcn/ui
-- **Backend**: Medusa 2.x con Mercurjs framework
-- **Estado**: Mock data con arquitectura lista para integración real
+- **Aplicación web**: experiencia responsive para Admin, Franquiciado y Proveedor
+- **Base ecommerce**: arquitectura preparada para integrarse con Medusa/Mercur
+- **Estado**: Entorno de demostración preparado para validación funcional
 
 ---
 
 ## 🚀 Preparación de la Demo
 
-### 1. Arrancar el Servidor
+### 1. Abrir la Aplicación
 
-```bash
-cd marketplace-b2b-carrefour-frontend
-npm run dev
-```
-
-Abrir: `http://localhost:3000`
+📍 `https://marketplace-b2b-carrefour.vercel.app`
 
 ### 2. Credenciales de Prueba
-
-**LOCALHOST MOCK MODE CREDENTIALS** (`NEXT_PUBLIC_MOCK_AUTH=true`)
 
 Tener a mano estas credenciales para la demo:
 
@@ -56,10 +345,10 @@ Tener a mano estas credenciales para la demo:
 
 ### 3. URLs Clave a Favoritar
 
-- **Dev Tools**: http://localhost:3000/admin/dev-tools
-- **Admin Dashboard**: http://localhost:3000/admin/dashboard
-- **Franquiciado**: http://localhost:3000/marketplace/dashboard
-- **Proveedor**: http://localhost:3000/supplier/dashboard
+- **Panel Admin**: https://marketplace-b2b-carrefour.vercel.app/admin/dashboard
+- **Admin Aperturas**: https://marketplace-b2b-carrefour.vercel.app/admin/openings
+- **Franquiciado**: https://marketplace-b2b-carrefour.vercel.app/marketplace/dashboard
+- **Proveedor**: https://marketplace-b2b-carrefour.vercel.app/supplier/dashboard
 
 ---
 
@@ -68,35 +357,32 @@ Tener a mano estas credenciales para la demo:
 ## 🔴 PARTE 1: Panel de Administrador (Admin)
 
 ### Login
-1. Ir a `http://localhost:3000`
+1. Ir a `https://marketplace-b2b-carrefour.vercel.app`
 2. **Email**: `admin@test.com`
 3. **Password**: `admin123`
 4. Click **"Iniciar Sesión"**
 
 ---
 
-### 1️⃣ Dashboard & Dev Tools
+### 1️⃣ Dashboard Admin
 
-**Empezar aquí para dar contexto técnico**
+**Empezar aquí para dar contexto general**
 
-📍 `http://localhost:3000/admin/dev-tools`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/dashboard`
 
 **Qué mostrar:**
-- ✅ **122 endpoints** documentados por módulo
-- ✅ Estado de feature flags (Mock vs Real)
-- ✅ Desglose por módulo:
-  - Auth (4), Openings (8), Categories (6)
-  - Quotes (10), Orders (24 total)
-  - Products (14), Checkout (15)
-- ✅ Credenciales de prueba disponibles
+- Vista de entrada del administrador
+- Acceso al menú lateral: Aperturas, Productos, Pedidos, Franquiciados y Tarificación
+- Cambio rápido entre secciones desde navegación
+- Roles diferenciados para Admin, Franquiciado y Proveedor
 
-**Mensaje clave**: *"Tenemos 122 endpoints organizados en 13 módulos completamente funcionales"*
+**Mensaje clave**: *"El administrador tiene una visión centralizada para gestionar la operativa del marketplace"*
 
 ---
 
 ### 2️⃣ Gestión de Aperturas (Openings)
 
-📍 `http://localhost:3000/admin/openings`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/openings`
 
 **Qué mostrar:**
 
@@ -126,7 +412,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 3️⃣ Gestión de Productos
 
-📍 `http://localhost:3000/admin/products`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/products`
 
 **Qué mostrar:**
 
@@ -157,9 +443,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 4️⃣ Aprobación de Precios
 
-📍 `http://localhost:3000/admin/pricing/approval-queue`
-
-**NOTA IMPORTANTE**: La ruta antigua (`/admin/products/pricing`) ya no existe. Usar `/admin/pricing/approval-queue`.
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/pricing/approval-queue`
 
 **Qué mostrar:**
 - Cola de productos pendientes de aprobación
@@ -178,7 +462,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 5️⃣ Vista Global de Pedidos
 
-📍 `http://localhost:3000/admin/orders`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/orders`
 
 **Qué mostrar:**
 
@@ -216,7 +500,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 6️⃣ Gestión de Franquiciados
 
-📍 `http://localhost:3000/admin/franchisees`
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/franchisees`
 
 **Qué mostrar:**
 - Lista de franquiciados registrados
@@ -232,9 +516,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 7️⃣ Presupuestos de Aperturas
 
-📍 `http://localhost:3000/admin/openings` → abrir un proyecto → tab **Presupuestos**
-
-**Nota**: No existe página global `/admin/quotes` en la implementación actual; esa URL devuelve 404 y no aparece en el menú lateral.
+📍 `https://marketplace-b2b-carrefour.vercel.app/admin/openings` → abrir un proyecto → tab **Presupuestos**
 
 **Qué mostrar:**
 - Acceso a presupuestos desde el detalle de cada proyecto de apertura
@@ -257,7 +539,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 1️⃣ Catálogo de Productos
 
-📍 `http://localhost:3000/marketplace`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace`
 
 **Qué mostrar:**
 
@@ -277,7 +559,7 @@ Tener a mano estas credenciales para la demo:
 - **Añadir al carrito**
 
 **C. Carrito de Compras**
-📍 `http://localhost:3000/marketplace/cart`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/cart`
 - Items agregados con expansión completa
 - Variantes mostradas por separado
 - SKU y stock por variante
@@ -291,7 +573,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 2️⃣ Mis Aperturas (Proyectos) 🆕
 
-📍 `http://localhost:3000/marketplace/openings`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/openings`
 
 **Qué mostrar:**
 
@@ -315,7 +597,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 3️⃣ Presupuestos
 
-📍 `http://localhost:3000/marketplace/quotes`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/quotes`
 
 **Qué mostrar:**
 - Presupuestos recibidos para mis proyectos en cards de ancho completo
@@ -328,7 +610,7 @@ Tener a mano estas credenciales para la demo:
   - Ver motivo de rechazo si el presupuesto ya está rechazado
   - Ver información de firma si el presupuesto ya está firmado
 - **Cambiar estado**: selector visual + botón **Cambiar estado** para reabrir, adjudicar, rechazar o expirar el presupuesto durante la demo
-- **Firma digital**: aparece en presupuestos adjudicados sin firma; en mock data también se puede mostrar el presupuesto ya firmado `quote_bcn_mob_001`.
+- **Firma digital**: aparece en presupuestos adjudicados sin firma; también se puede mostrar un presupuesto ya firmado como ejemplo.
 - Sistema de expiración visible por fecha de validez/expirado
 
 **Mensaje clave**: *"El franquiciado revisa presupuestos por proyecto, abre el detalle y toma decisiones cuando el estado lo permite"*
@@ -337,7 +619,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 4️⃣ Mis Pedidos
 
-📍 `http://localhost:3000/marketplace/orders`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/orders`
 
 **Qué mostrar:**
 
@@ -365,7 +647,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 5️⃣ Checkout Process
 
-📍 `http://localhost:3000/marketplace/cart` → botón **Proceder al Pago** → `http://localhost:3000/marketplace/checkout-new`
+📍 `https://marketplace-b2b-carrefour.vercel.app/marketplace/cart` → botón **Proceder al Pago** → `https://marketplace-b2b-carrefour.vercel.app/marketplace/checkout-new`
 
 **Nota**: No hay enlace directo al checkout en el sidebar. Se accede desde **Mi Carrito** y solo tiene sentido con productos añadidos.
 
@@ -393,7 +675,7 @@ Tener a mano estas credenciales para la demo:
 - Resumen del pedido
 - Estado y siguiente paso
 - Botón: "Ver mis pedidos"
-- **Validado**: success page renderiza correctamente tras confirmar pedido (`/marketplace/checkout-new/success?...`).
+- Página de confirmación tras completar el pedido
 
 **Mensaje clave**: *"Proceso de checkout completo con múltiples métodos de pago y confirmación inmediata"*
 
@@ -410,7 +692,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 1️⃣ Mis Productos
 
-📍 `http://localhost:3000/supplier/products`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/products`
 
 **Qué mostrar:**
 
@@ -423,14 +705,14 @@ Tener a mano estas credenciales para la demo:
 - Al hacer click, el producto vuelve a `pending_approval` y se limpia el motivo de rechazo; refrescar la página si el estado visual no cambia inmediatamente
 
 **B. Crear Producto**
-📍 `http://localhost:3000/supplier/products/new`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/products/new`
 - Formulario completo
 - Información básica (nombre, descripción, SKU)
 - Precio propuesto por el proveedor
 - **Enviar a aprobación**
 
 **C. Carga Masiva**
-📍 `http://localhost:3000/supplier/products/bulk-upload`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/products/bulk-upload`
 - Click en **Descargar Plantilla** para bajar `plantilla_productos.csv`
 - Abrir la plantilla en Excel/Numbers/Sheets y completar los productos
 - Mantener las 22 columnas del layout: Producto ID, título, categoría, SKU, variantes, unidades por pack, precio proveedor, IVA, stock e imágenes
@@ -445,7 +727,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 2️⃣ Pedidos Recibidos
 
-📍 `http://localhost:3000/supplier/orders`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/orders`
 
 **Qué mostrar:**
 
@@ -483,7 +765,7 @@ Tener a mano estas credenciales para la demo:
 
 ### 3️⃣ Invitaciones a Proyectos 🆕
 
-📍 `http://localhost:3000/supplier/openings`
+📍 `https://marketplace-b2b-carrefour.vercel.app/supplier/openings`
 
 **Qué mostrar:**
 
@@ -502,12 +784,12 @@ Tener a mano estas credenciales para la demo:
   - Preparar presupuesto basado en planos
 
 **C. Crear Presupuesto**
-📍 Misma ruta del botón **Ver mi presupuesto**: `http://localhost:3000/supplier/openings/proj_001/quote/cat_001`
+📍 Misma ruta del botón **Ver mi presupuesto**: `https://marketplace-b2b-carrefour.vercel.app/supplier/openings/proj_001/quote/cat_001`
 - Formulario completo
 - Items detallados (descripción, cantidad, precio)
 - Términos de pago y entrega
 - Garantía
-- **Enviar presupuesto** → redirige a success page: `/supplier/openings/proj_001/quote/cat_001/success`
+- **Enviar presupuesto** → redirige a la página de confirmación del presupuesto
 - Página de confirmación con resumen del envío y botones **Volver a invitaciones** / **Ver proyecto**
 
 **Mensaje clave**: *"Los proveedores acceden a documentación técnica completa para preparar cotizaciones precisas"*
@@ -526,20 +808,10 @@ Tener a mano estas credenciales para la demo:
 
 ### 2. Arquitectura Escalable
 
-✅ **Feature Flags Mock/Real**
-```typescript
-// Fácil migración a backend real
-const flags = {
-  auth: 'real',      // Ya usando Medusa
-  products: 'mock',  // Listo para cambiar
-  orders: 'mock',    // Un solo cambio de flag
-}
-```
-
-✅ **122 Endpoints Documentados**
-- API client preparada para cada módulo
-- Tipos TypeScript estrictos
-- Documentación para backend en `docs/modules/`
+✅ **Preparado para Crecer**
+- Separación clara entre roles y módulos
+- Flujos preparados para conectarse progresivamente con servicios reales
+- Documentación técnica disponible para el equipo de integración
 
 ### 3. Experiencia de Usuario
 
@@ -556,11 +828,11 @@ const flags = {
 
 ### 4. Datos Realistas
 
-✅ **Mock Data de Producción**
+✅ **Datos Realistas de Demostración**
 - 10 proyectos de apertura
 - 7 productos con variantes
 - 5 pedidos por rol
-- 6 proveedores mock
+- 6 proveedores de ejemplo
 - 5 franquiciados
 - Precios en centavos (alineado con Medusa)
 
@@ -591,11 +863,11 @@ const flags = {
 ### P: ¿Cuánto falta para producción?
 
 **R**: El frontend está **100% listo**. Falta:
-1. **Backend Medusa**: Implementar endpoints según docs en `docs/modules/`
-2. **Testing E2E**: Playwright tests (1 semana)
-3. **Integración**: Cambiar feature flags de mock → real (gradual por módulo)
+1. Conectar progresivamente los servicios finales de Medusa/Mercur
+2. Ejecutar pruebas automáticas de los flujos críticos
+3. Validar con usuarios reales y ajustar detalles operativos
 
-**Tiempo estimado**: 2-3 semanas con equipo backend completo.
+**Tiempo estimado**: 2-3 semanas con el equipo de integración completo.
 
 ---
 
@@ -672,15 +944,15 @@ Abrir de antemano:
 
 ### 2. Historia a Contar
 
-**Inicio** → "Tenemos 13 módulos completos con 122 endpoints"  
+**Inicio** → "Tenemos 13 módulos completos y recorribles por rol"  
 **Admin** → "Control total: productos, pedidos, aperturas, presupuestos"  
 **Franquiciado** → "Experiencia de compra B2B optimizada"  
 **Proveedor** → "Gestión completa desde propuesta hasta entrega"  
-**Cierre** → "Sistema production-ready esperando integración backend"
+**Cierre** → "Sistema listo para validación funcional y siguiente fase de integración"
 
 ### 3. Evitar
 
-❌ No mencionar "esto es mock" constantemente  
+❌ No entrar en detalles técnicos salvo que los pregunten  
 ❌ No disculparse por funcionalidad faltante  
 ✅ Enfocarse en lo que **SÍ funciona**  
 ✅ Mostrar la **profundidad** del desarrollo
@@ -697,7 +969,7 @@ Abrir de antemano:
 
 ## ✅ Checklist Pre-Demo
 
-- [ ] Servidor corriendo en `http://localhost:3000`
+- [ ] URL de demo abierta: `https://marketplace-b2b-carrefour.vercel.app`
 - [ ] Pestañas preparadas
 - [ ] Credenciales a mano
 - [ ] Carrito vacío (limpiar localStorage si necesario)
@@ -710,7 +982,7 @@ Abrir de antemano:
 
 ## 🎯 Mensaje Final
 
-> "Hemos construido un sistema B2B completo y funcional en tiempo récord. Con 13 módulos, 122 endpoints y ~19,866 líneas de código, tenemos una plataforma production-ready que solo espera la integración con el backend Medusa. Cada flujo está pensado, validado y testeado. Esto no es un prototipo - es software real listo para usuarios reales."
+> "Hemos construido una plataforma B2B completa y funcional en tiempo récord. Con 13 módulos y flujos completos para Admin, Franquiciado y Proveedor, Carrefour puede validar la experiencia operativa de punta a punta. Cada flujo está pensado, validado y preparado para la siguiente fase de integración."
 
 ---
 
