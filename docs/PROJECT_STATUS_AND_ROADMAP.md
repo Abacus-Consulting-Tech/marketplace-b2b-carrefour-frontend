@@ -1,8 +1,8 @@
 # Estado del Proyecto y Roadmap - Marketplace B2B Carrefour
 
 **Fecha**: 26 de Agosto de 2026  
-**Última Actualización**: Martes 26 Agosto - Alineación con Especificación Técnica v1.0  
-**Estado General**: 🟡 Frontend UI 85% | Integraciones Críticas 5% | MVP Funcional 45%
+**Última Actualización**: Martes 26 Agosto - Excel Import + Backend Integration Status  
+**Estado General**: 🟡 Frontend UI 85% | Integraciones Backend 25% | MVP Funcional 50%
 
 > **📌 FUENTE DE VERDAD (Source of Truth)**  
 > Este documento, junto con la **Especificación Técnica v1.0** (PDF 23 páginas) y [Dev Tools](http://localhost:3000/admin/dev-tools), son las **fuentes oficiales** de verdad del proyecto.  
@@ -47,8 +47,8 @@
 
 ### 📊 Cobertura Real vs Especificación Técnica:
 - **Frontend UI Mock**: 85% completo (13 de 18 módulos del spec)
-- **Integraciones Backend**: 5% completo (solo Auth parcial)
-- **MVP Funcional End-to-End**: 45% completo
+- **Integraciones Backend**: 25% completo (40 endpoints REAL de ~160 totales)
+- **MVP Funcional End-to-End**: 50% completo
 - **Módulos del Spec Implementados**: 8 de 18 (44%)
 
 ---
@@ -438,7 +438,7 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 
 ---
 
-### 8. Dev Tools (Actualizado 25 Agosto)
+### 8. Dev Tools (Actualizado 26 Agosto)
 **Estado**: ✅ Mantenido actualizado
 
 **Lo que se hizo:**
@@ -447,30 +447,41 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 - Estadísticas de módulos (real vs mock)
 - Filter por módulo
 - Credenciales de prueba
+- **Estado de integración backend** con indicadores visuales (✅ REAL / 🎭 MOCK)
 
 **Archivos:**
 - `src/app/(backoffice)/admin/dev-tools/page.tsx`
 
-**Endpoints documentados**: 122 endpoints
-- Auth: 4 endpoints
+**Endpoints documentados**: 160+ endpoints
+- **Auth**: 4 endpoints ✅ REAL
+- **Admin Orders**: 8 endpoints ✅ REAL
+- **Supplier/Vendor Orders**: 9 endpoints ✅ REAL
+- **Pricing**: 6 endpoints ✅ REAL
+- **Excel Import**: 8 endpoints ✅ REAL ← **NUEVO 26/08**
+  - Admin: template download, upload, list jobs, job details
+  - Vendor: template download, upload, list jobs, job details
+- **Sellers**: 5 endpoints ✅ REAL
 - Admin: 2 endpoints
-- Openings: 8 endpoints
+- Openings: 24 endpoints 🎭 MOCK
 - Categories: 6 endpoints
-- Pricing: 6 endpoints
 - Store: 3 endpoints
 - Vendor: 4 endpoints
-- Supplier Orders: 7 endpoints
-- **Products (24/08)**: 8 endpoints
+- **Products (24/08)**: 8 endpoints 🎭 MOCK
 - **Supplier Products**: 6 endpoints (create, update, delete, list, bulk-upload, images)
 - **Franchisee Management**: 6 endpoints (create, update, delete, list, activate/deactivate, stats)
-- **Checkout (25/08)**: 15 endpoints (cart address, shipping methods, payment sessions, complete, etc.)
-- **Quotes (25/08)**: 10 endpoints
-- **Franchisee Orders (25/08)**: 8 endpoints
-- **Admin Orders (25/08)**: 9 endpoints
-- **Cart & Checkout**: 15 endpoints
+- **Checkout (25/08)**: 15 endpoints 🎭 MOCK (cart address, shipping methods, payment sessions, complete, etc.)
+- **Quotes (25/08)**: 10 endpoints 🎭 MOCK
+- **Franchisee Orders (25/08)**: 8 endpoints 🎭 MOCK
+- **Cart & Checkout**: 15 endpoints 🎭 MOCK
 - **Misc**: 5 endpoints
 
-**Tiempo invertido**: ~1.5 horas de mantenimiento total
+**Integración Backend (Render DEV)**:
+- ✅ **40 endpoints REAL**: Auth, Admin Orders, Supplier Orders, Pricing, Excel Import, Sellers
+- 🎭 **120+ endpoints MOCK**: Openings, Products, Checkout, Quotes, etc.
+- Backend URL: https://marketplace-b2b-backend-dev.onrender.com
+- Feature flags permiten cambiar entre REAL/MOCK por módulo
+
+**Tiempo invertido**: ~2 horas de mantenimiento total
 
 ---
 
@@ -1136,18 +1147,140 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 
 ---
 
+### 18. Excel Import - Carga Masiva de Productos (HOY - Martes 26 Agosto)
+**Estado**: ✅ Completo (Backend Real)
+
+**Lo que se hizo:**
+- Sistema completo de importación masiva de productos vía Excel
+- Cliente API para admin y vendor con endpoints reales
+- Tipos TypeScript completos para jobs asíncronos
+- Utilidad de polling para tracking de progreso
+- Integración con backend Render DEV
+- Testing guide actualizado con casos de uso
+
+**Archivos creados (5 archivos, ~1,130 líneas):**
+
+**Types (65 líneas):**
+1. `src/types/excel-import.ts` - Tipos completos para ImportJob, estados, errores
+
+**API Client (330 líneas):**
+2. `src/lib/api/excel-import-client.ts` - Cliente completo con 8 endpoints + polling
+
+**Documentación (735 líneas):**
+3. `docs/integration/EXCEL_IMPORT_BACKEND_VALIDATED.md` - Manual backend completo
+4. `docs/integration/Plantilla_ejemplo_proveedores_carga_productos.xlsx` - Template 400 filas
+5. `docs/integration/TESTING_BACKEND_INTEGRATION.md` - Actualizado con Test 13 & 14
+
+**Archivos modificados:**
+- `src/app/(backoffice)/admin/dev-tools/page.tsx` - +8 endpoints documentados
+
+**Endpoints integrados (8 endpoints - TODOS REAL):**
+
+**Admin**:
+- GET `/admin/custom/products/import/template` - Descargar plantilla
+- POST `/admin/custom/products/import` - Subir Excel (con seller_id)
+- GET `/admin/custom/products/import` - Listar jobs (filtrable)
+- GET `/admin/custom/products/import/:id` - Detalle de job
+
+**Vendor**:
+- GET `/vendor/custom/products/import/template` - Descargar plantilla
+- POST `/vendor/custom/products/import` - Subir Excel (seller_id desde header)
+- GET `/vendor/custom/products/import` - Listar mis jobs
+- GET `/vendor/custom/products/import/:id` - Detalle de job
+
+**Features:**
+- **Template Excel**:
+  - 100 productos × 4 variantes = 400 filas
+  - Categorías B2B (Suministros, Equipamiento, Uniformes, etc.)
+  - Columnas obligatorias: título, SKU, precio base
+  - Columnas opcionales: descripción, marca, EAN, opciones de variante, imágenes
+  
+- **Upload y procesamiento**:
+  - Validación de archivo (.xlsx, .xls, max 10 MB)
+  - Job asíncrono con estados: queued → validating → ingesting → success/failed
+  - Multipart/form-data upload
+  - Backend procesa 400 filas en ~2-5 segundos
+  
+- **Polling de progreso**:
+  - Utilidad `pollImportJob()` con callback de progreso
+  - Intervalo configurable (default 1.5s)
+  - Timeout de seguridad (default 3 minutos)
+  - Detección automática de finalización (success/failed)
+  
+- **Manejo de errores**:
+  - Errores por línea con: line, column, reason, value
+  - Validación backend: SKU único, precio > 0, categoría existente
+  - All-or-nothing: si una fila falla, ningún producto se crea
+  - UI puede mostrar tabla de errores para corrección
+  
+- **Resultado exitoso**:
+  - Lista de `created_product_ids`
+  - Productos creados en estado "proposed"
+  - Listo para flujo de aprobación de precios existente
+  - Link automático a `/admin/products/pricing` o `/vendor/products`
+
+**Integración:**
+- Backend: Render DEV (`https://marketplace-b2b-backend-dev.onrender.com`)
+- Autenticación: JWT (admin) o JWT + x-seller-id (vendor)
+- Feature flag: reutiliza `pricing` module flag
+- Mock mode disponible para desarrollo sin backend
+- Compatible con flujo de aprobación de productos existente
+
+**Flujo completo**:
+```
+1. Usuario descarga template Excel
+2. Rellena productos y variantes (400 filas)
+3. Sube archivo vía drag&drop o selector
+4. Backend crea job (status: queued)
+5. Validación de columnas, SKUs, precios, categorías
+6. Ingesta de productos (status: ingesting)
+7. Éxito: productos creados (status: success)
+   O
+   Error: tabla de errores (status: failed)
+8. Frontend muestra resultado y enlaza a pricing approval
+```
+
+**Características destacadas:**
+- ✅ 100% TypeScript con tipos estrictos
+- ✅ Integración REAL con backend (no mock)
+- ✅ 8 endpoints funcionando en Render DEV
+- ✅ Polling asíncrono con utilidad reutilizable
+- ✅ Manejo robusto de errores
+- ✅ Template de ejemplo con datos realistas B2B
+- ✅ Documentación técnica completa
+- ✅ Testing guide actualizado (Test 13 & 14)
+- ✅ Compatible con feature flags
+- ✅ Admin puede importar para cualquier seller
+- ✅ Vendor importa para sí mismo (seller_id automático)
+
+**Backend validado**:
+- Fecha: 2026-08-21
+- Commits backend: validados por equipo backend
+- 400 filas procesadas exitosamente
+- 100 productos creados con 4 variantes cada uno
+- Distribuidos en 10 categorías B2B
+- TypeScript compilation OK
+- Endpoint público `/custom/products/import` eliminado (404)
+- Autenticación obligatoria en todos los endpoints
+
+**Tiempo invertido**: ~2 horas (tipos, cliente, documentación, testing)
+
+---
+
 ## 📋 Estado por Módulo
 
 | Módulo | Frontend Mock | Backend Real | Integrado | Docs | Tests |
 |--------|---------------|--------------|-----------|------|-------|
 | **Auth** | ✅ | ✅ | ✅ | ✅ | ⏳ |
+| **Admin Orders** | ✅ | ✅ | ✅ | ✅ | ⏳ |
+| **Supplier/Vendor Orders** | ✅ | ✅ | ✅ | ✅ | ⏳ |
+| **Pricing/Approval** | ✅ | ✅ | ✅ | ✅ | ⏳ |
+| **Excel Import** | ✅ | ✅ | ✅ | ✅ | ✅ | ← **NUEVO 26/08**
+| **Sellers/Suppliers** | ✅ | ✅ | ✅ | ✅ | ⏳ |
 | **Openings** | ✅ | ⏳ | ❌ | ✅ | ⏳ |
 | **Categories** | ✅ | ⏳ | ❌ | ✅ | ⏳ |
 | **Quotes** | ✅ | ⏳ | ❌ | ✅ | ⏳ |
-| **Supplier Orders** | ✅ | ⏳ | ❌ | ✅ | ⏳ |
-| **Product Pricing/Approval** | ✅ | ⏳ | ❌ | ✅ | ⏳ |
 | **Product Management (Admin)** | ✅ | ⏳ | ❌ | ✅ | ✅ |
-| **Admin Orders (Global)** | ✅ | ⏳ | ❌ | ✅ | ⏳ |
 | **Catalog (Franchisee)** | ✅ | ⏳ | ❌ | ✅ | ✅ |
 | **Cart** | ✅ | ⏳ | ❌ | ✅ | ✅ |
 | **Checkout (Proceso de Pago)** | ✅ | ⏳ | ❌ | ✅ | ⏳ |
@@ -1163,10 +1296,12 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 - ❌ No iniciado
 
 **Nota:** 
+- **Backend Integration**: 6 módulos completamente integrados con backend real (40 endpoints)
 - **Openings**: ✅ **COMPLETO** (Semana 2) - Incluye sistema de invitaciones a proveedores integrado (2 componentes, 409 líneas, guía de testing)
 - **Product Pricing/Approval**: El submódulo `/admin/products/pricing` SÍ está completo
 - **Product Management (Admin)**: ✅ **COMPLETO** (24/08/2026) - CRUD completo con testing guide
 - **Catalog (Franchisee)**: ✅ **COMPLETO** (24/08/2026) - Catálogo + detalle + filtros con testing guide
+- **Excel Import**: ✅ **COMPLETO** (26/08/2026) - Carga masiva de productos con backend real
 - **Cart**: ✅ **COMPLETO** (24/08/2026) - Carrito con expansión Medusa y variant-aware
 - **Checkout**: ✅ **COMPLETO** (25/08/2026) - Wizard completo con 15 archivos (~3,366 líneas); success page corregida y validada el 26/08
 - **Quotes**: ✅ **COMPLETO** (25/08/2026) - Sistema completo de presupuestos con 11 archivos (1,500 líneas)
