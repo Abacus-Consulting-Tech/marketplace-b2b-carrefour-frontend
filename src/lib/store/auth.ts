@@ -49,18 +49,14 @@ export const useAuthStore = create<AuthStore>()(
     {
       name: 'auth-storage',
       storage: createJSONStorage(() => localStorage),
-      onRehydrateStorage: () => (state) => {
+      onRehydrateStorage: () => {
         console.log('[AuthStore] onRehydrateStorage callback fired');
-        // This callback runs after hydration completes
         return (state: AuthStore | undefined, error?: Error) => {
           if (error) {
             console.error('[AuthStore] Hydration error:', error);
           }
           console.log('[AuthStore] Hydration complete. User:', state?.user?.email, 'isAuth:', state?.isAuthenticated);
-          // Always set hydrated to true, even if there was an error or no stored data
-          if (state) {
-            state.setHasHydrated(true);
-          }
+          state?.setHasHydrated(true);
         };
       },
     }

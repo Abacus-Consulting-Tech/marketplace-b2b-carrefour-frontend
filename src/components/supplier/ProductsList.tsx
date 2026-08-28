@@ -259,7 +259,7 @@ export function ProductsList({ sellerId }: ProductsListProps) {
                             <div className="max-w-xs">
                               <div className="font-medium">{product.title}</div>
                               <div className="text-xs text-gray-500">
-                                Pack de {product.units_per_pack} uds
+                                PCB Mínimo: {product.units_per_pack}
                               </div>
                             </div>
                           </div>

@@ -131,10 +131,25 @@ export interface PendingProductsResponse {
   offset: number;
 }
 
+export interface PricedProductsFilters {
+  seller_id?: string;
+  status?: PricingStatus | 'all';
+  q?: string;
+  limit?: number;
+  offset?: number;
+}
+
+export interface PricedProductsResponse {
+  products: Product[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
 // Admin: Approve/Reject Product
 export interface ApproveProductRequest {
   status: 'approved';
-  markup_percentage: number; // 0-500
+  markup_percentage: number | null; // 0-500, null = use seller global markup
 }
 
 export interface RejectProductRequest {
@@ -145,6 +160,16 @@ export interface RejectProductRequest {
 export type PricingApprovalRequest = ApproveProductRequest | RejectProductRequest;
 
 export interface PricingApprovalResponse {
+  product: Product;
+  message: string;
+}
+
+export interface UpdateProductMarkupRequest {
+  markup_percentage: number | null; // null = use seller global markup
+  reason?: string;
+}
+
+export interface UpdateProductMarkupResponse {
   product: Product;
   message: string;
 }

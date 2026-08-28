@@ -48,11 +48,46 @@ export const mockSuppliers: Supplier[] = [
 // ============================================================================
 
 export const mockCategories: ProductCategory[] = [
-  { id: 'cat_uniformes', name: 'Uniformes', handle: 'uniformes' },
-  { id: 'cat_marketing', name: 'Material Marketing', handle: 'marketing' },
-  { id: 'cat_senalizacion', name: 'Señalización en tienda', handle: 'senalizacion' },
-  { id: 'cat_limpieza', name: 'Limpieza', handle: 'limpieza' },
-  { id: 'cat_embalaje', name: 'Embalaje', handle: 'embalaje' },
+  { 
+    id: 'cat_uniformes', 
+    name: 'Uniformes', 
+    handle: 'uniformes',
+    description: 'Ropa y uniformes corporativos',
+    imageUrl: 'https://loremflickr.com/400/300/uniform,clothing',
+    icon: 'Users'
+  },
+  { 
+    id: 'cat_marketing', 
+    name: 'Material Marketing', 
+    handle: 'marketing',
+    description: 'Materiales de promoción y marketing',
+    imageUrl: 'https://loremflickr.com/400/300/marketing,business',
+    icon: 'Megaphone'
+  },
+  { 
+    id: 'cat_senalizacion', 
+    name: 'Señalización en tienda', 
+    handle: 'senalizacion',
+    description: 'Carteles y señalética para punto de venta',
+    imageUrl: 'https://loremflickr.com/400/300/store,signs',
+    icon: 'Signpost'
+  },
+  { 
+    id: 'cat_limpieza', 
+    name: 'Limpieza', 
+    handle: 'limpieza',
+    description: 'Productos y equipos de limpieza',
+    imageUrl: 'https://loremflickr.com/400/300/cleaning,supplies',
+    icon: 'Sparkles'
+  },
+  { 
+    id: 'cat_embalaje', 
+    name: 'Embalaje', 
+    handle: 'embalaje',
+    description: 'Cajas, bolsas y materiales de embalaje',
+    imageUrl: 'https://loremflickr.com/400/300/boxes,packaging',
+    icon: 'Package'
+  },
 ];
 
 // ============================================================================

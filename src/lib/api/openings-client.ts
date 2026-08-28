@@ -196,6 +196,7 @@ export const openingsApi = {
       const newProject: OpeningProject = {
         id: `proj_${Date.now()}`,
         franchisee_id: data.franchisee_id,
+        store_sap_code: data.store_sap_code,
         name: data.name,
         address: data.address,
         fiscal_data: data.fiscal_data,

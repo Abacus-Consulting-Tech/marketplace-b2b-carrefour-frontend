@@ -15,13 +15,14 @@ import { InviteSupplierForm } from '@/components/openings/admin/InviteSupplierFo
 import { InvitationsList } from '@/components/openings/admin/InvitationsList';
 import DocumentUploadForm from '@/components/openings/admin/DocumentUploadForm';
 import DocumentsList from '@/components/openings/admin/DocumentsList';
+import OpeningProcessGuide from '@/components/openings/shared/OpeningProcessGuide';
 import ProjectWorkflowTimeline from '@/components/openings/shared/ProjectWorkflowTimeline';
 import ProjectStatusChanger from '@/components/openings/admin/ProjectStatusChanger';
 import StatusHistoryLog from '@/components/openings/shared/StatusHistoryLog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, ArrowLeft, Building2, Calendar, MapPin, FileText } from 'lucide-react';
+import { Loader2, ArrowLeft, Building2, Calendar, MapPin } from 'lucide-react';
 import { formatDate } from '@/types/openings';
 import { useToast } from '@/hooks/use-toast';
 import type { ProjectCategory, SupplierInvitation } from '@/types/openings';
@@ -333,6 +334,8 @@ export default function AdminOpeningDetailPage() {
         </div>
       </div>
 
+      <OpeningProcessGuide currentStatus={selectedProject.status} role="admin" />
+
       {/* Información General */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <Card>
@@ -422,12 +425,18 @@ export default function AdminOpeningDetailPage() {
 
               <div>
                 <h4 className="font-semibold mb-2">Datos Fiscales</h4>
-                <p className="text-gray-600">
-                  CIF: {selectedProject.fiscal_data.tax_id}
-                </p>
-                <p className="text-gray-600">
-                  {selectedProject.fiscal_data.company_name}
-                </p>
+                {selectedProject.fiscal_data ? (
+                  <>
+                    <p className="text-gray-600">
+                      CIF: {selectedProject.fiscal_data.tax_id}
+                    </p>
+                    <p className="text-gray-600">
+                      {selectedProject.fiscal_data.company_name}
+                    </p>
+                  </>
+                ) : (
+                  <p className="text-gray-600">No disponibles</p>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -466,6 +475,14 @@ export default function AdminOpeningDetailPage() {
             </Card>
           ) : (
             <>
+              <Card className="mb-4 border-blue-200 bg-blue-50">
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold text-blue-950">Paso 1: prepara las categorías antes de invitar</h3>
+                  <p className="mt-1 text-sm text-blue-800">
+                    Cada categoría debe tener alcance, presupuesto estimado y documentos suficientes para que el proveedor cotice sin idas y vueltas.
+                  </p>
+                </CardContent>
+              </Card>
               <CategoryList
                 categories={categories}
                 onAdd={handleAddCategory}
@@ -494,6 +511,15 @@ export default function AdminOpeningDetailPage() {
             </Card>
           ) : (
             <div className="space-y-4">
+              <Card className="border-blue-200 bg-blue-50">
+                <CardContent className="pt-6">
+                  <h3 className="font-semibold text-blue-950">Paso 2: invita proveedores por categoría</h3>
+                  <p className="mt-1 text-sm text-blue-800">
+                    Selecciona la categoría, el proveedor y la fecha límite. El proveedor verá los documentos técnicos y podrá presentar su presupuesto.
+                  </p>
+                </CardContent>
+              </Card>
+
               <div className="flex justify-between items-center">
                 <div>
                   <h3 className="text-lg font-semibold">Proveedores Invitados</h3>

@@ -5,8 +5,12 @@
  * Handles authentication headers, vendor seller-id, and error handling
  */
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com'
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com'
 const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MERCUR_PUBLISHABLE_API_KEY || ''
+
+function getApiBaseUrl(): string {
+  return typeof window !== 'undefined' ? '/api' : BACKEND_API_URL
+}
 
 /**
  * Get auth token from localStorage
@@ -99,7 +103,7 @@ export async function apiRequest<T>(
 ): Promise<T> {
   const { sellerId, isStore, ...fetchOptions } = options
   
-  const url = `${API_BASE_URL}${endpoint}`
+  const url = `${getApiBaseUrl()}${endpoint}`
   
   try {
     const response = await fetch(url, {
@@ -110,15 +114,9 @@ export async function apiRequest<T>(
       },
     })
     
-    // Handle 401 - token expired/invalid
+    // Let the current page handle data authorization errors without destroying the session.
     if (response.status === 401) {
-      console.error('[API] 401 Unauthorized - clearing auth and redirecting to login')
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('auth-token')
-        localStorage.removeItem('auth-storage')
-        window.location.href = '/login'
-      }
-      throw new Error('Session expired. Please log in again.')
+      throw new Error('No autorizado para consultar este recurso.')
     }
     
     if (!response.ok) {

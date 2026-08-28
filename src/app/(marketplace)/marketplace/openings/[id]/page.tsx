@@ -1,5 +1,5 @@
 /**
- * Portal Franquiciado - Detalle de Proyecto de Apertura
+ * Portal Franquiciado - Detalle de tienda
  */
 
 'use client';
@@ -98,14 +98,14 @@ export default function FranchiseeOpeningDetailPage() {
         <Card>
           <CardContent className="text-center py-12">
             <Building2 className="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <p className="text-gray-500">Proyecto no encontrado</p>
+            <p className="text-gray-500">Tienda no encontrada</p>
             <Button
               variant="link"
               onClick={() => router.push('/marketplace/openings')}
               className="mt-4"
             >
               <ArrowLeft className="mr-2 h-4 w-4" />
-              Volver a mis proyectos
+              Volver a mis tiendas
             </Button>
           </CardContent>
         </Card>
@@ -123,7 +123,7 @@ export default function FranchiseeOpeningDetailPage() {
           className="mb-4"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Volver a mis proyectos
+          Volver a mis tiendas
         </Button>
 
         <div className="flex items-start justify-between">
@@ -154,7 +154,7 @@ export default function FranchiseeOpeningDetailPage() {
         <TabsContent value="info" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Información del Proyecto</CardTitle>
+              <CardTitle>Información de la tienda</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid md:grid-cols-2 gap-6">

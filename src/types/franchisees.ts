@@ -171,8 +171,8 @@ export interface CreateFranchiseeRequest {
   
   // Metadata
   metadata: {
-    company_name: string;
-    tax_id: string;
+    company_name?: string;
+    tax_id?: string;
     store_name?: string;
     store_code?: string;
     city?: string;

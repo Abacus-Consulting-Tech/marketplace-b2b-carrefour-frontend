@@ -401,6 +401,8 @@ Response: 401 Unauthorized
 }
 ```
 
+`markup_percentage` también puede ser `null` para indicar que el producto debe usar el markup global del seller.
+
 **Request (Rechazar):**
 ```json
 {
@@ -432,7 +434,8 @@ Response: 401 Unauthorized
    - `approved_at = NOW()`
    - `approved_by = current_user_id`
 2. **Crear producto en Medusa:**
-   - Calcular `final_price = base_price * (1 + markup_percentage/100)`
+  - Calcular `final_price = base_price * (1 + applied_markup/100)`
+  - `applied_markup = COALESCE(product.markup_percentage, seller.global_markup_percentage)`
    - Insertar en `products` table con precio final
    - Si hay variantes → crear en `product_variants`
    - Actualizar `medusa_product_id` en proposal
@@ -446,9 +449,75 @@ Response: 401 Unauthorized
    - `rejected_by = current_user_id`
 
 **Validaciones:**
-- Si `status = 'approved'` → `markup_percentage` requerido (0-500)
+- Si `status = 'approved'` → `markup_percentage` puede ser `null` o un número entre 0 y 500
 - Si `status = 'rejected'` → `rejection_reason` requerido (min 10 chars)
 - Producto debe estar en `status = 'pending_approval'`
+
+---
+
+#### 9.1 GET `/admin/custom/products`
+**Descripción:** Listar productos tarificados/aprobados para revisar markup individual  
+**Requiere autenticación:** Sí (admin)
+
+**Query params:**
+- `status`: `approved | rejected | pending_approval` (default: `approved`)
+- `seller_id`: string (opcional)
+- `q`: string (búsqueda por título, EAN o proveedor)
+- `limit`: number (default: 50)
+- `offset`: number (default: 0)
+
+**Response 200:**
+```json
+{
+  "products": [
+    {
+      "id": "proposal_01",
+      "title": "Agua Mineral 1.5L - Pack 6 uds",
+      "base_price": 3.50,
+      "units_per_pack": 6,
+      "seller_id": "seller_01",
+      "seller_name": "Proveedor Bebidas S.L.",
+      "status": "approved",
+      "markup_percentage": null,
+      "global_markup_percentage": 15.00,
+      "applied_markup": 15.00,
+      "created_at": "2026-08-20T09:00:00Z",
+      "updated_at": "2026-08-21T10:30:00Z"
+    }
+  ],
+  "total": 1,
+  "limit": 50,
+  "offset": 0
+}
+```
+
+---
+
+#### 9.2 PATCH `/admin/custom/products/:id/markup`
+**Descripción:** Actualizar el markup específico de un producto aprobado o devolverlo al markup global  
+**Requiere autenticación:** Sí (admin)
+
+**Request:**
+```json
+{
+  "markup_percentage": 18.50,
+  "reason": "Ajuste comercial específico"
+}
+```
+
+Para volver al markup global del seller:
+
+```json
+{
+  "markup_percentage": null,
+  "reason": "Volver a markup global del proveedor"
+}
+```
+
+**Validaciones:**
+- El producto debe estar aprobado/publicado
+- `markup_percentage` puede ser `null` o un número entre 0 y 500
+- Registrar auditoría del cambio con usuario admin, fecha, valor anterior, valor nuevo y motivo
 
 ---
 

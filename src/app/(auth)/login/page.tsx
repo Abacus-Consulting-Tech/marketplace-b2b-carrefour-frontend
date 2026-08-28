@@ -101,8 +101,8 @@ export default function LoginPage() {
         console.log('[Login] Redirecting to /supplier/dashboard');
         router.push("/supplier/dashboard");
       } else if (user.role === "franchisee") {
-        console.log('[Login] Redirecting to /marketplace/dashboard');
-        router.push("/marketplace/dashboard");
+        console.log('[Login] Redirecting to /marketplace');
+        router.push("/marketplace");
       } else {
         console.log('[Login] Redirecting to /marketplace');
         router.push("/marketplace");

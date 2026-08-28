@@ -11,6 +11,7 @@ import {
   ShoppingBag,
   CheckCircle,
   DollarSign,
+  Percent,
   Wrench,
   MapPin,
 } from "lucide-react";
@@ -126,6 +127,12 @@ export function AdminSidebar() {
             icon={<DollarSign className="h-5 w-5" />}
             label="Markup Global"
             isActive={isActive("/admin/pricing/markup")}
+          />
+          <NavItem
+            href="/admin/pricing/product-markups"
+            icon={<Percent className="h-5 w-5" />}
+            label="Markup por Producto"
+            isActive={isActive("/admin/pricing/product-markups")}
           />
         </NavSection>
 

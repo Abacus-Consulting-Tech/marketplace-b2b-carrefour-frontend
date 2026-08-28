@@ -5,11 +5,13 @@ import { useAuthStore } from '@/lib/store/auth';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
 import { ProductProposalForm } from '@/components/supplier/ProductProposalForm';
+import { featureFlags } from '@/config/feature-flags';
 import type { Product } from '@/types/products-pricing';
 
 export default function NewProductPage() {
   const router = useRouter();
   const { user } = useAuthStore();
+  const sellerId = user?.seller_id ?? (featureFlags.shouldUseMock('pricing') ? user?.id : undefined);
 
   if (!user) {
     return null; // ProtectedRoute will handle redirect
@@ -40,7 +42,13 @@ export default function NewProductPage() {
       </div>
 
       {/* Form */}
-      <ProductProposalForm sellerId={user.id} onSuccess={handleSuccess} />
+      {sellerId ? (
+        <ProductProposalForm sellerId={sellerId} onSuccess={handleSuccess} />
+      ) : (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          No se ha podido identificar la cuenta de proveedor. Cierra sesión y vuelve a iniciar sesión.
+        </div>
+      )}
     </div>
   );
 }

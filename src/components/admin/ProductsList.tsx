@@ -270,7 +270,7 @@ export default function ProductsList() {
                         <Badge variant="outline">{price} €</Badge>
                       )}
                       {variantCount > 1 && (
-                        <Badge variant="secondary">{variantCount} variantes</Badge>
+                        <Badge variant="secondary">{variantCount} opciones</Badge>
                       )}
                     </div>
                   </div>

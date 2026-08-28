@@ -20,8 +20,8 @@ export function QuickActions() {
       color: 'bg-green-100 text-green-600 hover:bg-green-200',
     },
     {
-      title: 'Proyectos de Apertura',
-      description: 'Gestionar nuevas aperturas',
+      title: 'Mis tiendas',
+      description: 'Gestionar tiendas y aperturas',
       icon: Building2,
       href: '/franchisee/openings',
       color: 'bg-purple-100 text-purple-600 hover:bg-purple-200',

@@ -1,5 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+function decodeJWT(token: string): { actor_id?: string; actor_type?: 'user' | 'member' } | null {
+  try {
+    const payload = token.split('.')[1]
+    if (!payload) return null
+
+    return JSON.parse(Buffer.from(payload, 'base64url').toString('utf8'))
+  } catch (error) {
+    console.error('[Auth Login API] Failed to decode JWT:', error)
+    return null
+  }
+}
+
+async function fetchSellerId(backendBaseUrl: string, token: string): Promise<string | undefined> {
+  try {
+    const response = await fetch(`${backendBaseUrl}/vendor/sellers/me`, {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json',
+      },
+    })
+
+    if (!response.ok) {
+      console.warn('[Auth Login API] Failed to fetch seller info:', response.status)
+      return process.env.NEXT_PUBLIC_DEFAULT_SELLER_ID
+    }
+
+    const data = await response.json()
+    return data.seller?.id || data.id || process.env.NEXT_PUBLIC_DEFAULT_SELLER_ID
+  } catch (error) {
+    console.error('[Auth Login API] Error fetching seller info:', error)
+    return process.env.NEXT_PUBLIC_DEFAULT_SELLER_ID
+  }
+}
+
 /**
  * Proxy endpoint to bypass CORS restrictions when calling Medusa backend from localhost
  * This proxies POST /api/auth/login to Medusa's /auth/user/emailpass
@@ -9,9 +43,15 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { email, password } = body
 
+    const backendBaseUrl = process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com'
+    const emailLower = email.toLowerCase()
+    const isSupplier = emailLower.includes('seller') || emailLower.includes('mercur') ||
+      emailLower.includes('kickz') || emailLower.includes('trailhead') || emailLower.includes('supplier')
+    const authEndpoint = isSupplier ? '/auth/member/emailpass' : '/auth/user/emailpass'
+
     // API routes run server-side, so we always call the backend directly
     // This API route itself IS the CORS workaround proxy
-    const backendUrl = `${process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com'}/auth/user/emailpass`
+    const backendUrl = `${backendBaseUrl}${authEndpoint}`
     
     console.log('[Auth Login API] Calling backend:', backendUrl)
     
@@ -46,25 +86,28 @@ export async function POST(request: NextRequest) {
       console.log('[Auth Login API] Success, received token:', data.token ? 'yes' : 'no')
 
       // Medusa only returns { token: "..." }, no user object
-      // Deduce role from email until backend provides proper user data
+      // Deduce role from endpoint/email until backend provides proper user data
       let role: 'admin' | 'supplier' | 'franchisee' = 'franchisee'
-      
-      const emailLower = email.toLowerCase()
-      if (emailLower.includes('admin') || emailLower.includes('acano')) {
-        role = 'admin'
-      } else if (emailLower.includes('seller') || emailLower.includes('mercur') || 
-                 emailLower.includes('kickz') || emailLower.includes('trailhead')) {
+      const jwtPayload = decodeJWT(data.token)
+      if (isSupplier || jwtPayload?.actor_type === 'member') {
         role = 'supplier'
+      } else if (emailLower.includes('admin') || emailLower.includes('acano')) {
+        role = 'admin'
       }
 
+      const sellerId = role === 'supplier' ? await fetchSellerId(backendBaseUrl, data.token) : undefined
+
       const user = {
-        id: email,
+        id: jwtPayload?.actor_id || email,
         email: email,
         name: email.split('@')[0],
         role: role,
+        actor_type: jwtPayload?.actor_type,
+        actor_id: jwtPayload?.actor_id,
+        seller_id: sellerId,
       }
 
-      console.log('[Auth Login API] Created user object:', { email, role })
+      console.log('[Auth Login API] Created user object:', { email, role, seller_id: sellerId })
 
       return NextResponse.json({
         user,

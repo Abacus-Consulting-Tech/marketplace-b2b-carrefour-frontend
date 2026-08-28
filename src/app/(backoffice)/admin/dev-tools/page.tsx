@@ -538,6 +538,26 @@ export default function DevToolsPage() {
         medusaEndpoint: '/admin/custom/products/:id/pricing-approval'
       },
       {
+        path: '/admin/custom/products',
+        method: 'GET',
+        module: 'pricing',
+        description: 'Listar productos tarificados para revisar markup',
+        usesRealAPI: !featureFlags.shouldUseMock('pricing'),
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/custom/products'
+      },
+      {
+        path: '/admin/custom/products/:id/markup',
+        method: 'PATCH',
+        module: 'pricing',
+        description: 'Actualizar markup específico de producto aprobado',
+        usesRealAPI: !featureFlags.shouldUseMock('pricing'),
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/custom/products/:id/markup'
+      },
+      {
         path: '/admin/custom/sellers',
         method: 'GET',
         module: 'pricing',
@@ -655,7 +675,7 @@ export default function DevToolsPage() {
         path: '/admin/variants/:id/inventory',
         method: 'POST',
         module: 'products',
-        description: 'Ajustar inventario de variante',
+        description: 'Ajustar inventario de opción',
         usesRealAPI: !featureFlags.shouldUseMock('products'),
         status: 'working',
         requiresAuth: true,

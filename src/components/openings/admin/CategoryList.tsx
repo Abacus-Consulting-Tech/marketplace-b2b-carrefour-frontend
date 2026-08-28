@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Pencil, Trash2, Plus, Euro, Calendar, FileText } from 'lucide-react';
+import { Pencil, Trash2, Plus, Calendar, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -20,7 +20,6 @@ import {
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import type { ProjectCategory } from '@/types/openings';
-import { formatCurrency } from '@/types/openings';
 
 interface CategoryListProps {
   categories: ProjectCategory[];
@@ -114,22 +113,7 @@ export function CategoryList({
             </CardHeader>
 
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* Presupuesto */}
-                <div className="flex items-center gap-2">
-                  <div className="rounded-full bg-blue-100 p-2">
-                    <Euro className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-gray-600">Presupuesto Estimado</p>
-                    <p className="font-semibold">
-                      {category.budget_estimate
-                        ? formatCurrency(category.budget_estimate)
-                        : 'No especificado'}
-                    </p>
-                  </div>
-                </div>
-
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Presupuestos */}
                 <div className="flex items-center gap-2">
                   <div className="rounded-full bg-green-100 p-2">

@@ -34,8 +34,6 @@ import type {
   SupplierOrderFilters,
   SupplierOrderStats,
   SupplierOrdersResponse,
-  SupplierOrderResponse,
-  SupplierOrderStatsResponse,
   AcceptOrderRequest,
   RejectOrderRequest,
   UpdateOrderStatusRequest,
@@ -168,6 +166,21 @@ export const supplierOrdersApi = {
     }
     
     // Real API call to Medusa
+    const data = await apiRequest<any>(`/vendor/orders/${orderId}`)
+    return data.order || data
+  },
+
+  /**
+   * Get order statistics for the current supplier
+   *
+   * @returns Supplier order statistics
+   */
+  async getOrderStats(): Promise<SupplierOrderStats> {
+    if (isMockMode) {
+      return mockDelay(getMockOrderStats())
+    }
+
+    // Real API call to Medusa
     const data = await apiRequest<any>('/vendor/orders/stats')
     return data.stats || data
   },
@@ -294,23 +307,7 @@ export const supplierOrdersApi = {
         estimated_delivery: request.estimatedDelivery,
       }),
     })
-    return data.order || data.toISOString(),
-        supplierNotes: `Pedido enviado. Transportista: ${request.carrier}. Número de seguimiento: ${request.trackingNumber}`,
-      })
-      return mockDelay(updated)
-    }
-    
-    // Real API call to Medusa
-    const response = await apiClient.post<SupplierOrderResponse>(
-      `${API_BASE_URL}/${request.orderId}/tracking`,
-      {
-        tracking_number: request.trackingNumber,
-        tracking_url: request.trackingUrl,
-        carrier: request.carrier,
-        estimated_delivery: request.estimatedDelivery,
-      }
-    )
-    return response.data.order
+    return data.order || data
   },
 
   /**
@@ -326,8 +323,8 @@ export const supplierOrdersApi = {
     }
     
     // Real API call to Medusa
-    const response = await apiClient.get<IncidentsResponse>(`${API_BASE_URL}/${orderId}/incidents`)
-    return response.data.incidents
+    const data = await apiRequest<IncidentsResponse>(`/vendor/orders/${orderId}/incidents`)
+    return data.incidents
   },
 
   /**
@@ -369,16 +366,15 @@ export const supplierOrdersApi = {
       })
     }
     
-    const response = await apiClient.post<{ incident: OrderIncident }>(
-      `${API_BASE_URL}/${request.orderId}/incidents`,
-      formData,
+    const data = await apiRequest<{ incident: OrderIncident }>(
+      `/vendor/orders/${request.orderId}/incidents`,
       {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        method: 'POST',
+        body: formData,
+        headers: {},
       }
     )
-    return response.data.incident
+    return data.incident
   },
 
   /**
@@ -403,14 +399,17 @@ export const supplierOrdersApi = {
     }
     
     // Real API call to Medusa
-    const response = await apiClient.patch<{ incident: OrderIncident }>(
-      `${API_BASE_URL}/incidents/${request.incidentId}/resolve`,
+    const data = await apiRequest<{ incident: OrderIncident }>(
+      `/vendor/orders/incidents/${request.incidentId}/resolve`,
       {
-        resolution: request.resolution,
-        refund_amount: request.refundAmount,
-        replacement_offered: request.replacementOffered,
+        method: 'PATCH',
+        body: JSON.stringify({
+          resolution: request.resolution,
+          refund_amount: request.refundAmount,
+          replacement_offered: request.replacementOffered,
+        }),
       }
     )
-    return response.data.incident
+    return data.incident
   },
 }

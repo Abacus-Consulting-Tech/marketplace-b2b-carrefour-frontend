@@ -36,7 +36,7 @@ export default function QuotesPage() {
               Mis Presupuestos
             </h1>
             <p className="text-gray-600">
-              Presupuestos recibidos para tus proyectos de apertura
+              Presupuestos recibidos para tus tiendas
             </p>
           </div>
         </div>
@@ -49,7 +49,7 @@ export default function QuotesPage() {
           <div className="space-y-2 text-sm text-blue-900">
             <p className="font-medium">¿Cómo funciona el sistema de presupuestos?</p>
             <ul className="list-disc list-inside space-y-1 text-blue-800">
-              <li>Crea un proyecto de apertura desde el módulo de Aperturas</li>
+              <li>Accede a una tienda desde el módulo Mis tiendas</li>
               <li>El equipo administrativo invita a proveedores cualificados</li>
               <li>Los proveedores envían sus presupuestos con todos los detalles</li>
               <li>Compara las ofertas y adjudica al mejor proveedor</li>

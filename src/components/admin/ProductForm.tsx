@@ -31,8 +31,6 @@ interface VariantFormData {
   title: string;
   sku: string;
   price: string;
-  inventory_quantity: string;
-  manage_inventory: boolean;
 }
 
 export default function ProductForm({ product, mode }: ProductFormProps) {
@@ -49,6 +47,7 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
     title: product?.title || '',
     subtitle: product?.subtitle || '',
     description: product?.description || '',
+    carrefour_description: product?.metadata?.carrefour_description || '',
     handle: product?.handle || '',
     
     // Status & Assignment
@@ -72,15 +71,11 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
       title: v.title,
       sku: v.sku || '',
       price: (v.prices[0]?.amount / 100).toString() || '0',
-      inventory_quantity: v.inventory_quantity.toString(),
-      manage_inventory: v.manage_inventory,
     })) || [
       {
         title: 'Default',
         sku: '',
         price: '0',
-        inventory_quantity: '0',
-        manage_inventory: true,
       },
     ]
   );
@@ -92,6 +87,7 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
         title: product.title || '',
         subtitle: product.subtitle || '',
         description: product.description || '',
+        carrefour_description: product.metadata?.carrefour_description || '',
         handle: product.handle || '',
         status: product.status || 'draft',
         supplier_id: product.supplier?.id || '',
@@ -108,8 +104,6 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
           title: v.title,
           sku: v.sku || '',
           price: (v.prices[0]?.amount / 100).toString() || '0',
-          inventory_quantity: v.inventory_quantity.toString(),
-          manage_inventory: v.manage_inventory,
         }))
       );
     }
@@ -169,18 +163,16 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
     setVariants([
       ...variants,
       {
-        title: `Variant ${variants.length + 1}`,
+        title: `Opción ${variants.length + 1}`,
         sku: '',
         price: '0',
-        inventory_quantity: '0',
-        manage_inventory: true,
       },
     ]);
   };
 
   const removeVariant = (index: number) => {
     if (variants.length === 1) {
-      alert('Debe haber al menos una variante');
+      alert('Debe haber al menos una opción');
       return;
     }
     setVariants(variants.filter((_, i) => i !== index));
@@ -203,7 +195,7 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
     // Validate variants
     variants.forEach((variant, index) => {
       if (!variant.title.trim()) {
-        errors[`variant_${index}_title`] = 'El título de la variante es obligatorio';
+        errors[`variant_${index}_title`] = 'El título de la opción es obligatorio';
       }
       if (!variant.sku.trim()) {
         errors[`variant_${index}_sku`] = 'El SKU es obligatorio';
@@ -211,10 +203,6 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
       const price = parseFloat(variant.price);
       if (isNaN(price) || price < 0) {
         errors[`variant_${index}_price`] = 'El precio debe ser un número válido';
-      }
-      const inventory = parseInt(variant.inventory_quantity);
-      if (isNaN(inventory) || inventory < 0) {
-        errors[`variant_${index}_inventory`] = 'El inventario debe ser un número válido';
       }
     });
 
@@ -245,11 +233,11 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
               currency_code: 'EUR',
             },
           ],
-          inventory_quantity: parseInt(v.inventory_quantity),
-          manage_inventory: v.manage_inventory,
+          manage_inventory: false,
         })),
         metadata: {
           units_per_pack: parseInt(formData.units_per_pack),
+          carrefour_description: formData.carrefour_description || undefined,
           min_order_quantity: parseInt(formData.min_order_quantity),
           lead_time_days: parseInt(formData.lead_time_days),
         },
@@ -341,14 +329,28 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Descripción</Label>
+            <Label htmlFor="description">Descripción del proveedor</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => handleChange('description', e.target.value)}
               rows={4}
-              placeholder="Descripción detallada del producto..."
+              placeholder="Descripción proporcionada por el proveedor..."
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="carrefour_description">Descripción Carrefour</Label>
+            <Textarea
+              id="carrefour_description"
+              value={formData.carrefour_description}
+              onChange={(e) => handleChange('carrefour_description', e.target.value)}
+              rows={4}
+              placeholder="Descripción interna o adaptada para Carrefour..."
+            />
+            <p className="text-xs text-muted-foreground">
+              Campo opcional para que el administrador complete información específica de Carrefour.
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -419,12 +421,12 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Variantes y Precios</CardTitle>
-              <CardDescription>Gestión de SKUs, precios e inventario</CardDescription>
+              <CardTitle>Opciones y Precios</CardTitle>
+              <CardDescription>Gestión de SKUs y precios</CardDescription>
             </div>
             <Button type="button" variant="outline" size="sm" onClick={addVariant}>
               <Plus className="h-4 w-4 mr-2" />
-              Añadir Variante
+              Añadir Opción
             </Button>
           </div>
         </CardHeader>
@@ -432,7 +434,7 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
           {variants.map((variant, index) => (
             <div key={index} className="p-4 border rounded-lg space-y-4">
               <div className="flex items-center justify-between">
-                <h4 className="font-medium">Variante #{index + 1}</h4>
+                <h4 className="font-medium">Opción #{index + 1}</h4>
                 {variants.length > 1 && (
                   <Button
                     type="button"
@@ -445,7 +447,7 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
                 )}
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor={`variant_title_${index}`}>
                     Título <span className="text-red-500">*</span>
@@ -495,27 +497,6 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
                   {fieldErrors[`variant_${index}_price`] && (
                     <p className="text-sm text-red-600">
                       {fieldErrors[`variant_${index}_price`]}
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor={`variant_inventory_${index}`}>
-                    Inventario <span className="text-red-500">*</span>
-                  </Label>
-                  <Input
-                    id={`variant_inventory_${index}`}
-                    type="number"
-                    min="0"
-                    value={variant.inventory_quantity}
-                    onChange={(e) =>
-                      handleVariantChange(index, 'inventory_quantity', e.target.value)
-                    }
-                    className={fieldErrors[`variant_${index}_inventory`] ? 'border-red-500' : ''}
-                  />
-                  {fieldErrors[`variant_${index}_inventory`] && (
-                    <p className="text-sm text-red-600">
-                      {fieldErrors[`variant_${index}_inventory`]}
                     </p>
                   )}
                 </div>
@@ -580,7 +561,7 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label htmlFor="units_per_pack">
-                Unidades por Pack <span className="text-red-500">*</span>
+                PCB Mínimo <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="units_per_pack"

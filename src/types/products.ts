@@ -113,6 +113,8 @@ export interface ProductCategory {
   parent_category_id?: string;
   rank?: number;
   metadata?: Record<string, any>;
+  imageUrl?: string;
+  icon?: string;
 }
 
 export interface ProductType {
@@ -131,6 +133,7 @@ export interface ProductMetadata {
   // B2B specific fields
   units_per_pack?: number;
   pack_description?: string;
+  carrefour_description?: string;
   min_order_quantity?: number;
   max_order_quantity?: number;
   lead_time_days?: number;

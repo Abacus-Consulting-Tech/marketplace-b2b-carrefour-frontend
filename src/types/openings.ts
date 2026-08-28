@@ -92,6 +92,7 @@ export interface OpeningProject {
   id: string;
   franchisee_id: string;
   store_id?: string;
+  store_sap_code?: string;
   name: string;
   description?: string;
   status: ProjectStatus;
@@ -105,7 +106,7 @@ export interface OpeningProject {
   address: Address;
   
   // Datos fiscales
-  fiscal_data: FiscalData;
+  fiscal_data?: FiscalData;
   
   // Archivos
   floor_plan_url?: string;
@@ -299,9 +300,10 @@ export interface AuditLog {
 
 export interface CreateProjectRequest {
   franchisee_id: string;
+  store_sap_code?: string;
   name: string;
   address: Address;
-  fiscal_data: FiscalData;
+  fiscal_data?: FiscalData;
   planned_opening_date?: Date | string;
 }
 

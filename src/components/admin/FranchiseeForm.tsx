@@ -9,13 +9,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { AlertCircle, Save, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
@@ -41,11 +34,6 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
     email: franchisee?.email || '',
     phone: franchisee?.phone || '',
     password: '',
-    
-    // Company Info
-    company_name: franchisee?.metadata?.company_name || '',
-    tax_id: franchisee?.metadata?.tax_id || '',
-    store_code: franchisee?.metadata?.store_code || '',
     
     // B2B Config
     discount_tier: franchisee?.metadata?.discount_tier || 'basic',
@@ -74,22 +62,6 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
           if (!value) return 'La contraseña es obligatoria';
           if (value.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
         }
-        return null;
-      case 'company_name':
-        return !value?.trim() ? 'El nombre de la empresa es obligatorio' : null;
-      case 'tax_id':
-        return !value?.trim() ? 'El CIF/NIF es obligatorio' : null;
-      case 'store_code':
-        return !value?.trim() ? 'El código de tienda es obligatorio' : null;
-      case 'credit_limit':
-        const creditLimit = parseFloat(value);
-        if (isNaN(creditLimit)) return 'Debe ser un número';
-        if (creditLimit < 0) return 'El límite de crédito debe ser positivo';
-        return null;
-      case 'payment_terms':
-        const paymentTerms = parseInt(value);
-        if (isNaN(paymentTerms)) return 'Debe ser un número';
-        if (paymentTerms < 0) return 'Los días de pago deben ser positivos';
         return null;
       default:
         return null;
@@ -161,9 +133,6 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
           password: formData.password,
           groups: [{ id: 'cg_b2b_franchisees' }],
           metadata: {
-            company_name: formData.company_name,
-            tax_id: formData.tax_id,
-            store_code: formData.store_code,
             discount_tier: formData.discount_tier as any,
             credit_limit: parseFloat(formData.credit_limit),
             payment_terms: parseInt(String(formData.payment_terms)),
@@ -189,9 +158,6 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
           phone: formData.phone || undefined,
           metadata: {
             ...franchisee?.metadata,
-            company_name: formData.company_name,
-            tax_id: formData.tax_id,
-            store_code: formData.store_code,
             discount_tier: formData.discount_tier as any,
             credit_limit: parseFloat(formData.credit_limit),
             payment_terms: parseInt(String(formData.payment_terms)),
@@ -232,7 +198,7 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
           </h1>
           <p className="text-muted-foreground mt-1">
             {mode === 'create'
-              ? 'Completa la información para crear un nuevo franquiciado'
+              ? 'Crea el acceso inicial para que el franquiciado complete su perfil y tiendas'
               : 'Actualiza la información del franquiciado'}
           </p>
         </div>
@@ -335,14 +301,14 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
 
             {mode === 'create' && (
               <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="password">Contraseña *</Label>
+                <Label htmlFor="password">Contraseña temporal *</Label>
                 <Input
                   id="password"
                   type="password"
                   value={formData.password}
                   onChange={(e) => handleChange('password', e.target.value)}
                   onBlur={() => handleBlur('password')}
-                  placeholder="Mínimo 8 caracteres"
+                  placeholder="Contraseña temporal para el primer acceso"
                   required
                   minLength={8}
                   className={fieldErrors.password ? 'border-red-500' : ''}
@@ -356,128 +322,6 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
                 )}
               </div>
             )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Company Information */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Información de la Empresa</CardTitle>
-          <CardDescription>Datos fiscales y comerciales</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2 md:col-span-2">
-              <Label htmlFor="company_name">Nombre de la Empresa *</Label>
-              <Input
-                id="company_name"
-                value={formData.company_name}
-                onChange={(e) => handleChange('company_name', e.target.value)}
-                onBlur={() => handleBlur('company_name')}
-                placeholder="Carrefour Centro SL"
-                required
-                className={fieldErrors.company_name ? 'border-red-500' : ''}
-              />
-              {fieldErrors.company_name && (
-                <p className="text-sm text-red-600">{fieldErrors.company_name}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="tax_id">CIF/NIF *</Label>
-              <Input
-                id="tax_id"
-                value={formData.tax_id}
-                onChange={(e) => handleChange('tax_id', e.target.value)}
-                onBlur={() => handleBlur('tax_id')}
-                placeholder="B12345678"
-                required
-                className={fieldErrors.tax_id ? 'border-red-500' : ''}
-              />
-              {fieldErrors.tax_id && (
-                <p className="text-sm text-red-600">{fieldErrors.tax_id}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="store_code">Código de Tienda *</Label>
-              <Input
-                id="store_code"
-                value={formData.store_code}
-                onChange={(e) => handleChange('store_code', e.target.value)}
-                onBlur={() => handleBlur('store_code')}
-                placeholder="CF-MAD-001"
-                required
-                className={fieldErrors.store_code ? 'border-red-500' : ''}
-              />
-              {fieldErrors.store_code && (
-                <p className="text-sm text-red-600">{fieldErrors.store_code}</p>
-              )}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* B2B Configuration */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Configuración B2B</CardTitle>
-          <CardDescription>Condiciones comerciales y descuentos</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="discount_tier">Nivel de Descuento *</Label>
-              <Select value={formData.discount_tier} onValueChange={(value) => handleChange('discount_tier', value)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="basic">Basic (0-5%)</SelectItem>
-                  <SelectItem value="silver">Silver (5-10%)</SelectItem>
-                  <SelectItem value="gold">Gold (10-15%)</SelectItem>
-                  <SelectItem value="platinum">Platinum (15-20%)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="credit_limit">Límite de Crédito (€) *</Label>
-              <Input
-                id="credit_limit"
-                type="number"
-                step="0.01"
-                min="0"
-                value={formData.credit_limit}
-                onChange={(e) => handleChange('credit_limit', e.target.value)}
-                onBlur={() => handleBlur('credit_limit')}
-                placeholder="5000"
-                required
-                className={fieldErrors.credit_limit ? 'border-red-500' : ''}
-              />
-              {fieldErrors.credit_limit && (
-                <p className="text-sm text-red-600">{fieldErrors.credit_limit}</p>
-              )}
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="payment_terms">Días de Pago *</Label>
-              <Input
-                id="payment_terms"
-                type="number"
-                min="0"
-                value={formData.payment_terms}
-                onChange={(e) => handleChange('payment_terms', e.target.value)}
-                onBlur={() => handleBlur('payment_terms')}
-                placeholder="30"
-                required
-                className={fieldErrors.payment_terms ? 'border-red-500' : ''}
-              />
-              {fieldErrors.payment_terms && (
-                <p className="text-sm text-red-600">{fieldErrors.payment_terms}</p>
-              )}
-            </div>
           </div>
         </CardContent>
       </Card>

@@ -31,7 +31,6 @@ import type { ProjectCategory } from '@/types/openings';
 const categoryFormSchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
   description: z.string().optional(),
-  budget_estimate: z.number().min(0, 'El presupuesto debe ser mayor a 0').optional(),
 });
 
 type CategoryFormData = z.infer<typeof categoryFormSchema>;
@@ -58,18 +57,11 @@ export function CategoryForm({
     defaultValues: {
       name: category?.name || '',
       description: category?.description || '',
-      budget_estimate: category?.budget_estimate ? category.budget_estimate / 100 : undefined,
     },
   });
 
   const handleSubmit = async (data: CategoryFormData) => {
-    // Convert budget from EUR to cents if provided
-    const submitData = {
-      ...data,
-      budget_estimate: data.budget_estimate ? Math.round(data.budget_estimate * 100) : undefined,
-    };
-    
-    await onSubmit(submitData);
+    await onSubmit(data);
     form.reset();
   };
 
@@ -121,34 +113,6 @@ export function CategoryForm({
                   </FormControl>
                   <FormDescription>
                     Opcional: Detalles sobre los requisitos de esta categoría
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="budget_estimate"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Presupuesto Estimado (€)</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      placeholder="0.00"
-                      {...field}
-                      onChange={(e) => {
-                        const value = e.target.value;
-                        field.onChange(value === '' ? undefined : parseFloat(value));
-                      }}
-                      value={field.value ?? ''}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Opcional: Presupuesto estimado para esta categoría
                   </FormDescription>
                   <FormMessage />
                 </FormItem>

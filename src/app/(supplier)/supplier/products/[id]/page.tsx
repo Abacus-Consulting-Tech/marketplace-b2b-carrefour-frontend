@@ -10,6 +10,7 @@ import { useToast } from '@/hooks/use-toast';
 import { pricingApi } from '@/lib/api/products-pricing-client';
 import { ProductStatusBadge } from '@/components/supplier/ProductStatusBadge';
 import { useAuthStore } from '@/lib/store/auth';
+import { featureFlags } from '@/config/feature-flags';
 import type { Product } from '@/types/products-pricing';
 import {
   ArrowLeft,
@@ -33,6 +34,7 @@ export default function ProductDetailPage() {
   const params = useParams();
   const { toast } = useToast();
   const { user } = useAuthStore();
+  const sellerId = user?.seller_id ?? (featureFlags.shouldUseMock('pricing') ? user?.id : undefined);
   
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -50,14 +52,18 @@ export default function ProductDetailPage() {
   }, [productId, user]);
 
   const fetchProductDetails = async () => {
-    if (!user) return;
+    if (!sellerId) {
+      setIsLoading(false);
+      setError('No se ha podido identificar la cuenta de proveedor. Cierra sesión y vuelve a iniciar sesión.');
+      return;
+    }
 
     try {
       setIsLoading(true);
       setError(null);
 
       // Fetch all products and find the one we need
-      const response = await pricingApi.getMyProducts(user.id);
+      const response = await pricingApi.getMyProducts(sellerId);
       const foundProduct = response.data.find(p => p.id === productId);
 
       if (!foundProduct) {
@@ -92,11 +98,11 @@ export default function ProductDetailPage() {
   };
 
   const handleResubmitRejectedProduct = async () => {
-    if (!user || !product) return;
+    if (!sellerId || !product) return;
 
     try {
       setIsResubmitting(true);
-      const response = await pricingApi.resubmitRejectedProduct(product.id, user.id);
+      const response = await pricingApi.resubmitRejectedProduct(product.id, sellerId);
       setProduct(response.data.product);
       toast({
         title: 'Producto reenviado',
@@ -270,7 +276,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 <div className="rounded-lg border p-4">
-                  <div className="text-sm text-gray-500 mb-1">Unidades por Pack</div>
+                  <div className="text-sm text-gray-500 mb-1">PCB Mínimo</div>
                   <div className="text-2xl font-bold">{product.units_per_pack}</div>
                   <div className="text-sm text-gray-600 mt-1">unidades</div>
                 </div>

@@ -135,7 +135,7 @@ export function QuotesList({ franchiseeId, projectId, className = '' }: QuotesLi
           <p className="text-gray-600">
             {search || statusFilter !== 'all'
               ? 'No se encontraron presupuestos con los filtros seleccionados'
-              : 'Aún no has recibido presupuestos para tus proyectos de apertura'}
+              : 'Aún no has recibido presupuestos para tus tiendas'}
           </p>
         </Card>
       ) : (

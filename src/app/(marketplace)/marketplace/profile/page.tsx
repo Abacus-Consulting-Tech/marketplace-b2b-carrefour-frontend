@@ -11,31 +11,50 @@ import { User, Mail, Building2, Phone, MapPin, Save } from 'lucide-react';
 
 const PROFILE_STORAGE_KEY = 'franchisee-profile-data';
 
+interface ProfileData {
+  name: string;
+  email: string;
+  phone: string;
+  company: string;
+  taxId: string;
+  fiscalAddress: string;
+  fiscalCity: string;
+  fiscalProvince: string;
+  fiscalPostalCode: string;
+}
+
 export default function ProfilePage() {
   const { user } = useAuthStore();
   const { toast } = useToast();
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const getInitialData = () => {
+  const getInitialData = (): ProfileData => {
+    const defaultData: ProfileData = {
+      name: user?.name || '',
+      email: user?.email || '',
+      phone: user?.phone || '+34 600 000 000',
+      company: '',
+      taxId: '',
+      fiscalAddress: '',
+      fiscalCity: '',
+      fiscalProvince: '',
+      fiscalPostalCode: '',
+    };
+
     // Try to load from localStorage first
     if (typeof window !== 'undefined') {
       const savedData = localStorage.getItem(PROFILE_STORAGE_KEY);
       if (savedData) {
-        return JSON.parse(savedData);
+        const parsedData = JSON.parse(savedData);
+        return {
+          ...defaultData,
+          ...parsedData,
+        };
       }
     }
     
-    // Default values
-    return {
-      name: user?.name || '',
-      email: user?.email || '',
-      phone: user?.phone || '+34 600 000 000',
-      company: 'Carrefour Franquiciado - Centro',
-      address: 'Calle Principal 123, Madrid',
-      city: 'Madrid',
-      postalCode: '28001',
-    };
+    return defaultData;
   };
 
   const [formData, setFormData] = useState(getInitialData());
@@ -59,8 +78,9 @@ export default function ProfilePage() {
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000));
     
-    // Save to localStorage
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify(formData));
+    const savedData = localStorage.getItem(PROFILE_STORAGE_KEY);
+    const parsedData = savedData ? JSON.parse(savedData) : {};
+    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ ...parsedData, ...formData }));
     
     toast({
       title: 'Perfil actualizado',
@@ -83,7 +103,7 @@ export default function ProfilePage() {
       <div>
         <h1 className="text-3xl font-bold text-gray-900">Mi Perfil</h1>
         <p className="text-gray-600 mt-1">
-          Gestiona tu información personal y de contacto
+          Gestiona tus datos de contacto y fiscales de la sociedad
         </p>
       </div>
 
@@ -94,9 +114,9 @@ export default function ProfilePage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Información Personal</CardTitle>
+                  <CardTitle>Datos del franquiciado</CardTitle>
                   <CardDescription>
-                    Actualiza tus datos de contacto y preferencias
+                    Actualiza los datos de contacto y fiscales de la sociedad
                   </CardDescription>
                 </div>
                 {!isEditing && (
@@ -154,7 +174,7 @@ export default function ProfilePage() {
                 <div className="space-y-2">
                   <Label htmlFor="company">
                     <Building2 className="h-4 w-4 inline mr-2" />
-                    Empresa
+                    Razón social
                   </Label>
                   <Input
                     id="company"
@@ -165,37 +185,60 @@ export default function ProfilePage() {
                   />
                 </div>
 
+                <div className="space-y-2">
+                  <Label htmlFor="taxId">CIF/NIF</Label>
+                  <Input
+                    id="taxId"
+                    name="taxId"
+                    value={formData.taxId}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                    placeholder="B12345678"
+                  />
+                </div>
+
                 <div className="space-y-2 md:col-span-2">
-                  <Label htmlFor="address">
+                  <Label htmlFor="fiscalAddress">
                     <MapPin className="h-4 w-4 inline mr-2" />
-                    Dirección
+                    Dirección fiscal
                   </Label>
                   <Input
-                    id="address"
-                    name="address"
-                    value={formData.address}
+                    id="fiscalAddress"
+                    name="fiscalAddress"
+                    value={formData.fiscalAddress}
                     onChange={handleChange}
                     disabled={!isEditing}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="city">Ciudad</Label>
+                  <Label htmlFor="fiscalCity">Ciudad</Label>
                   <Input
-                    id="city"
-                    name="city"
-                    value={formData.city}
+                    id="fiscalCity"
+                    name="fiscalCity"
+                    value={formData.fiscalCity}
                     onChange={handleChange}
                     disabled={!isEditing}
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="postalCode">Código Postal</Label>
+                  <Label htmlFor="fiscalProvince">Provincia</Label>
                   <Input
-                    id="postalCode"
-                    name="postalCode"
-                    value={formData.postalCode}
+                    id="fiscalProvince"
+                    name="fiscalProvince"
+                    value={formData.fiscalProvince}
+                    onChange={handleChange}
+                    disabled={!isEditing}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="fiscalPostalCode">Código Postal</Label>
+                  <Input
+                    id="fiscalPostalCode"
+                    name="fiscalPostalCode"
+                    value={formData.fiscalPostalCode}
                     onChange={handleChange}
                     disabled={!isEditing}
                   />
@@ -215,6 +258,7 @@ export default function ProfilePage() {
               )}
             </CardContent>
           </Card>
+
         </div>
 
         {/* Account Info Sidebar */}
@@ -250,8 +294,8 @@ export default function ProfilePage() {
               <a href="/marketplace/orders" className="block text-sm text-blue-600 hover:underline">
                 Mis Pedidos →
               </a>
-              <a href="/marketplace/dashboard" className="block text-sm text-blue-600 hover:underline">
-                Dashboard →
+              <a href="/marketplace/openings" className="block text-sm text-blue-600 hover:underline">
+                Mis tiendas →
               </a>
             </CardContent>
           </Card>

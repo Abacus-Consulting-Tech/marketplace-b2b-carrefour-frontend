@@ -171,7 +171,7 @@ export default function ApprovalQueuePage() {
 
     const markupValue = parseFloat(customMarkup);
     
-    if (isNaN(markupValue) || markupValue < 0 || markupValue > 500) {
+    if (!useGlobalMarkup && (isNaN(markupValue) || markupValue < 0 || markupValue > 500)) {
       setError('El markup debe estar entre 0% y 500%');
       return;
     }
@@ -183,7 +183,7 @@ export default function ApprovalQueuePage() {
 
       const response = await pricingApi.approveProduct(
         selectedProduct.id,
-        markupValue
+        useGlobalMarkup ? null : markupValue
       );
 
       if (response.data) {
@@ -457,11 +457,11 @@ export default function ApprovalQueuePage() {
                           )}
                           <div className="flex items-center gap-2 mt-2">
                             <Badge variant="outline" className="text-xs">
-                              {product.units_per_pack} uds/pack
+                              PCB Mínimo: {product.units_per_pack}
                             </Badge>
                             {product.variants && product.variants.length > 0 && (
                               <Badge variant="secondary" className="text-xs">
-                                {product.variants.length} variantes
+                                {product.variants.length} opciones
                               </Badge>
                             )}
                           </div>
@@ -633,7 +633,7 @@ export default function ApprovalQueuePage() {
                   disabled={loading}
                 />
                 <p className="text-xs text-muted-foreground">
-                  Rango permitido: 0% - 500%
+                  Rango permitido: 0% - 500%. Solo se guarda como excepción si seleccionas markup personalizado.
                 </p>
               </div>
 
@@ -671,7 +671,7 @@ export default function ApprovalQueuePage() {
             </Button>
             <Button
               onClick={handleApprove}
-              disabled={loading || !customMarkup}
+              disabled={loading || (!useGlobalMarkup && !customMarkup)}
             >
               <CheckCircle2 className="h-4 w-4 mr-2" />
               {loading ? 'Aprobando...' : 'Aprobar Producto'}

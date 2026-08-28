@@ -170,7 +170,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
               </TabsTrigger>
               <TabsTrigger value="variants">
                 <Package className="h-4 w-4 mr-2" />
-                Variantes
+                Opciones
               </TabsTrigger>
               <TabsTrigger value="details">
                 <Warehouse className="h-4 w-4 mr-2" />
@@ -262,7 +262,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <TabsContent value="details" className="space-y-3 mt-4">
               {product.metadata?.units_per_pack && (
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Unidades por pack:</span>
+                  <span className="text-gray-600">PCB Mínimo:</span>
                   <span className="font-semibold">{product.metadata.units_per_pack}</span>
                 </div>
               )}

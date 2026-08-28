@@ -19,6 +19,7 @@ export default function NewOpeningProjectPage() {
   // Form state
   const [formData, setFormData] = useState({
     franchisee_id: '',
+    store_sap_code: '',
     name: '',
     planned_opening_date: '',
     // Address
@@ -27,12 +28,6 @@ export default function NewOpeningProjectPage() {
     postal_code: '',
     province: '',
     country: 'ES',
-    // Fiscal data
-    company_name: '',
-    tax_id: '',
-    contact_name: '',
-    contact_email: '',
-    contact_phone: '',
   });
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -47,10 +42,8 @@ export default function NewOpeningProjectPage() {
 
     try {
       // Validate required fields
-      if (!formData.franchisee_id || !formData.name || !formData.street || !formData.city || 
-          !formData.postal_code || !formData.province || !formData.company_name || 
-          !formData.tax_id || !formData.contact_name || !formData.contact_email || 
-          !formData.contact_phone) {
+        if (!formData.franchisee_id || !formData.store_sap_code || !formData.name || !formData.street || !formData.city || 
+          !formData.postal_code || !formData.province) {
         setError('Por favor, completa todos los campos obligatorios.');
         setIsSubmitting(false);
         return;
@@ -59,6 +52,7 @@ export default function NewOpeningProjectPage() {
       // Build request
       const request: CreateProjectRequest = {
         franchisee_id: formData.franchisee_id,
+        store_sap_code: formData.store_sap_code,
         name: formData.name,
         address: {
           street: formData.street,
@@ -66,13 +60,6 @@ export default function NewOpeningProjectPage() {
           postal_code: formData.postal_code,
           province: formData.province,
           country: formData.country,
-        },
-        fiscal_data: {
-          company_name: formData.company_name,
-          tax_id: formData.tax_id,
-          contact_name: formData.contact_name,
-          contact_email: formData.contact_email,
-          contact_phone: formData.contact_phone,
         },
       };
 
@@ -161,6 +148,23 @@ export default function NewOpeningProjectPage() {
               </div>
 
               <div className="col-span-2">
+                <Label htmlFor="store_sap_code">
+                  Código SAP de la tienda <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="store_sap_code"
+                  name="store_sap_code"
+                  value={formData.store_sap_code}
+                  onChange={handleInputChange}
+                  placeholder="ej: SAP-000123"
+                  required
+                />
+                <p className="text-sm text-muted-foreground mt-1">
+                  Se usará para consultar los datos fiscales ya completados por el franquiciado.
+                </p>
+              </div>
+
+              <div className="col-span-2">
                 <Label htmlFor="name">
                   Nombre del Proyecto <span className="text-destructive">*</span>
                 </Label>
@@ -195,10 +199,10 @@ export default function NewOpeningProjectPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <MapPin className="h-5 w-5" />
-              Ubicación del Local
+              Ubicación de la tienda
             </CardTitle>
             <CardDescription>
-              Dirección del establecimiento
+              Dirección de la tienda
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -269,94 +273,6 @@ export default function NewOpeningProjectPage() {
                   value={formData.country}
                   onChange={handleInputChange}
                   placeholder="ES"
-                  required
-                />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Fiscal Information */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Building2 className="h-5 w-5" />
-              Datos Fiscales
-            </CardTitle>
-            <CardDescription>
-              Información fiscal del establecimiento
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="col-span-2">
-                <Label htmlFor="company_name">
-                  Razón Social <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="company_name"
-                  name="company_name"
-                  value={formData.company_name}
-                  onChange={handleInputChange}
-                  placeholder="ej: Carrefour Express Madrid S.L."
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="tax_id">
-                  CIF/NIF <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="tax_id"
-                  name="tax_id"
-                  value={formData.tax_id}
-                  onChange={handleInputChange}
-                  placeholder="ej: B12345678"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="contact_name">
-                  Nombre de Contacto <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="contact_name"
-                  name="contact_name"
-                  value={formData.contact_name}
-                  onChange={handleInputChange}
-                  placeholder="ej: Juan Pérez"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="contact_email">
-                  Email de Contacto <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="contact_email"
-                  name="contact_email"
-                  type="email"
-                  value={formData.contact_email}
-                  onChange={handleInputChange}
-                  placeholder="ej: juan@carrefour.com"
-                  required
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="contact_phone">
-                  Teléfono de Contacto <span className="text-destructive">*</span>
-                </Label>
-                <Input
-                  id="contact_phone"
-                  name="contact_phone"
-                  type="tel"
-                  value={formData.contact_phone}
-                  onChange={handleInputChange}
-                  placeholder="ej: +34 600 123 456"
                   required
                 />
               </div>

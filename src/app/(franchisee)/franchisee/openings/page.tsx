@@ -1,5 +1,5 @@
 /**
- * Portal Franquiciado - Mis Proyectos de Apertura
+ * Portal Franquiciado - Mis tiendas
  */
 
 'use client';
@@ -49,16 +49,16 @@ export default function FranchiseeOpeningsPage() {
     <div className="container mx-auto py-8 px-4 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-3xl font-bold">Mis Proyectos de Apertura</h1>
+        <h1 className="text-3xl font-bold">Mis tiendas</h1>
         <p className="text-gray-600 mt-1">
-          Gestiona tus proyectos de apertura de establecimientos
+          Gestiona tus tiendas y aperturas asignadas
         </p>
       </div>
 
       {/* Estadísticas */}
       <div className="grid grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-lg border shadow-sm">
-          <p className="text-sm text-gray-600">Total Proyectos</p>
+          <p className="text-sm text-gray-600">Total tiendas</p>
           <p className="text-2xl font-bold">{myProjects.length}</p>
         </div>
         <div className="bg-white p-4 rounded-lg border shadow-sm">
@@ -99,7 +99,7 @@ export default function FranchiseeOpeningsPage() {
           ) : activeProjects.length === 0 ? (
             <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed">
               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No tienes proyectos activos</p>
+              <p className="text-gray-600">No tienes tiendas activas</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -118,7 +118,7 @@ export default function FranchiseeOpeningsPage() {
           {pendingSignatureProjects.length === 0 ? (
             <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed">
               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No hay proyectos pendientes de firma</p>
+              <p className="text-gray-600">No hay tiendas pendientes de firma</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -137,7 +137,7 @@ export default function FranchiseeOpeningsPage() {
           {completedProjects.length === 0 ? (
             <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed">
               <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No hay proyectos completados</p>
+              <p className="text-gray-600">No hay tiendas completadas</p>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">

@@ -11,7 +11,6 @@ import {
   ClipboardList,
   Truck,
   User,
-  MapPin,
   BarChart3,
   Building2,
 } from "lucide-react";
@@ -91,12 +90,12 @@ export function FranchiseeSidebar() {
           isActive={isActive("/marketplace/dashboard")}
         />
 
-        {/* Proyectos de Apertura */}
-        <NavSection title="Proyectos">
+        {/* Tiendas */}
+        <NavSection title="Tiendas">
           <NavItem
             href="/marketplace/openings"
             icon={<Building2 className="h-5 w-5" />}
-            label="Mis Aperturas"
+            label="Mis tiendas"
             isActive={isActive("/marketplace/openings")}
           />
         </NavSection>
@@ -146,12 +145,6 @@ export function FranchiseeSidebar() {
             icon={<User className="h-5 w-5" />}
             label="Mi Perfil"
             isActive={isActive("/marketplace/profile")}
-          />
-          <NavItem
-            href="/marketplace/addresses"
-            icon={<MapPin className="h-5 w-5" />}
-            label="Direcciones"
-            isActive={isActive("/marketplace/addresses")}
           />
           <NavItem
             href="/marketplace/stats"

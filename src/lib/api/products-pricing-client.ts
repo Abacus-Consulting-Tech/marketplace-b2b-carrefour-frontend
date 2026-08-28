@@ -19,6 +19,7 @@ import { featureFlags } from '@/config/feature-flags';
 import { apiRequest, buildQueryString, logApiMode, createApiHeaders } from './api-utils';
 import type {
   Product,
+  PricingStatus,
   Seller,
   SellerMarkup,
   SellerMarkupHistory,
@@ -26,8 +27,12 @@ import type {
   ProposeProductResponse,
   PendingProductsFilters,
   PendingProductsResponse,
+  PricedProductsFilters,
+  PricedProductsResponse,
   PricingApprovalRequest,
   PricingApprovalResponse,
+  UpdateProductMarkupRequest,
+  UpdateProductMarkupResponse,
   UpdateSellerMarkupRequest,
   UpdateSellerMarkupResponse,
   GetSellerMarkupHistoryRequest,
@@ -41,8 +46,10 @@ import {
   mockProposeProduct,
   mockGetMyProducts,
   mockGetPendingProducts,
+  mockGetPricedProducts,
   mockApproveProduct,
   mockRejectProduct,
+  mockUpdateProductMarkup,
   mockResubmitRejectedProduct,
   mockGetSellerMarkup,
   mockUpdateSellerMarkup,
@@ -57,6 +64,42 @@ import {
 
 const isMockMode = featureFlags.shouldUseMock('pricing');
 const isBackendReady = featureFlags.isBackendReady('pricing');
+
+interface VendorProductsResponse {
+  products: VendorProductResponse[];
+  count?: number;
+  total?: number;
+  limit?: number;
+  offset?: number;
+}
+
+type VendorProductResponse = Omit<Partial<Product>, 'status'> & {
+  id: string;
+  title: string;
+  status?: string;
+  pricing_status?: PricingStatus;
+  metadata?: {
+    base_price?: number;
+    units_per_pack?: number;
+    pricing_status?: PricingStatus;
+    rejection_reason?: string;
+  };
+};
+
+function normalizeVendorProduct(product: VendorProductResponse): Product {
+  return {
+    ...product,
+    description: product.description,
+    base_price: product.base_price ?? product.metadata?.base_price ?? 0,
+    units_per_pack: product.units_per_pack ?? product.metadata?.units_per_pack ?? 1,
+    seller_id: product.seller_id ?? '',
+    variants: product.variants ?? [],
+    status: product.pricing_status ?? product.metadata?.pricing_status ?? 'pending_approval',
+    rejection_reason: product.rejection_reason ?? product.metadata?.rejection_reason,
+    created_at: product.created_at ?? new Date().toISOString(),
+    updated_at: product.updated_at ?? new Date().toISOString(),
+  };
+}
 
 // Log mode on initialization
 logApiMode('Pricing', isMockMode, isBackendReady);
@@ -123,12 +166,14 @@ export const pricingApi = {
       return mockGetMyProducts(sellerId);
     }
 
-    const data = await apiRequest<Product[]>('/vendor/custom/products?limit=100', {
+    const data = await apiRequest<VendorProductResponse[] | VendorProductsResponse>('/vendor/custom/products?limit=100', {
       method: 'GET',
       sellerId,
     });
+
+    const products = Array.isArray(data) ? data : data.products ?? [];
     
-    return { data: Array.isArray(data) ? data : [] };
+    return { data: products.map(normalizeVendorProduct) };
   },
 
   /**
@@ -224,7 +269,7 @@ export const pricingApi = {
    */
   async approveProduct(
     productId: string,
-    markup: number
+    markup: number | null
   ): Promise<ApiResponse<PricingApprovalResponse>> {
     if (isMockMode) {
       return mockApproveProduct(productId, markup);
@@ -239,6 +284,63 @@ export const pricingApi = {
           status: 'approved',
           markup_percentage: markup,
         }),
+      }
+    );
+  },
+
+  /**
+   * Get approved/priced products for admin markup review
+   * GET /admin/custom/products
+   */
+  async getPricedProducts(
+    filters?: PricedProductsFilters
+  ): Promise<ApiResponse<PricedProductsResponse>> {
+    if (isMockMode) {
+      return mockGetPricedProducts(filters);
+    }
+
+    const params = new URLSearchParams();
+    params.append('status', filters?.status && filters.status !== 'all' ? filters.status : 'approved');
+    if (filters?.seller_id) params.append('seller_id', filters.seller_id);
+    if (filters?.q) params.append('q', filters.q);
+    if (filters?.limit) params.append('limit', filters.limit.toString());
+    if (filters?.offset) params.append('offset', filters.offset.toString());
+
+    const data = await apiRequest<VendorProductResponse[] | VendorProductsResponse>('/admin/custom/products?' + params.toString(), {
+      method: 'GET',
+      headers: createApiHeaders(),
+    });
+
+    const products = Array.isArray(data) ? data : data.products ?? [];
+
+    return {
+      data: {
+        products: products.map(normalizeVendorProduct),
+        total: Array.isArray(data) ? products.length : data.total ?? data.count ?? products.length,
+        limit: Array.isArray(data) ? filters?.limit ?? 50 : data.limit ?? filters?.limit ?? 50,
+        offset: Array.isArray(data) ? filters?.offset ?? 0 : data.offset ?? filters?.offset ?? 0,
+      },
+    };
+  },
+
+  /**
+   * Update product-specific markup after approval
+   * PATCH /admin/custom/products/:id/markup
+   */
+  async updateProductMarkup(
+    productId: string,
+    request: UpdateProductMarkupRequest
+  ): Promise<ApiResponse<UpdateProductMarkupResponse>> {
+    if (isMockMode) {
+      return mockUpdateProductMarkup(productId, request.markup_percentage, request.reason);
+    }
+
+    return apiRequest<UpdateProductMarkupResponse>(
+      `/admin/custom/products/${productId}/markup`,
+      {
+        method: 'PATCH',
+        headers: createApiHeaders(),
+        body: JSON.stringify(request),
       }
     );
   },

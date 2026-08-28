@@ -9,12 +9,12 @@ import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { OpeningProject } from '@/types/openings';
 import { openingsApi } from '@/lib/api/openings-client';
-import { useAuthStore } from '@/lib/store/auth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import OpeningProcessGuide from '@/components/openings/shared/OpeningProcessGuide';
 import ProjectDocumentsViewer from '@/components/openings/shared/ProjectDocumentsViewer';
 import {
   Loader2,
@@ -32,7 +32,6 @@ export default function SupplierOpeningDetailPage() {
   const params = useParams();
   const router = useRouter();
   const projectId = params.id as string;
-  const { user } = useAuthStore();
 
   const [project, setProject] = useState<OpeningProject | null>(null);
   const [loading, setLoading] = useState(true);
@@ -183,6 +182,8 @@ export default function SupplierOpeningDetailPage() {
           </Badge>
         </div>
       </div>
+
+      <OpeningProcessGuide currentStatus={project.status} role="supplier" className="mb-6" />
 
       {/* Access Confirmation Alert */}
       <Alert className="mb-6">

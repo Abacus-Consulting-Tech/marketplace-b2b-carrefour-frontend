@@ -4,13 +4,20 @@
 
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useOpenings } from '@/lib/store/openings';
 import { openingsApi } from '@/lib/api/openings-client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   Loader2,
   Building2,
@@ -19,10 +26,20 @@ import {
   Clock,
   Send,
 } from 'lucide-react';
-import { formatDate, formatCurrency } from '@/types/openings';
+import { formatDate, formatCurrency, InvitationStatus } from '@/types/openings';
+
+const STATUS_FILTERS: Array<{ value: InvitationStatus | 'all'; label: string }> = [
+  { value: 'all', label: 'Todos los estados' },
+  { value: 'pending', label: 'Pendiente' },
+  { value: 'viewed', label: 'Visto' },
+  { value: 'quote_submitted', label: 'Enviado' },
+  { value: 'declined', label: 'Declinado' },
+  { value: 'expired', label: 'Expirado' },
+];
 
 export default function SupplierInvitationsPage() {
   const router = useRouter();
+  const [statusFilter, setStatusFilter] = useState<InvitationStatus | 'all'>('all');
   const {
     myInvitations,
     setMyInvitations,
@@ -52,6 +69,13 @@ export default function SupplierInvitationsPage() {
 
   const pendingInvitations = getPendingInvitations();
   const submittedInvitations = getInvitationsWithQuotes();
+  const filteredInvitations = statusFilter === 'all'
+    ? myInvitations
+    : myInvitations.filter((invitation) => invitation.status === statusFilter);
+
+  const getStatusLabel = (status: string) => {
+    return STATUS_FILTERS.find((item) => item.value === status)?.label || status;
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -62,6 +86,8 @@ export default function SupplierInvitationsPage() {
             Pendiente
           </Badge>
         );
+      case 'viewed':
+        return <Badge variant="outline">Visto</Badge>;
       case 'quote_submitted':
         return (
           <Badge className="bg-blue-600 text-white">
@@ -76,10 +102,12 @@ export default function SupplierInvitationsPage() {
             Adjudicado
           </Badge>
         );
-      case 'rejected':
-        return <Badge variant="outline">Rechazado</Badge>;
+      case 'declined':
+        return <Badge variant="outline">Declinado</Badge>;
+      case 'expired':
+        return <Badge variant="outline">Expirado</Badge>;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <Badge variant="outline">{getStatusLabel(status)}</Badge>;
     }
   };
 
@@ -113,6 +141,32 @@ export default function SupplierInvitationsPage() {
         </div>
       </div>
 
+      {/* Filtro por estado */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-base">Buscar por estado</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="max-w-sm">
+            <Select
+              value={statusFilter}
+              onValueChange={(value) => setStatusFilter(value as InvitationStatus | 'all')}
+            >
+              <SelectTrigger aria-label="Buscar invitaciones por estado">
+                <SelectValue placeholder="Selecciona un estado" />
+              </SelectTrigger>
+              <SelectContent>
+                {STATUS_FILTERS.map((status) => (
+                  <SelectItem key={status.value} value={status.value}>
+                    {status.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Lista de invitaciones */}
       {isLoadingInvitations ? (
         <div className="flex items-center justify-center py-12">
@@ -123,9 +177,14 @@ export default function SupplierInvitationsPage() {
           <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
           <p className="text-gray-600">No tienes invitaciones pendientes</p>
         </div>
+      ) : filteredInvitations.length === 0 ? (
+        <div className="text-center py-12 bg-gray-50 rounded-lg border-2 border-dashed">
+          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+          <p className="text-gray-600">No hay invitaciones con este estado</p>
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-4">
-          {myInvitations.map((invitation) => (
+          {filteredInvitations.map((invitation) => (
             <Card key={invitation.id} className="hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">

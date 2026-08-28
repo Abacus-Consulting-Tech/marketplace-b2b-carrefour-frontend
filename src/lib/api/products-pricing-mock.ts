@@ -13,7 +13,10 @@ import type {
   ProposeProductResponse,
   PendingProductsResponse,
   PendingProductsFilters,
+  PricedProductsFilters,
+  PricedProductsResponse,
   PricingApprovalResponse,
+  UpdateProductMarkupResponse,
   UpdateSellerMarkupResponse,
   GetSellerMarkupHistoryRequest,
   GetSellerMarkupHistoryResponse,
@@ -562,11 +565,54 @@ export async function mockGetPendingProducts(
 }
 
 /**
+ * Mock: Get priced products for admin markup review
+ */
+export async function mockGetPricedProducts(
+  filters?: PricedProductsFilters
+): Promise<ApiResponse<PricedProductsResponse>> {
+  await delay();
+
+  let products = mockProductsStore.filter(p => p.status === 'approved');
+
+  if (filters?.status && filters.status !== 'all') {
+    products = products.filter(p => p.status === filters.status);
+  }
+
+  if (filters?.seller_id) {
+    const resolvedSellerId = resolveSellerId(filters.seller_id);
+    products = products.filter(p => p.seller_id === resolvedSellerId);
+  }
+
+  if (filters?.q) {
+    const query = filters.q.toLowerCase();
+    products = products.filter(p =>
+      p.title.toLowerCase().includes(query) ||
+      p.description?.toLowerCase().includes(query) ||
+      p.ean?.toLowerCase().includes(query)
+    );
+  }
+
+  const offset = filters?.offset || 0;
+  const limit = filters?.limit || 50;
+  const paginatedProducts = products.slice(offset, offset + limit);
+
+  return {
+    data: {
+      products: paginatedProducts,
+      total: products.length,
+      limit,
+      offset,
+    },
+    message: `${products.length} productos tarificados`,
+  };
+}
+
+/**
  * Mock: Approve product with markup
  */
 export async function mockApproveProduct(
   productId: string,
-  markup: number
+  markup: number | null
 ): Promise<ApiResponse<PricingApprovalResponse>> {
   await delay();
 
@@ -594,7 +640,47 @@ export async function mockApproveProduct(
   return {
     data: {
       product: updatedProduct,
-      message: `Producto aprobado con markup del ${markup}%`,
+      message: markup === null
+        ? 'Producto aprobado con markup global del proveedor'
+        : `Producto aprobado con markup del ${markup}%`,
+    },
+  };
+}
+
+/**
+ * Mock: Update product-specific markup after approval
+ */
+export async function mockUpdateProductMarkup(
+  productId: string,
+  markup: number | null,
+  reason?: string
+): Promise<ApiResponse<UpdateProductMarkupResponse>> {
+  await delay();
+
+  const productIndex = mockProductsStore.findIndex(p => p.id === productId);
+
+  if (productIndex === -1) {
+    return {
+      data: null as any,
+      error: 'Producto no encontrado',
+    };
+  }
+
+  const product = mockProductsStore[productIndex];
+  const updatedProduct: Product = {
+    ...product,
+    markup_percentage: markup,
+    updated_at: new Date().toISOString(),
+  };
+
+  mockProductsStore[productIndex] = updatedProduct;
+
+  return {
+    data: {
+      product: updatedProduct,
+      message: markup === null
+        ? 'Producto configurado para usar el markup global del proveedor'
+        : `Markup específico actualizado a ${markup}%`,
     },
   };
 }

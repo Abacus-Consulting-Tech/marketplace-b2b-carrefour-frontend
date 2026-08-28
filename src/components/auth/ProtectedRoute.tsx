@@ -38,7 +38,7 @@ export function ProtectedRoute({ children, requiredRole, allowedRoles }: Protect
     } else if (user.role === "supplier") {
       router.replace("/supplier/dashboard");
     } else {
-      router.replace("/marketplace/dashboard");
+      router.replace("/marketplace");
     }
     return null;
   }
@@ -49,7 +49,7 @@ export function ProtectedRoute({ children, requiredRole, allowedRoles }: Protect
     } else if (user.role === "supplier") {
       router.replace("/supplier/dashboard");
     } else {
-      router.replace("/marketplace/dashboard");
+      router.replace("/marketplace");
     }
     return null;
   }

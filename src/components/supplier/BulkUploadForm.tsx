@@ -26,15 +26,15 @@ import {
 
 // Tipos para los datos del CSV (22 columnas de la plantilla real)
 interface CSVRow {
-  producto_id: string; // Código común para agrupar variantes
+  producto_id: string; // Código común para agrupar opciones
   titulo: string;
   descripcion?: string;
   categoria: string;
   subcategoria?: string;
   marca?: string;
-  sku: string; // SKU / Referencia única por variante
+  sku: string; // SKU / Referencia única por opción
   ean?: string; // EAN / Código de barras
-  variante?: string; // Nombre legible (ej: "Talla M")
+  variante?: string; // Nombre legible de la opción (ej: "Talla M")
   opcion1?: string; // Nombre de opción 1 (ej: "Talla")
   valor1?: string; // Valor de opción 1 (ej: "M")
   opcion2?: string; // Nombre de opción 2 (ej: "Color")
@@ -50,7 +50,7 @@ interface CSVRow {
   imagen5?: string;
 }
 
-// Producto agrupado (puede tener múltiples variantes)
+// Producto agrupado (puede tener múltiples opciones)
 interface GroupedProduct {
   producto_id: string;
   title: string;
@@ -58,7 +58,7 @@ interface GroupedProduct {
   category_id: string;
   subcategory?: string;
   marca?: string;
-  base_price: number; // Precio de la primera variante o promedio
+  base_price: number; // Precio de la primera opción o promedio
   units_per_pack: number;
   tax_rate?: number;
   images: string[];
@@ -97,7 +97,7 @@ export function BulkUploadForm() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Validar un producto agrupado (puede tener múltiples variantes)
+  // Validar un producto agrupado (puede tener múltiples opciones)
   const validateProduct = (grouped: GroupedProduct, rowNumbers: number[]): ParsedProduct => {
     const errors: string[] = [];
     
@@ -115,7 +115,7 @@ export function BulkUploadForm() {
     }
     
     if (grouped.units_per_pack < 1) {
-      errors.push('Unidades por pack debe ser al menos 1');
+      errors.push('PCB Mínimo debe ser al menos 1');
     }
 
     if (grouped.tax_rate !== undefined && (grouped.tax_rate < 0 || grouped.tax_rate > 100)) {
@@ -129,19 +129,19 @@ export function BulkUploadForm() {
       }
     });
 
-    // Validar SKUs únicos en variantes
+    // Validar SKUs únicos en opciones
     if (grouped.hasVariants) {
       const skus = grouped.rows.map(r => r.sku);
       const uniqueSkus = new Set(skus);
       if (skus.length !== uniqueSkus.size) {
-        errors.push('SKUs duplicados en las variantes');
+        errors.push('SKUs duplicados en las opciones');
       }
     }
 
     // Crear objeto parsedData si es válido
     let parsedData: ProposeProductRequest | undefined;
     if (errors.length === 0 && user) {
-      // Crear array de variantes si es necesario
+      // Crear array de opciones si es necesario
       const variants = grouped.hasVariants ? grouped.rows.map(row => {
         const options: Record<string, string> = {};
         if (row.opcion1 && row.valor1) options[row.opcion1] = row.valor1;
@@ -406,7 +406,7 @@ export function BulkUploadForm() {
           title: product.data.title,
           status: 'success',
           message: product.data.hasVariants 
-            ? `Producto con ${product.data.rows.length} variantes propuesto correctamente`
+            ? `Producto con ${product.data.rows.length} opciones propuesto correctamente`
             : 'Producto propuesto correctamente',
         });
       } catch (error) {
@@ -437,7 +437,7 @@ export function BulkUploadForm() {
 
   // Descargar template CSV
   const downloadTemplate = () => {
-    const template = `Producto ID,Título producto,Descripción,Categoría general,Subcategoría,Marca,SKU / Referencia,EAN / Código de barras,Variante,Opción 1,Valor 1,Opción 2,Valor 2,Unidades por pack,Precio proveedor (€),IVA (%),Stock,Imagen 1 URL,Imagen 2 URL,Imagen 3 URL,Imagen 4 URL,Imagen 5 URL
+    const template = `Producto ID,Título producto,Descripción,Categoría general,Subcategoría,Marca,SKU / Referencia,EAN / Código de barras,Opción,Opción 1,Valor 1,Opción 2,Valor 2,PCB Mínimo,Precio proveedor (€),IVA (%),Stock,Imagen 1 URL,Imagen 2 URL,Imagen 3 URL,Imagen 4 URL,Imagen 5 URL
 PANT-H-MAR,Pantalón hombre marino con logo,Pantalón de uniforme color marino con logo corporativo,Uniformes,Confección,Pomares,FPANH-38,1234567890123,Talla S,Talla,S,Color,Marino,1,18.70,21,20,https://placehold.co/400x400,https://placehold.co/400x400/blue,,,
 PANT-H-MAR,Pantalón hombre marino con logo,Pantalón de uniforme color marino con logo corporativo,Uniformes,Confección,Pomares,FPANH-40,1234567890124,Talla M,Talla,M,Color,Marino,1,18.70,21,15,https://placehold.co/400x400,https://placehold.co/400x400/blue,,,
 PREIMP-001,Super Precio Express,Preimpreso promocional para tienda,Preimpresos,Material,Altavia,67524,9876543210987,Pack 250,Formato,18.5x9.5cm,,,250,7.77,21,100,https://placehold.co/400x400,,,,`;
@@ -555,7 +555,7 @@ PREIMP-001,Super Precio Express,Preimpreso promocional para tienda,Preimpresos,M
                 <div>
                   <p className="font-semibold text-gray-700 mb-1">📋 Columnas del Producto Principal:</p>
                   <ul className="list-disc list-inside ml-4 space-y-1 text-xs">
-                    <li><code className="bg-white px-1 rounded">Producto ID</code> - Código común para agrupar variantes (ej: PANT-H-MAR)</li>
+                    <li><code className="bg-white px-1 rounded">Producto ID</code> - Código común para agrupar opciones (ej: PANT-H-MAR)</li>
                     <li><code className="bg-white px-1 rounded">Título producto</code> - Nombre del producto (mín. 3 caracteres) <span className="text-red-600">*</span></li>
                     <li><code className="bg-white px-1 rounded">Descripción</code> - Descripción completa del producto</li>
                     <li><code className="bg-white px-1 rounded">Categoría general</code> - Categoría principal <span className="text-red-600">*</span></li>
@@ -565,11 +565,11 @@ PREIMP-001,Super Precio Express,Preimpreso promocional para tienda,Preimpresos,M
                 </div>
                 
                 <div>
-                  <p className="font-semibold text-gray-700 mb-1">🏷️ Identificadores y Variantes:</p>
+                  <p className="font-semibold text-gray-700 mb-1">🏷️ Identificadores y Opciones:</p>
                   <ul className="list-disc list-inside ml-4 space-y-1 text-xs">
-                    <li><code className="bg-white px-1 rounded">SKU / Referencia</code> - Código único de variante <span className="text-red-600">*</span></li>
+                    <li><code className="bg-white px-1 rounded">SKU / Referencia</code> - Código único de opción <span className="text-red-600">*</span></li>
                     <li><code className="bg-white px-1 rounded">EAN / Código de barras</code> - Código de barras del producto</li>
-                    <li><code className="bg-white px-1 rounded">Variante</code> - Nombre legible (ej: &quot;Talla M&quot;, &quot;Pack 250&quot;)</li>
+                    <li><code className="bg-white px-1 rounded">Opción</code> - Nombre legible (ej: &quot;Talla M&quot;, &quot;Pack 250&quot;)</li>
                     <li><code className="bg-white px-1 rounded">Opción 1</code> - Nombre de opción (ej: &quot;Talla&quot;, &quot;Color&quot;)</li>
                     <li><code className="bg-white px-1 rounded">Valor 1</code> - Valor de opción 1 (ej: &quot;M&quot;, &quot;Azul&quot;)</li>
                     <li><code className="bg-white px-1 rounded">Opción 2</code> - Segunda opción si aplica</li>
@@ -580,7 +580,7 @@ PREIMP-001,Super Precio Express,Preimpreso promocional para tienda,Preimpresos,M
                 <div>
                   <p className="font-semibold text-gray-700 mb-1">💰 Precios y Stock:</p>
                   <ul className="list-disc list-inside ml-4 space-y-1 text-xs">
-                    <li><code className="bg-white px-1 rounded">Unidades por pack</code> - Cantidad de unidades por pack (entero &gt;= 1) <span className="text-red-600">*</span></li>
+                    <li><code className="bg-white px-1 rounded">PCB Mínimo</code> - Cantidad mínima de unidades por pedido (entero &gt;= 1) <span className="text-red-600">*</span></li>
                     <li><code className="bg-white px-1 rounded">Precio proveedor (€)</code> - Precio neto del proveedor (número &gt; 0) <span className="text-red-600">*</span></li>
                     <li><code className="bg-white px-1 rounded">IVA (%)</code> - Tipo de IVA: 0, 10 o 21 <span className="text-red-600">*</span></li>
                     <li><code className="bg-white px-1 rounded">Stock</code> - Unidades disponibles (opcional)</li>
@@ -597,8 +597,8 @@ PREIMP-001,Super Precio Express,Preimpreso promocional para tienda,Preimpresos,M
 
                 <div className="mt-3 p-2 bg-blue-50 rounded border border-blue-200">
                   <p className="text-xs text-blue-800">
-                    <strong>💡 Sistema de Variantes:</strong> Múltiples filas con el mismo <code className="bg-white px-1">Producto ID</code> se agrupan 
-                    automáticamente como variantes del mismo producto. Perfecto para tallas, colores o formatos.
+                    <strong>💡 Sistema de Opciones:</strong> Múltiples filas con el mismo <code className="bg-white px-1">Producto ID</code> se agrupan 
+                    automáticamente como opciones del mismo producto. Perfecto para tallas, colores o formatos.
                   </p>
                 </div>
                 
@@ -873,9 +873,9 @@ function ProductsPreviewTable({ products }: { products: ParsedProduct[] }) {
           <TableRow>
             <TableHead className="w-24">Producto ID</TableHead>
             <TableHead>Título</TableHead>
-            <TableHead className="w-20">Variantes</TableHead>
+            <TableHead className="w-20">Opciones</TableHead>
             <TableHead className="w-32">Precio</TableHead>
-            <TableHead className="w-24">Unid/Pack</TableHead>
+            <TableHead className="w-24">PCB Mínimo</TableHead>
             <TableHead className="w-32">Estado</TableHead>
             <TableHead>Errores</TableHead>
           </TableRow>

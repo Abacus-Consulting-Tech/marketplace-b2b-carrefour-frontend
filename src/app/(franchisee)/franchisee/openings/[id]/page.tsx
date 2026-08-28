@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { openingsApi } from '@/lib/api/openings-client';
 import type { OpeningProject, ProjectCategory, QuoteComparisonData } from '@/types/openings';
 import { ProjectStatusBadge } from '@/components/openings/shared/ProjectStatusBadge';
+import OpeningProcessGuide from '@/components/openings/shared/OpeningProcessGuide';
 import { QuoteComparisonTable } from '@/components/openings/shared/QuoteComparisonTable';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -154,6 +155,8 @@ export default function FranchiseeProjectDetailPage() {
         <ProjectStatusBadge status={project.status} />
       </div>
 
+      <OpeningProcessGuide currentStatus={project.status} role="franchisee" />
+
       {/* Info Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
@@ -256,11 +259,15 @@ export default function FranchiseeProjectDetailPage() {
 
               <div>
                 <h4 className="font-semibold text-gray-900 mb-2">Datos Fiscales</h4>
-                <p className="text-gray-700">
-                  <strong>Razón Social:</strong> {project.fiscal_data.company_name}<br />
-                  <strong>CIF:</strong> {project.fiscal_data.tax_id}<br />
-                  <strong>Contacto:</strong> {project.fiscal_data.contact_name} ({project.fiscal_data.contact_email})
-                </p>
+                {project.fiscal_data ? (
+                  <p className="text-gray-700">
+                    <strong>Razón Social:</strong> {project.fiscal_data.company_name}<br />
+                    <strong>CIF:</strong> {project.fiscal_data.tax_id}<br />
+                    <strong>Contacto:</strong> {project.fiscal_data.contact_name} ({project.fiscal_data.contact_email})
+                  </p>
+                ) : (
+                  <p className="text-gray-700">No disponibles</p>
+                )}
               </div>
             </CardContent>
           </Card>

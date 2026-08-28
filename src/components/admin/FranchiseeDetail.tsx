@@ -303,8 +303,8 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
                 </div>
 
                 <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Código de Tienda</p>
-                  <p className="font-medium">{franchisee.metadata?.store_code || '-'}</p>
+                  <p className="text-sm text-muted-foreground">Tiendas registradas</p>
+                  <p className="font-medium">{franchisee.shipping_addresses?.length || 0}</p>
                 </div>
 
                 <div className="space-y-1">
@@ -339,10 +339,10 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
-                <CardTitle>Direcciones de Envío</CardTitle>
+                <CardTitle>Tiendas</CardTitle>
                 <Button size="sm">
                   <MapPin className="h-4 w-4 mr-2" />
-                  Añadir Dirección
+                  Añadir Tienda
                 </Button>
               </div>
             </CardHeader>
@@ -350,7 +350,7 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
               {!franchisee.shipping_addresses || franchisee.shipping_addresses.length === 0 ? (
                 <div className="text-center py-8">
                   <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground">No hay direcciones registradas</p>
+                  <p className="text-muted-foreground">No hay tiendas registradas</p>
                 </div>
               ) : (
                 <div className="space-y-4">

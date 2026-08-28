@@ -2,345 +2,148 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { Input } from "@/components/ui/input";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { productsApi } from "@/lib/api/products-client";
-import { mockSuppliers, mockCategories } from "@/lib/api/products-mock";
-import type { Product } from "@/types/products";
-import { Search, ShoppingCart, Filter, Package } from "lucide-react";
+import { mockCategories } from "@/lib/api/products-mock";
+import { ShoppingCart, Package, Users, Megaphone, Signpost, Sparkles } from "lucide-react";
 import { useCartStore } from "@/lib/store/cart";
-import { useToast } from "@/hooks/use-toast";
 
-export default function MarketplacePage() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
-  const [selectedSupplier, setSelectedSupplier] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("name");
-  const addItem = useCartStore((state) => state.addItem);
-  const { toast } = useToast();
+const ICON_MAP: Record<string, React.ReactNode> = {
+  Users: <Users className="w-5 h-5 text-blue-600" />,
+  Megaphone: <Megaphone className="w-5 h-5 text-blue-600" />,
+  Signpost: <Signpost className="w-5 h-5 text-blue-600" />,
+  Sparkles: <Sparkles className="w-5 h-5 text-blue-600" />,
+  Package: <Package className="w-5 h-5 text-blue-600" />,
+};
+
+export default function MarketplaceLandingPage() {
+  const [isLoading, setIsLoading] = useState(false);
+  const cart = useCartStore((state) => state.items);
 
   useEffect(() => {
-    fetchProducts();
+    setIsLoading(false);
   }, []);
 
-  const fetchProducts = async () => {
-    try {
-      const response = await productsApi.listProducts({});
-      setProducts(response.data?.products || []);
-    } catch (error) {
-      console.error("Error fetching products:", error);
-      toast({
-        title: "Error",
-        description: "No se pudieron cargar los productos",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const filteredProducts = products
-    .filter((product) => {
-      // Only show published products
-      if (product.status !== 'published') return false;
-      
-      // Search filter
-      const matchesSearch =
-        product.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        product.description?.toLowerCase().includes(searchQuery.toLowerCase());
-      
-      // Category filter
-      const matchesCategory =
-        selectedCategory === "all" ||
-        product.categories?.some((cat) => cat.id === selectedCategory);
-      
-      // Supplier filter
-      const matchesSupplier =
-        selectedSupplier === "all" ||
-        product.supplier_id === selectedSupplier;
-      
-      return matchesSearch && matchesCategory && matchesSupplier;
-    })
-    .sort((a, b) => {
-      switch (sortBy) {
-        case "price-asc":
-          const priceA = a.variants[0]?.prices[0]?.amount || 0;
-          const priceB = b.variants[0]?.prices[0]?.amount || 0;
-          return priceA - priceB;
-        case "price-desc":
-          const priceA2 = a.variants[0]?.prices[0]?.amount || 0;
-          const priceB2 = b.variants[0]?.prices[0]?.amount || 0;
-          return priceB2 - priceA2;
-        case "name":
-        default:
-          return a.title.localeCompare(b.title);
-      }
-    });
-
-  const handleAddToCart = (product: Product) => {
-    const firstVariant = product.variants[0];
-    if (!firstVariant) {
-      toast({
-        title: "Error",
-        description: "Producto sin variantes disponibles",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    addItem({
-      productId: product.id,
-      name: product.title,
-      price: firstVariant.prices[0]?.amount || 0,
-      quantity: 1,
-      image: product.thumbnail,
-      variantId: firstVariant.id,
-    });
-    
-    toast({
-      title: "Producto agregado",
-      description: `${product.title} se agregó al carrito`,
-    });
-  };
-
   return (
-    <div className="space-y-6">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-blue-50 to-slate-100">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-          Catálogo de Productos
-        </h1>
-        <p className="text-gray-600 dark:text-gray-400 mt-2">
-          Explora y ordena productos de nuestros proveedores
-        </p>
-      </div>
-
-      {/* Search and Filters */}
-      <div className="space-y-4">
-        {/* Search Bar */}
-        <div className="relative max-w-md">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <Input
-            type="search"
-            placeholder="Buscar productos..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-
-        {/* Filters Row */}
-        <div className="flex gap-4 flex-wrap items-center">
-          <div className="flex items-center gap-2">
-            <Filter className="h-4 w-4 text-gray-500" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Filtros:
-            </span>
-          </div>
-          
-          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-            <SelectTrigger className="w-[220px]">
-              <SelectValue placeholder="Categoría" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todas las categorías</SelectItem>
-              {mockCategories.map((cat) => (
-                <SelectItem key={cat.id} value={cat.id}>
-                  {cat.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <Select value={selectedSupplier} onValueChange={setSelectedSupplier}>
-            <SelectTrigger className="w-[220px]">
-              <SelectValue placeholder="Proveedor" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">Todos los proveedores</SelectItem>
-              {mockSuppliers.map((supplier) => (
-                <SelectItem key={supplier.id} value={supplier.id}>
-                  {supplier.name}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-
-          <div className="h-6 w-px bg-gray-300 dark:bg-gray-600" />
-
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              Ordenar:
-            </span>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="name">Nombre (A-Z)</SelectItem>
-                <SelectItem value="price-asc">Precio: Menor a Mayor</SelectItem>
-                <SelectItem value="price-desc">Precio: Mayor a Menor</SelectItem>
-              </SelectContent>
-            </Select>
+      <div className="bg-white border-b shadow-sm">
+        <div className="max-w-7xl mx-auto px-4 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-4xl font-bold text-slate-900">Marketplace Carrefour</h1>
+              <p className="text-slate-600 mt-2">Encuentra todo lo que necesita tu tienda</p>
+            </div>
+            <Link
+              href="/marketplace/cart"
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+            >
+              <ShoppingCart className="w-5 h-5" />
+              <span className="font-medium">
+                Carrito {cart.length > 0 && `(${cart.length})`}
+              </span>
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Results count */}
-      {!loading && (
-        <div className="text-sm text-gray-600 dark:text-gray-400">
-          {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''} encontrado{filteredProducts.length !== 1 ? 's' : ''}
+      {/* Hero Section */}
+      <div className="max-w-7xl mx-auto px-4 py-12">
+        <div className="text-center mb-16">
+          <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            Explora nuestras categorías
+          </h2>
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            Selecciona una categoría para ver todos nuestros productos y hacer tu pedido
+          </p>
         </div>
-      )}
 
-      {/* Products Grid */}
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {[...Array(8)].map((_, i) => (
-            <Card key={i}>
-              <CardHeader>
-                <Skeleton className="h-48 w-full" />
-              </CardHeader>
-              <CardContent>
-                <Skeleton className="h-4 w-3/4 mb-2" />
-                <Skeleton className="h-4 w-1/2" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      ) : filteredProducts.length === 0 ? (
-        <Card className="p-12">
-          <div className="text-center">
-            <Package className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 dark:text-gray-400 text-lg mb-2">
-              {searchQuery || selectedCategory !== "all" || selectedSupplier !== "all"
-                ? "No se encontraron productos con los filtros seleccionados"
-                : "No hay productos disponibles"}
-            </p>
-            {(searchQuery || selectedCategory !== "all" || selectedSupplier !== "all") && (
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("all");
-                  setSelectedSupplier("all");
-                }}
-              >
-                Limpiar filtros
-              </Button>
-            )}
-          </div>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filteredProducts.map((product) => {
-            const firstVariant = product.variants[0];
-            const price = firstVariant?.prices[0]?.amount || 0;
-            const stock = firstVariant?.inventory_quantity || 0;
-            
+        {/* Categories Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-16">
+          {mockCategories.map((category) => {
+            const iconName = (category.icon || "Package") as keyof typeof ICON_MAP;
+            const Icon = ICON_MAP[iconName];
             return (
-              <Card key={product.id} className="flex flex-col hover:shadow-lg transition-shadow">
-                <CardHeader className="p-0">
-                  {product.thumbnail ? (
-                    <img
-                      src={product.thumbnail}
-                      alt={product.title}
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                  ) : (
-                    <div className="w-full h-48 bg-gray-200 dark:bg-gray-700 rounded-t-lg flex items-center justify-center">
-                      <Package className="h-12 w-12 text-gray-400" />
-                    </div>
-                  )}
-                </CardHeader>
-                <CardContent className="flex-1 p-4">
-                  <CardTitle className="text-lg mb-2 line-clamp-2">{product.title}</CardTitle>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2 mb-3">
-                    {product.description}
-                  </p>
-                  
-                  <div className="space-y-3">
-                    {/* Price */}
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-2xl font-bold text-blue-600">
-                        €{(price / 100).toFixed(2)}
-                      </span>
-                      {product.metadata?.units_per_pack && product.metadata.units_per_pack > 1 && (
-                        <span className="text-sm text-gray-500">
-                          / pack {product.metadata.units_per_pack}
-                        </span>
-                      )}
-                    </div>
-                    
-                    {/* Unit price */}
-                    {product.metadata?.units_per_pack && product.metadata.units_per_pack > 1 && (
-                      <p className="text-sm text-gray-500">
-                        (€{(price / 100 / product.metadata.units_per_pack).toFixed(2)} / unidad)
-                      </p>
+              <Link key={category.id} href={`/marketplace/shop?category=${category.id}`} className="block">
+                <Card className="overflow-hidden hover:shadow-xl transition-all transform hover:scale-105 cursor-pointer h-full">
+                  {/* Image Container */}
+                  <div className="relative h-48 bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden">
+                    {category.imageUrl ? (
+                      // eslint-disable-next-line @next/next/no-image-element
+                      <img
+                        src={category.imageUrl}
+                        alt={category.name}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <Package className="w-16 h-16 text-slate-400" />
+                      </div>
                     )}
-                    
-                    {/* Badges */}
-                    <div className="flex gap-2 flex-wrap">
-                      {product.supplier && (
-                        <Badge variant="outline" className="text-xs">
-                          {product.supplier.name}
-                        </Badge>
-                      )}
-                      <Badge
-                        variant={stock > 20 ? "default" : stock > 0 ? "secondary" : "destructive"}
-                        className={
-                          stock > 20
-                            ? "bg-green-100 text-green-800"
-                            : stock > 0
-                            ? "bg-yellow-100 text-yellow-800"
-                            : ""
-                        }
-                      >
-                        {stock > 20 ? "En Stock" : stock > 0 ? `Stock Bajo (${stock})` : "Sin Stock"}
-                      </Badge>
-                    </div>
-                    
-                    {/* Variants count */}
-                    {product.variants.length > 1 && (
-                      <p className="text-xs text-gray-500">
-                        {product.variants.length} variantes disponibles
-                      </p>
-                    )}
+                    {/* Overlay */}
+                    <div className="absolute inset-0 bg-black/30 hover:bg-black/50 transition" />
                   </div>
-                </CardContent>
-                <CardFooter className="p-4 pt-0 flex gap-2">
-                  <Link href={`/marketplace/products/${product.id}`} className="flex-1">
-                    <Button variant="outline" className="w-full">
-                      Ver Detalle
+
+                  <CardContent className="p-4">
+                    <div className="flex items-center gap-2 mb-2">
+                      {Icon}
+                      <h3 className="font-bold text-lg text-slate-900">{category.name}</h3>
+                    </div>
+                    {category.description && (
+                      <p className="text-sm text-slate-600 mb-3">{category.description}</p>
+                    )}
+                    <Button
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      size="sm"
+                    >
+                      Ver productos
                     </Button>
-                  </Link>
-                  <Button 
-                    onClick={() => handleAddToCart(product)} 
-                    className="flex-1"
-                    disabled={stock === 0}
-                  >
-                    <ShoppingCart className="h-4 w-4 mr-2" />
-                    {stock === 0 ? "Sin Stock" : "Agregar"}
-                  </Button>
-                </CardFooter>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             );
           })}
         </div>
-      )}
+
+        {/* CTA Section */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg p-12 text-center text-white">
+          <h3 className="text-3xl font-bold mb-4">¿No encuentras lo que buscas?</h3>
+          <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
+            Contacta con nuestro equipo de ventas para solicitar productos personalizados o consultar disponibilidad
+          </p>
+          <Button
+            size="lg"
+            className="bg-white text-blue-600 hover:bg-slate-100"
+          >
+            Contactar soporte
+          </Button>
+        </div>
+
+        {/* Features Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ShoppingCart className="w-8 h-8 text-blue-600" />
+            </div>
+            <h4 className="font-bold text-slate-900 mb-2">Compra fácil</h4>
+            <p className="text-slate-600">Interfaz intuitiva y proceso de compra simplificado</p>
+          </div>
+          <div className="text-center">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Package className="w-8 h-8 text-green-600" />
+            </div>
+            <h4 className="font-bold text-slate-900 mb-2">Entrega rápida</h4>
+            <p className="text-slate-600">Productos entregados en el menor tiempo posible</p>
+          </div>
+          <div className="text-center">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <ShoppingCart className="w-8 h-8 text-purple-600" />
+            </div>
+            <h4 className="font-bold text-slate-900 mb-2">Precios competitivos</h4>
+            <p className="text-slate-600">Las mejores ofertas para tu negocio</p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

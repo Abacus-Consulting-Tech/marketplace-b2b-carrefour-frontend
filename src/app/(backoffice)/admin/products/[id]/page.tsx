@@ -135,7 +135,7 @@ export default function ProductDetailPage() {
               <Warehouse className="h-8 w-8 text-purple-600" />
               <div>
                 <p className="text-2xl font-bold">{product.variants.length}</p>
-                <p className="text-sm text-gray-500">Variantes</p>
+                <p className="text-sm text-gray-500">Opciones</p>
               </div>
             </div>
           </CardContent>
@@ -145,7 +145,7 @@ export default function ProductDetailPage() {
       <Tabs defaultValue="info" className="space-y-4">
         <TabsList>
           <TabsTrigger value="info">Información</TabsTrigger>
-          <TabsTrigger value="variants">Variantes</TabsTrigger>
+          <TabsTrigger value="variants">Opciones</TabsTrigger>
           <TabsTrigger value="inventory">Inventario</TabsTrigger>
         </TabsList>
 
@@ -201,7 +201,7 @@ export default function ProductDetailPage() {
         <TabsContent value="variants">
           <Card>
             <CardHeader>
-              <CardTitle>Variantes ({product.variants.length})</CardTitle>
+              <CardTitle>Opciones ({product.variants.length})</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="space-y-3">

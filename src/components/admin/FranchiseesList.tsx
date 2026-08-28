@@ -333,11 +333,9 @@ export default function FranchiseesList() {
                           <div className="font-medium">
                             {franchisee.metadata?.company_name || `${franchisee.first_name} ${franchisee.last_name}`}
                           </div>
-                          {franchisee.metadata?.store_code && (
-                            <div className="text-xs text-muted-foreground">
-                              Código: {franchisee.metadata.store_code}
-                            </div>
-                          )}
+                          <div className="text-xs text-muted-foreground">
+                            {franchisee.shipping_addresses?.length || 0} tienda{franchisee.shipping_addresses?.length === 1 ? '' : 's'} registrada{franchisee.shipping_addresses?.length === 1 ? '' : 's'}
+                          </div>
                           {franchisee.metadata?.tax_id && (
                             <div className="text-xs text-muted-foreground">
                               CIF: {franchisee.metadata.tax_id}
@@ -366,7 +364,9 @@ export default function FranchiseesList() {
                             <div>
                               <div>{franchisee.shipping_addresses[0].city}</div>
                               <div className="text-xs text-muted-foreground">
-                                {franchisee.shipping_addresses[0].province}
+                                {franchisee.shipping_addresses.length > 1
+                                  ? `${franchisee.shipping_addresses.length} tiendas`
+                                  : franchisee.shipping_addresses[0].province}
                               </div>
                             </div>
                           </div>
