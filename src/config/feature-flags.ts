@@ -39,23 +39,23 @@ export const featureFlags = {
    * Module configurations
    * 
    * Each module can be independently configured to use mock or real data.
-   * Environment variables take precedence over default values.
+   * The mock branch hard-forces local mock data for runtime-sensitive modules.
    */
   modules: {
     auth: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_AUTH === 'true',
-      backendReady: true, // ✅ Medusa backend live
+      useMock: true,
+      backendReady: false,
       apiBaseUrl: '/api/auth',
-      notes: 'Medusa auth integrated - POST /auth/user/emailpass, GET /auth/session, DELETE /auth/session',
-      lastUpdated: '2026-08-21',
+      notes: 'Mock branch: auth is forced to local mock data regardless of .env.local overrides.',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
     
     pricing: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_PRICING !== 'false', // Default to true
-      backendReady: true, // ✅ Render DEV validated 2026-08-24
-      apiBaseUrl: '/admin/custom',
-      notes: 'Pricing API validated - GET /admin/custom/products/pending, PATCH /admin/custom/products/:id/pricing-approval, GET/PATCH /admin/custom/sellers/:id/markup',
-      lastUpdated: '2026-08-26',
+      useMock: true,
+      backendReady: false,
+      apiBaseUrl: '/api/products/pricing',
+      notes: 'Mock branch: product pricing approval uses local mock data.',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
     
     openings: {
@@ -67,19 +67,19 @@ export const featureFlags = {
     } satisfies ModuleConfig,
     
     products: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_PRODUCTS !== 'false', // Use env var, default to mock
+      useMock: true,
       backendReady: false,
       apiBaseUrl: '/api/products',
-      notes: 'Using mock mode until backend is ready',
-      lastUpdated: '2026-08-21',
+      notes: 'Mock branch: products use local mock data.',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
 
     suppliers: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_SUPPLIERS !== 'false', // Default to true
-      backendReady: true, // ✅ Render DEV validated 2026-08-24
-      apiBaseUrl: '/admin',
-      notes: 'Sellers API validated - GET /admin/sellers, GET /admin/custom/sellers, GET /vendor/sellers/me',
-      lastUpdated: '2026-08-26',
+      useMock: true,
+      backendReady: false,
+      apiBaseUrl: '/api/suppliers',
+      notes: 'Mock branch: suppliers use local mock data.',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
 
     categories: {
@@ -91,19 +91,19 @@ export const featureFlags = {
     } satisfies ModuleConfig,
 
     quotes: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_QUOTES !== 'false', // Default to true
-      backendReady: true, // ✅ Render DEV validated 2026-08-26
-      apiBaseUrl: '/quotes',
-      notes: 'Quotes API validated - GET /quotes, /admin/quotes, /seller/quotes, /seller/invitations (partial integration)',
-      lastUpdated: '2026-08-26',
+      useMock: true,
+      backendReady: false,
+      apiBaseUrl: '/api/quotes',
+      notes: 'Mock branch: quotes use local mock data.',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
 
     orders: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_ORDERS !== 'false', // Default to true
-      backendReady: true, // ✅ Render DEV validated 2026-08-26
-      apiBaseUrl: '/admin/orders',
-      notes: 'Orders API validated - GET /admin/orders, /admin/custom/orders/stats, /franchisee/orders, /vendor/orders (all integrated)',
-      lastUpdated: '2026-08-26',
+      useMock: true,
+      backendReady: false,
+      apiBaseUrl: '/api/supplier/orders',
+      notes: 'Mock branch: supplier and franchisee orders use local mock data.',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
 
     franchisees: {
@@ -115,19 +115,19 @@ export const featureFlags = {
     } satisfies ModuleConfig,
 
     catalog: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_CATALOG !== 'false', // Default to mock
+      useMock: true,
       backendReady: false,
       apiBaseUrl: '/store/products',
-      notes: 'Franchisee marketplace catalog - Uses Product Management mock data, aligned with Medusa Store API',
-      lastUpdated: '2026-08-24',
+      notes: 'Mock branch: franchisee catalog uses local mock data.',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
 
     checkout: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_CHECKOUT !== 'false', // Default to mock
+      useMock: true,
       backendReady: false,
       apiBaseUrl: '/store',
-      notes: 'Checkout and order creation - Mock mode until payment provider is configured',
-      lastUpdated: '2026-08-25',
+      notes: 'Mock branch: checkout and order creation use local mock data.',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
   } as const,
   
