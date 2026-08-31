@@ -3,51 +3,43 @@
  * 
  * Comprehensive documentation of all Medusa API endpoints used in the application.
  * 
- * 🌐 BACKEND INTEGRATION STATUS (Updated 2026-08-26 17:15 UTC):
- * ✅ Auth: 4 endpoints - REAL API (Render DEV) - VALIDATED ✨
- * ✅ Admin Orders: 8 endpoints - REAL API (Render DEV) - VALIDATED ✨
- * ✅ Supplier/Vendor Orders: 9 endpoints - REAL API (Render DEV) - VALIDATED ✨
- * ✅ Pricing Module: 6 endpoints - REAL API (Render DEV) - WORKFLOW VALIDATED ✨
- * ✅ Excel Import: 8 endpoints - REAL API (Render DEV) - INTEGRATED ✨
- * ✅ Sellers: 5 endpoints - REAL API (Render DEV) - VALIDATED ✨
- * ✅ Seller Markup: 2 endpoints - REAL API (Render DEV) - WORKFLOW VALIDATED ✨
- * ✅ Quotes: 6 endpoints - REAL API (Render DEV) - INTEGRATED ✨
- * 🎭 Openings: 24 endpoints - MOCK (backend pending)
- * 🎭 Products: 8 endpoints - MOCK (backend pending)
- * 🎭 Checkout: 15 endpoints - MOCK (backend pending)
+ * 🌐 BACKEND INTEGRATION STATUS (Updated 2026-08-31 13:35 UTC):
+ * ✅ Auth: REAL API - VALIDATED
+ * ✅ Admin Orders: REAL API - VALIDATED
+ * ✅ Supplier/Vendor Orders: REAL API - VALIDATED
+ * ⚠️ Pricing Module: REAL API with temporary frontend fallback; `GET /seller/catalog-products` remains misaligned in DEV
+ * ✅ Excel Import: REAL API - INTEGRATED
+ * ✅ Sellers: REAL API - VALIDATED
+ * ✅ Quotes: REAL API - VALIDATED
+ * ⚠️ Franchisees: backend route responds with RBAC `403`; frontend kept in mock for DEV
+ * ⚠️ Openings: backend route `/openings/projects` responds `404`; frontend kept in mock for DEV
+ * ⚠️ Products/Catalog: real endpoints respond but are currently empty in DEV; frontend kept in mock for DEV catalog/product UI
+ * ⚠️ Checkout: kept in mock because Store API catalog is empty and cart flow cannot be validated end-to-end
  * 
- * 🎉 COMPLETE WORKFLOW VALIDATED (2026-08-26):
- * 1. Vendor proposes product → ✅ 201 Created
- * 2. Product appears in admin pending list → ✅ 200 OK
- * 3. Admin manages seller markup (GET + PATCH) → ✅ 200 OK
- * 4. Vendor tracks proposals → ✅ 200 OK
- * 5. Full audit trail validated (proposed_by, updated_by, previous values)
+ * 🎯 CURRENT DEV DECISION (2026-08-31):
+ * - Keep REAL in `auth`, `suppliers`, `pricing`, `orders`, `quotes`
+ * - Keep MOCK in `openings`, `franchisees`, `products`, `catalog`, `checkout`, `categories`
+ * - Supplier product list uses temporary fallback from `/seller/catalog-products` to `/vendor/custom/products`
  * 
- * Endpoint Summary (Total: 165+ endpoints):
- * - Auth: 4 endpoints (Login Admin/Vendor, Logout, Session) ✅ REAL
- * - Admin Orders: 8 endpoints (List, Detail, Stats, Status, Priority, Refund, Incidents, Notes) ✅ REAL
- * - Supplier Orders: 9 endpoints (CRUD, Stats, Accept/Reject, Tracking, Incidents) ✅ REAL
- * - Pricing: 6 endpoints (Pending Products, Approval, Markup, History) ✅ REAL ✨ WORKFLOW TESTED
- * - Seller Markup: 2 endpoints (GET markup, PATCH markup) ✅ REAL ✨ WORKFLOW TESTED
- * - Excel Import: 8 endpoints (Template, Upload, List Jobs, Job Details) ✅ REAL
- * - Admin: 5 endpoints (Orders, Users, Sellers) ✅ REAL
- * - Quotes: 6 endpoints (List, Detail, Award, Reject, Sign, Stats) ✅ REAL
- * - Franchisees: 9 endpoints (Medusa Customers + Addresses CRUD)
- * - Franchisee Orders: 4 endpoints (List, Detail, Stats, Cancel) ✅ REAL
- * - Openings: 24 endpoints (Projects, Categories, Documents, Invitations, Quotes, Financing, Status)
- * - Products (Admin): 8 endpoints (CRUD, Stats, Bulk Operations, Inventory)
- * - Catalog (Franchisee): 2 endpoints (Product List + Detail for Marketplace)
- * - Checkout: 15 endpoints (Cart, Address, Shipping, Payment Sessions, Complete, Order)
- * - Store: 11 endpoints (Regions, Cart Operations, Shipping, Customer)
- * - Vendor: 5 endpoints (Products, Bulk Upload, Markup) ✅ REAL ✨ WORKFLOW TESTED
- * - Supplier Products: 6 endpoints (CRUD, Bulk Upload, Images)
- * - Franchisee Management: 6 endpoints (CRUD, Activate/Deactivate, Stats)
- * - Quotes (Franchisee): 6 endpoints (List, Detail, Award, Reject, Sign, Stats) ✅ REAL
- * - Quotes (Supplier): 7 endpoints (Invitations, Create, Update, Submit, Decline, List, Detail) ✅ REAL
+ * Endpoint Summary (Total: 137 endpoints):
+ * - Auth: 5 endpoints (login unificado, fallbacks legacy, sesión) ✅ REAL
+ * - Admin: 1 endpoint (usuario actual) ✅ REAL
+ * - Suppliers: 3 endpoints (sellers admin + vendor actual) ✅ REAL
+ * - Franchisees: 10 endpoints (customers admin + direcciones + `store/customers/me`) ⚠️ MOCK EN DEV
+ * - Openings: 24 endpoints (projects, categories, documents, invitations, quotes, financing, status) ⚠️ MOCK EN DEV
+ * - Pricing + Excel Import: 20 endpoints (pending products, markups, seller catalog, imports) ✅ REAL CON FALLBACK TEMPORAL
+ * - Products: 8 endpoints (CRUD admin, stats, bulk operations, inventory) ⚠️ MOCK EN DEV
+ * - Catalog: 2 endpoints (listado y detalle marketplace) ⚠️ MOCK EN DEV
+ * - Store: 1 endpoint (regions) ⚠️ SIN VALIDAR
+ * - Cart: 6 endpoints (cart operations + shipping options) ⚠️ SIN VALIDAR
+ * - Checkout: 15 endpoints (address, shipping, payment, complete, order) ⚠️ MOCK EN DEV
+ * - Orders: 22 endpoints (admin, franchisee y supplier/vendor) ✅ REAL
+ * - Quotes: 14 endpoints (franchisee + supplier) ✅ REAL
+ * - Franchisee Management: 6 endpoints (CRUD, status, stats) ⚠️ SIN VALIDAR
  * 
  * Backend: https://marketplace-b2b-backend-dev.onrender.com
- * Status: ✅ PRODUCTION-READY (39 endpoints tested & validated)
- * Confidence: 🟢 HIGH (Complete workflow validation completed)
+ * Status: ⚠️ HYBRID DEV MODE (real where validated, mock where backend remains broken/incomplete)
+ * Confidence: 🟡 MEDIUM-HIGH (targeted real smoke validation completed 2026-08-31)
  * 
  * Features:
  * - Filter by module
@@ -205,9 +197,9 @@ export default function DevToolsPage() {
         path: '/admin/customers',
         method: 'POST',
         module: 'franchisees',
-        description: 'Crear franquiciado',
+        description: 'Crear franquiciado (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/customers'
       },
@@ -215,9 +207,9 @@ export default function DevToolsPage() {
         path: '/admin/customers/:id',
         method: 'POST',
         module: 'franchisees',
-        description: 'Actualizar franquiciado',
+        description: 'Actualizar franquiciado (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/customers/:id'
       },
@@ -225,9 +217,9 @@ export default function DevToolsPage() {
         path: '/admin/customers/:id',
         method: 'DELETE',
         module: 'franchisees',
-        description: 'Eliminar franquiciado',
+        description: 'Eliminar franquiciado (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/customers/:id'
       },
@@ -235,9 +227,9 @@ export default function DevToolsPage() {
         path: '/admin/customers/:id/addresses',
         method: 'GET',
         module: 'franchisees',
-        description: 'Listar direcciones de franquiciado',
+        description: 'Listar direcciones de franquiciado (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/customers/:id/addresses'
       },
@@ -245,9 +237,9 @@ export default function DevToolsPage() {
         path: '/admin/customers/:id/addresses',
         method: 'POST',
         module: 'franchisees',
-        description: 'Añadir dirección a franquiciado',
+        description: 'Añadir dirección a franquiciado (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/customers/:id/addresses'
       },
@@ -255,9 +247,9 @@ export default function DevToolsPage() {
         path: '/admin/customers/:id/addresses/:addressId',
         method: 'PATCH',
         module: 'franchisees',
-        description: 'Actualizar dirección',
+        description: 'Actualizar dirección (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/customers/:id/addresses/:addressId'
       },
@@ -265,9 +257,9 @@ export default function DevToolsPage() {
         path: '/admin/customers/:id/addresses/:addressId',
         method: 'DELETE',
         module: 'franchisees',
-        description: 'Eliminar dirección',
+        description: 'Eliminar dirección (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/customers/:id/addresses/:addressId'
       },
@@ -279,9 +271,9 @@ export default function DevToolsPage() {
         path: '/admin/openings/projects',
         method: 'GET',
         module: 'openings',
-        description: 'Listar proyectos de aperturas',
+        description: 'Listar proyectos de aperturas (frontend mantenido en mock; backend no validado en esta ronda)',
         usesRealAPI: !featureFlags.shouldUseMock('openings'),
-        status: 'working',
+        status: 'broken',
         requiresAuth: true,
         medusaEndpoint: '/admin/openings/projects'
       },
@@ -289,9 +281,9 @@ export default function DevToolsPage() {
         path: '/admin/openings/projects/:id',
         method: 'GET',
         module: 'openings',
-        description: 'Detalle de proyecto de apertura',
+        description: 'Detalle de proyecto de apertura (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('openings'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/openings/projects/:id'
       },
@@ -299,9 +291,9 @@ export default function DevToolsPage() {
         path: '/admin/openings/projects',
         method: 'POST',
         module: 'openings',
-        description: 'Crear proyecto de apertura',
+        description: 'Crear proyecto de apertura (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('openings'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/openings/projects'
       },
@@ -309,9 +301,9 @@ export default function DevToolsPage() {
         path: '/admin/openings/projects/:id',
         method: 'PATCH',
         module: 'openings',
-        description: 'Actualizar proyecto de apertura',
+        description: 'Actualizar proyecto de apertura (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('openings'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/openings/projects/:id'
       },
@@ -319,9 +311,9 @@ export default function DevToolsPage() {
         path: '/admin/openings/projects/:id',
         method: 'DELETE',
         module: 'openings',
-        description: 'Eliminar proyecto',
+        description: 'Eliminar proyecto (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('openings'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/openings/projects/:id'
       },
@@ -329,9 +321,9 @@ export default function DevToolsPage() {
         path: '/admin/openings/projects/:id/categories',
         method: 'GET',
         module: 'openings',
-        description: 'Categorías del proyecto',
+        description: 'Categorías del proyecto (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('openings'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/openings/projects/:id/categories'
       },
@@ -339,9 +331,9 @@ export default function DevToolsPage() {
         path: '/admin/openings/projects/:id/categories',
         method: 'POST',
         module: 'openings',
-        description: 'Añadir categoría al proyecto',
+        description: 'Añadir categoría al proyecto (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('openings'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/openings/projects/:id/categories'
       },
@@ -349,9 +341,9 @@ export default function DevToolsPage() {
         path: '/admin/openings/projects/:id/quotes',
         method: 'GET',
         module: 'openings',
-        description: 'Presupuestos del proyecto',
+        description: 'Presupuestos del proyecto (no validado en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('openings'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/openings/projects/:id/quotes'
       },
@@ -699,9 +691,9 @@ export default function DevToolsPage() {
         path: '/store/products',
         method: 'GET',
         module: 'catalog',
-        description: 'Listar productos del catálogo (franchisee)',
+        description: 'Listar productos del catálogo (franchisee) - 200 en DEV pero sin productos',
         usesRealAPI: !featureFlags.shouldUseMock('catalog'),
-        status: 'working',
+        status: 'broken',
         requiresAuth: false,
         medusaEndpoint: '/store/products'
       },
@@ -797,9 +789,9 @@ export default function DevToolsPage() {
         path: '/store/carts/:id',
         method: 'POST',
         module: 'checkout',
-        description: 'Actualizar carrito con dirección de envío/facturación',
+        description: 'Actualizar carrito con dirección de envío/facturación (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id'
       },
@@ -807,9 +799,9 @@ export default function DevToolsPage() {
         path: '/store/carts/:id/shipping-methods',
         method: 'POST',
         module: 'checkout',
-        description: 'Añadir método de envío al carrito',
+        description: 'Añadir método de envío al carrito (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/shipping-methods'
       },
@@ -817,9 +809,9 @@ export default function DevToolsPage() {
         path: '/store/carts/:id/payment-collections',
         method: 'POST',
         module: 'checkout',
-        description: 'Crear colección de pago (Stripe)',
+        description: 'Crear colección de pago (Stripe) (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/payment-collections'
       },
@@ -827,9 +819,9 @@ export default function DevToolsPage() {
         path: '/store/carts/:id/complete',
         method: 'POST',
         module: 'checkout',
-        description: 'Completar carrito y crear pedido',
+        description: 'Completar carrito y crear pedido (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/complete'
       },
@@ -837,9 +829,9 @@ export default function DevToolsPage() {
         path: '/store/orders/:id',
         method: 'GET',
         module: 'checkout',
-        description: 'Obtener detalles del pedido creado',
+        description: 'Obtener detalles del pedido creado (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/orders/:id'
       },
@@ -863,7 +855,7 @@ export default function DevToolsPage() {
         module: 'suppliers',
         description: 'Obtener seller actual (vendor)',
         usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
-        status: 'untested',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/vendor/sellers/me'
       },
@@ -871,9 +863,9 @@ export default function DevToolsPage() {
         path: '/seller/catalog-products',
         method: 'GET',
         module: 'pricing',
-        description: 'Mis productos propuestos',
+        description: 'Mis productos propuestos (desalineado en DEV: devuelve vacio mientras vendor/custom/products devuelve datos)',
         usesRealAPI: !featureFlags.shouldUseMock('pricing'),
-        status: 'untested',
+        status: 'broken',
         requiresAuth: true,
         medusaEndpoint: '/seller/catalog-products'
       },
@@ -1379,79 +1371,15 @@ export default function DevToolsPage() {
       },
 
       // ========================================================================
-      // SUPPLIER PRODUCTS MODULE (Vendor Product Management)
-      // ========================================================================
-      {
-        path: '/vendor/products',
-        method: 'GET',
-        module: 'supplier-products',
-        description: 'Listar mis productos (proveedor)',
-        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
-        status: 'working',
-        requiresAuth: true,
-        medusaEndpoint: '/vendor/products'
-      },
-      {
-        path: '/vendor/products',
-        method: 'POST',
-        module: 'supplier-products',
-        description: 'Crear nuevo producto',
-        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
-        status: 'working',
-        requiresAuth: true,
-        medusaEndpoint: '/vendor/products'
-      },
-      {
-        path: '/vendor/products/:id',
-        method: 'PATCH',
-        module: 'supplier-products',
-        description: 'Actualizar producto',
-        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
-        status: 'working',
-        requiresAuth: true,
-        medusaEndpoint: '/vendor/products/:id'
-      },
-      {
-        path: '/vendor/products/:id',
-        method: 'DELETE',
-        module: 'supplier-products',
-        description: 'Eliminar producto',
-        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
-        status: 'working',
-        requiresAuth: true,
-        medusaEndpoint: '/vendor/products/:id'
-      },
-      {
-        path: '/vendor/products/bulk-upload',
-        method: 'POST',
-        module: 'supplier-products',
-        description: 'Carga masiva de productos (CSV/Excel)',
-        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
-        status: 'working',
-        requiresAuth: true,
-        medusaEndpoint: '/vendor/products/bulk-upload'
-      },
-      {
-        path: '/vendor/products/:id/images',
-        method: 'POST',
-        module: 'supplier-products',
-        description: 'Subir imágenes de producto',
-        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
-        status: 'working',
-        requiresAuth: true,
-        medusaEndpoint: '/vendor/products/:id/images'
-      },
-
-      // ========================================================================
       // FRANCHISEE MANAGEMENT MODULE (Admin Franchisee CRUD)
       // ========================================================================
       {
         path: '/admin/franchisees',
         method: 'GET',
         module: 'franchisee-management',
-        description: 'Listar franquiciados',
+        description: 'Listar franquiciados (ruta legacy/no validada en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/franchisees'
       },
@@ -1459,9 +1387,9 @@ export default function DevToolsPage() {
         path: '/admin/franchisees/:id',
         method: 'GET',
         module: 'franchisee-management',
-        description: 'Detalle de franquiciado',
+        description: 'Detalle de franquiciado (ruta legacy/no validada en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/franchisees/:id'
       },
@@ -1469,9 +1397,9 @@ export default function DevToolsPage() {
         path: '/admin/franchisees',
         method: 'POST',
         module: 'franchisee-management',
-        description: 'Crear franquiciado',
+        description: 'Crear franquiciado (ruta legacy/no validada en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/franchisees'
       },
@@ -1479,9 +1407,9 @@ export default function DevToolsPage() {
         path: '/admin/franchisees/:id',
         method: 'PATCH',
         module: 'franchisee-management',
-        description: 'Actualizar franquiciado',
+        description: 'Actualizar franquiciado (ruta legacy/no validada en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/franchisees/:id'
       },
@@ -1489,9 +1417,9 @@ export default function DevToolsPage() {
         path: '/admin/franchisees/:id/status',
         method: 'PATCH',
         module: 'franchisee-management',
-        description: 'Activar/desactivar franquiciado',
+        description: 'Activar/desactivar franquiciado (ruta legacy/no validada en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/franchisees/:id/status'
       },
@@ -1499,9 +1427,9 @@ export default function DevToolsPage() {
         path: '/admin/franchisees/:id/stats',
         method: 'GET',
         module: 'franchisee-management',
-        description: 'Estadísticas del franquiciado',
+        description: 'Estadísticas del franquiciado (ruta legacy/no validada en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/franchisees/:id/stats'
       },
@@ -1513,9 +1441,9 @@ export default function DevToolsPage() {
         path: '/store/carts/:id/shipping-address',
         method: 'POST',
         module: 'checkout',
-        description: 'Actualizar dirección de envío',
+        description: 'Actualizar dirección de envío (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/shipping-address'
       },
@@ -1523,9 +1451,9 @@ export default function DevToolsPage() {
         path: '/store/carts/:id/billing-address',
         method: 'POST',
         module: 'checkout',
-        description: 'Actualizar dirección de facturación',
+        description: 'Actualizar dirección de facturación (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/billing-address'
       },
@@ -1533,9 +1461,9 @@ export default function DevToolsPage() {
         path: '/store/carts/:id/payment-sessions',
         method: 'POST',
         module: 'checkout',
-        description: 'Iniciar sesión de pago',
+        description: 'Iniciar sesión de pago (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/payment-sessions'
       },
@@ -1543,9 +1471,9 @@ export default function DevToolsPage() {
         path: '/store/carts/:id/payment-session',
         method: 'POST',
         module: 'checkout',
-        description: 'Seleccionar método de pago',
+        description: 'Seleccionar método de pago (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/payment-session'
       },
@@ -1553,9 +1481,9 @@ export default function DevToolsPage() {
         path: '/store/shipping-options/:cartId',
         method: 'GET',
         module: 'checkout',
-        description: 'Obtener opciones de envío disponibles',
+        description: 'Obtener opciones de envío disponibles (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/shipping-options/:cartId'
       },
@@ -1563,9 +1491,9 @@ export default function DevToolsPage() {
         path: '/store/payment-collections/:id',
         method: 'GET',
         module: 'checkout',
-        description: 'Obtener estado de pago',
+        description: 'Obtener estado de pago (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/payment-collections/:id'
       },
@@ -1573,9 +1501,9 @@ export default function DevToolsPage() {
         path: '/store/carts/:id/line-items',
         method: 'POST',
         module: 'checkout',
-        description: 'Añadir item al carrito',
+        description: 'Añadir item al carrito (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/line-items'
       },
@@ -1583,9 +1511,9 @@ export default function DevToolsPage() {
         path: '/store/carts/:id/line-items/:lineId',
         method: 'PATCH',
         module: 'checkout',
-        description: 'Actualizar cantidad de item',
+        description: 'Actualizar cantidad de item (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/line-items/:lineId'
       },
@@ -1593,9 +1521,9 @@ export default function DevToolsPage() {
         path: '/store/carts/:id/line-items/:lineId',
         method: 'DELETE',
         module: 'checkout',
-        description: 'Eliminar item del carrito',
+        description: 'Eliminar item del carrito (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/line-items/:lineId'
       },
@@ -1603,9 +1531,9 @@ export default function DevToolsPage() {
         path: '/store/carts/:id/discounts/:code',
         method: 'POST',
         module: 'checkout',
-        description: 'Aplicar código de descuento',
+        description: 'Aplicar código de descuento (no validado end-to-end en DEV)',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
-        status: 'working',
+        status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/discounts/:code'
       },
@@ -1623,7 +1551,6 @@ export default function DevToolsPage() {
     'openings',
     'pricing',
     'products',
-    'supplier-products',
     'catalog',
     'checkout',
     'suppliers',
@@ -1703,13 +1630,13 @@ export default function DevToolsPage() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardDescription>Real API</CardDescription>
+            <CardDescription>Configurados en Real API</CardDescription>
             <CardTitle className="text-3xl text-green-600">{stats.realAPI}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex gap-2 text-xs text-muted-foreground">
               <Cloud className="h-4 w-4" />
-              <span>Conectado al backend</span>
+              <span>Apuntan al backend por feature flag</span>
             </div>
           </CardContent>
         </Card>
@@ -1739,11 +1666,31 @@ export default function DevToolsPage() {
           <CardContent>
             <div className="flex gap-2 text-xs text-muted-foreground">
               <Settings className="h-4 w-4" />
-              <span>Work / Broken / Test</span>
+              <span>working / broken / untested</span>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-base">Cómo leer esta página</CardTitle>
+          <CardDescription>
+            `Real API` no significa que el endpoint esté validado o sano.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="text-sm text-muted-foreground space-y-1">
+          <p>
+            `Real API` solo indica que el frontend está configurado para llamar al backend real mediante feature flags.
+          </p>
+          <p>
+            El estado real del endpoint se refleja en `working`, `broken` o `untested`.
+          </p>
+          <p>
+            En el modo híbrido actual de DEV, varios módulos siguen en real pero algunos endpoints están vacíos o rotos en backend.
+          </p>
+        </CardContent>
+      </Card>
 
       <Tabs defaultValue="endpoints" className="space-y-4">
         <TabsList>
@@ -1773,7 +1720,7 @@ export default function DevToolsPage() {
             <CardHeader>
               <CardTitle>Endpoints de Medusa API</CardTitle>
               <CardDescription>
-                {filteredEndpoints.length} endpoints en el módulo &quot;{selectedModule}&quot;
+                {filteredEndpoints.length} endpoints en el módulo &quot;{selectedModule}&quot;. Revisa `status` para saber si funcionan realmente.
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -1806,7 +1753,7 @@ export default function DevToolsPage() {
                       {endpoint.usesRealAPI ? (
                         <Badge className="bg-green-500">
                           <Cloud className="h-3 w-3 mr-1" />
-                          Real API
+                          Real API Config
                         </Badge>
                       ) : (
                         <Badge className="bg-blue-500">

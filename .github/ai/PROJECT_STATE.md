@@ -1,6 +1,6 @@
 # PROJECT STATE
 
-**Updated**: 2026-08-28
+**Updated**: 2026-08-31
 **Classification**: 🟡 SEMI-STABLE (update weekly or on module status change, NOT per endpoint)
 **Syncs FROM**: `API_STATUS.md` (every Friday 4 PM)
 **Hierarchy**: See `.github/ai/DOCUMENTATION_HIERARCHY.md` for official data flow
@@ -70,6 +70,7 @@ Three user roles in separate app sections:
 | **Pricing** | Product approval, markup | ✅ | ✅ Ready |
 | **Suppliers** | Vendor management | ✅ | ✅ Ready |
 | **Products** | Catalog CRUD, variants | ✅ | 🟡 Mock |
+| **Catalog** | Marketplace browsing for franchisees | ✅ | 🟡 Mock |
 | **Openings** | Store projects, documents | ✅ | 🟡 Mock |
 | **Orders** | Multi-role views, fulfillment | ✅ | ✅ Ready |
 | **Quotes** | Quotations, signatures | ✅ | ✅ Ready |
@@ -101,19 +102,20 @@ Three user roles in separate app sections:
 ## Current API Status
 
 See `API_STATUS.md` for detailed endpoint list. Summary:
-- **Ready (Medusa)**: Auth (4), Pricing (8), Suppliers (7), Excel Import (8), Orders (17), Quotes (13) = **57 endpoints**
-- **Partial**: Franchisees (9 endpoints, 2 GET broken with RBAC issue)
-- **Mock**: Openings (24), Products (8), Checkout (15), Categories (4) = **51+ endpoints**
+- **Stable for current DEV UI**: `auth`, `suppliers`, `pricing` (con fallback temporal en seller catalog), `orders`, `quotes`
+- **Partial in backend but kept mock in DEV**: `franchisees` (`/admin/customers*` GET devuelve `403`)
+- **Mock in DEV**: `openings` (`/openings/projects` devuelve `404`), `products`, `catalog`, `checkout`, `categories`
+- **Source inventory snapshot**: 137 endpoints total, 76 `working`, 6 `broken`, 55 `untested`
 
 ---
 
 ## Current Priorities
 
 **Near-term:**
-- Quote workflow integration (statistics, notifications)
-- Supplier permissions & RBAC
-- Checkout flow (Stripe PaymentIntents, shipping, address)
-- Franchisee dashboard (stats, KPIs)
+- Backend alignment for `seller/catalog-products` so the supplier fallback can be removed
+- RBAC fix for `/admin/customers*` to move franchisees out of mock in DEV
+- Backend availability for `/openings/projects` and related openings flows
+- Store catalog data quality to unlock real cart/checkout validation end-to-end
 
 **Blocking issues (6 decisions needed):**
 - Stripe Billing (annual subscriptions)
@@ -131,9 +133,18 @@ See `API_STATUS.md` for detailed endpoint list. Summary:
   - Impact: Cannot list/fetch franchisees directly; using mock data as workaround
   - Workaround: Feature flag `franchisees.useMock = true` (enabled by default)
   - Create/Update/Delete operations work normally
+
+- **Supplier Catalog Mismatch**: `/seller/catalog-products` no devuelve datos utilizables en DEV
+  - Impact: `/supplier/products` necesita fallback temporal a `/vendor/custom/products`
+  - Workaround: Mantener el fallback frontend hasta alinear el backend
+
+- **Openings Module (🟡 Mock)**: `/openings/projects` responde 404 en DEV
+  - Impact: UI de openings sigue en mock para no romper navegación y detalle
   
 - **RBAC Permissions**: `/admin/customers` (GET) broken on Medusa backend
   
+- **Checkout / Store Catalog**: Store API no devuelve hoy catálogo utilizable para validar carrito y checkout real
+
 - **Stripe**: JS integrated but PaymentIntents flow not fully tested
 
 - **Type Contracts**: Backend responses may not match frontend interfaces; verify after switching from mock to real per module

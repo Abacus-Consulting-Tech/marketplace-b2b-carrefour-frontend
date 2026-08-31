@@ -10,15 +10,39 @@ export interface ProtectedRouteProps {
   allowedRoles?: ("admin" | "franchisee" | "supplier")[];
 }
 
+function getRoleRedirectPath(role: ProtectedRouteProps["requiredRole"]) {
+  if (role === "admin") {
+    return "/admin/dashboard";
+  }
+
+  if (role === "supplier") {
+    return "/supplier/dashboard";
+  }
+
+  return "/marketplace";
+}
+
 export function ProtectedRoute({ children, requiredRole, allowedRoles }: ProtectedRouteProps) {
   const router = useRouter();
   const { isAuthenticated, user, _hasHydrated } = useAuthStore();
+  const hasRoleMismatch = Boolean(user && requiredRole && user.role !== requiredRole);
+  const hasDisallowedRole = Boolean(user && allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user.role));
 
   useEffect(() => {
     if (_hasHydrated && !isAuthenticated) {
       router.replace("/login");
     }
   }, [_hasHydrated, isAuthenticated, router]);
+
+  useEffect(() => {
+    if (!_hasHydrated || !isAuthenticated || !user) {
+      return;
+    }
+
+    if (hasRoleMismatch || hasDisallowedRole) {
+      router.replace(getRoleRedirectPath(user.role));
+    }
+  }, [_hasHydrated, hasDisallowedRole, hasRoleMismatch, isAuthenticated, router, user]);
 
   if (!_hasHydrated) {
     return (
@@ -32,25 +56,7 @@ export function ProtectedRoute({ children, requiredRole, allowedRoles }: Protect
     return null;
   }
 
-  if (requiredRole && user.role !== requiredRole) {
-    if (user.role === "admin") {
-      router.replace("/admin/dashboard");
-    } else if (user.role === "supplier") {
-      router.replace("/supplier/dashboard");
-    } else {
-      router.replace("/marketplace");
-    }
-    return null;
-  }
-
-  if (allowedRoles && allowedRoles.length > 0 && !allowedRoles.includes(user.role)) {
-    if (user.role === "admin") {
-      router.replace("/admin/dashboard");
-    } else if (user.role === "supplier") {
-      router.replace("/supplier/dashboard");
-    } else {
-      router.replace("/marketplace");
-    }
+  if (hasRoleMismatch || hasDisallowedRole) {
     return null;
   }
 

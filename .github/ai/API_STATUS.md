@@ -1,16 +1,16 @@
 # API STATUS
 
-**Updated**: 2026-08-28 (from dev-tools)
+**Updated**: 2026-08-31 (from dev-tools)
 **Classification**: 🟢 VOLATILE (update every 3-5 endpoints or weekly)
 **Source of Truth**: `src/app/(backoffice)/admin/dev-tools/page.tsx` (EndpointInfo array)
 **Hierarchy**: See `.github/ai/DOCUMENTATION_HIERARCHY.md` for official data flow
 **Backend**: https://marketplace-b2b-backend-dev.onrender.com
-**Total Real Endpoints**: 66 (57 fully working, 9 partial with RBAC issue)
-**Total Mock Endpoints**: 74+
-**Status**: 🟡 PARTIALLY PRODUCTION-READY
-  - ✅ 57 endpoints ready (Real API, fully validated)
-  - ⚠️ 9 endpoints partial (Franchisees, RBAC 403 issue)
-  - 🎭 51+ endpoints mock (Backend pending, not production-ready)
+**Total Endpoint Inventory**: 137
+**Inventory Status**: 76 working, 6 broken, 55 untested
+**Status**: ⚠️ HYBRID DEV MODE
+  - 🌐 Real en DEV: `auth`, `suppliers`, `pricing`, `orders`, `quotes`
+  - 🎭 Mock en DEV: `openings`, `franchisees`, `products`, `catalog`, `checkout`, `categories`
+  - ℹ️ `Real API Config` en `dev-tools` significa "apunta al backend", no "validado"
 
 ---
 
@@ -43,129 +43,116 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 
 ---
 
-## Real API - Partially Ready (✅/⚠️)
+## Validated Or Usable In DEV
 
-57 endpoints working, 9 with known issues (Franchisees RBAC)
-
-### Auth (4 endpoints)
-- `POST /auth/user/emailpass` — Login admin/franchisee (working)
-- `POST /auth/member/emailpass` — Login supplier/vendor (working)
-- `GET /auth/session` — Get current session (untested)
+### Auth (5 endpoints)
+- `POST /auth/login` — Login unificado MVP (working)
+- `POST /auth/user/emailpass` — Fallback admin/franchisee (working)
+- `POST /auth/member/emailpass` — Fallback supplier/vendor (working)
+- `GET /auth/session` — Sesión actual (untested)
 - `DELETE /auth/session` — Logout (untested)
+- **Status**: ✅ WORKING para el flujo actual de login; sesión/logout pendientes de validación explícita
 
-### Orders Module (17 endpoints)
-- Admin Orders (8): List, Detail, Stats, Status, Priority, Refund, Incidents, Notes
-- Supplier Orders (9): CRUD, Stats, Accept/Reject, Tracking, Incidents
-- **Status**: ✅ WORKING — Complete workflow validated 2026-08-26
+### Suppliers (3 endpoints)
+- `GET /admin/sellers` — Listado de sellers (working)
+- `GET /admin/sellers/:id` — Detalle de seller (working)
+- `GET /vendor/sellers/me` — Seller actual (working)
+- **Status**: ✅ WORKING — Validado en DEV
 
-### Pricing (8 endpoints)
-- `GET /admin/custom/products/pending` — Pending product approvals (working)
-- `PATCH /admin/custom/products/:id/pricing-approval` — Approve/reject (working)
-- `GET /admin/custom/sellers/:id/markup` — Get seller markup (working)
-- `PATCH /admin/custom/sellers/:id/markup` — Update seller markup (working)
-- Plus: History, approval queue, bulk operations
-- **Status**: ✅ WORKING — Workflow tested 2026-08-26
+### Pricing + Excel Import (20 endpoints)
+- Cola de aprobaciones, markups, propuestas de producto y 8 endpoints de importación Excel
+- `GET /seller/catalog-products` — **BROKEN** en DEV: responde sin los datos esperados para seller catalog
+- Fallback temporal en frontend: `/seller/catalog-products` → `/vendor/custom/products` cuando el catálogo seller llega vacío
+- **Status**: ⚠️ USABLE — Flujo principal estable con fallback temporal mientras backend alinea seller catalog
 
-### Sellers (7 endpoints)
-- `GET /admin/sellers` — List sellers (working)
-- `GET /admin/sellers/:id` — Seller detail (working)
-- `GET /admin/custom/sellers` — Custom seller info (working)
-- `GET /vendor/sellers/me` — Current vendor info (working)
-- Plus: CRUD operations, markup management
-- **Status**: ✅ WORKING — Validated 2026-08-26
+### Orders (22 endpoints)
+- Incluye superficies de admin, franchisee y supplier/vendor
+- `GET /admin/orders` y proxies consumidos por la UI validados
+- `GET /admin/orders/stats` — **BROKEN** en el inventario actual
+- `/vendor/orders/:id/incidents` — endpoints todavía sin validar
+- **Status**: ✅ WORKING para los flujos hoy consumidos por la UI
 
-### Excel Import (8 endpoints)
-- Admin: Template download, Upload, List jobs, Job details
-- Vendor: Template download, Upload, List jobs, Job details
-- **Status**: ✅ WORKING — Integrated 2026-08-26
-
-### Quotes (13 endpoints)
-- Franchisee Quotes (6): List, Detail, Award, Reject, Sign, Stats
-- Supplier Quotes (7): Invitations, Create, Update, Submit, Decline, List, Detail
-- **Status**: ✅ WORKING — Integrated 2026-08-26
-
-### Franchisees (9 endpoints)
-- `GET /admin/customers` — **BROKEN** (403 - RBAC issue)
-- `GET /admin/customers/:id` — **BROKEN** (403 - RBAC issue)
-- `POST /admin/customers` — Create (working)
-- `PATCH /admin/customers/:id` — Update (working)
-- `DELETE /admin/customers/:id` — Delete (working)
-- Addresses CRUD (4): GET, POST, PATCH, DELETE
-- **Status**: ⚠️ PARTIAL — RBAC permissions issue on GET endpoints
+### Quotes (14 endpoints)
+- Lecturas de franchisee por `/store/quotes*` y acciones supplier alineadas
+- `POST /store/quotes/:id/award`, `POST /store/quotes/:id/reject`, `POST /store/quotes/:id/sign` permanecen untested
+- **Status**: ✅ WORKING para listas, detalle y respuesta supplier; adjudicación/firma siguen pendientes
 
 ---
 
-## Mock API - In Development (🎭)
+## Kept In Mock In DEV
+
+### Franchisees (10 endpoints)
+- `GET /admin/customers` — **BROKEN** (403 RBAC)
+- `GET /admin/customers/:id` — **BROKEN** (403 RBAC)
+- 8 endpoints adicionales siguen untested
+- `GET /store/customers/me` está inventariado pero no revalida el módulo completo
+- **Status**: ⚠️ PARTIAL EN BACKEND, MOCK EN DEV
 
 ### Openings (24 endpoints)
-- Projects: CRUD, categories, documents, invitations, quotes, financing, status
-- Document Management (4): Upload, list, download, delete technical plans
-- Supplier Invitations (4): Invite multiple, accept, decline, tracking
-- **Status**: 🎭 MOCK — Backend pending
+- `GET /admin/openings/projects` — **BROKEN** (404 en DEV)
+- 7 superficies relacionadas siguen untested
+- El resto del inventario se mantiene documentado, pero la UI sigue en mock para no romper el módulo
+- **Status**: 🎭 MOCK EN DEV
 
-### Products (8 endpoints)
-- Admin CRUD, stats, bulk operations, inventory management
-- **Status**: 🎭 MOCK — Backend pending
+### Products + Catalog (10 endpoints)
+- Admin products mantiene 8 endpoints inventariados como working
+- `GET /store/products` — **BROKEN** en la práctica de DEV por catálogo vacío/no utilizable
+- Aunque algunas rutas reales responden, la UI de catálogo/producto se mantiene en mock hasta que haya datos válidos
+- **Status**: 🎭 MOCK EN DEV
 
-### Checkout (15 endpoints)
-- Cart operations, address validation, shipping methods, payment sessions, order completion
-- **Status**: 🎭 MOCK — Backend pending
+### Cart + Checkout + Store (22 endpoints)
+- `store`: 1 endpoint (`/store/regions`) todavía untested
+- `cart`: 6 endpoints untested
+- `checkout`: 15 endpoints untested
+- El checkout real sigue bloqueado porque Store API no devuelve catálogo utilizable para completar carrito y pago de extremo a extremo
+- **Status**: 🎭 MOCK EN DEV
 
-### Catalog (2 endpoints)
-- Product list for marketplace, product detail for franchisees
-- **Status**: 🎭 MOCK — Backend pending
-
-### Categories (4 endpoints)
-- CRUD operations for product categorization
-- **Status**: 🎭 MOCK — Backend pending
+### Categories
+- No hay inventario activo separado en `dev-tools`; hoy dependen de las superficies de products/catalog
+- **Status**: 🎭 MOCK EN DEV
 
 ---
 
 ## Workflow Status
 
-✅ **Complete Workflow Validated (2026-08-26)**:
-1. Vendor proposes product → 201 Created
-2. Product appears in admin pending list → 200 OK
-3. Admin manages seller markup (GET + PATCH) → 200 OK
-4. Vendor tracks proposals → 200 OK
-5. Full audit trail working (proposed_by, updated_by, previous values)
+✅ **Flujos estables en DEV (validados 2026-08-31)**:
+1. Login real para admin, franchisee y supplier con fallback por rol
+2. Supplier products usable con fallback temporal al catálogo vendor legacy
+3. Marketplace quotes con lecturas reales por `/store/quotes`
+4. Admin orders cargando contra backend con respuestas `200`
+5. Source of truth `admin/dev-tools` aclarada para distinguir configuración real vs estado validado
 
 ---
 
 ## Known Issues
 
-- `/admin/customers` (GET) — Returns 403 Forbidden (RBAC permission issue, use mock mode)
-- Stripe PaymentIntents — Integrated but flow not fully tested
-- Document downloads — Real backend URL generation pending verification
+- `/admin/customers` y `/admin/customers/:id` (GET) — `403 Forbidden` por RBAC; `franchisees` sigue en mock en DEV
+- `/admin/openings/projects` — `404` en DEV; `openings` sigue en mock
+- `/seller/catalog-products` — Mismatch con backend: el seller catalog llega vacío mientras `/vendor/custom/products` sí devuelve datos
+- `/store/products` — Responde sin catálogo utilizable en DEV; `catalog` y `products` siguen en mock para la UI franchisee
+- Checkout real bloqueado por ausencia de datos utilizables en Store API para validar carrito y `offer_id`
+- `/admin/orders/stats` — marcado como broken en el inventario actual
 
 ---
 
-## Production Readiness Summary
+## Readiness Summary
 
-### ✅ SAFE FOR PRODUCTION (57 endpoints)
-- Auth (4): Login, logout, session management
-- Orders (17): Admin, supplier, franchisee views with full workflow
-- Pricing (8): Product approval, seller markup management
-- Suppliers (7): Vendor management and details
-- Quotes (13): Full quotation workflow with signature integration
-- Excel Import (8): Bulk product/supplier upload
+### ✅ Stable For Current DEV UI
+- `auth`
+- `suppliers`
+- `pricing` with temporary seller-catalog fallback
+- `orders`
+- `quotes`
 
-**Use in Production**: YES — These modules have been tested and validated.
+### ⚠️ Backend Partially Working But Kept Mock In DEV
+- `franchisees`
 
-### ⚠️ USE WITH CAUTION (9 endpoints)
-- Franchisees (9): GET endpoints return 403 RBAC error; CUD operations work
-- **Workaround**: Feature flag `franchisees.useMock = true` (enabled by default)
-- **Limitation**: Cannot list franchisees from real API; must use mock data
-
-**Use in Production**: PARTIAL — Only use if workaround is acceptable.
-
-### 🎭 NOT READY FOR PRODUCTION (51+ endpoints)
-- Openings (24): Mock data only
-- Products (8): Mock data only
-- Checkout (15): Mock data only
-- Categories (4): Mock data only
-
-**Use in Production**: NO — Backend integration still pending.
+### 🎭 Still Mock In DEV
+- `openings`
+- `products`
+- `catalog`
+- `checkout`
+- `categories`
 
 ---
 
@@ -176,4 +163,4 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 2. Known Issues list for your module
 3. Feature flags to confirm mock vs. real API
 
-If you see a module marked ✅ but endpoints return unexpected errors, consult Known Issues.
+If you see a module marked ✅ but endpoints return unexpected errors, consult Known Issues and the current DEV hybrid recommendation first.

@@ -81,3 +81,7 @@ Configuración recomendada para la rama `dev` tras validar qué módulos están 
 ## Nota operativa
 
 Después de cambiar `.env.local`, reiniciar `npm run dev` o `npm run dev:open` para que Next.js vuelva a cargar los `NEXT_PUBLIC_*`.
+
+Nota de inventario:
+
+- El bloque `supplier-products` basado en `/vendor/products*` se retiró de `admin/dev-tools` porque era documentación legacy sin consumidores activos en el frontend actual.
