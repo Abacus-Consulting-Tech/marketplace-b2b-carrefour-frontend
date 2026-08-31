@@ -1,7 +1,7 @@
 # Módulo 11: Supplier Products (CRUD de Productos del Proveedor)
 
 ## Estado
-✅ **Completado** - Frontend funcional con mock data (25/08/2026)
+⚠️ **Frontend operativo en modo híbrido** - real usable con fallback temporal en DEV (31/08/2026)
 
 ## Descripción
 Sistema completo que permite a los proveedores gestionar sus propios productos desde el panel vendor. Incluye CRUD completo, carga masiva de productos, y gestión de imágenes.
@@ -65,9 +65,17 @@ src/components/supplier/
 
 ## Endpoints API Necesarios
 
+## ⚠️ Realidad validada en DEV (2026-08-31)
+
+- La documentación original de este módulo describe el flujo legacy basado en `/vendor/products`.
+- El frontend alineado actualmente usa `/seller/catalog-products` como contrato principal para proveedor.
+- En DEV, `GET /seller/catalog-products` sigue desalineado y puede responder vacío.
+- Para no romper `/supplier/products`, el frontend aplica un fallback temporal a `/vendor/custom/products` cuando el seller catalog llega vacío.
+- Este módulo no debe considerarse cerrado de backend hasta eliminar ese fallback temporal.
+
 ### 1. Listar Productos del Proveedor
 ```http
-GET /vendor/products
+GET /seller/catalog-products
 Authorization: Bearer {token}
 
 Query Params:
@@ -104,7 +112,7 @@ Response 200:
 
 ### 2. Crear Producto
 ```http
-POST /vendor/products
+POST /seller/catalog-products
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -147,7 +155,7 @@ Response 201:
 
 ### 3. Actualizar Producto
 ```http
-PATCH /vendor/products/:id
+PATCH /seller/catalog-products/:id
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -166,7 +174,7 @@ Response 200:
 
 ### 4. Eliminar Producto
 ```http
-DELETE /vendor/products/:id
+DELETE /seller/catalog-products/:id
 Authorization: Bearer {token}
 
 Response 200:

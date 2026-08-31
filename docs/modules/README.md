@@ -1,10 +1,13 @@
 # Módulos - Documentación para Backend
 
+> Estado de estas carpetas: documentación de alcance e intención enviada al backend.
+> Estado operativo validado en DEV: consultar primero `src/app/(backoffice)/admin/dev-tools/page.tsx`, `.github/ai/API_STATUS.md` y `.github/ai/PROJECT_STATE.md`.
+
 Esta carpeta contiene la documentación organizada por módulos que se ha enviado al equipo de backend.
 
 ## 📁 Estructura de Módulos
 
-### ✅ Módulos Completados (13/13)
+### ✅ Módulos Documentados (13/13)
 
 | # | Módulo | Carpeta | Documentos Backend |
 |---|--------|---------|-------------------|
@@ -26,6 +29,16 @@ Esta carpeta contiene la documentación organizada por módulos que se ha enviad
 
 ## 📋 Resumen por Módulo
 
+## ⚠️ Nota de vigencia
+
+Varios READMEs de módulos fueron redactados cuando el frontend estaba completo en mock o cuando el backend objetivo todavía no se había revalidado contra DEV.
+
+Situación validada a 2026-08-31:
+
+- Estables para la UI actual en real: `auth`, `suppliers`, `pricing`, `orders`, `quotes`
+- Mantenidos en mock en DEV por bloqueo backend o datos no utilizables: `openings`, `franchisees`, `products`, `catalog`, `checkout`, `categories`
+- Caso especial: `supplier/products` funciona con fallback temporal desde `/seller/catalog-products` hacia `/vendor/custom/products`
+
 ### 1. Auth (Autenticación)
 - **Frontend**: Login, registro, recuperación de contraseña
 - **Backend Docs**: Especificaciones de API completas con mock data
@@ -34,7 +47,8 @@ Esta carpeta contiene la documentación organizada por módulos que se ha enviad
 ### 2. Openings (Nuevas Aperturas)
 - **Frontend**: Gestión de proyectos de apertura de franquicias
 - **Backend Docs**: Guía completa de backend + email para backend
-- **Estado**: ✅ Enviado al backend
+- **Estado documental**: ✅ Enviado al backend
+- **Estado validado en DEV**: 🎭 Mock, porque `/admin/openings/projects` devuelve `404`
 
 ### 3. Categories (Categorías)
 - **Frontend**: Gestión de categorías de productos
@@ -59,7 +73,8 @@ Esta carpeta contiene la documentación organizada por módulos que se ha enviad
 ### 7. Franchisee Catalog (Catálogo Franquiciado)
 - **Frontend**: Catálogo de productos para franquiciados
 - **Backend Docs**: Usa APIs de productos estándar de Medusa
-- **Estado**: ✅ Sin documentación específica necesaria
+- **Estado documental**: ✅ Sin documentación específica necesaria
+- **Estado validado en DEV**: 🎭 Mock, porque `/store/products` no entrega catálogo utilizable para la UI
 
 ### 8. Franchisee Orders (Pedidos Franquiciado)
 - **Frontend**: Historial de pedidos del franquiciado
@@ -79,17 +94,20 @@ Esta carpeta contiene la documentación organizada por módulos que se ha enviad
 ### 11. Supplier Products (Productos del Proveedor)
 - **Frontend**: CRUD de productos para proveedores (8 archivos, ~1,634 líneas)
 - **Backend Docs**: README.md + SUPPLIER_PRODUCTS_BACKEND.md con 6 endpoints
-- **Estado**: ✅ Documentación creada (25/08/2026)
+- **Estado documental**: ✅ Documentación creada (25/08/2026)
+- **Estado validado en DEV**: ⚠️ Real usable con fallback temporal; `GET /seller/catalog-products` sigue desalineado
 
 ### 12. Franchisee Management (Gestión de Franquiciados)
 - **Frontend**: CRUD de franquiciados desde admin (10 archivos, ~2,511 líneas)
 - **Backend Docs**: README.md + FRANCHISEE_MANAGEMENT_BACKEND.md con 6 endpoints
-- **Estado**: ✅ Documentación creada (25/08/2026)
+- **Estado documental**: ✅ Documentación creada (25/08/2026)
+- **Estado validado en DEV**: ⚠️ Parcial en backend, mock en UI; `/admin/customers*` GET devuelve `403`
 
 ### 13. Checkout (Flujo de Compra)
 - **Frontend**: Checkout multi-step completo (15 archivos, ~3,366 líneas)
 - **Backend Docs**: README.md + CHECKOUT_BACKEND.md con 10 endpoints + 5 extensiones
-- **Estado**: ✅ Documentación creada (25/08/2026)
+- **Estado documental**: ✅ Documentación creada (25/08/2026)
+- **Estado validado en DEV**: 🎭 Mock, porque el catálogo/cart real no puede validarse de extremo a extremo
 
 ---
 
@@ -100,16 +118,17 @@ Esta carpeta contiene la documentación organizada por módulos que se ha enviad
 - **Módulos con Backend Docs**: 12/13
 - **SQL Scripts**: 4 módulos (Categories, Pricing, Orders, Quotes)
 - **Endpoints Documentados**: 122 endpoints totales
+- **Inventario operativo actual en source of truth**: 137 endpoints
 
 ---
 
 ## 🔄 Próximos Pasos
 
 1. [x] ~~Crear documentación de backend para **Categories**~~ ✅ COMPLETADO
-2. [ ] Verificar que backend ha recibido todos los documentos
-3. [ ] Actualizar documentos según feedback del backend
+2. [ ] Cruzar esta documentación con la validación real de DEV antes de asumir que un módulo está operativo
+3. [ ] Actualizar documentos según feedback del backend y según los bloqueos vigentes en `dev-tools`
 
 ---
 
-**Última Actualización**: 25 de Agosto de 2026  
+**Última Actualización**: 31 de Agosto de 2026
 **Mantenedor**: Frontend Team

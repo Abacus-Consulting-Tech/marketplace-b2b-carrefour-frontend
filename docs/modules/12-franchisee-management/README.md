@@ -1,7 +1,7 @@
 # Módulo 12: Franchisee Management (CRUD de Franquiciados - Admin)
 
 ## Estado
-✅ **Completado** - Frontend funcional con mock data (25/08/2026)
+⚠️ **Frontend completado, backend parcial en DEV** - la UI se mantiene en mock (31/08/2026)
 
 ## Descripción
 Sistema completo de gestión de franquiciados desde el panel de administración. Permite a los administradores crear, editar, activar/desactivar franquiciados, y ver sus estadísticas de compra.
@@ -75,9 +75,17 @@ src/types/franchisees.ts (333 líneas)
 
 ## Endpoints API Necesarios
 
+## ⚠️ Realidad validada en DEV (2026-08-31)
+
+- Este README describe el contrato objetivo del módulo.
+- La validación real del frontend hoy no está consumiendo `/admin/franchisees` como contrato backend estable.
+- El alineamiento actual está alrededor de `/admin/customers*`.
+- `GET /admin/customers` y `GET /admin/customers/:id` devuelven `403` en DEV por RBAC.
+- Por ese bloqueo, el módulo de gestión de franquiciados sigue en mock en la configuración híbrida recomendada.
+
 ### 1. Listar Franquiciados
 ```http
-GET /admin/franchisees
+GET /admin/customers
 Authorization: Bearer {token}
 
 Query Params:
@@ -121,7 +129,7 @@ Response 200:
 
 ### 2. Obtener Detalle de Franquiciado
 ```http
-GET /admin/franchisees/:id
+GET /admin/customers/:id
 Authorization: Bearer {token}
 
 Response 200:
@@ -143,7 +151,7 @@ Response 200:
 
 ### 3. Crear Franquiciado
 ```http
-POST /admin/franchisees
+POST /admin/customers
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -177,7 +185,7 @@ Response 201:
 
 ### 4. Actualizar Franquiciado
 ```http
-PATCH /admin/franchisees/:id
+PATCH /admin/customers/:id
 Authorization: Bearer {token}
 Content-Type: application/json
 

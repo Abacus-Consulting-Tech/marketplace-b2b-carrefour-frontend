@@ -58,6 +58,12 @@ El catálogo depende de:
 - **Backend Docs**: ✅ No requiere documentación específica
 - **Backend Implementation**: Usa Medusa 2.x estándar
 
+## ⚠️ Realidad validada en DEV (2026-08-31)
+
+- Aunque `/store/products` y rutas relacionadas existen como contrato objetivo, el catálogo real en DEV no está devolviendo datos utilizables para la UI actual.
+- Por eso `catalog` y `products` siguen en mock en la configuración híbrida recomendada de `dev`.
+- Este README debe leerse como contrato esperado de integración, no como confirmación de disponibilidad real en DEV.
+
 ## 📝 Notas
 
 Este módulo es puramente de consumo de APIs estándar de Medusa. Toda la lógica de negocio específica ya está documentada en:
@@ -66,4 +72,4 @@ Este módulo es puramente de consumo de APIs estándar de Medusa. Toda la lógic
 
 ---
 
-**Última Actualización**: 25 de Agosto de 2026
+**Última Actualización**: 31 de Agosto de 2026

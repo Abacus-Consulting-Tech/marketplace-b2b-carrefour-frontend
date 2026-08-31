@@ -1,7 +1,7 @@
 # Módulo 13: Checkout (Flujo de Compra Completo)
 
 ## Estado
-✅ **Completado** - Frontend funcional con mock data (25/08/2026)
+⚠️ **Frontend completado, validación real pendiente en DEV** - el módulo sigue en mock (31/08/2026)
 
 ## Descripción
 Flujo completo de checkout para franquiciados, integrando carrito, dirección, envío, pago y confirmación de pedido. Es el módulo más extenso del sistema (15 archivos, ~3,366 líneas).
@@ -102,6 +102,14 @@ src/types/checkout.ts (156 líneas)
 ```
 
 ## Endpoints API Necesarios
+
+## ⚠️ Realidad validada en DEV (2026-08-31)
+
+- Este README documenta el flujo objetivo de checkout.
+- El frontend real alineado actualmente no depende de un namespace custom `/checkout/*` como superficie backend estable.
+- La implementación real está basada en rutas Store/Medusa de carrito y checkout (`/store/carts*`, `/store/shipping-options`, `/store/orders/:id`).
+- Aun así, el flujo no puede validarse end-to-end en DEV porque el catálogo real no devuelve datos utilizables para construir carrito y completar compra.
+- Por eso `checkout` sigue en mock en la configuración híbrida recomendada.
 
 ### 1. Iniciar Checkout
 ```http

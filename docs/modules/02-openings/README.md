@@ -143,6 +143,13 @@ See:
 - **Backend Docs**: Enviado
 - **Backend Implementation**: Pendiente
 
+## ⚠️ Realidad validada en DEV (2026-08-31)
+
+- Este módulo sigue en mock en la UI de `dev`.
+- La validación real más reciente encontró `404` en `/admin/openings/projects`.
+- Por tanto, la documentación de este módulo describe el contrato objetivo, no un backend hoy operativo en DEV.
+- El estado operativo actual se sigue desde `admin/dev-tools` y `.github/ai/API_STATUS.md`.
+
 ---
 
-**Última Actualización**: 25 de Agosto de 2026
+**Última Actualización**: 31 de Agosto de 2026
