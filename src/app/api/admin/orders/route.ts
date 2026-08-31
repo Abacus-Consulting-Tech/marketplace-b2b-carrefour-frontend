@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 /**
  * Proxy endpoint for admin orders
  * Proxies GET /api/admin/orders to Medusa's /admin/orders
