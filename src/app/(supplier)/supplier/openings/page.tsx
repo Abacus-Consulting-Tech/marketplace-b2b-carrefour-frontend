@@ -26,7 +26,7 @@ import {
   Clock,
   Send,
 } from 'lucide-react';
-import { formatDate, formatCurrency, InvitationStatus } from '@/types/openings';
+import { formatDate, InvitationStatus } from '@/types/openings';
 
 const STATUS_FILTERS: Array<{ value: InvitationStatus | 'all'; label: string }> = [
   { value: 'all', label: 'Todos los estados' },
@@ -208,14 +208,6 @@ export default function SupplierInvitationsPage() {
                 <div className="space-y-4">
                   {/* Información de la categoría */}
                   <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <p className="text-gray-600">Presupuesto estimado</p>
-                      <p className="font-semibold">
-                        {invitation.category?.budget_estimate
-                          ? formatCurrency(invitation.category.budget_estimate)
-                          : 'No especificado'}
-                      </p>
-                    </div>
                     <div>
                       <p className="text-gray-600">Fecha límite</p>
                       <p className="font-semibold">

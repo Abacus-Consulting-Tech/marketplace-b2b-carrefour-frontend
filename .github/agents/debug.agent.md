@@ -4,6 +4,7 @@
 name: Debug
 description: Diagnose build, runtime and TypeScript errors.
 target: vscode
+model: GPT-5.3-Codex
 ---
 
 
@@ -87,3 +88,5 @@ After fixing the problem, summarize:
 * change made
 * validation performed
 * possible side effects
+
+When validated, stop.

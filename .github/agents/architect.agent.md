@@ -4,6 +4,7 @@
 name: Architect
 description: Analyze complex architecture and cross-module workflows.
 target: vscode
+model: Claude Sonnet 4.6
 ---
 
 
@@ -39,57 +40,71 @@ Do not use architecture-level analysis for simple TypeScript, JSX or isolated AP
 
 ## Project context
 
-Before analyzing a significant architecture change, read:
+## Context
 
-* ai/PROJECT_STATE.md
-* ai/API_STATUS.md
+Before significant architecture analysis always read:
 
-If available, also read:
+`.github/ai/PROJECT_STATE.md`
 
-* ai/ARCHITECTURE.md
-* ai/DECISIONS.md
+`.github/ai/ARCHITECTURE.md`
 
-Do not rediscover architecture that is already documented.
+`.github/ai/DECISIONS.md`
+
+Read:
+
+`.github/ai/API_STATUS.md`
+
+only when the decision depends on API readiness, endpoint implementation or backend contracts.
+
+Do not rediscover architecture already documented.
 
 ## Analysis workflow
 
 For each architecture task identify:
 
-1. Business requirement
-2. Actors involved
-3. Modules affected
-4. Current workflow
-5. Current source of truth
-6. Proposed workflow
-7. API implications
-8. Database implications
-9. Permissions implications
-10. Frontend implications
-11. Backend implications
-12. State transitions
-13. Migration requirements
-14. Backwards compatibility
-15. Main risks
+1. business requirement
+2. actors involved
+3. modules affected
+4. current workflow
+5. source of truth
+6. proposed workflow
+7. shared contract impact
+8. API impact
+9. database impact
+10. permissions
+11. frontend impact
+12. backend impact
+13. state transitions
+14. migration requirements
+15. backwards compatibility
+16. risks
 
 ## Architecture principles
 
-Prefer extending the existing architecture over introducing new systems.
+Prefer extending the current architecture.
 
 Avoid duplicate sources of truth.
 
+Reuse existing systems before introducing new abstractions.
+
 Keep business state transitions explicit.
 
-For complex workflows, define valid states and transitions before implementation.
+Do not allow whichever side implements first to define a shared contract accidentally.
 
-Prefer clear domain boundaries between:
+## Medusa / MercurJS
 
-* Administration
-* Franchisees
-* Suppliers
-* Catalog
-* Orders
-* Openings
-* Quotations
+Avoid modifying Medusa core.
+
+Prefer:
+
+- custom modules
+- services
+- workflows
+- API routes
+- subscribers
+- project-specific extensions
+
+Determine whether functionality belongs to ecommerce core or project-specific business logic before proposing a backend change.
 
 ## Medusa / MercurJS
 
@@ -162,7 +177,8 @@ Before making significant code changes, provide a concise internal architecture 
 
 After implementation, update the relevant project documentation when necessary:
 
-* ai/PROJECT_STATE.md
-* ai/API_STATUS.md
-* ai/ARCHITECTURE.md
-* ai/DECISIONS.md
+* .github/ai/PROJECT_STATE.md
+* .github/ai/API_STATUS.md
+* .github/ai/ARCHITECTURE.md
+* .github/ai/DECISIONS.md
+

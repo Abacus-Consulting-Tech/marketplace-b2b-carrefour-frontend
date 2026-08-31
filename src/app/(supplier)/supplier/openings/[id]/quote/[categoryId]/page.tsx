@@ -16,7 +16,7 @@ import {
   Calendar,
   MapPin,
 } from 'lucide-react';
-import { formatDate, formatCurrency } from '@/types/openings';
+import { formatDate } from '@/types/openings';
 import { useToast } from '@/hooks/use-toast';
 
 export default function SupplierQuoteFormPage() {
@@ -222,16 +222,7 @@ export default function SupplierQuoteFormPage() {
             </div>
           )}
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
-            <div className="bg-gray-50 p-3 rounded-lg">
-              <p className="text-sm text-gray-600">Presupuesto Estimado</p>
-              <p className="text-lg font-bold text-gray-900">
-                {invitation.category?.budget_estimate
-                  ? formatCurrency(invitation.category.budget_estimate)
-                  : 'No especificado'}
-              </p>
-            </div>
-
+          <div className="grid grid-cols-1 gap-4 pt-2 md:grid-cols-2">
             <div className="bg-gray-50 p-3 rounded-lg">
               <p className="text-sm text-gray-600">Fecha Límite</p>
               <p className="text-lg font-bold text-gray-900 flex items-center gap-2">

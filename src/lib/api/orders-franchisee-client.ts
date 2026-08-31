@@ -187,8 +187,7 @@ async function realGetOrderById(id: string): Promise<GetOrderResponse> {
   const data = await apiRequest<any>(`/franchisee/orders/${id}`)
   
   return {
-    order: data.order || data,
-    success: true
+    order: data.order || data
   }
 }
 
@@ -201,7 +200,6 @@ async function realCancelOrder(request: CancelOrderRequest): Promise<CancelOrder
   })
   
   return {
-    success: true,
     message: data.message || 'Pedido cancelado correctamente',
     order: data.order
   }

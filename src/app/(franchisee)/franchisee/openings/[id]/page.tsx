@@ -17,12 +17,11 @@ import {
   MapPin, 
   Calendar, 
   FileText, 
-  DollarSign,
   ArrowLeft,
   Download,
   CheckCircle2
 } from 'lucide-react';
-import { formatDate, formatCurrency } from '@/types/openings';
+import { formatDate } from '@/types/openings';
 
 export default function FranchiseeProjectDetailPage() {
   const params = useParams();
@@ -132,8 +131,6 @@ export default function FranchiseeProjectDetailPage() {
     );
   }
 
-  const totalBudget = categories.reduce((sum, cat) => sum + (cat.budget_estimate || 0), 0);
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -158,7 +155,7 @@ export default function FranchiseeProjectDetailPage() {
       <OpeningProcessGuide currentStatus={project.status} role="franchisee" />
 
       {/* Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-3">
@@ -203,19 +200,6 @@ export default function FranchiseeProjectDetailPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-yellow-100 rounded-lg">
-                <DollarSign className="h-5 w-5 text-yellow-600" />
-              </div>
-              <div>
-                <p className="text-sm text-gray-600">Presupuesto Total</p>
-                <p className="font-semibold">{formatCurrency(totalBudget)}</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       {/* Main Content */}
@@ -296,12 +280,6 @@ export default function FranchiseeProjectDetailPage() {
                       <div>
                         <CardTitle>{category.name}</CardTitle>
                         <p className="text-sm text-gray-600 mt-1">{category.description}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-sm text-gray-600">Presupuesto Estimado</p>
-                        <p className="text-lg font-bold text-gray-900">
-                          {formatCurrency(category.budget_estimate || 0)}
-                        </p>
                       </div>
                     </div>
                   </CardHeader>

@@ -279,7 +279,7 @@ async function realUpdateOrderStatus(request: UpdateOrderStatusRequest): Promise
   
   return {
     order: data.order || data,
-    success: true
+    message: data.message || 'Estado actualizado correctamente'
   }
 }
 

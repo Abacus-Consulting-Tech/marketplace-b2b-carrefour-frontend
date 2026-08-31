@@ -51,7 +51,7 @@ export const useAuthStore = create<AuthStore>()(
       storage: createJSONStorage(() => localStorage),
       onRehydrateStorage: () => {
         console.log('[AuthStore] onRehydrateStorage callback fired');
-        return (state: AuthStore | undefined, error?: Error) => {
+        return (state: AuthStore | undefined, error?: unknown) => {
           if (error) {
             console.error('[AuthStore] Hydration error:', error);
           }

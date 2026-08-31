@@ -159,7 +159,7 @@ export function buildQueryString(params: Record<string, any>): string {
 /**
  * Log API mode for debugging
  */
-export function logApiMode(moduleName: string, isMock: boolean, backendReady: boolean) {
+export function logApiMode(moduleName: string, isMock: boolean, backendReady = false) {
   if (typeof window !== 'undefined') {
     console.log(
       `${isMock ? '🎭' : '🌐'} ${moduleName} API Mode: ${isMock ? 'MOCK' : 'REAL'}`,

@@ -66,11 +66,6 @@ export function QuoteForm({
     },
   });
 
-  // Calculate budget estimate for reference
-  const budgetEstimate = invitation.category?.budget_estimate
-    ? invitation.category.budget_estimate / 100
-    : null;
-
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     setFileError('');
@@ -127,22 +122,6 @@ export function QuoteForm({
       <div className="p-6 pt-0">
         <Form {...form}>
           <form className="space-y-6">
-            {/* Budget Reference */}
-            {budgetEstimate && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-sm text-blue-800">
-                  <strong>Presupuesto estimado:</strong>{' '}
-                  {budgetEstimate.toLocaleString('es-ES', {
-                    style: 'currency',
-                    currency: 'EUR',
-                  })}
-                </p>
-                <p className="text-xs text-blue-600 mt-1">
-                  Esta es una referencia. Su presupuesto puede ser diferente.
-                </p>
-              </div>
-            )}
-
             {/* Amount */}
             <FormField
               control={form.control}

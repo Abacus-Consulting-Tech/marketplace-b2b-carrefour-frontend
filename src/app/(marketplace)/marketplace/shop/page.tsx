@@ -117,14 +117,12 @@ export default function ShopPage({ searchParams }: ShopPageProps) {
     const price = variant.prices[0]?.amount || 0;
 
     addItem({
-      product_id: product.id,
-      product_title: product.title,
-      variant_id: variant.id,
-      variant_title: variant.title,
+      productId: product.id,
+      name: product.title,
+      variantId: variant.id,
       quantity: 1,
-      unit_price_cents: price,
-      thumbnail: product.thumbnail,
-      supplier_id: product.supplier_id,
+      price,
+      image: product.thumbnail,
     });
 
     toast({
@@ -251,7 +249,6 @@ export default function ShopPage({ searchParams }: ShopPageProps) {
                 <Card key={product.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                   <div className="relative h-48 bg-slate-100 overflow-hidden">
                     {product.thumbnail ? (
-                      // eslint-disable-next-line @next/next/no-image-element
                       <img
                         src={product.thumbnail}
                         alt={product.title}

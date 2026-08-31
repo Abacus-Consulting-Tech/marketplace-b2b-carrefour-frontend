@@ -197,7 +197,7 @@ export const pricingApi = {
       return { data: product };
     }
 
-    return apiRequest<Product>(`/vendor/custom/products/${productId}`, {
+    return apiRequest<ApiResponse<Product>>(`/vendor/custom/products/${productId}`, {
       method: 'GET',
       headers: createApiHeaders({ sellerId }),
     });
@@ -219,7 +219,7 @@ export const pricingApi = {
       return mockBulkProposeProducts(sellerId, products);
     }
 
-    return apiRequest<BulkUploadResult>('/vendor/custom/products/bulk', {
+    return apiRequest<ApiResponse<BulkUploadResult>>('/vendor/custom/products/bulk', {
       method: 'POST',
       headers: createApiHeaders({ sellerId }),
       body: JSON.stringify({ products }),
@@ -253,7 +253,7 @@ export const pricingApi = {
     const queryString = params.toString();
     const endpoint = `/admin/custom/products/pending${queryString ? `?${queryString}` : ''}`;
 
-    return apiRequest<PendingProductsResponse>(endpoint, {
+    return apiRequest<ApiResponse<PendingProductsResponse>>(endpoint, {
       method: 'GET',
       headers: createApiHeaders(),
     });
@@ -275,7 +275,7 @@ export const pricingApi = {
       return mockApproveProduct(productId, markup);
     }
 
-    return apiRequest<PricingApprovalResponse>(
+    return apiRequest<ApiResponse<PricingApprovalResponse>>(
       `/admin/custom/products/${productId}/pricing-approval`,
       {
         method: 'PATCH',
@@ -335,7 +335,7 @@ export const pricingApi = {
       return mockUpdateProductMarkup(productId, request.markup_percentage, request.reason);
     }
 
-    return apiRequest<UpdateProductMarkupResponse>(
+    return apiRequest<ApiResponse<UpdateProductMarkupResponse>>(
       `/admin/custom/products/${productId}/markup`,
       {
         method: 'PATCH',
@@ -361,7 +361,7 @@ export const pricingApi = {
       return mockRejectProduct(productId, reason);
     }
 
-    return apiRequest<PricingApprovalResponse>(
+    return apiRequest<ApiResponse<PricingApprovalResponse>>(
       `/admin/custom/products/${productId}/pricing-approval`,
       {
         method: 'PATCH',
@@ -390,7 +390,7 @@ export const pricingApi = {
       return mockResubmitRejectedProduct(productId, sellerId);
     }
 
-    return apiRequest<PricingApprovalResponse>(
+    return apiRequest<ApiResponse<PricingApprovalResponse>>(
       `/vendor/custom/products/${productId}/resubmit`,
       {
         method: 'PATCH',
@@ -412,7 +412,7 @@ export const pricingApi = {
       return mockGetSellerMarkup(sellerId);
     }
 
-    return apiRequest<SellerMarkup>(`/admin/custom/sellers/${sellerId}/markup`, {
+    return apiRequest<ApiResponse<SellerMarkup>>(`/admin/custom/sellers/${sellerId}/markup`, {
       method: 'GET',
       headers: createApiHeaders(),
     });
@@ -434,7 +434,7 @@ export const pricingApi = {
       return mockUpdateSellerMarkup(sellerId, request.global_markup_percentage, request.reason);
     }
 
-    return apiRequest<UpdateSellerMarkupResponse>(
+    return apiRequest<ApiResponse<UpdateSellerMarkupResponse>>(
       `/admin/custom/sellers/${sellerId}/markup`,
       {
         method: 'PATCH',
@@ -465,7 +465,7 @@ export const pricingApi = {
     const queryString = params.toString();
     const endpoint = `/admin/custom/sellers/${request.seller_id}/markup/history${queryString ? `?${queryString}` : ''}`;
 
-    return apiRequest<GetSellerMarkupHistoryResponse>(endpoint, {
+    return apiRequest<ApiResponse<GetSellerMarkupHistoryResponse>>(endpoint, {
       method: 'GET',
       headers: createApiHeaders(),
     });
@@ -482,7 +482,7 @@ export const pricingApi = {
       return mockGetAllSellers();
     }
 
-    return apiRequest<Seller[]>('/admin/custom/sellers', {
+    return apiRequest<ApiResponse<Seller[]>>('/admin/custom/sellers', {
       method: 'GET',
       headers: createApiHeaders(),
     });

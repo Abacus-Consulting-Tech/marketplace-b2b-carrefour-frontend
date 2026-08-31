@@ -32,7 +32,7 @@ export function QuoteComparisonTable({
   onViewQuote,
   canSelectQuote = false,
 }: QuoteComparisonTableProps) {
-  const { quotes, budget_estimate } = data;
+  const { quotes } = data;
 
   // Ordenar por precio (más bajo primero)
   const sortedQuotes = [...quotes].sort((a, b) => a.amount - b.amount);
@@ -49,11 +49,6 @@ export function QuoteComparisonTable({
       <div className="flex items-center justify-between bg-gray-50 p-4 rounded-lg">
         <div>
           <h3 className="font-semibold text-lg">{data.category_name}</h3>
-          {budget_estimate && (
-            <p className="text-sm text-gray-600">
-              Presupuesto estimado: {formatCurrency(budget_estimate)}
-            </p>
-          )}
         </div>
         <div className="text-right">
           <p className="text-sm text-gray-600">{quotes.length} presupuestos recibidos</p>

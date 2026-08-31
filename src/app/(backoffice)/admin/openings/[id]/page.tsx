@@ -479,7 +479,7 @@ export default function AdminOpeningDetailPage() {
                 <CardContent className="pt-6">
                   <h3 className="font-semibold text-blue-950">Paso 1: prepara las categorías antes de invitar</h3>
                   <p className="mt-1 text-sm text-blue-800">
-                    Cada categoría debe tener alcance, presupuesto estimado y documentos suficientes para que el proveedor cotice sin idas y vueltas.
+                    Cada categoría debe tener alcance, requisitos y documentos suficientes para que el proveedor cotice sin idas y vueltas.
                   </p>
                 </CardContent>
               </Card>

@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import { FileText, Download, TrendingDown, TrendingUp, Info } from 'lucide-react';
+import { FileText, Download, TrendingDown, Info } from 'lucide-react';
 import { useState } from 'react';
 
 interface Quote {
@@ -32,10 +32,8 @@ interface Quote {
 }
 
 interface QuotesComparisonTableProps {
-  categoryId: string;
   categoryName: string;
   categoryDescription?: string;
-  budgetEstimate: number;
   quotes: Quote[];
   onAward: (quoteId: string) => void;
   onRevert?: (quoteId: string) => void;
@@ -43,10 +41,8 @@ interface QuotesComparisonTableProps {
 }
 
 export default function QuotesComparisonTable({
-  categoryId,
   categoryName,
   categoryDescription,
-  budgetEstimate,
   quotes,
   onAward,
   onRevert,
@@ -68,13 +64,6 @@ export default function QuotesComparisonTable({
       style: 'currency',
       currency: 'EUR',
     }).format(amount / 100);
-  };
-
-  // Calcular porcentaje de ahorro/aumento vs presupuesto estimado
-  const getSavingsPercentage = (amount: number) => {
-    if (budgetEstimate === 0) return 0;
-    const diff = budgetEstimate - amount;
-    return Math.round((diff / budgetEstimate) * 100);
   };
 
   // Manejar clic en adjudicar
@@ -158,16 +147,10 @@ export default function QuotesComparisonTable({
                 )}
               </CardDescription>
             </div>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Presupuesto estimado</p>
-              <p className="text-2xl font-bold text-gray-900">
-                {formatCurrency(budgetEstimate)}
-              </p>
-            </div>
           </div>
 
           {/* Estadísticas */}
-          <div className="grid grid-cols-3 gap-4 mt-6">
+          <div className="grid grid-cols-1 gap-4 mt-6 md:grid-cols-2">
             <div className="bg-blue-50 rounded-lg p-3">
               <p className="text-sm text-blue-600 font-medium">
                 Presupuestos recibidos
@@ -183,15 +166,6 @@ export default function QuotesComparisonTable({
               </p>
               <p className="text-2xl font-bold text-green-900">
                 {formatCurrency(lowestAmount)}
-              </p>
-            </div>
-            <div className="bg-purple-50 rounded-lg p-3">
-              <p className="text-sm text-purple-600 font-medium">
-                Ahorro potencial
-              </p>
-              <p className="text-2xl font-bold text-purple-900">
-                {getSavingsPercentage(lowestAmount) > 0 ? '+' : ''}
-                {getSavingsPercentage(lowestAmount)}%
               </p>
             </div>
           </div>
@@ -216,7 +190,6 @@ export default function QuotesComparisonTable({
                 {sortedQuotes.map((quote) => {
                   const isLowest = quote.amount === lowestAmount;
                   const isAwarded = quote.status === 'awarded';
-                  const savings = getSavingsPercentage(quote.amount);
 
                   return (
                     <TableRow 
@@ -251,23 +224,6 @@ export default function QuotesComparisonTable({
                               Mejor oferta
                             </Badge>
                           )}
-                        </div>
-                        <div className="flex items-center gap-1 text-sm mt-1">
-                          {savings > 0 ? (
-                            <>
-                              <TrendingDown className="h-4 w-4 text-green-600" />
-                              <span className="text-green-600 font-medium">
-                                {savings}% ahorro
-                              </span>
-                            </>
-                          ) : savings < 0 ? (
-                            <>
-                              <TrendingUp className="h-4 w-4 text-red-600" />
-                              <span className="text-red-600 font-medium">
-                                {Math.abs(savings)}% sobre presupuesto
-                              </span>
-                            </>
-                          ) : null}
                         </div>
                       </TableCell>
 

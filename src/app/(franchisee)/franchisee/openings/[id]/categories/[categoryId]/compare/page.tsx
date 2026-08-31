@@ -13,7 +13,6 @@ import type { Quote } from '@/types/openings';
 interface ComparisonData {
   category_id: string;
   category_name: string;
-  budget_estimate: number;
   quotes: any[];
 }
 
@@ -42,7 +41,6 @@ export default function QuotesComparisonPage() {
         setComparisonData({
           category_id: response.data.category_id,
           category_name: response.data.category_name,
-          budget_estimate: response.data.budget_estimate || 0,
           quotes: response.data.quotes as Quote[],
         });
       } else {
@@ -172,9 +170,7 @@ export default function QuotesComparisonPage() {
 
       {/* Comparison Table */}
       <QuotesComparisonTable
-        categoryId={comparisonData.category_id}
         categoryName={comparisonData.category_name}
-        budgetEstimate={comparisonData.budget_estimate}
         quotes={comparisonData.quotes}
         onAward={handleAward}
         onRevert={handleRevert}
