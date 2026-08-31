@@ -1,5 +1,13 @@
 import axios from 'axios'
 
+function getAuthToken(): string | null {
+  if (typeof window === 'undefined') {
+    return null
+  }
+
+  return localStorage.getItem('auth-token') || null
+}
+
 // Use proxy in development to avoid CORS, direct URL in production
 const getBaseURL = () => {
   if (typeof window === 'undefined') {
@@ -27,10 +35,17 @@ const mercurStoreClient = axios.create({
 })
 
 mercurStoreClient.interceptors.request.use(config => {
-  const publishableApiKey = process.env.NEXT_PUBLIC_MERCUR_PUBLISHABLE_API_KEY
+  const publishableApiKey =
+    process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ||
+    process.env.NEXT_PUBLIC_MERCUR_PUBLISHABLE_API_KEY
+  const authToken = getAuthToken()
 
   if (publishableApiKey) {
     config.headers['x-publishable-api-key'] = publishableApiKey
+  }
+
+  if (authToken) {
+    config.headers.Authorization = `Bearer ${authToken}`
   }
 
   return config

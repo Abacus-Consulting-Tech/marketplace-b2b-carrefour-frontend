@@ -1,5 +1,21 @@
 import { NextRequest, NextResponse } from 'next/server'
 
+type LoginRole = 'admin' | 'supplier' | 'franchisee'
+
+interface ProxyLoginUser {
+  id?: string
+  email?: string
+  name?: string
+  role?: LoginRole
+  seller_id?: string
+}
+
+interface ProxyLoginPayload {
+  token?: string
+  user?: ProxyLoginUser
+  message?: string
+}
+
 function decodeJWT(token: string): { actor_id?: string; actor_type?: 'user' | 'member' } | null {
   try {
     const payload = token.split('.')[1]
@@ -13,30 +29,73 @@ function decodeJWT(token: string): { actor_id?: string; actor_type?: 'user' | 'm
 }
 
 async function fetchSellerId(backendBaseUrl: string, token: string): Promise<string | undefined> {
+  const defaultSellerId = process.env.NEXT_PUBLIC_DEFAULT_SELLER_ID
+
   try {
     const response = await fetch(`${backendBaseUrl}/vendor/sellers/me`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
+        ...(defaultSellerId ? { 'x-seller-id': defaultSellerId } : {}),
       },
     })
 
     if (!response.ok) {
       console.warn('[Auth Login API] Failed to fetch seller info:', response.status)
-      return process.env.NEXT_PUBLIC_DEFAULT_SELLER_ID
+      return defaultSellerId
     }
 
     const data = await response.json()
-    return data.seller?.id || data.id || process.env.NEXT_PUBLIC_DEFAULT_SELLER_ID
+    return data.seller?.id || data.id || defaultSellerId
   } catch (error) {
     console.error('[Auth Login API] Error fetching seller info:', error)
-    return process.env.NEXT_PUBLIC_DEFAULT_SELLER_ID
+    return defaultSellerId
   }
 }
 
+function inferRoleFromEmail(email: string, actorType?: 'user' | 'member', fallbackRole?: string): LoginRole {
+  if (fallbackRole === 'admin' || fallbackRole === 'supplier' || fallbackRole === 'franchisee') {
+    return fallbackRole
+  }
+
+  const emailLower = email.toLowerCase()
+
+  if (actorType === 'member' || emailLower.includes('seller') || emailLower.includes('mercur') || emailLower.includes('kickz') || emailLower.includes('trailhead') || emailLower.includes('supplier')) {
+    return 'supplier'
+  }
+
+  if (emailLower.includes('admin') || emailLower.includes('acano')) {
+    return 'admin'
+  }
+
+  return 'franchisee'
+}
+
+async function attemptLogin(
+  backendBaseUrl: string,
+  endpoint: string,
+  email: string,
+  password: string,
+  controller: AbortController
+): Promise<{ response: Response; data: ProxyLoginPayload }> {
+  const response = await fetch(`${backendBaseUrl}${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+    signal: controller.signal,
+  })
+
+  const raw = await response.json().catch(() => ({})) as Record<string, any>
+  const data = (raw.data && typeof raw.data === 'object' ? raw.data : raw) as ProxyLoginPayload
+
+  return { response, data }
+}
+
 /**
- * Proxy endpoint to bypass CORS restrictions when calling Medusa backend from localhost
- * This proxies POST /api/auth/login to Medusa's /auth/user/emailpass
+ * Proxy endpoint to bypass CORS restrictions when calling the backend from localhost.
+ * It prefers the documented /auth/login contract and falls back to legacy role-specific endpoints.
  */
 export async function POST(request: NextRequest) {
   try {
@@ -47,61 +106,80 @@ export async function POST(request: NextRequest) {
     const emailLower = email.toLowerCase()
     const isSupplier = emailLower.includes('seller') || emailLower.includes('mercur') ||
       emailLower.includes('kickz') || emailLower.includes('trailhead') || emailLower.includes('supplier')
-    const authEndpoint = isSupplier ? '/auth/member/emailpass' : '/auth/user/emailpass'
 
-    // API routes run server-side, so we always call the backend directly
-    // This API route itself IS the CORS workaround proxy
-    const backendUrl = `${backendBaseUrl}${authEndpoint}`
-    
-    console.log('[Auth Login API] Calling backend:', backendUrl)
-    
     // Add timeout to prevent hanging on slow backend (Render free tier may be sleeping)
     const controller = new AbortController()
     const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 second timeout
     
     try {
-      const response = await fetch(backendUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-        signal: controller.signal,
-      })
-      
-      clearTimeout(timeoutId)
-      
-      console.log('[Auth Login API] Response status:', response.status)
+      const attempts = [
+        '/auth/login',
+        isSupplier ? '/auth/member/emailpass' : '/auth/user/emailpass',
+      ]
 
-      if (!response.ok) {
-        const error = await response.json().catch(() => ({ message: 'Authentication failed' }))
-        console.error('[Auth Login API] Error response:', error)
+      let loginResponse: Response | null = null
+      let loginData: ProxyLoginPayload | null = null
+
+      for (const endpoint of attempts) {
+        console.log('[Auth Login API] Calling backend:', `${backendBaseUrl}${endpoint}`)
+        const result = await attemptLogin(backendBaseUrl, endpoint, email, password, controller)
+
+        if (result.response.ok) {
+          const candidateToken = result.data.token
+          const jwtPayload = candidateToken ? decodeJWT(candidateToken) : null
+
+          if (isSupplier && endpoint === '/auth/login' && jwtPayload?.actor_type !== 'member') {
+            console.warn('[Auth Login API] Unified supplier login returned non-member token, falling back')
+            continue
+          }
+
+          loginResponse = result.response
+          loginData = result.data
+          break
+        }
+
+        if (endpoint !== '/auth/login') {
+          clearTimeout(timeoutId)
+          console.error('[Auth Login API] Error response:', result.data)
+          return NextResponse.json(
+            { message: result.data.message || 'Authentication failed' },
+            { status: result.response.status }
+          )
+        }
+
+        if (result.response.status !== 404 && result.response.status !== 405) {
+          clearTimeout(timeoutId)
+          console.error('[Auth Login API] Error response:', result.data)
+          return NextResponse.json(
+            { message: result.data.message || 'Authentication failed' },
+            { status: result.response.status }
+          )
+        }
+      }
+
+      clearTimeout(timeoutId)
+
+      if (!loginResponse?.ok || !loginData?.token) {
         return NextResponse.json(
-          { message: error.message || 'Authentication failed' },
-          { status: response.status }
+          { message: loginData?.message || 'Authentication failed' },
+          { status: loginResponse?.status || 401 }
         )
       }
 
-      const data = await response.json()
-      console.log('[Auth Login API] Success, received token:', data.token ? 'yes' : 'no')
+      console.log('[Auth Login API] Success, received token:', loginData.token ? 'yes' : 'no')
 
-      // Medusa only returns { token: "..." }, no user object
-      // Deduce role from endpoint/email until backend provides proper user data
-      let role: 'admin' | 'supplier' | 'franchisee' = 'franchisee'
-      const jwtPayload = decodeJWT(data.token)
-      if (isSupplier || jwtPayload?.actor_type === 'member') {
-        role = 'supplier'
-      } else if (emailLower.includes('admin') || emailLower.includes('acano')) {
-        role = 'admin'
-      }
+      const jwtPayload = decodeJWT(loginData.token)
+      const role = inferRoleFromEmail(email, jwtPayload?.actor_type, loginData.user?.role)
 
-      const sellerId = role === 'supplier' ? await fetchSellerId(backendBaseUrl, data.token) : undefined
+      const sellerId = role === 'supplier'
+        ? loginData.user?.seller_id || await fetchSellerId(backendBaseUrl, loginData.token)
+        : undefined
 
       const user = {
-        id: jwtPayload?.actor_id || email,
-        email: email,
-        name: email.split('@')[0],
-        role: role,
+        id: loginData.user?.id || jwtPayload?.actor_id || email,
+        email: loginData.user?.email || email,
+        name: loginData.user?.name || email.split('@')[0],
+        role,
         actor_type: jwtPayload?.actor_type,
         actor_id: jwtPayload?.actor_id,
         seller_id: sellerId,
@@ -111,7 +189,7 @@ export async function POST(request: NextRequest) {
 
       return NextResponse.json({
         user,
-        token: data.token,
+        token: loginData.token,
       })
     } catch (fetchError) {
       clearTimeout(timeoutId)

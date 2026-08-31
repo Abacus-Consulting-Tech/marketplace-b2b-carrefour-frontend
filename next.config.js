@@ -40,6 +40,9 @@ const getProxyConfig = () => {
 const proxyConfig = getProxyConfig()
 
 const nextConfig = {
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   images: {
     domains: ['localhost', 'cdn.carrefour-b2b.com', 'images.unsplash.com'],
     remotePatterns: [

@@ -93,10 +93,20 @@ export default function DevToolsPage() {
       // AUTH MODULE
       // ========================================================================
       {
+        path: '/auth/login',
+        method: 'POST',
+        module: 'auth',
+        description: 'Login unificado MVP para admin, franchisee y supplier',
+        usesRealAPI: !featureFlags.shouldUseMock('auth'),
+        status: 'working',
+        requiresAuth: false,
+        medusaEndpoint: '/auth/login'
+      },
+      {
         path: '/auth/user/emailpass',
         method: 'POST',
         module: 'auth',
-        description: 'Login de admin/franchisee',
+        description: 'Login legacy de admin/franchisee (fallback)',
         usesRealAPI: !featureFlags.shouldUseMock('auth'),
         status: 'working',
         requiresAuth: false,
@@ -106,7 +116,7 @@ export default function DevToolsPage() {
         path: '/auth/member/emailpass',
         method: 'POST',
         module: 'auth',
-        description: 'Login de proveedor/supplier',
+        description: 'Login legacy de proveedor/supplier (fallback)',
         usesRealAPI: !featureFlags.shouldUseMock('auth'),
         status: 'working',
         requiresAuth: false,
@@ -602,74 +612,74 @@ export default function DevToolsPage() {
       // PRODUCTS MODULE (Admin - Catalog Management)
       // ========================================================================
       {
-        path: '/admin/products',
+        path: '/admin/custom/catalog-products',
         method: 'GET',
         module: 'products',
         description: 'Listar productos (admin) con filtros',
         usesRealAPI: !featureFlags.shouldUseMock('products'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/admin/products'
+        medusaEndpoint: '/admin/custom/catalog-products'
       },
       {
-        path: '/admin/products/:id',
+        path: '/admin/custom/catalog-products/:id',
         method: 'GET',
         module: 'products',
         description: 'Detalle de producto (admin)',
         usesRealAPI: !featureFlags.shouldUseMock('products'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/admin/products/:id'
+        medusaEndpoint: '/admin/custom/catalog-products/:id'
       },
       {
-        path: '/admin/products',
+        path: '/admin/custom/catalog-products',
         method: 'POST',
         module: 'products',
         description: 'Crear producto',
         usesRealAPI: !featureFlags.shouldUseMock('products'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/admin/products'
+        medusaEndpoint: '/admin/custom/catalog-products'
       },
       {
-        path: '/admin/products/:id',
-        method: 'POST',
+        path: '/admin/custom/catalog-products/:id',
+        method: 'PATCH',
         module: 'products',
         description: 'Actualizar producto',
         usesRealAPI: !featureFlags.shouldUseMock('products'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/admin/products/:id'
+        medusaEndpoint: '/admin/custom/catalog-products/:id'
       },
       {
-        path: '/admin/products/:id',
+        path: '/admin/custom/catalog-products/:id',
         method: 'DELETE',
         module: 'products',
         description: 'Eliminar producto',
         usesRealAPI: !featureFlags.shouldUseMock('products'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/admin/products/:id'
+        medusaEndpoint: '/admin/custom/catalog-products/:id'
       },
       {
-        path: '/admin/products/stats',
+        path: '/admin/custom/catalog-products/stats',
         method: 'GET',
         module: 'products',
         description: 'Estadísticas de productos',
         usesRealAPI: !featureFlags.shouldUseMock('products'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/admin/products/stats'
+        medusaEndpoint: '/admin/custom/catalog-products/stats'
       },
       {
-        path: '/admin/products/bulk-update-status',
+        path: '/admin/custom/catalog-products/bulk-update-status',
         method: 'POST',
         module: 'products',
         description: 'Actualización masiva de estado',
         usesRealAPI: !featureFlags.shouldUseMock('products'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/admin/products/bulk-update-status'
+        medusaEndpoint: '/admin/custom/catalog-products/bulk-update-status'
       },
       {
         path: '/admin/variants/:id/inventory',
@@ -858,34 +868,34 @@ export default function DevToolsPage() {
         medusaEndpoint: '/vendor/sellers/me'
       },
       {
-        path: '/vendor/custom/products',
+        path: '/seller/catalog-products',
         method: 'GET',
         module: 'pricing',
         description: 'Mis productos propuestos',
         usesRealAPI: !featureFlags.shouldUseMock('pricing'),
         status: 'untested',
         requiresAuth: true,
-        medusaEndpoint: '/vendor/custom/products'
+        medusaEndpoint: '/seller/catalog-products'
       },
       {
-        path: '/vendor/custom/products',
+        path: '/seller/catalog-products',
         method: 'POST',
         module: 'pricing',
         description: 'Proponer nuevo producto',
         usesRealAPI: !featureFlags.shouldUseMock('pricing'),
         status: 'untested',
         requiresAuth: true,
-        medusaEndpoint: '/vendor/custom/products'
+        medusaEndpoint: '/seller/catalog-products'
       },
       {
-        path: '/vendor/custom/products/bulk',
+        path: '/seller/catalog-products/bulk',
         method: 'POST',
         module: 'pricing',
         description: 'Carga masiva de productos (CSV)',
         usesRealAPI: !featureFlags.shouldUseMock('pricing'),
         status: 'untested',
         requiresAuth: true,
-        medusaEndpoint: '/vendor/custom/products/bulk'
+        medusaEndpoint: '/seller/catalog-products/bulk'
       },
       {
         path: '/vendor/custom/sellers/me/markup',
@@ -1219,57 +1229,57 @@ export default function DevToolsPage() {
 
       // ========================================================================
       // QUOTES MODULE - FRANCHISEE (Opening Projects) - ✅ REAL API (Render DEV)
-      // Backend Report 2026-08-26: Using /quotes endpoints
+      // MVP-aligned store quote endpoints with publishable key + bearer auth
       // ========================================================================
       {
-        path: '/quotes',
+        path: '/store/quotes',
         method: 'GET',
         module: 'quotes',
         description: 'Listar presupuestos del franquiciado',
         usesRealAPI: !featureFlags.shouldUseMock('quotes'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/quotes'
+        medusaEndpoint: '/store/quotes'
       },
       {
-        path: '/quotes/:id',
+        path: '/store/quotes/:id',
         method: 'GET',
         module: 'quotes',
         description: 'Detalle de presupuesto',
         usesRealAPI: !featureFlags.shouldUseMock('quotes'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/quotes/:id'
+        medusaEndpoint: '/store/quotes/:id'
       },
       {
-        path: '/quotes/:id/award',
+        path: '/store/quotes/:id/award',
         method: 'POST',
         module: 'quotes',
         description: 'Adjudicar presupuesto a proveedor',
         usesRealAPI: !featureFlags.shouldUseMock('quotes'),
         status: 'untested',
         requiresAuth: true,
-        medusaEndpoint: '/quotes/:id/award'
+        medusaEndpoint: '/store/quotes/:id/award'
       },
       {
-        path: '/quotes/:id/reject',
+        path: '/store/quotes/:id/reject',
         method: 'POST',
         module: 'quotes',
         description: 'Rechazar presupuesto',
         usesRealAPI: !featureFlags.shouldUseMock('quotes'),
         status: 'untested',
         requiresAuth: true,
-        medusaEndpoint: '/quotes/:id/reject'
+        medusaEndpoint: '/store/quotes/:id/reject'
       },
       {
-        path: '/quotes/:id/sign',
+        path: '/store/quotes/:id/sign',
         method: 'POST',
         module: 'quotes',
         description: 'Firmar presupuesto adjudicado',
         usesRealAPI: !featureFlags.shouldUseMock('quotes'),
         status: 'untested',
         requiresAuth: true,
-        medusaEndpoint: '/quotes/:id/sign'
+        medusaEndpoint: '/store/quotes/:id/sign'
       },
       
       // Admin Quotes
@@ -1338,14 +1348,14 @@ export default function DevToolsPage() {
         medusaEndpoint: '/seller/quotes/:id'
       },
       {
-        path: '/seller/quotes/:id/submit',
+        path: '/seller/quotes/:id/respond',
         method: 'POST',
         module: 'quotes',
-        description: 'Enviar presupuesto (draft → submitted)',
+        description: 'Responder invitación con presupuesto (draft → submitted)',
         usesRealAPI: !featureFlags.shouldUseMock('quotes'),
         status: 'working',
         requiresAuth: true,
-        medusaEndpoint: '/seller/quotes/:id/submit'
+        medusaEndpoint: '/seller/quotes/:id/respond'
       },
       {
         path: '/seller/invitations/:id/decline',

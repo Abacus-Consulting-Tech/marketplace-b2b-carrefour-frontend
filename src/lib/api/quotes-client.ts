@@ -59,7 +59,6 @@ import { apiRequest, buildQueryString, logApiMode } from './api-utils'
 // Configuration
 // ============================================================================
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000'
 const USE_MOCK = featureFlags.shouldUseMock('quotes')
 
 // ============================================================================
@@ -441,7 +440,9 @@ async function getRealQuotesForFranchisee(
   logApiMode('Quotes (Franchisee)', featureFlags.shouldUseMock('quotes'))
   
   const queryString = buildQueryString(params || {})
-  const data = await apiRequest<GetQuotesResponse>(`/quotes${queryString}`)
+  const data = await apiRequest<GetQuotesResponse>(`/store/quotes${queryString}`, {
+    isStore: true,
+  })
   return data
 }
 
@@ -452,7 +453,9 @@ async function getRealQuotesForSupplier(
   logApiMode('Quotes (Seller)', featureFlags.shouldUseMock('quotes'))
   
   const queryString = buildQueryString(params || {})
-  const data = await apiRequest<GetQuotesResponse>(`/seller/quotes${queryString}`)
+  const data = await apiRequest<GetQuotesResponse>(`/seller/quotes${queryString}`, {
+    sellerId: supplierId,
+  })
   return data
 }
 
@@ -466,11 +469,16 @@ async function getRealAllQuotes(params?: QuoteSearchParams): Promise<GetQuotesRe
 
 async function getRealQuoteById(id: string): Promise<GetQuoteResponse | null> {
   try {
-    const data = await apiRequest<any>(`/quotes/${id}`)
+    const data = await apiRequest<GetQuoteResponse | Quote>(`/store/quotes/${id}`, {
+      isStore: true,
+    })
+
+    if ('quote' in data) {
+      return data
+    }
+
     return {
-      quote: data.quote || data,
-      invitation: data.invitation,
-      signature: data.signature,
+      quote: data,
     }
   } catch (error) {
     return null
@@ -483,7 +491,9 @@ async function getRealQuoteStats(): Promise<GetQuoteStatsResponse> {
 }
 
 async function getRealInvitationsForSupplier(supplierId: string): Promise<GetInvitationsResponse> {
-  const data = await apiRequest<GetInvitationsResponse>('/seller/invitations')
+  const data = await apiRequest<GetInvitationsResponse>('/seller/invitations', {
+    sellerId: supplierId,
+  })
   return data
 }
 
@@ -494,99 +504,71 @@ async function getRealInvitationsForSupplier(supplierId: string): Promise<GetInv
 export const quotesApi = {
   // Franchisee endpoints
   getQuotesForFranchisee: USE_MOCK ? getMockQuotesForFranchisee : getRealQuotesForFranchisee,
-  getQuoteById: USE_MOCK ? getMockQuoteByIdFranchisee : async (id: string) => {
-    const response = await fetch(`${API_BASE_URL}/store/quotes/${id}`)
-    if (!response.ok) return null
-    return response.json()
-  },
+  getQuoteById: USE_MOCK ? getMockQuoteByIdFranchisee : getRealQuoteById,
   awardQuote: USE_MOCK ? mockAwardQuote : async (request: AwardQuoteRequest) => {
-    const response = await fetch(`${API_BASE_URL}/store/quotes/${request.quote_id}/award`, {
+    const data = await apiRequest<Quote | GetQuoteResponse>(`/store/quotes/${request.quote_id}/award`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      isStore: true,
       body: JSON.stringify(request),
     })
-    if (!response.ok) throw new Error('Failed to award quote')
-    return response.json()
+    return 'quote' in data ? data.quote : data
   },
   rejectQuote: USE_MOCK ? mockRejectQuote : async (request: RejectQuoteRequest) => {
-    const response = await fetch(`${API_BASE_URL}/store/quotes/${request.quote_id}/reject`, {
+    const data = await apiRequest<Quote | GetQuoteResponse>(`/store/quotes/${request.quote_id}/reject`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      isStore: true,
       body: JSON.stringify(request),
     })
-    if (!response.ok) throw new Error('Failed to reject quote')
-    return response.json()
+    return 'quote' in data ? data.quote : data
   },
   updateQuoteStatus: USE_MOCK ? mockUpdateQuoteStatus : async (request: UpdateQuoteStatusRequest) => {
-    const response = await fetch(`${API_BASE_URL}/store/quotes/${request.quote_id}/status`, {
+    const data = await apiRequest<Quote | GetQuoteResponse>(`/store/quotes/${request.quote_id}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      isStore: true,
       body: JSON.stringify(request),
     })
-    if (!response.ok) throw new Error('Failed to update quote status')
-    return response.json()
+    return 'quote' in data ? data.quote : data
   },
   signQuote: USE_MOCK ? mockSignQuote : async (request: SignQuoteRequest) => {
-    const response = await fetch(`${API_BASE_URL}/store/quotes/${request.quote_id}/sign`, {
+    const data = await apiRequest<QuoteSignature | { signature: QuoteSignature }>(`/store/quotes/${request.quote_id}/sign`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      isStore: true,
       body: JSON.stringify(request),
     })
-    if (!response.ok) throw new Error('Failed to sign quote')
-    return response.json()
+    return 'signature' in data ? data.signature : data
   },
   
   // Supplier endpoints
-  getInvitationsForSupplier: USE_MOCK ? getMockInvitationsForSupplier : async (supplierId: string) => {
-    const response = await fetch(`${API_BASE_URL}/seller/invitations`)
-    if (!response.ok) throw new Error('Failed to fetch invitations')
-    return response.json()
-  },
+  getInvitationsForSupplier: USE_MOCK ? getMockInvitationsForSupplier : getRealInvitationsForSupplier,
   getQuotesForSupplier: USE_MOCK ? getMockQuotesForSupplier : getRealQuotesForSupplier,
   createQuote: USE_MOCK ? mockCreateQuote : async (request: CreateQuoteRequest) => {
-    const response = await fetch(`${API_BASE_URL}/seller/quotes`, {
+    return apiRequest<Quote>('/seller/quotes', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
     })
-    if (!response.ok) throw new Error('Failed to create quote')
-    return response.json()
   },
   updateQuote: USE_MOCK ? mockUpdateQuote : async (quoteId: string, request: UpdateQuoteRequest) => {
-    const response = await fetch(`${API_BASE_URL}/seller/quotes/${quoteId}`, {
+    return apiRequest<Quote>(`/seller/quotes/${quoteId}`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
     })
-    if (!response.ok) throw new Error('Failed to update quote')
-    return response.json()
   },
   submitQuote: USE_MOCK ? mockSubmitQuote : async (request: SubmitQuoteRequest) => {
-    const response = await fetch(`${API_BASE_URL}/seller/quotes/${request.quote_id}/submit`, {
+    return apiRequest<Quote>(`/seller/quotes/${request.quote_id}/respond`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
     })
-    if (!response.ok) throw new Error('Failed to submit quote')
-    return response.json()
   },
   declineInvitation: USE_MOCK ? mockDeclineInvitation : async (request: DeclineInvitationRequest) => {
-    const response = await fetch(`${API_BASE_URL}/seller/invitations/${request.invitation_id}/decline`, {
+    return apiRequest<SupplierInvitation>(`/seller/invitations/${request.invitation_id}/decline`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(request),
     })
-    if (!response.ok) throw new Error('Failed to decline invitation')
-    return response.json()
   },
   
   // Admin endpoints
   getAllQuotes: USE_MOCK ? getMockAllQuotes : getRealAllQuotes,
-  getQuoteStats: USE_MOCK ? getMockQuoteStatsAPI : async () => {
-    const response = await fetch(`${API_BASE_URL}/admin/quotes/stats`)
-    if (!response.ok) throw new Error('Failed to fetch stats')
-    return response.json()
-  },
+  getQuoteStats: USE_MOCK ? getMockQuoteStatsAPI : getRealQuoteStats,
   
   // Utility exports
   formatPrice,

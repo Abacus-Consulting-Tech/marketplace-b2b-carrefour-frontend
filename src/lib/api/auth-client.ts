@@ -27,6 +27,20 @@ export interface LoginResponse {
   token: string
 }
 
+interface BackendLoginUser {
+  id?: string
+  email?: string
+  name?: string
+  role?: 'admin' | 'supplier' | 'franchisee'
+  seller_id?: string
+}
+
+interface BackendLoginPayload {
+  token?: string
+  user?: BackendLoginUser
+  message?: string
+}
+
 export interface JWTPayload {
   actor_type: 'user' | 'member'
   actor_id: string
@@ -72,94 +86,123 @@ function determineRole(email: string, actorType?: 'user' | 'member'): 'admin' | 
   return 'franchisee'
 }
 
+async function attemptLogin(
+  endpoint: string,
+  email: string,
+  password: string,
+  controller: AbortController
+): Promise<{ response: Response; data: BackendLoginPayload }> {
+  const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ email, password }),
+    signal: controller.signal,
+  })
+
+  const raw = await response.json().catch(() => ({})) as Record<string, unknown>
+  const nested = raw.data
+  const data = (nested && typeof nested === 'object' ? nested : raw) as BackendLoginPayload
+
+  return { response, data }
+}
+
 /**
  * Get seller ID from backend for vendor users
  * Required for /vendor/* endpoints
  */
 async function fetchSellerIdForVendor(token: string): Promise<string | undefined> {
+  const defaultSellerId = process.env.NEXT_PUBLIC_DEFAULT_SELLER_ID
+
   try {
     const response = await fetch(`${API_BASE_URL}/vendor/sellers/me`, {
       headers: {
         'Authorization': `Bearer ${token}`,
         'Content-Type': 'application/json',
+        ...(defaultSellerId ? { 'x-seller-id': defaultSellerId } : {}),
       },
     })
     
     if (!response.ok) {
       console.warn('[Auth] Failed to fetch seller info:', response.status)
-      return process.env.NEXT_PUBLIC_DEFAULT_SELLER_ID
+      return defaultSellerId
     }
     
     const data = await response.json()
-    return data.seller?.id || data.id
+    return data.seller?.id || data.id || defaultSellerId
   } catch (error) {
     console.error('[Auth] Error fetching seller ID:', error)
-    return process.env.NEXT_PUBLIC_DEFAULT_SELLER_ID
+    return defaultSellerId
   }
 }
 
 /**
- * Login - handles both admin and vendor authentication
- * Automatically selects correct endpoint based on email
+ * Login with unified contract and legacy fallback.
  */
 export async function login(request: LoginRequest): Promise<LoginResponse> {
   const { email, password } = request
   
-  // Determine if this is admin or vendor login
   const emailLower = email.toLowerCase()
-  const isAdmin = emailLower.includes('admin') || emailLower.includes('acano') || emailLower.includes('carrefour')
+  const isSupplier = emailLower.includes('seller') || emailLower.includes('mercur') ||
+    emailLower.includes('kickz') || emailLower.includes('trailhead') || emailLower.includes('supplier')
   
-  // Select endpoint
-  const endpoint = isAdmin ? '/auth/user/emailpass' : '/auth/member/emailpass'
-  
-  console.log(`[Auth] Login attempt for ${email} via ${endpoint}`)
+  console.log(`[Auth] Login attempt for ${email}`)
   
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 30000) // 30s timeout
   
   try {
-    const response = await fetch(`${API_BASE_URL}${endpoint}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ email, password }),
-      signal: controller.signal,
-    })
-    
+    const attempts = ['/auth/login', isSupplier ? '/auth/member/emailpass' : '/auth/user/emailpass']
+
+    let loginData: BackendLoginPayload | null = null
+    let loginStatus = 0
+
+    for (const endpoint of attempts) {
+      console.log(`[Auth] Trying ${endpoint}`)
+      const { response, data } = await attemptLogin(endpoint, email, password, controller)
+
+      if (response.ok) {
+        const jwtPayload = data.token ? decodeJWT(data.token) : null
+
+        if (isSupplier && endpoint === '/auth/login' && jwtPayload?.actor_type !== 'member') {
+          console.warn('[Auth] Unified supplier login returned non-member token, falling back')
+          continue
+        }
+
+        loginData = data
+        loginStatus = response.status
+        break
+      }
+
+      if (endpoint !== '/auth/login' || (response.status !== 404 && response.status !== 405)) {
+        clearTimeout(timeoutId)
+        throw new Error(data.message || `Login failed: ${response.status}`)
+      }
+    }
+
     clearTimeout(timeoutId)
-    
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: 'Authentication failed' }))
-      throw new Error(error.message || `Login failed: ${response.status}`)
+
+    if (!loginData?.token) {
+      throw new Error(loginData?.message || `Login failed: ${loginStatus || 401}`)
     }
     
-    const data = await response.json()
-    
-    if (!data.token) {
-      throw new Error('No token received from backend')
-    }
-    
-    // Decode JWT to extract claims
-    const jwtPayload = decodeJWT(data.token)
+    const jwtPayload = decodeJWT(loginData.token)
     console.log('[Auth] JWT payload:', jwtPayload)
     
-    // Determine role
-    const role = determineRole(email, jwtPayload?.actor_type)
+    const role = loginData.user?.role || determineRole(email, jwtPayload?.actor_type)
     
-    // For vendor users, fetch seller_id
     let seller_id: string | undefined
-    if (role === 'supplier' && jwtPayload?.actor_type === 'member') {
-      seller_id = await fetchSellerIdForVendor(data.token)
+    if (role === 'supplier') {
+      seller_id = loginData.user?.seller_id || await fetchSellerIdForVendor(loginData.token)
       console.log('[Auth] Vendor seller_id:', seller_id)
     }
     
-    // Construct user object
     const user: User = {
-      id: jwtPayload?.actor_id || email,
-      email: email,
-      name: email.split('@')[0],
-      role: role,
+      id: loginData.user?.id || jwtPayload?.actor_id || email,
+      email: loginData.user?.email || email,
+      name: loginData.user?.name || email.split('@')[0],
+      role,
       phone: '',
       status: 'active',
       createdAt: new Date().toISOString(),
@@ -173,7 +216,7 @@ export async function login(request: LoginRequest): Promise<LoginResponse> {
     
     return {
       user,
-      token: data.token,
+      token: loginData.token,
     }
   } catch (error) {
     clearTimeout(timeoutId)
@@ -224,9 +267,26 @@ export async function getSession(token: string): Promise<boolean> {
 /**
  * Get user info from backend
  * Admin: GET /admin/users/me
- * Vendor: GET /vendor/sellers/me
+ * Supplier: GET /vendor/sellers/me
  */
-export async function getUserInfo(token: string, role: 'admin' | 'supplier' | 'franchisee'): Promise<any> {
+interface BackendUserInfoResponse {
+  seller?: {
+    id?: string
+    email?: string
+    name?: string
+  }
+  id?: string
+  email?: string
+  first_name?: string
+  last_name?: string
+  name?: string
+  role?: string
+}
+
+export async function getUserInfo(
+  token: string,
+  role: 'admin' | 'supplier' | 'franchisee'
+): Promise<BackendUserInfoResponse> {
   try {
     const endpoint = role === 'admin' ? '/admin/users/me' : '/vendor/sellers/me'
     

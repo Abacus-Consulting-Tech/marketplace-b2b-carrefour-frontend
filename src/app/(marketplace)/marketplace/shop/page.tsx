@@ -49,7 +49,7 @@ export default function ShopPage({ searchParams }: ShopPageProps) {
 
   const fetchProducts = async () => {
     try {
-      const response = await productsApi.listProducts({});
+      const response = await productsApi.listCatalogProducts({});
       setProducts(response.data?.products || []);
     } catch (error) {
       console.error("Error fetching products:", error);

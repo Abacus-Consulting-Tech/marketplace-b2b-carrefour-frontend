@@ -16,8 +16,10 @@
  */
 
 import { featureFlags } from '@/config/feature-flags';
+import { createApiHeaders } from './api-utils';
 import type {
   Product,
+  ProductStatus,
   ListProductsFilters,
   ListProductsResponse,
   GetProductRequest,
@@ -53,7 +55,11 @@ import {
 // ============================================================================
 
 const isMockMode = featureFlags.shouldUseMock('products');
-const API_BASE_URL = featureFlags.getApiBaseUrl('products') || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com';
+
+function getApiBaseUrl(): string {
+  return typeof window !== 'undefined' ? '/api' : BACKEND_API_URL;
+}
 
 // Log mode on initialization
 if (typeof window !== 'undefined') {
@@ -64,43 +70,24 @@ if (typeof window !== 'undefined') {
 }
 
 /**
- * Get auth token from storage
- */
-function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('auth_token') || null;
-}
-
-/**
- * Create headers for API requests
- */
-function createHeaders(): Record<string, string> {
-  const headers: Record<string, string> = {
-    'Content-Type': 'application/json',
-  };
-
-  const token = getAuthToken();
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
-  return headers;
-}
-
-/**
  * Generic API request handler
  */
+interface RequestOptions extends RequestInit {
+  isStore?: boolean;
+}
+
 async function apiRequest<T>(
   endpoint: string,
-  options: RequestInit = {}
+  options: RequestOptions = {}
 ): Promise<ApiResponse<T>> {
   try {
-    const url = `${API_BASE_URL}${endpoint}`;
+    const { isStore = false, ...fetchOptions } = options;
+    const url = `${getApiBaseUrl()}${endpoint}`;
     const response = await fetch(url, {
-      ...options,
+      ...fetchOptions,
       headers: {
-        ...createHeaders(),
-        ...options.headers,
+        ...createApiHeaders({ isStore }),
+        ...fetchOptions.headers,
       },
     });
 
@@ -115,6 +102,140 @@ async function apiRequest<T>(
     console.error('API Request Error:', error);
     throw error;
   }
+}
+
+type BackendProductRecord = Record<string, any>;
+
+function toProductStatus(status: unknown): ProductStatus {
+  switch (status) {
+    case 'published':
+    case 'approved':
+      return 'published';
+    case 'pending_approval':
+    case 'proposed':
+      return 'proposed';
+    case 'rejected':
+      return 'rejected';
+    default:
+      return 'draft';
+  }
+}
+
+function toCents(amount: unknown): number {
+  if (typeof amount !== 'number' || Number.isNaN(amount)) {
+    return 0;
+  }
+
+  return Number.isInteger(amount) && amount >= 1000 ? amount : Math.round(amount * 100);
+}
+
+function normalizeVariant(productId: string, rawVariant: BackendProductRecord, fallbackTitle: string) {
+  const priceAmount = Array.isArray(rawVariant.prices) && rawVariant.prices[0]?.amount !== undefined
+    ? rawVariant.prices[0].amount
+    : rawVariant.base_price ?? rawVariant.unit_price ?? rawVariant.price ?? 0;
+
+  return {
+    id: rawVariant.id ?? rawVariant.variant_id ?? `${productId}-default-variant`,
+    product_id: productId,
+    title: rawVariant.title ?? fallbackTitle,
+    sku: rawVariant.sku ?? rawVariant.ean ?? productId,
+    ean: rawVariant.ean,
+    inventory_quantity: rawVariant.inventory_quantity ?? rawVariant.stock_available ?? rawVariant.stock ?? 0,
+    manage_inventory: rawVariant.manage_inventory ?? true,
+    allow_backorder: rawVariant.allow_backorder ?? false,
+    prices: Array.isArray(rawVariant.prices) && rawVariant.prices.length > 0
+      ? rawVariant.prices.map((price: BackendProductRecord, index: number) => ({
+          id: price.id ?? `${productId}-price-${index}`,
+          currency_code: price.currency_code ?? rawVariant.currency ?? 'EUR',
+          amount: typeof price.amount === 'number' ? price.amount : toCents(priceAmount),
+        }))
+      : [{
+          id: `${productId}-price-default`,
+          currency_code: rawVariant.currency ?? 'EUR',
+          amount: toCents(priceAmount),
+        }],
+    created_at: rawVariant.created_at ?? new Date().toISOString(),
+    updated_at: rawVariant.updated_at ?? rawVariant.created_at ?? new Date().toISOString(),
+  };
+}
+
+function normalizeProduct(rawProduct: BackendProductRecord): Product {
+  const id = rawProduct.id ?? rawProduct.product_id ?? rawProduct.offer_id ?? `prod_${Date.now()}`;
+  const title = rawProduct.title ?? rawProduct.name ?? rawProduct.product_name ?? 'Producto sin nombre';
+  const rawVariants = Array.isArray(rawProduct.variants) && rawProduct.variants.length > 0
+    ? rawProduct.variants
+    : [rawProduct];
+  const categories = Array.isArray(rawProduct.categories)
+    ? rawProduct.categories.map((category: BackendProductRecord, index: number) => ({
+        id: category.id ?? category.category_id ?? `${id}-category-${index}`,
+        name: category.name ?? category.title ?? rawProduct.category ?? 'Sin categoría',
+        description: category.description,
+        handle: category.handle ?? category.name ?? `category-${index}`,
+      }))
+    : rawProduct.category_id || rawProduct.category
+    ? [{
+        id: rawProduct.category_id ?? String(rawProduct.category),
+        name: rawProduct.category ?? String(rawProduct.category_id),
+        handle: String(rawProduct.category_id ?? rawProduct.category).toLowerCase().replace(/\s+/g, '-'),
+      }]
+    : undefined;
+  const images = Array.isArray(rawProduct.images)
+    ? rawProduct.images.map((image: BackendProductRecord | string) =>
+        typeof image === 'string' ? { id: image, url: image } : { id: image.id ?? image.url, url: image.url }
+      )
+    : undefined;
+  const supplierId = rawProduct.supplier_id ?? rawProduct.seller_id ?? rawProduct.supplier?.id;
+  const supplierName = rawProduct.supplier?.name ?? rawProduct.seller_name ?? rawProduct.supplier_name;
+
+  return {
+    id,
+    title,
+    subtitle: rawProduct.subtitle,
+    description: rawProduct.description,
+    handle: rawProduct.handle,
+    status: toProductStatus(rawProduct.status),
+    thumbnail: rawProduct.thumbnail ?? images?.[0]?.url,
+    supplier_id: supplierId,
+    supplier: supplierId
+      ? {
+          id: supplierId,
+          name: supplierName ?? supplierId,
+        }
+      : undefined,
+    variants: rawVariants.map((variant: BackendProductRecord) => normalizeVariant(id, variant, title)),
+    categories,
+    tags: Array.isArray(rawProduct.tags)
+      ? rawProduct.tags.map((tag: BackendProductRecord | string, index: number) =>
+          typeof tag === 'string'
+            ? { id: `${id}-tag-${index}`, value: tag }
+            : { id: tag.id ?? `${id}-tag-${index}`, value: tag.value ?? tag.name ?? '' }
+        )
+      : undefined,
+    images,
+    metadata: rawProduct.metadata,
+    created_at: rawProduct.created_at ?? new Date().toISOString(),
+    updated_at: rawProduct.updated_at ?? rawProduct.created_at ?? new Date().toISOString(),
+  };
+}
+
+function normalizeListResponse(rawData: BackendProductRecord | BackendProductRecord[]): ListProductsResponse {
+  const rawProducts = Array.isArray(rawData)
+    ? rawData
+    : Array.isArray(rawData.products)
+    ? rawData.products
+    : [];
+
+  return {
+    products: rawProducts.map(normalizeProduct),
+    count: Array.isArray(rawData) ? rawProducts.length : rawData.count ?? rawData.total ?? rawProducts.length,
+    offset: Array.isArray(rawData) ? 0 : rawData.offset ?? rawData.skip ?? 0,
+    limit: Array.isArray(rawData) ? rawProducts.length : rawData.limit ?? rawData.take ?? rawProducts.length,
+  };
+}
+
+function normalizeGetResponse(rawData: BackendProductRecord): GetProductResponse {
+  const product = rawData.product ? normalizeProduct(rawData.product) : normalizeProduct(rawData);
+  return { product };
 }
 
 // ============================================================================
@@ -299,34 +420,39 @@ async function realListProducts(filters?: ListProductsFilters): Promise<ApiRespo
   if (filters?.q) params.append('q', filters.q);
   if (filters?.status) params.append('status', filters.status);
   if (filters?.supplier_id) params.append('supplier_id', filters.supplier_id);
-  if (filters?.category_id) params.append('category_id[]', filters.category_id);
+  if (filters?.category_id) params.append('category_id', filters.category_id);
   if (filters?.limit) params.append('limit', filters.limit.toString());
   if (filters?.offset) params.append('offset', filters.offset.toString());
 
-  return apiRequest<ListProductsResponse>(`/admin/products?${params.toString()}`);
+  const data = await apiRequest<BackendProductRecord | BackendProductRecord[]>(
+    `/admin/custom/catalog-products${params.toString() ? `?${params.toString()}` : ''}`
+  );
+
+  return { data: normalizeListResponse(data.data ?? data) };
 }
 
 async function realGetProduct(request: GetProductRequest): Promise<ApiResponse<GetProductResponse>> {
   const expand = request.expand ? `?expand=${request.expand}` : '';
-  return apiRequest<GetProductResponse>(`/admin/products/${request.id}${expand}`);
+  const data = await apiRequest<BackendProductRecord>(`/admin/custom/catalog-products/${request.id}${expand}`);
+  return { data: normalizeGetResponse(data.data ?? data) };
 }
 
 async function realCreateProduct(request: CreateProductRequest): Promise<ApiResponse<CreateProductResponse>> {
-  return apiRequest<CreateProductResponse>('/admin/products', {
+  return apiRequest<CreateProductResponse>('/admin/custom/catalog-products', {
     method: 'POST',
     body: JSON.stringify(request),
   });
 }
 
 async function realUpdateProduct(id: string, request: UpdateProductRequest): Promise<ApiResponse<UpdateProductResponse>> {
-  return apiRequest<UpdateProductResponse>(`/admin/products/${id}`, {
-    method: 'POST',
+  return apiRequest<UpdateProductResponse>(`/admin/custom/catalog-products/${id}`, {
+    method: 'PATCH',
     body: JSON.stringify(request),
   });
 }
 
 async function realDeleteProduct(id: string): Promise<ApiResponse<DeleteProductResponse>> {
-  return apiRequest<DeleteProductResponse>(`/admin/products/${id}`, {
+  return apiRequest<DeleteProductResponse>(`/admin/custom/catalog-products/${id}`, {
     method: 'DELETE',
   });
 }
@@ -341,7 +467,7 @@ async function realUpdateInventory(request: UpdateInventoryRequest): Promise<Api
 
 async function realBulkUpdateStatus(request: BulkUpdateStatusRequest): Promise<ApiResponse<BulkUpdateStatusResponse>> {
   // Custom endpoint for bulk operations
-  return apiRequest<BulkUpdateStatusResponse>('/admin/products/bulk-update-status', {
+  return apiRequest<BulkUpdateStatusResponse>('/admin/custom/catalog-products/bulk-update-status', {
     method: 'POST',
     body: JSON.stringify(request),
   });
@@ -349,7 +475,34 @@ async function realBulkUpdateStatus(request: BulkUpdateStatusRequest): Promise<A
 
 async function realGetProductStats(): Promise<ApiResponse<GetProductStatsResponse>> {
   // Custom stats endpoint
-  return apiRequest<GetProductStatsResponse>('/admin/products/stats');
+  return apiRequest<GetProductStatsResponse>('/admin/custom/catalog-products/stats');
+}
+
+async function realListCatalogProducts(filters?: ListProductsFilters): Promise<ApiResponse<ListProductsResponse>> {
+  const params = new URLSearchParams();
+  if (filters?.q) params.append('search', filters.q);
+  if (filters?.supplier_id) {
+    params.append('seller_id', filters.supplier_id);
+    params.append('supplier_id', filters.supplier_id);
+  }
+  if (filters?.category_id) params.append('category_id', filters.category_id);
+  if (filters?.limit) params.append('take', filters.limit.toString());
+  if (filters?.offset) params.append('skip', filters.offset.toString());
+
+  const data = await apiRequest<BackendProductRecord | BackendProductRecord[]>(
+    `/store/products${params.toString() ? `?${params.toString()}` : ''}`,
+    { isStore: true }
+  );
+
+  return { data: normalizeListResponse(data.data ?? data) };
+}
+
+async function realGetCatalogProduct(request: GetProductRequest): Promise<ApiResponse<GetProductResponse>> {
+  const data = await apiRequest<BackendProductRecord>(`/store/products/${request.id}`, {
+    isStore: true,
+  });
+
+  return { data: normalizeGetResponse(data.data ?? data) };
 }
 
 // ============================================================================
@@ -369,6 +522,14 @@ export const productsApi = {
    */
   getProduct(request: GetProductRequest): Promise<ApiResponse<GetProductResponse>> {
     return isMockMode ? mockGetProduct(request) : realGetProduct(request);
+  },
+
+  listCatalogProducts(filters?: ListProductsFilters): Promise<ApiResponse<ListProductsResponse>> {
+    return isMockMode ? mockListProducts(filters) : realListCatalogProducts(filters);
+  },
+
+  getCatalogProduct(request: GetProductRequest): Promise<ApiResponse<GetProductResponse>> {
+    return isMockMode ? mockGetProduct(request) : realGetCatalogProduct(request);
   },
 
   /**

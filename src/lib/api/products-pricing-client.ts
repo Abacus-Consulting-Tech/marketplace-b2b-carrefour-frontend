@@ -10,13 +10,13 @@
  * - GET /admin/custom/sellers/:id/markup - Get seller markup
  * - PATCH /admin/custom/sellers/:id/markup - Update seller markup
  * - GET /admin/custom/sellers/:id/markup/history - Markup change history
- * - POST /vendor/custom/products - Propose new product
- * - GET /vendor/custom/products - My products list
+ * - POST /seller/catalog-products - Propose new product
+ * - GET /seller/catalog-products - My products list
  * - GET /vendor/custom/sellers/me/markup - My markup info
  */
 
 import { featureFlags } from '@/config/feature-flags';
-import { apiRequest, buildQueryString, logApiMode, createApiHeaders } from './api-utils';
+import { apiRequest, logApiMode, createApiHeaders } from './api-utils';
 import type {
   Product,
   PricingStatus,
@@ -86,6 +86,56 @@ type VendorProductResponse = Omit<Partial<Product>, 'status'> & {
   };
 };
 
+type SellerCatalogProductResponse = Omit<Partial<Product>, 'status'> & {
+  id?: string;
+  product_id?: string;
+  title?: string;
+  name?: string;
+  product_name?: string;
+  status?: string;
+  pricing_status?: PricingStatus;
+  unit_price?: number;
+  stock_available?: number;
+  sku?: string;
+  metadata?: {
+    base_price?: number;
+    units_per_pack?: number;
+    pricing_status?: PricingStatus;
+    rejection_reason?: string;
+    thumbnail?: string;
+    images?: string[];
+    tags?: string[];
+    category_id?: string;
+    subcategory?: string;
+    tax_rate?: number;
+    ean?: string;
+  };
+};
+
+interface SellerCatalogProductsResponse {
+  products: SellerCatalogProductResponse[];
+  count?: number;
+  total?: number;
+  limit?: number;
+  offset?: number;
+}
+
+const SELLER_CATALOG_ENDPOINT = '/seller/catalog-products';
+const LEGACY_VENDOR_PRODUCTS_ENDPOINT = '/vendor/custom/products';
+
+function toPricingStatus(status: unknown): PricingStatus {
+  switch (status) {
+    case 'approved':
+      return 'approved';
+    case 'rejected':
+      return 'rejected';
+    case 'proposed':
+    case 'pending_approval':
+    default:
+      return 'pending_approval';
+  }
+}
+
 function normalizeVendorProduct(product: VendorProductResponse): Product {
   return {
     ...product,
@@ -99,6 +149,100 @@ function normalizeVendorProduct(product: VendorProductResponse): Product {
     created_at: product.created_at ?? new Date().toISOString(),
     updated_at: product.updated_at ?? new Date().toISOString(),
   };
+}
+
+function normalizeSellerProduct(product: SellerCatalogProductResponse): Product {
+  return {
+    id: product.id ?? product.product_id ?? `prod_${Date.now()}`,
+    title: product.title ?? product.name ?? product.product_name ?? 'Producto sin nombre',
+    description: product.description,
+    base_price: product.base_price ?? product.unit_price ?? product.metadata?.base_price ?? 0,
+    units_per_pack: product.units_per_pack ?? product.metadata?.units_per_pack ?? 1,
+    category_id: product.category_id ?? product.metadata?.category_id,
+    subcategory: product.subcategory ?? product.metadata?.subcategory,
+    tags: product.tags ?? product.metadata?.tags,
+    thumbnail: product.thumbnail ?? product.metadata?.thumbnail,
+    images: product.images ?? product.metadata?.images,
+    seller_id: product.seller_id ?? '',
+    seller_name: product.seller_name,
+    variants: product.variants ?? [],
+    status: product.pricing_status ?? product.metadata?.pricing_status ?? toPricingStatus(product.status),
+    markup_percentage: product.markup_percentage,
+    rejection_reason: product.rejection_reason ?? product.metadata?.rejection_reason,
+    ean: product.ean ?? product.metadata?.ean,
+    tax_rate: product.tax_rate ?? product.metadata?.tax_rate,
+    created_at: product.created_at ?? new Date().toISOString(),
+    updated_at: product.updated_at ?? new Date().toISOString(),
+    approved_at: product.approved_at,
+    approved_by: product.approved_by,
+    rejected_at: product.rejected_at,
+    rejected_by: product.rejected_by,
+  };
+}
+
+function buildSellerCatalogPayload(request: ProposeProductRequest) {
+  const firstVariant = request.variants?.[0];
+
+  return {
+    product_name: request.title,
+    description: request.description,
+    category: request.category_id ?? request.subcategory,
+    unit_price: request.base_price,
+    stock_available: firstVariant?.inventory_quantity ?? 0,
+    units_per_pack: request.units_per_pack,
+    sku: firstVariant?.sku ?? request.ean,
+    ean: request.ean,
+    tax_rate: request.tax_rate,
+    thumbnail: request.thumbnail,
+    images: request.images,
+    tags: request.tags,
+    category_id: request.category_id,
+    subcategory: request.subcategory,
+    variants: request.variants,
+  };
+}
+
+function buildSellerCatalogBulkPayload(products: ProductProposal[]) {
+  return products.map((product) => ({
+    product_name: product.title,
+    description: product.description,
+    category: product.category_id ?? product.subcategory,
+    unit_price: product.base_price,
+    stock_available: product.stock ?? 0,
+    units_per_pack: product.units_per_pack,
+    sku: product.sku,
+    ean: product.ean,
+    tax_rate: product.tax_rate,
+    thumbnail: product.thumbnail,
+    images: product.images,
+    tags: product.tags,
+    category_id: product.category_id,
+    subcategory: product.subcategory,
+  }));
+}
+
+function extractSellerCatalogProduct(
+  response: SellerCatalogProductResponse | { product?: SellerCatalogProductResponse }
+): SellerCatalogProductResponse {
+  if ('product' in response) {
+    if (!response.product) {
+      throw new Error('La respuesta del producto del proveedor no incluye datos del producto.');
+    }
+
+    return response.product;
+  }
+
+  return response as SellerCatalogProductResponse;
+}
+
+async function listLegacyVendorProducts(sellerId: string): Promise<Product[]> {
+  const data = await apiRequest<VendorProductResponse[] | VendorProductsResponse>(`${LEGACY_VENDOR_PRODUCTS_ENDPOINT}?limit=100`, {
+    method: 'GET',
+    sellerId,
+  });
+
+  const products = Array.isArray(data) ? data : data.products ?? [];
+  return products.map(normalizeVendorProduct);
 }
 
 // Log mode on initialization
@@ -120,7 +264,7 @@ export const pricingApi = {
 
   /**
    * Propose a new product (Supplier)
-   * POST /vendor/custom/products
+  * POST /seller/catalog-products
    * 
    * @param request - Product proposal data
    * @returns Created product with pending_approval status
@@ -132,31 +276,26 @@ export const pricingApi = {
       return mockProposeProduct(request);
     }
 
-    const data = await apiRequest<ProposeProductResponse>('/vendor/custom/products', {
+    const data = await apiRequest<ProposeProductResponse | { product: SellerCatalogProductResponse; message?: string }>(SELLER_CATALOG_ENDPOINT, {
       method: 'POST',
       sellerId: request.sellerId,
-      body: JSON.stringify({
-        title: request.title,
-        description: request.description,
-        base_price: request.base_price,
-        units_per_pack: request.units_per_pack,
-        category_id: request.category_id,
-        subcategory: request.subcategory,
-        tags: request.tags,
-        thumbnail: request.thumbnail,
-        images: request.images,
-        variants: request.variants,
-        ean: request.ean,
-        tax_rate: request.tax_rate,
-      }),
+      body: JSON.stringify(buildSellerCatalogPayload(request)),
     });
+
+    const product = normalizeSellerProduct(extractSellerCatalogProduct(data));
     
-    return { data };
+    return {
+      data: {
+        product,
+        message: data.message ?? 'Producto propuesto correctamente.',
+      },
+    };
   },
 
   /**
    * Get all products for a supplier
-   * GET /vendor/custom/products
+    * GET /seller/catalog-products
+    * Temporary fallback: GET /vendor/custom/products
    * 
    * @param sellerId - Supplier ID
    * @returns Array of all products (any status)
@@ -166,19 +305,23 @@ export const pricingApi = {
       return mockGetMyProducts(sellerId);
     }
 
-    const data = await apiRequest<VendorProductResponse[] | VendorProductsResponse>('/vendor/custom/products?limit=100', {
+    const data = await apiRequest<SellerCatalogProductResponse[] | SellerCatalogProductsResponse>(`${SELLER_CATALOG_ENDPOINT}?limit=100`, {
       method: 'GET',
       sellerId,
     });
 
     const products = Array.isArray(data) ? data : data.products ?? [];
+
+    if (products.length === 0) {
+      return { data: await listLegacyVendorProducts(sellerId) };
+    }
     
-    return { data: products.map(normalizeVendorProduct) };
+    return { data: products.map(normalizeSellerProduct) };
   },
 
   /**
    * Get single product by ID (Supplier)
-   * GET /vendor/custom/products/:id
+  * GET /seller/catalog-products/:id
    * 
    * @param productId - Product ID
    * @param sellerId - Supplier ID (for auth)
@@ -197,15 +340,17 @@ export const pricingApi = {
       return { data: product };
     }
 
-    return apiRequest<ApiResponse<Product>>(`/vendor/custom/products/${productId}`, {
+    const data = await apiRequest<{ product?: SellerCatalogProductResponse } | SellerCatalogProductResponse>(`${SELLER_CATALOG_ENDPOINT}/${productId}`, {
       method: 'GET',
-      headers: createApiHeaders({ sellerId }),
+      sellerId,
     });
+
+    return { data: normalizeSellerProduct(extractSellerCatalogProduct(data)) };
   },
 
   /**
    * Bulk propose products via CSV/Excel (Supplier)
-   * POST /vendor/custom/products/bulk
+  * POST /seller/catalog-products/bulk
    * 
    * @param sellerId - Supplier ID
    * @param products - Array of product proposals from Excel
@@ -219,11 +364,13 @@ export const pricingApi = {
       return mockBulkProposeProducts(sellerId, products);
     }
 
-    return apiRequest<ApiResponse<BulkUploadResult>>('/vendor/custom/products/bulk', {
+    const data = await apiRequest<BulkUploadResult>(`${SELLER_CATALOG_ENDPOINT}/bulk`, {
       method: 'POST',
-      headers: createApiHeaders({ sellerId }),
-      body: JSON.stringify({ products }),
+      sellerId,
+      body: JSON.stringify({ products: buildSellerCatalogBulkPayload(products) }),
     });
+
+    return { data };
   },
 
   // ==========================================================================
@@ -376,7 +523,7 @@ export const pricingApi = {
 
   /**
    * Resubmit a rejected product for approval (Supplier)
-   * PATCH /vendor/custom/products/:id/resubmit
+  * PATCH /seller/catalog-products/:id/resubmit
    * 
    * @param productId - Product ID
    * @param sellerId - Seller ID
@@ -390,14 +537,21 @@ export const pricingApi = {
       return mockResubmitRejectedProduct(productId, sellerId);
     }
 
-    return apiRequest<ApiResponse<PricingApprovalResponse>>(
-      `/vendor/custom/products/${productId}/resubmit`,
+    const data = await apiRequest<PricingApprovalResponse | { product: SellerCatalogProductResponse; message?: string }>(
+      `${SELLER_CATALOG_ENDPOINT}/${productId}/resubmit`,
       {
         method: 'PATCH',
-        headers: createApiHeaders({ sellerId }),
+        sellerId,
         body: JSON.stringify({ status: 'pending_approval' }),
       }
     );
+
+    return {
+      data: {
+        product: normalizeSellerProduct(extractSellerCatalogProduct(data)),
+        message: data.message ?? 'Producto reenviado para aprobación.',
+      },
+    };
   },
 
   /**

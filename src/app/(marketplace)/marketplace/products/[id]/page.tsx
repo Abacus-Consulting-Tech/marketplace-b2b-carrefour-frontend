@@ -29,7 +29,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
   const fetchProduct = async () => {
     try {
-      const response = await productsApi.getProduct({ id: params.id, expand: 'variants,categories,tags,supplier' });
+      const response = await productsApi.getCatalogProduct({ id: params.id, expand: 'variants,categories,tags,supplier' });
       setProduct(response.data?.product || null);
       // Set first variant as selected by default
       if (response.data?.product?.variants?.length > 0) {

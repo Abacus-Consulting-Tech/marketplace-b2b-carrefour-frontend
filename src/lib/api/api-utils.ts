@@ -6,7 +6,10 @@
  */
 
 const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com'
-const PUBLISHABLE_API_KEY = process.env.NEXT_PUBLIC_MERCUR_PUBLISHABLE_API_KEY || ''
+const PUBLISHABLE_API_KEY =
+  process.env.NEXT_PUBLIC_MEDUSA_PUBLISHABLE_KEY ||
+  process.env.NEXT_PUBLIC_MERCUR_PUBLISHABLE_API_KEY ||
+  ''
 
 function getApiBaseUrl(): string {
   return typeof window !== 'undefined' ? '/api' : BACKEND_API_URL

@@ -10,6 +10,7 @@ const medusaAuthClient = axios.create({
 })
 
 export interface MedusaAuthResponse {
+  token?: string
   user: {
     id: string
     email: string
@@ -30,12 +31,29 @@ export interface MedusaLoginInput {
 }
 
 /**
- * Authenticate user with Medusa backend
- * Endpoint: POST /auth/user/emailpass
+ * Authenticate user with the preferred unified auth contract.
+ * Falls back to the legacy Medusa admin endpoint when needed.
  */
 export const medusaLogin = async (input: MedusaLoginInput): Promise<MedusaAuthResponse> => {
-  const response = await medusaAuthClient.post<MedusaAuthResponse>('/auth/user/emailpass', input)
-  return response.data
+  try {
+    const response = await medusaAuthClient.post<{ success?: boolean; data?: MedusaAuthResponse } | MedusaAuthResponse>('/auth/login', input)
+    if ('data' in response.data) {
+      if (!response.data.data) {
+        throw new Error('Unified login response did not include auth data')
+      }
+
+      return response.data.data
+    }
+
+    return response.data as MedusaAuthResponse
+  } catch (error: unknown) {
+    if (axios.isAxiosError(error) && (error.response?.status === 404 || error.response?.status === 405)) {
+      const fallbackResponse = await medusaAuthClient.post<MedusaAuthResponse>('/auth/user/emailpass', input)
+      return fallbackResponse.data
+    }
+
+    throw error
+  }
 }
 
 /**

@@ -53,7 +53,7 @@ export default function CartPage() {
       const itemsWithProductData: CartItemWithDetails[] = await Promise.all(
         items.map(async (item) => {
           try {
-            const response = await productsApi.getProduct({ 
+            const response = await productsApi.getCatalogProduct({ 
               id: item.productId, 
               expand: 'variants,categories,supplier' 
             });

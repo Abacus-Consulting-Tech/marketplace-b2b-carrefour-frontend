@@ -34,6 +34,20 @@ export interface ModuleConfig {
 
 type ModuleName = 'auth' | 'pricing' | 'openings' | 'products' | 'suppliers' | 'categories' | 'quotes' | 'orders' | 'franchisees' | 'catalog' | 'checkout';
 
+function getMockFlag(envVarName: string, defaultValue = false): boolean {
+  const envValue = process.env[envVarName];
+
+  if (envValue === 'true') {
+    return true;
+  }
+
+  if (envValue === 'false') {
+    return false;
+  }
+
+  return defaultValue;
+}
+
 export const featureFlags = {
   /**
    * Module configurations
@@ -43,91 +57,91 @@ export const featureFlags = {
    */
   modules: {
     auth: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_AUTH === 'true',
+      useMock: getMockFlag('NEXT_PUBLIC_MOCK_AUTH'),
       backendReady: true, // ✅ Medusa backend live
       apiBaseUrl: '/api/auth',
-      notes: 'Medusa auth integrated - POST /auth/user/emailpass, GET /auth/session, DELETE /auth/session',
-      lastUpdated: '2026-08-21',
+      notes: 'Auth proxy aligned with /auth/login and legacy fallback endpoints for DEV backend compatibility',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
     
     pricing: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_PRICING !== 'false', // Default to true
+      useMock: getMockFlag('NEXT_PUBLIC_MOCK_PRICING'),
       backendReady: true, // ✅ Render DEV validated 2026-08-24
       apiBaseUrl: '/admin/custom',
-      notes: 'Pricing API validated - GET /admin/custom/products/pending, PATCH /admin/custom/products/:id/pricing-approval, GET/PATCH /admin/custom/sellers/:id/markup',
-      lastUpdated: '2026-08-26',
+      notes: 'Pricing API validated - admin custom pricing routes plus seller catalog product proposal flow',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
     
     openings: {
-      useMock: true, // Always mock for now
+      useMock: getMockFlag('NEXT_PUBLIC_MOCK_OPENINGS'),
       backendReady: false,
       apiBaseUrl: '/api/openings',
-      notes: 'Mock data ready, backend not started yet',
-      lastUpdated: '2026-08-21',
+      notes: 'Openings client can target backend routes when enabled; DEV readiness still depends on backend availability',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
     
     products: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_PRODUCTS !== 'false', // Use env var, default to mock
-      backendReady: false,
+      useMock: getMockFlag('NEXT_PUBLIC_MOCK_PRODUCTS'),
+      backendReady: true,
       apiBaseUrl: '/api/products',
-      notes: 'Using mock mode until backend is ready',
-      lastUpdated: '2026-08-21',
+      notes: 'Admin catalog products and marketplace store products aligned to backend routes',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
 
     suppliers: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_SUPPLIERS !== 'false', // Default to true
+      useMock: getMockFlag('NEXT_PUBLIC_MOCK_SUPPLIERS'),
       backendReady: true, // ✅ Render DEV validated 2026-08-24
       apiBaseUrl: '/admin',
       notes: 'Sellers API validated - GET /admin/sellers, GET /admin/custom/sellers, GET /vendor/sellers/me',
-      lastUpdated: '2026-08-26',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
 
     categories: {
-      useMock: true,
+      useMock: getMockFlag('NEXT_PUBLIC_MOCK_CATEGORIES'),
       backendReady: false,
       apiBaseUrl: '/api/categories',
-      notes: 'Planned for next sprint',
-      lastUpdated: '2026-08-21',
+      notes: 'Categories remain configurable by env even though no dedicated validated backend flow is active yet',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
 
     quotes: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_QUOTES !== 'false', // Default to true
+      useMock: getMockFlag('NEXT_PUBLIC_MOCK_QUOTES'),
       backendReady: true, // ✅ Render DEV validated 2026-08-26
       apiBaseUrl: '/quotes',
-      notes: 'Quotes API validated - GET /quotes, /admin/quotes, /seller/quotes, /seller/invitations (partial integration)',
-      lastUpdated: '2026-08-26',
+      notes: 'Quotes API validated - store quote reads and seller responses aligned to current contract',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
 
     orders: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_ORDERS !== 'false', // Default to true
+      useMock: getMockFlag('NEXT_PUBLIC_MOCK_ORDERS'),
       backendReady: true, // ✅ Render DEV validated 2026-08-26
       apiBaseUrl: '/admin/orders',
       notes: 'Orders API validated - GET /admin/orders, /admin/custom/orders/stats, /franchisee/orders, /vendor/orders (all integrated)',
-      lastUpdated: '2026-08-26',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
 
     franchisees: {
-      useMock: true,
+      useMock: getMockFlag('NEXT_PUBLIC_MOCK_FRANCHISEES'),
       backendReady: false,
       apiBaseUrl: '/api/admin/customers',
-      notes: 'Franchisee management (Medusa Customers) - Full CRUD with mock data',
-      lastUpdated: '2026-08-24',
+      notes: 'Franchisee management can be switched by env; backend readiness still needs functional confirmation',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
 
     catalog: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_CATALOG !== 'false', // Default to mock
-      backendReady: false,
+      useMock: getMockFlag('NEXT_PUBLIC_MOCK_CATALOG'),
+      backendReady: true,
       apiBaseUrl: '/store/products',
-      notes: 'Franchisee marketplace catalog - Uses Product Management mock data, aligned with Medusa Store API',
-      lastUpdated: '2026-08-24',
+      notes: 'Franchisee marketplace catalog aligned to store product routes',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
 
     checkout: {
-      useMock: process.env.NEXT_PUBLIC_MOCK_CHECKOUT !== 'false', // Default to mock
-      backendReady: false,
+      useMock: getMockFlag('NEXT_PUBLIC_MOCK_CHECKOUT'),
+      backendReady: true,
       apiBaseUrl: '/store',
-      notes: 'Checkout and order creation - Mock mode until payment provider is configured',
-      lastUpdated: '2026-08-25',
+      notes: 'Checkout uses the real Mercur/Medusa store flow when enabled',
+      lastUpdated: '2026-08-31',
     } satisfies ModuleConfig,
   } as const,
   
