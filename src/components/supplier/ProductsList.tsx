@@ -44,31 +44,53 @@ export function ProductsList({ sellerId }: ProductsListProps) {
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<PricingStatus | 'all'>('all');
 
-  // Fetch products and seller info on mount
+  // Fetch products on mount (with cleanup to prevent duplicate calls)
   useEffect(() => {
-    fetchData();
-  }, [sellerId]);
+    let isMounted = true;
+    const abortController = new AbortController();
 
-  const fetchData = async () => {
-    try {
-      setIsLoading(true);
-      setError(null);
-      
-      // Fetch products
-      const productsResponse = await pricingApi.getMyProducts(sellerId);
-      setProducts(productsResponse.data);
-    } catch (err) {
-      console.error('Error fetching products:', err);
-      setError(err instanceof Error ? err.message : 'Error al cargar productos');
-      toast({
-        title: 'Error al cargar productos',
-        description: 'No se pudieron cargar los productos. Inténtalo de nuevo.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        setError(null);
+        
+        // Fetch products
+        const productsResponse = await pricingApi.getMyProducts(sellerId);
+        
+        // Only update state if component is still mounted
+        if (isMounted) {
+          setProducts(productsResponse.data);
+        }
+      } catch (err) {
+        // Ignore abort errors
+        if (err instanceof Error && err.name === 'AbortError') {
+          return;
+        }
+        
+        if (isMounted) {
+          console.error('Error fetching products:', err);
+          setError(err instanceof Error ? err.message : 'Error al cargar productos');
+          toast({
+            title: 'Error al cargar productos',
+            description: 'No se pudieron cargar los productos. Inténtalo de nuevo.',
+            variant: 'destructive',
+          });
+        }
+      } finally {
+        if (isMounted) {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    fetchData();
+
+    // Cleanup function to prevent state updates on unmounted component
+    return () => {
+      isMounted = false;
+      abortController.abort();
+    };
+  }, [sellerId, toast]);
 
   // Filter products
   const filteredProducts = products.filter((product) => {
