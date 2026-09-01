@@ -1,4 +1,4 @@
-# bug.agent.md
+# debug.agent.md
 
 ---
 name: Debug
