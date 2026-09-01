@@ -4,7 +4,7 @@
       "main": true,
       "dev": false,
       "feature/mock-version": false,
-      "medusa-update": false
+      "medusa-update": true
     }
   },
   "github": {
@@ -12,7 +12,6 @@
     "autoJobCancelation": true
   },
   "buildCommand": "npm run build",
-  "ignoreCommand": "",
   "installCommand": "npm install",
   "framework": "nextjs"
 }
