@@ -42,8 +42,13 @@ Environments `pre` y `prod` (prod con required reviewers).
 
 Secrets por environment: `VPS_HOST`, `VPS_SSH_KEY`, `GHCR_PAT` (`read:packages`).
 
-Vars de despliegue: `SSH_USER`, `SSH_PORT`, `FRONT_PUBLISH_PORT` (pre: `10110`,
-estándar de puertos del workspace).
+Vars de despliegue: `SSH_USER` (pre: `marketplace_front_admin`), `SSH_PORT`,
+`FRONT_PUBLISH_PORT` (pre: `10110`, estándar de puertos del workspace).
+
+En pre, front y backend comparten máquina Plesk pero **usuario de sistema distinto**
+(`marketplace_front_admin` vs `marketplace_admin`); ese usuario debe estar en el grupo
+`docker`, tener autorizada la deploy key y ser dueño de `/opt/projects/marketplace-b2b-carrefour-frontend`
+(alta de root — runbook del plan 03).
 
 Vars de build (se hornean; vacía = default del Dockerfile):
 
