@@ -40,6 +40,11 @@ const getProxyConfig = () => {
 const proxyConfig = getProxyConfig()
 
 const nextConfig = {
+  // Disable React Strict Mode to prevent duplicate API calls in development
+  // Strict Mode intentionally double-renders components to detect bugs
+  // This causes duplicate network requests even with proper cleanup
+  reactStrictMode: false,
+  
   eslint: {
     ignoreDuringBuilds: true,
   },
