@@ -42,7 +42,31 @@ export default function ProductsList() {
   const isMockMode = featureFlags.shouldUseMock('products');
 
   useEffect(() => {
+    let isMounted = true;
+
+    async function loadProducts() {
+      try {
+        setLoading(true);
+        const response = await productsApi.listProducts({});
+        if (isMounted && response.data?.products) {
+          setProducts(response.data.products);
+        }
+      } catch (err) {
+        if (isMounted) {
+          console.error('Error loading products:', err);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
     loadProducts();
+
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
   async function loadProducts() {

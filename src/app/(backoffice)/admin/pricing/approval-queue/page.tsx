@@ -87,15 +87,50 @@ export default function ApprovalQueuePage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
-  // Load data on mount
+  // Load data on mount (with cleanup to prevent duplicate calls)
   useEffect(() => {
-    loadPendingProducts();
-    loadSellers();
-  }, []);
+    let isMounted = true;
 
-  // Reload products when filters change
-  useEffect(() => {
-    loadPendingProducts();
+    async function fetchData() {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        const filters: PendingProductsFilters = {};
+        if (selectedSellerId) filters.seller_id = selectedSellerId;
+        if (selectedCategoryId) filters.category_id = selectedCategoryId;
+        
+        const [productsResponse, sellersResponse] = await Promise.all([
+          pricingApi.getPendingProducts(filters),
+          pricingApi.getAllSellers()
+        ]);
+        
+        if (isMounted) {
+          if (productsResponse.data) {
+            setProducts(productsResponse.data.products);
+            setTotal(productsResponse.data.total);
+          }
+          if (sellersResponse.data) {
+            setSellers(sellersResponse.data);
+          }
+        }
+      } catch (err: any) {
+        if (isMounted) {
+          console.error('Error loading data:', err);
+          setError(err.message || 'Error al cargar datos');
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    fetchData();
+
+    return () => {
+      isMounted = false;
+    };
   }, [selectedSellerId, selectedCategoryId]);
 
   /**
