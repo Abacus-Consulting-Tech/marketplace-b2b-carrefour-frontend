@@ -42,14 +42,6 @@ export default function SupplierProductsPage() {
         </div>
       </div>
 
-      {!featureFlags.shouldUseMock('pricing') && (
-        <Alert className="border-amber-200 bg-amber-50 text-amber-900">
-          <AlertDescription>
-            Si acabas de hacer una carga masiva y no ves los productos aqui, el import puede haber terminado bien pero el listado supplier del backend sigue desalineado en DEV. Revisa el resultado del job de importacion antes de repetir la carga.
-          </AlertDescription>
-        </Alert>
-      )}
-
       {/* Products List */}
       {sellerId ? (
         <ProductsList sellerId={sellerId} />

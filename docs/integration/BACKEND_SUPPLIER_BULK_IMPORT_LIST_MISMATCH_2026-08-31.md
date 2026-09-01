@@ -1,11 +1,26 @@
 # Backend mismatch: importacion masiva supplier vs listado de Mis Productos
 
-Fecha: 2026-08-31
-Entorno: DEV Render
-Frontend: http://localhost:3000
+**Estado: ✅ RESUELTO (2026-09-01)**
+
+Fecha del reporte: 2026-08-31  
+Fecha de resolución: 2026-09-01  
+Entorno: DEV Render  
+Frontend: http://localhost:3000  
 Backend: https://marketplace-b2b-backend-dev.onrender.com
 
-## Resumen
+---
+
+## Resolución
+
+**Causa raíz identificada por backend:** El importador de Excel guardaba un dato de "propietario" distinto al que usa el listado para filtrar productos por proveedor.
+
+**Corrección aplicada:** Se alineó el dato de propietario en el importador para que coincida con el alta manual de productos.
+
+**Validado en Render DEV:** Productos importados por Excel ahora aparecen inmediatamente en "Mis Productos" con el estado esperado (propuesto, pendiente de aprobación de precio).
+
+---
+
+## Resumen (Original)
 
 La importacion masiva de productos para supplier funciona y crea productos en backend, pero esos productos no aparecen despues en la pantalla de supplier "Mis Productos".
 
