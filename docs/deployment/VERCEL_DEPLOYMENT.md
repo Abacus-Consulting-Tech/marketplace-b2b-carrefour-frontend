@@ -1,3 +1,5 @@
+> **OBSOLETO** — este flujo ya no se usa. El despliegue real es Docker + GitHub Actions: ver [docs/DEPLOYMENT.md](../DEPLOYMENT.md). Pendiente de borrado (docs/fix/02).
+
 # 🚀 Deploy a Vercel - Marketplace B2B Carrefour
 
 Guía paso a paso para desplegar tu aplicación Next.js a Vercel.

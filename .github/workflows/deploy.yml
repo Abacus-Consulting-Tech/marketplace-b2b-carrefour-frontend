@@ -1,0 +1,139 @@
+# Despliega una imagen ya construida en la maquina del entorno elegido.
+#
+# Se invoca de dos formas:
+#   - encadenado desde build.yml (workflow_call) -> autodespliegue a pre
+#   - a mano (workflow_dispatch)                 -> prod y rollbacks
+#
+# Vars POR ENVIRONMENT:    SSH_USER (def. deploy), SSH_PORT (def. 22),
+#                          FRONT_PUBLISH_PORT (def. 10110) — puerto de 127.0.0.1
+#                          del host donde el compose publica el front. El deploy
+#                          lo escribe en el .env de la maquina; el proxy_pass del
+#                          nginx de Plesk DEBE apuntar a este mismo puerto.
+# Secrets POR ENVIRONMENT: VPS_HOST, VPS_SSH_KEY, GHCR_PAT (read:packages)
+#
+# En la maquina debe existir /opt/projects/marketplace-b2b-carrefour-frontend/
+# con docker-compose.yml (copia de docker/compose.yml) y .env.
+#
+# OJO: la imagen del front HORNEA la config del entorno. Desplegar en prod una
+# imagen pre-* es un error: cada entorno solo acepta sus tags <target>-*.
+# Rollback = relanzar con el <target>-<sha7> anterior.
+
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      target:
+        description: Entorno destino
+        type: string
+        required: true
+      tag:
+        description: Tag de imagen. Vacio = tag movil del entorno
+        type: string
+        required: false
+        default: ""
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Entorno destino
+        type: choice
+        options: [pre, prod]
+        required: true
+      tag:
+        description: "Tag de imagen (p.ej. pre-a1b2c3d). Vacio = tag movil del entorno"
+        required: false
+        default: ""
+
+concurrency:
+  group: deploy-${{ inputs.target }}
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target }}
+    steps:
+      - name: Resolver imagen
+        id: image
+        # inputs.tag entra por env (nunca interpolado en el script): es texto
+        # libre y dentro de `run:` permitiria inyectar shell a quien despacha.
+        env:
+          TAG_INPUT: ${{ inputs.tag }}
+          TARGET: ${{ inputs.target }}
+        run: |
+          TAG="${TAG_INPUT:-$TARGET}"
+          case "$TAG" in
+            "$TARGET"|"$TARGET"-*) ;;
+            *) echo "::error::El tag '$TAG' no es del entorno $TARGET (esperado $TARGET-<sha7>)"; exit 1 ;;
+          esac
+          echo "ref=$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]'):${TAG}" >> "$GITHUB_OUTPUT"
+
+      - uses: appleboy/ssh-action@v1
+        env:
+          IMAGE: ${{ steps.image.outputs.ref }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          FRONT_PUBLISH_PORT: ${{ vars.FRONT_PUBLISH_PORT || '10110' }}
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          port: ${{ vars.SSH_PORT || 22 }}
+          username: ${{ vars.SSH_USER || 'deploy' }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          envs: IMAGE,GHCR_USER,GHCR_PAT,FRONT_PUBLISH_PORT
+          script: |
+            set -eu
+            cd /opt/projects/marketplace-b2b-carrefour-frontend
+
+            set_kv() {
+              if grep -q "^$1=" .env; then
+                sed -i "s|^$1=.*|$1=$2|" .env
+              else
+                echo "$1=$2" >> .env
+              fi
+            }
+            PREV="$(grep '^IMAGE_FRONT=' .env | tail -n1 | cut -d= -f2- || true)"
+            rollback() {
+              if [ -n "$PREV" ] && [ "$PREV" != "$IMAGE" ]; then
+                echo "rollback -> $PREV"
+                set_kv IMAGE_FRONT "$PREV"
+                docker compose up -d || true
+              else
+                echo "sin imagen previa: no hay rollback posible"
+              fi
+            }
+
+            echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            set_kv IMAGE_FRONT "$IMAGE"
+            # Puerto host del front: gobernado por la var del environment de
+            # GitHub. El nginx de Plesk debe apuntar al mismo.
+            set_kv FRONT_PUBLISH_PORT "$FRONT_PUBLISH_PORT"
+
+            if ! docker compose pull || ! docker compose up -d --remove-orphans; then
+              echo "::error::pull/up fallo con $IMAGE"
+              docker compose logs --tail=120 app || true
+              rollback
+              exit 1
+            fi
+
+            # Gate real: el HEALTHCHECK de la imagen hace GET / dentro del
+            # contenedor (start-period 30 s). El resto lo cubre el smoke del
+            # runbook (docs/DEPLOYMENT.md).
+            CID="$(docker compose ps -q app)"
+            OK=""
+            for _ in $(seq 1 40); do
+              ST="$(docker inspect -f '{{.State.Health.Status}}' "$CID" 2>/dev/null || echo starting)"
+              [ "$ST" = healthy ] && { OK=1; break; }
+              [ "$ST" = unhealthy ] && break
+              sleep 5
+            done
+
+            if [ -z "$OK" ]; then
+              echo "::error::health KO tras desplegar $IMAGE"
+              docker compose logs --tail=120 app || true
+              rollback
+              exit 1
+            fi
+
+            docker compose ps
+            # Solo dangling. NUNCA -a: la maquina es compartida con Plesk.
+            docker image prune -f

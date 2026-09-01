@@ -1,0 +1,27 @@
+# Control de versiones y meta
+.git
+.github
+.vscode
+.idea
+
+# Dependencias y artefactos del host
+node_modules
+.next
+out
+coverage
+*.log
+
+# Env: next build hornea cualquier .env presente. Solo pasa el example.
+.env
+.env.*
+!.env.example
+
+# Restos de despliegues anteriores (docs/fix/02_limpieza-repo.md)
+*.tar.gz
+package-for-deployment.sh
+
+# No aportan al build
+docs
+docker
+README.md
+CLAUDE.md

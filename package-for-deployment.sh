@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# OBSOLETO — este flujo (PM2/cdmon) ya no se usa. El despliegue real es
+# Docker + GitHub Actions: ver docs/DEPLOYMENT.md. Pendiente de borrado (docs/fix/02).
+
 # Script de Empaquetado para Deployment
 # Marketplace B2B Carrefour - cdmon
 
