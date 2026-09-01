@@ -1,10 +1,10 @@
 {
   "git": {
     "deploymentEnabled": {
-      "main": false,
+      "main": true,
       "dev": false,
       "feature/mock-version": false,
-      "medusa-update": true
+      "medusa-update": false
     }
   },
   "github": {
@@ -12,7 +12,7 @@
     "autoJobCancelation": true
   },
   "buildCommand": "npm run build",
-  "ignoreCommand": "[ \"$VERCEL_GIT_COMMIT_REF\" != \"medusa-update\" ]",
+  "ignoreCommand": "",
   "installCommand": "npm install",
   "framework": "nextjs"
 }
