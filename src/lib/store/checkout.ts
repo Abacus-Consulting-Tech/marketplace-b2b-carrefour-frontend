@@ -75,7 +75,18 @@ export const useCheckoutStore = create<CheckoutStore>()(
     }),
     {
       name: 'checkout-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => {
+        // Check if we're in the browser
+        if (typeof window !== 'undefined') {
+          return localStorage
+        }
+        // Return a no-op storage for SSR
+        return {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {},
+        }
+      }),
     }
   )
 );

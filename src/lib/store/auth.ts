@@ -30,14 +30,18 @@ export const useAuthStore = create<AuthStore>()(
 
       login: (user: User, token: string) => {
         console.log('[AuthStore] login() called for user:', user.email, 'role:', user.role);
-        localStorage.setItem('auth-token', token)
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('auth-token', token)
+        }
         set({ user, token, isAuthenticated: true })
         console.log('[AuthStore] State updated, isAuthenticated: true');
       },
 
       logout: () => {
         console.log('[AuthStore] logout() called');
-        localStorage.removeItem('auth-token')
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('auth-token')
+        }
         set({ user: null, token: null, isAuthenticated: false })
       },
 
@@ -48,7 +52,18 @@ export const useAuthStore = create<AuthStore>()(
     }),
     {
       name: 'auth-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => {
+        // Check if we're in the browser
+        if (typeof window !== 'undefined') {
+          return localStorage
+        }
+        // Return a no-op storage for SSR
+        return {
+          getItem: () => null,
+          setItem: () => {},
+          removeItem: () => {},
+        }
+      }),
       onRehydrateStorage: () => {
         console.log('[AuthStore] onRehydrateStorage callback fired');
         return (state: AuthStore | undefined, error?: unknown) => {
