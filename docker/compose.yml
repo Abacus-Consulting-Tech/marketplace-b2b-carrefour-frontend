@@ -1,0 +1,35 @@
+# Front custom en pre y prod (mismo fichero, distinto .env). La imagen se
+# construye en CI (build.yml); este compose NO construye. Para un build local:
+#   docker build -f docker/Dockerfile --build-arg NEXT_PUBLIC_API_URL=... -t front:local .
+#
+# En la maquina: /opt/projects/marketplace-b2b-carrefour-frontend/
+#   docker-compose.yml   <- copia de este fichero
+#   .env                 <- a partir de docker/.env.example
+#
+# El nginx de Plesk reenvia el dominio del front a 127.0.0.1:${FRONT_PUBLISH_PORT}
+# (estandar 1PPRR: 10110 = proyecto 01, rol 10 front, replica 0).
+# RECORDATORIO cross-repo: el backend debe listar el origen publico de este
+# front en STORE_CORS y AUTH_CORS, o el navegador bloqueara sus llamadas.
+
+name: marketplace-b2b-carrefour-frontend
+
+services:
+  app:
+    image: ${IMAGE_FRONT:?IMAGE_FRONT sin definir en .env (ghcr.io/...:pre-XXXXXXX)}
+    container_name: marketplace-b2b-carrefour-frontend-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:${FRONT_PUBLISH_PORT:-10110}:3000"
+    labels:
+      com.project.stack: marketplace-b2b-carrefour-frontend
+      com.project.role: app
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    deploy:
+      resources:
+        limits:
+          # Holgura para squoosh (optimizacion de imagenes sin sharp).
+          memory: 1G

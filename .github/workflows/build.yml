@@ -1,0 +1,140 @@
+# CI del front: audit y tests en paralelo -> build de imagen -> autodespliegue a pre.
+#
+#   push a main o dev        : audit || test -> build (env pre) -> deploy-pre
+#   pull_request a main o dev: audit || test                      (sin imagen)
+#   workflow_dispatch        : audit || test -> build (env elegido) (sin deploy;
+#                              prod se despliega a mano desde deploy.yml)
+#
+# Hoy main y dev despliegan ambos a pre; cuando exista el servidor de prod,
+# main pasara a prod y dev quedara como rama de pre.
+#
+# La imagen HORNEA la configuracion (NEXT_PUBLIC_* se inlinean en next build):
+# hay una imagen por entorno, etiquetada <target>-<sha7> y <target>. Las vars
+# salen del GitHub Environment del target (docs/DEPLOYMENT.md).
+#
+# Gates:
+#   audit: npm audit --omit=dev --audit-level=high (solo deps de runtime).
+#   test : vitest --passWithNoTests (hoy no hay tests: docs/fix/01).
+#   El build en si (next build + tsc) es el tercer gate.
+
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main, dev]
+  workflow_dispatch:
+    inputs:
+      target:
+        description: Environment cuyas vars se hornean en la imagen
+        type: choice
+        options: [pre, prod]
+        default: pre
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      # Trabaja sobre el lockfile: no necesita npm ci.
+      - run: npm audit --omit=dev --audit-level=high
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - run: npx vitest run --passWithNoTests
+
+  build:
+    needs: [audit, test]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.target || 'pre' }}
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      tag: ${{ steps.meta.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Imagen y tag (ghcr exige minusculas)
+        id: meta
+        env:
+          TARGET: ${{ inputs.target || 'pre' }}
+        run: |
+          echo "IMAGE=$(echo 'ghcr.io/${{ github.repository }}' | tr '[:upper:]' '[:lower:]')" >> "$GITHUB_ENV"
+          echo "tag=${TARGET}-${GITHUB_SHA::7}" >> "$GITHUB_OUTPUT"
+          echo "target=${TARGET}" >> "$GITHUB_OUTPUT"
+
+      - name: Vars obligatorias del environment
+        env:
+          API_URL: ${{ vars.NEXT_PUBLIC_API_URL }}
+        run: |
+          if [ -z "$API_URL" ]; then
+            echo "::error::Falta la var NEXT_PUBLIC_API_URL en el environment ${{ steps.meta.outputs.target }}"
+            exit 1
+          fi
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile
+          push: true
+          tags: |
+            ${{ env.IMAGE }}:${{ steps.meta.outputs.tag }}
+            ${{ env.IMAGE }}:${{ steps.meta.outputs.target }}
+          # Una var vacia/inexistente llega como "" y el Dockerfile aplica su default.
+          build-args: |
+            NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_MERCUR_STORE_API=${{ vars.NEXT_PUBLIC_MERCUR_STORE_API }}
+            NEXT_PUBLIC_API_TIMEOUT=${{ vars.NEXT_PUBLIC_API_TIMEOUT }}
+            NEXT_PUBLIC_MERCUR_PUBLISHABLE_API_KEY=${{ vars.NEXT_PUBLIC_MERCUR_PUBLISHABLE_API_KEY }}
+            NEXT_PUBLIC_MERCUR_REGION_ID=${{ vars.NEXT_PUBLIC_MERCUR_REGION_ID }}
+            NEXT_PUBLIC_DEFAULT_SELLER_ID=${{ vars.NEXT_PUBLIC_DEFAULT_SELLER_ID }}
+            NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=${{ vars.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY }}
+            NEXT_PUBLIC_MOCK_AUTH=${{ vars.NEXT_PUBLIC_MOCK_AUTH }}
+            NEXT_PUBLIC_CATALOG_SOURCE=${{ vars.NEXT_PUBLIC_CATALOG_SOURCE }}
+            NEXT_PUBLIC_CART_SOURCE=${{ vars.NEXT_PUBLIC_CART_SOURCE }}
+            NEXT_PUBLIC_MOCK_PRODUCTS=${{ vars.NEXT_PUBLIC_MOCK_PRODUCTS }}
+            NEXT_PUBLIC_MOCK_CATALOG=${{ vars.NEXT_PUBLIC_MOCK_CATALOG }}
+            NEXT_PUBLIC_MOCK_ORDERS=${{ vars.NEXT_PUBLIC_MOCK_ORDERS }}
+            NEXT_PUBLIC_MOCK_QUOTES=${{ vars.NEXT_PUBLIC_MOCK_QUOTES }}
+            NEXT_PUBLIC_MOCK_SUPPLIERS=${{ vars.NEXT_PUBLIC_MOCK_SUPPLIERS }}
+            NEXT_PUBLIC_MOCK_PRICING=${{ vars.NEXT_PUBLIC_MOCK_PRICING }}
+            NEXT_PUBLIC_MOCK_CHECKOUT=${{ vars.NEXT_PUBLIC_MOCK_CHECKOUT }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # Autodespliegue: push -> imagen pre -> deploy en pre con el tag INMUTABLE.
+  # prod NO se encadena: dispatch de build.yml con target=prod y luego
+  # deploy.yml con ese prod-<sha7>; su gate son los revisores del environment.
+  deploy-pre:
+    needs: build
+    if: github.event_name == 'push'
+    uses: ./.github/workflows/deploy.yml
+    with:
+      target: pre
+      tag: ${{ needs.build.outputs.tag }}
+    secrets: inherit

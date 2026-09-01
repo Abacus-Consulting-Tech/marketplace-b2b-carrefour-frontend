@@ -1,3 +1,5 @@
+> **OBSOLETO** — este flujo ya no se usa. El despliegue real es Docker + GitHub Actions: ver [docs/DEPLOYMENT.md](../DEPLOYMENT.md). Pendiente de borrado (docs/fix/02).
+
 # Instrucciones Rápidas de Deployment
 ## Marketplace B2B Carrefour → cdmon
 
