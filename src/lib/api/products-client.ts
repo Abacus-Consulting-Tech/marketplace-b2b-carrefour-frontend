@@ -20,6 +20,8 @@ import { createApiHeaders } from './api-utils';
 import type {
   Product,
   ProductStatus,
+  Supplier,
+  ProductCategory,
   ListProductsFilters,
   ListProductsResponse,
   GetProductRequest,
@@ -218,6 +220,59 @@ function normalizeProduct(rawProduct: BackendProductRecord): Product {
   };
 }
 
+function normalizeSupplier(rawSupplier: BackendProductRecord): Supplier {
+  return {
+    id: rawSupplier.id ?? rawSupplier.seller_id ?? rawSupplier.supplier_id ?? '',
+    name: rawSupplier.name ?? rawSupplier.company_name ?? rawSupplier.seller_name ?? 'Proveedor sin nombre',
+    email: rawSupplier.email,
+    phone: rawSupplier.phone,
+    logo: rawSupplier.logo ?? rawSupplier.logo_url,
+  };
+}
+
+function normalizeCategory(rawCategory: BackendProductRecord): ProductCategory {
+  const id = rawCategory.id ?? rawCategory.category_id ?? rawCategory.handle ?? `cat_${Date.now()}`;
+  const name = rawCategory.name ?? rawCategory.title ?? rawCategory.handle ?? 'Sin categoría';
+
+  return {
+    id,
+    name,
+    description: rawCategory.description,
+    handle: rawCategory.handle ?? String(name).toLowerCase().replace(/\s+/g, '-'),
+    parent_category_id: rawCategory.parent_category_id,
+    rank: rawCategory.rank,
+    metadata: rawCategory.metadata,
+  };
+}
+
+function fromCentsToMajorUnit(amount: unknown): number {
+  if (typeof amount !== 'number' || Number.isNaN(amount)) {
+    return 0;
+  }
+
+  return amount >= 1000 ? amount / 100 : amount;
+}
+
+function buildAdminCatalogPayload(request: CreateProductRequest | UpdateProductRequest) {
+  const categories = request.categories ?? [];
+  const variants = 'variants' in request ? request.variants : undefined;
+  const firstVariant = variants?.[0];
+  const firstPrice = firstVariant?.prices?.[0]?.amount;
+  const category = categories[0];
+  const sellerId = 'supplier_id' in request ? request.supplier_id : undefined;
+
+  return {
+    ...request,
+    seller_id: sellerId,
+    product_name: request.title,
+    category,
+    category_id: category,
+    sku: firstVariant?.sku,
+    unit_price: fromCentsToMajorUnit(firstPrice),
+    stock_available: firstVariant?.inventory_quantity ?? 0,
+  };
+}
+
 function normalizeListResponse(rawData: BackendProductRecord | BackendProductRecord[]): ListProductsResponse {
   const rawProducts = Array.isArray(rawData)
     ? rawData
@@ -236,6 +291,18 @@ function normalizeListResponse(rawData: BackendProductRecord | BackendProductRec
 function normalizeGetResponse(rawData: BackendProductRecord): GetProductResponse {
   const product = rawData.product ? normalizeProduct(rawData.product) : normalizeProduct(rawData);
   return { product };
+}
+
+function normalizeCreateResponse(rawData: BackendProductRecord): CreateProductResponse {
+  return {
+    product: rawData.product ? normalizeProduct(rawData.product) : normalizeProduct(rawData),
+  };
+}
+
+function normalizeUpdateResponse(rawData: BackendProductRecord): UpdateProductResponse {
+  return {
+    product: rawData.product ? normalizeProduct(rawData.product) : normalizeProduct(rawData),
+  };
 }
 
 // ============================================================================
@@ -438,17 +505,21 @@ async function realGetProduct(request: GetProductRequest): Promise<ApiResponse<G
 }
 
 async function realCreateProduct(request: CreateProductRequest): Promise<ApiResponse<CreateProductResponse>> {
-  return apiRequest<CreateProductResponse>('/admin/custom/catalog-products', {
+  const data = await apiRequest<BackendProductRecord>('/admin/custom/catalog-products', {
     method: 'POST',
-    body: JSON.stringify(request),
+    body: JSON.stringify(buildAdminCatalogPayload(request)),
   });
+
+  return { data: normalizeCreateResponse(data.data ?? data) };
 }
 
 async function realUpdateProduct(id: string, request: UpdateProductRequest): Promise<ApiResponse<UpdateProductResponse>> {
-  return apiRequest<UpdateProductResponse>(`/admin/custom/catalog-products/${id}`, {
+  const data = await apiRequest<BackendProductRecord>(`/admin/custom/catalog-products/${id}`, {
     method: 'PATCH',
-    body: JSON.stringify(request),
+    body: JSON.stringify(buildAdminCatalogPayload(request)),
   });
+
+  return { data: normalizeUpdateResponse(data.data ?? data) };
 }
 
 async function realDeleteProduct(id: string): Promise<ApiResponse<DeleteProductResponse>> {
@@ -476,6 +547,32 @@ async function realBulkUpdateStatus(request: BulkUpdateStatusRequest): Promise<A
 async function realGetProductStats(): Promise<ApiResponse<GetProductStatsResponse>> {
   // Custom stats endpoint
   return apiRequest<GetProductStatsResponse>('/admin/custom/catalog-products/stats');
+}
+
+async function realGetAssignableSuppliers(): Promise<ApiResponse<Supplier[]>> {
+  const response = await apiRequest<{ data?: BackendProductRecord[] } | BackendProductRecord[]>('/admin/custom/sellers', {
+    method: 'GET',
+  });
+
+  const rawData = response.data ?? response;
+  const suppliers = Array.isArray(rawData) ? rawData : rawData.data ?? [];
+
+  return { data: suppliers.map(normalizeSupplier) };
+}
+
+async function realGetProductCategories(): Promise<ApiResponse<ProductCategory[]>> {
+  const response = await apiRequest<
+    { product_categories?: BackendProductRecord[]; data?: BackendProductRecord[] } | BackendProductRecord[]
+  >('/admin/product-categories', {
+    method: 'GET',
+  });
+
+  const rawData = response.data ?? response;
+  const categories = Array.isArray(rawData)
+    ? rawData
+    : rawData.product_categories ?? rawData.data ?? [];
+
+  return { data: categories.map(normalizeCategory) };
 }
 
 async function realListCatalogProducts(filters?: ListProductsFilters): Promise<ApiResponse<ListProductsResponse>> {
@@ -572,5 +669,17 @@ export const productsApi = {
    */
   getStats(): Promise<ApiResponse<GetProductStatsResponse>> {
     return isMockMode ? mockGetProductStats() : realGetProductStats();
+  },
+
+  getAssignableSuppliers(): Promise<ApiResponse<Supplier[]>> {
+    return featureFlags.shouldUseMock('suppliers')
+      ? Promise.resolve({ data: mockSuppliers })
+      : realGetAssignableSuppliers();
+  },
+
+  getProductCategories(): Promise<ApiResponse<ProductCategory[]>> {
+    return featureFlags.shouldUseMock('categories')
+      ? Promise.resolve({ data: mockCategories })
+      : realGetProductCategories();
   },
 };

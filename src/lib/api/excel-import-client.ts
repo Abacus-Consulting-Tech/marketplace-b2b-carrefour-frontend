@@ -27,7 +27,12 @@
  */
 
 import { featureFlags } from '@/config/feature-flags';
-import { apiRequest, buildQueryString, logApiMode } from './api-utils';
+import {
+  buildQueryString,
+  getAuthToken,
+  getSellerIdFromStorage,
+  logApiMode,
+} from './api-utils';
 import type {
   ImportJob,
   UploadExcelAdminRequest,
@@ -37,6 +42,48 @@ import type {
   ListImportJobsResponse,
   GetImportJobResponse,
 } from '@/types/excel-import';
+
+const BACKEND_API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com';
+
+function getExcelImportUrl(path: string): string {
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    return `/backend${path}`;
+  }
+
+  return `${BACKEND_API_URL}${path}`;
+}
+
+function createExcelHeaders(options?: { isVendor?: boolean }): Record<string, string> {
+  const headers: Record<string, string> = {};
+  const token = getAuthToken();
+
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  if (options?.isVendor) {
+    const sellerId = getSellerIdFromStorage();
+    if (sellerId) {
+      headers['x-seller-id'] = sellerId;
+    }
+  }
+
+  return headers;
+}
+
+async function excelJsonRequest<T>(path: string, options?: { isVendor?: boolean }): Promise<T> {
+  const response = await fetch(getExcelImportUrl(path), {
+    method: 'GET',
+    headers: createExcelHeaders(options),
+  });
+
+  if (!response.ok) {
+    const error = await response.json().catch(() => ({ message: response.statusText }));
+    throw new Error(error.message || `Request failed: ${response.statusText}`);
+  }
+
+  return await response.json();
+}
 
 // ============================================================================
 // ADMIN ENDPOINTS
@@ -55,11 +102,9 @@ export async function downloadTemplateAdmin(): Promise<Blob> {
     return new Blob([], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   }
 
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/custom/products/import/template`, {
+  const response = await fetch(getExcelImportUrl('/admin/custom/products/import/template'), {
     method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${localStorage.getItem('auth-token') || ''}`,
-    },
+    headers: createExcelHeaders(),
   });
 
   if (!response.ok) {
@@ -92,12 +137,9 @@ export async function uploadExcelAdmin(request: UploadExcelAdminRequest): Promis
   formData.append('seller_id', request.seller_id);
   formData.append('file', request.file);
 
-  const token = localStorage.getItem('auth-token');
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/admin/custom/products/import`, {
+  const response = await fetch(getExcelImportUrl('/admin/custom/products/import'), {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token || ''}`,
-    },
+    headers: createExcelHeaders(),
     body: formData,
   });
 
@@ -126,7 +168,7 @@ export async function listImportJobsAdmin(filters?: ListImportJobsFilters): Prom
   }
 
   const queryString = buildQueryString(filters || {});
-  const data = await apiRequest<ListImportJobsResponse>(`/admin/custom/products/import${queryString}`);
+  const data = await excelJsonRequest<ListImportJobsResponse>(`/admin/custom/products/import${queryString}`);
   return data;
 }
 
@@ -152,7 +194,7 @@ export async function getImportJobAdmin(jobId: string): Promise<ImportJob> {
     };
   }
 
-  const response = await apiRequest<GetImportJobResponse>(`/admin/custom/products/import/${jobId}`);
+  const response = await excelJsonRequest<GetImportJobResponse>(`/admin/custom/products/import/${jobId}`);
   return response.job;
 }
 
@@ -172,15 +214,9 @@ export async function downloadTemplateVendor(): Promise<Blob> {
     return new Blob([], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
   }
 
-  const token = localStorage.getItem('auth-token');
-  const sellerId = JSON.parse(localStorage.getItem('auth-storage') || '{}')?.state?.user?.seller_id;
-
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vendor/custom/products/import/template`, {
+  const response = await fetch(getExcelImportUrl('/vendor/custom/products/import/template'), {
     method: 'GET',
-    headers: {
-      'Authorization': `Bearer ${token || ''}`,
-      'x-seller-id': sellerId || '',
-    },
+    headers: createExcelHeaders({ isVendor: true }),
   });
 
   if (!response.ok) {
@@ -211,15 +247,9 @@ export async function uploadExcelVendor(request: UploadExcelVendorRequest): Prom
   const formData = new FormData();
   formData.append('file', request.file);
 
-  const token = localStorage.getItem('auth-token');
-  const sellerId = JSON.parse(localStorage.getItem('auth-storage') || '{}')?.state?.user?.seller_id;
-
-  const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/vendor/custom/products/import`, {
+  const response = await fetch(getExcelImportUrl('/vendor/custom/products/import'), {
     method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${token || ''}`,
-      'x-seller-id': sellerId || '',
-    },
+    headers: createExcelHeaders({ isVendor: true }),
     body: formData,
   });
 
@@ -248,7 +278,7 @@ export async function listImportJobsVendor(filters?: Omit<ListImportJobsFilters,
   }
 
   const queryString = buildQueryString(filters || {});
-  const data = await apiRequest<ListImportJobsResponse>(`/vendor/custom/products/import${queryString}`);
+  const data = await excelJsonRequest<ListImportJobsResponse>(`/vendor/custom/products/import${queryString}`, { isVendor: true });
   return data;
 }
 
@@ -274,7 +304,7 @@ export async function getImportJobVendor(jobId: string): Promise<ImportJob> {
     };
   }
 
-  const response = await apiRequest<GetImportJobResponse>(`/vendor/custom/products/import/${jobId}`);
+  const response = await excelJsonRequest<GetImportJobResponse>(`/vendor/custom/products/import/${jobId}`, { isVendor: true });
   return response.job;
 }
 

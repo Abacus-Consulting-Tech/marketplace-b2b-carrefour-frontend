@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { productsApi } from '@/lib/api/products-client';
 import { mockSuppliers, mockCategories } from '@/lib/api/products-mock';
-import type { Product, ProductVariant, CreateProductRequest } from '@/types/products';
+import type { Product, Supplier, ProductCategory, CreateProductRequest } from '@/types/products';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -40,6 +40,9 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
   const [success, setSuccess] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [suppliers, setSuppliers] = useState<Supplier[]>(mockSuppliers);
+  const [categories, setCategories] = useState<ProductCategory[]>(mockCategories);
+  const [optionsWarning, setOptionsWarning] = useState<string | null>(null);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -108,6 +111,60 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
       );
     }
   }, [product, mode]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const loadOptions = async () => {
+      const warnings: string[] = [];
+
+      try {
+        const supplierResponse = await productsApi.getAssignableSuppliers();
+        if (!isMounted) return;
+
+        if (supplierResponse.data.length > 0) {
+          setSuppliers(supplierResponse.data);
+        } else {
+          warnings.push('proveedores');
+          setSuppliers(mockSuppliers);
+        }
+      } catch {
+        if (!isMounted) return;
+        warnings.push('proveedores');
+        setSuppliers(mockSuppliers);
+      }
+
+      try {
+        const categoriesResponse = await productsApi.getProductCategories();
+        if (!isMounted) return;
+
+        if (categoriesResponse.data.length > 0) {
+          setCategories(categoriesResponse.data);
+        } else {
+          warnings.push('categorías');
+          setCategories(mockCategories);
+        }
+      } catch {
+        if (!isMounted) return;
+        warnings.push('categorías');
+        setCategories(mockCategories);
+      }
+
+      if (isMounted) {
+        setOptionsWarning(
+          warnings.length > 0
+            ? `Se están usando datos de respaldo para ${warnings.join(' y ')}.`
+            : null
+        );
+      }
+    };
+
+    loadOptions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   const validateField = (field: string, value: any): string | null => {
     switch (field) {
@@ -248,7 +305,12 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
         if (response.data?.product) {
           setSuccess(true);
           setTimeout(() => {
-            router.push(`/admin/products/${response.data.product.id}`);
+            const params = new URLSearchParams({
+              productId: response.data.product.id,
+              productName: response.data.product.title,
+              status: response.data.product.status,
+            });
+            router.push(`/admin/products/success?${params.toString()}`);
           }, 1000);
         }
       } else if (product) {
@@ -288,6 +350,17 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
             <p className="text-sm font-medium text-green-800">
               ✓ Producto {mode === 'create' ? 'creado' : 'actualizado'} correctamente
             </p>
+          </CardContent>
+        </Card>
+      )}
+
+      {optionsWarning && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="py-3">
+            <div className="flex items-center gap-2 text-amber-800">
+              <AlertCircle className="h-4 w-4" />
+              <p className="text-sm font-medium">{optionsWarning}</p>
+            </div>
           </CardContent>
         </Card>
       )}
@@ -402,7 +475,7 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
                 <SelectValue placeholder="Seleccione un proveedor" />
               </SelectTrigger>
               <SelectContent>
-                {mockSuppliers.map((supplier) => (
+                {suppliers.map((supplier) => (
                   <SelectItem key={supplier.id} value={supplier.id}>
                     {supplier.name}
                   </SelectItem>
@@ -516,7 +589,7 @@ export default function ProductForm({ product, mode }: ProductFormProps) {
           <div className="space-y-2">
             <Label>Categorías</Label>
             <div className="flex flex-wrap gap-2">
-              {mockCategories.map((cat) => (
+              {categories.map((cat) => (
                 <Badge
                   key={cat.id}
                   variant={formData.category_ids.includes(cat.id) ? 'default' : 'outline'}

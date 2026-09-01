@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/lib/store/auth';
 import { Button } from '@/components/ui/button';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Plus, Upload } from 'lucide-react';
 import { ProductsList } from '@/components/supplier/ProductsList';
 import { featureFlags } from '@/config/feature-flags';
@@ -40,6 +41,14 @@ export default function SupplierProductsPage() {
           </Button>
         </div>
       </div>
+
+      {!featureFlags.shouldUseMock('pricing') && (
+        <Alert className="border-amber-200 bg-amber-50 text-amber-900">
+          <AlertDescription>
+            Si acabas de hacer una carga masiva y no ves los productos aqui, el import puede haber terminado bien pero el listado supplier del backend sigue desalineado en DEV. Revisa el resultado del job de importacion antes de repetir la carga.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Products List */}
       {sellerId ? (
