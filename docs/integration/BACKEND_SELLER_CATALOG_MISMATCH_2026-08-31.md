@@ -1,12 +1,39 @@
 # Informe de Incidencia Backend - Desajuste en Seller Catalog
 
-Fecha: 2026-08-31
-Entorno: Render DEV
-URL base del backend: `https://marketplace-b2b-backend-dev.onrender.com`
-Seller afectado: `sel_01M0T3BYTKQF7RV18RX93XEAQD`
+**Estado: ✅ RESUELTO (2026-09-01)**
+
+Fecha del reporte: 2026-08-31  
+Fecha de resolución: 2026-09-01  
+Entorno: Render DEV  
+URL base del backend: `https://marketplace-b2b-backend-dev.onrender.com`  
+Seller afectado: `sel_01M0T3BYTKQF7RV18RX93XEAQD`  
 Estado de la rama frontend afectada: `dev` actual
 
-## Resumen
+---
+
+## Resolución Final
+
+**Validado en DEV (2026-09-01):**
+
+Bug original confirmado resuelto con el mismo seller del reporte (`sel_01M0T3BYTKQF7RV18RX93XEAQD`):
+
+- `GET /vendor/custom/products` → count: 1, `prod_01M0ZGJ2P2CYZ1040PF1J3A82G`
+- `GET /seller/catalog-products` → **ahora también count: 1**, mismo `prod_01M0ZGJ2P2CYZ1040PF1J3A82G` (antes devolvía count: 0)
+
+**Subrutas nuevas verificadas en DEV:**
+
+- `GET /seller/catalog-products/:id` → detalle correcto
+- `PATCH /seller/catalog-products/:id/stock` → actualiza stock OK
+- Ownership: `x-seller-id` ajeno → 404 (bloqueado correctamente)
+
+**Acción realizada en frontend:**
+- ✅ Fallback temporal a `/vendor/custom/products` **eliminado**
+- ✅ Endpoint `/seller/catalog-products` ahora es la fuente principal
+- ✅ Documentación actualizada
+
+---
+
+## Resumen (Original)
 
 La migración del frontend movió las lecturas de productos de proveedor desde `GET /vendor/custom/products` hacia `GET /seller/catalog-products`.
 
@@ -160,9 +187,12 @@ Para el mismo proveedor autenticado y el mismo `seller_id`:
 
 ## Mitigación temporal aplicada en frontend
 
-Se ha añadido un fallback temporal de compatibilidad en el frontend:
+**[ELIMINADA - 2026-09-01]**
 
-- lectura principal: `GET /seller/catalog-products?limit=100`
-- fallback si viene vacío: `GET /vendor/custom/products?limit=100`
+~~Se ha añadido un fallback temporal de compatibilidad en el frontend:~~
 
-Esto mantiene la visibilidad del listado de productos del proveedor hasta que los endpoints del backend queden alineados.
+~~- lectura principal: `GET /seller/catalog-products?limit=100`~~
+~~- fallback si viene vacío: `GET /vendor/custom/products?limit=100`~~
+
+El fallback temporal ha sido **eliminado** tras confirmar que el backend está resuelto.  
+Frontend ahora usa únicamente `GET /seller/catalog-products` como fuente principal.

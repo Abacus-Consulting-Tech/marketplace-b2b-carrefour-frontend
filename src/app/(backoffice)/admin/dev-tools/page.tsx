@@ -3,11 +3,11 @@
  * 
  * Comprehensive documentation of all Medusa API endpoints used in the application.
  * 
- * 🌐 BACKEND INTEGRATION STATUS (Updated 2026-08-31 13:35 UTC):
+ * 🌐 BACKEND INTEGRATION STATUS (Updated 2026-09-01):
  * ✅ Auth: REAL API - VALIDATED
  * ✅ Admin Orders: REAL API - VALIDATED
  * ✅ Supplier/Vendor Orders: REAL API - VALIDATED
- * ⚠️ Pricing Module: REAL API with temporary frontend fallback; `GET /seller/catalog-products` remains misaligned in DEV
+ * ✅ Pricing Module: REAL API - VALIDATED (seller catalog endpoints fixed 2026-09-01)
  * ✅ Excel Import: REAL API - INTEGRATED
  * ✅ Sellers: REAL API - VALIDATED
  * ✅ Quotes: REAL API - VALIDATED
@@ -16,10 +16,9 @@
  * ⚠️ Products/Catalog: real endpoints respond but are currently empty in DEV; frontend kept in mock for DEV catalog/product UI
  * ⚠️ Checkout: kept in mock because Store API catalog is empty and cart flow cannot be validated end-to-end
  * 
- * 🎯 CURRENT DEV DECISION (2026-08-31):
+ * 🎯 CURRENT DEV DECISION (2026-09-01):
  * - Keep REAL in `auth`, `suppliers`, `pricing`, `orders`, `quotes`
  * - Keep MOCK in `openings`, `franchisees`, `products`, `catalog`, `checkout`, `categories`
- * - Supplier product list uses temporary fallback from `/seller/catalog-products` to `/vendor/custom/products`
  * 
  * Endpoint Summary (Total: 137 endpoints):
  * - Auth: 5 endpoints (login unificado, fallbacks legacy, sesión) ✅ REAL
@@ -863,9 +862,9 @@ export default function DevToolsPage() {
         path: '/seller/catalog-products',
         method: 'GET',
         module: 'pricing',
-        description: 'Mis productos propuestos (desalineado en DEV: devuelve vacio mientras vendor/custom/products devuelve datos)',
+        description: 'Mis productos propuestos',
         usesRealAPI: !featureFlags.shouldUseMock('pricing'),
-        status: 'broken',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/seller/catalog-products'
       },

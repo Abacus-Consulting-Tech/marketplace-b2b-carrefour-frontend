@@ -11,7 +11,7 @@
  * - PATCH /admin/custom/sellers/:id/markup - Update seller markup
  * - GET /admin/custom/sellers/:id/markup/history - Markup change history
  * - POST /seller/catalog-products - Propose new product
- * - GET /seller/catalog-products - My products list
+ * - GET /seller/catalog-products - My products list (✅ FIXED 2026-09-01)
  * - GET /vendor/custom/sellers/me/markup - My markup info
  */
 
@@ -121,7 +121,6 @@ interface SellerCatalogProductsResponse {
 }
 
 const SELLER_CATALOG_ENDPOINT = '/seller/catalog-products';
-const LEGACY_VENDOR_PRODUCTS_ENDPOINT = '/vendor/custom/products';
 
 function toPricingStatus(status: unknown): PricingStatus {
   switch (status) {
@@ -235,16 +234,6 @@ function extractSellerCatalogProduct(
   return response as SellerCatalogProductResponse;
 }
 
-async function listLegacyVendorProducts(sellerId: string): Promise<Product[]> {
-  const data = await apiRequest<VendorProductResponse[] | VendorProductsResponse>(`${LEGACY_VENDOR_PRODUCTS_ENDPOINT}?limit=100`, {
-    method: 'GET',
-    sellerId,
-  });
-
-  const products = Array.isArray(data) ? data : data.products ?? [];
-  return products.map(normalizeVendorProduct);
-}
-
 // Log mode on initialization
 logApiMode('Pricing', isMockMode, isBackendReady);
 
@@ -294,8 +283,7 @@ export const pricingApi = {
 
   /**
    * Get all products for a supplier
-    * GET /seller/catalog-products
-    * Temporary fallback: GET /vendor/custom/products
+   * GET /seller/catalog-products
    * 
    * @param sellerId - Supplier ID
    * @returns Array of all products (any status)
@@ -311,10 +299,6 @@ export const pricingApi = {
     });
 
     const products = Array.isArray(data) ? data : data.products ?? [];
-
-    if (products.length === 0) {
-      return { data: await listLegacyVendorProducts(sellerId) };
-    }
     
     return { data: products.map(normalizeSellerProduct) };
   },
