@@ -38,8 +38,15 @@ const elementStyle = {
 function PaymentFormContent() {
   const stripe = useStripe();
   const elements = useElements();
-  const { formData, prevStep, submit, updatePaymentData, status, error: submitError } =
-    useFranchiseeRegistration();
+  const {
+    formData,
+    prevStep,
+    submit,
+    completeSubmission,
+    updatePaymentData,
+    status,
+    error: submitError,
+  } = useFranchiseeRegistration();
 
   const [cardHolderName, setCardHolderName] = useState(
     formData.cardHolderName || `${formData.firstName || ''} ${formData.lastName || ''}`.trim()
@@ -105,7 +112,26 @@ function PaymentFormContent() {
       return;
     }
 
-    await submit(paymentMethod.id);
+    const response = await submit({
+      stripePaymentMethodId: paymentMethod.id,
+      deferSuccess: true,
+    });
+
+    if (response.billing?.client_secret) {
+      const { error: confirmationError } = await stripe.confirmCardPayment(
+        response.billing.client_secret,
+        {
+          payment_method: paymentMethod.id,
+        }
+      );
+
+      if (confirmationError) {
+        setCardError(confirmationError.message || 'No se pudo confirmar el pago con Stripe');
+        return;
+      }
+    }
+
+    completeSubmission(response.franchisee);
   };
 
   return (
@@ -116,7 +142,8 @@ function PaymentFormContent() {
           Cuota de Alta
         </h3>
         <p className="mb-6 text-sm text-muted-foreground">
-          Solo se acepta tarjeta de crédito. El pago se procesa de forma segura con Stripe.
+          Solo se acepta tarjeta. El pago se procesa de forma segura con Stripe y la activación
+          final depende de la confirmación del backend.
         </p>
 
         <Card>
@@ -192,7 +219,7 @@ function PaymentFormContent() {
               Procesando pago...
             </>
           ) : (
-            'Pagar y Enviar Solicitud'
+            'Enviar solicitud y procesar pago'
           )}
         </Button>
       </div>

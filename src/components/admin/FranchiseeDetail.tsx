@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { franchiseesApi } from '@/lib/api/franchisees-client';
 import type { Franchisee, FranchiseeStats } from '@/types/franchisees';
+import { isFranchiseeBillingEnabled } from '@/lib/config/franchisee-billing';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { FranchiseeStatusBadge, DiscountTierBadge } from './FranchiseeStatusBadge';
@@ -74,8 +75,11 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
     postal_code: '',
     phone: '',
   });
+  const approvalRequiresActiveSubscription = isFranchiseeBillingEnabled;
   const subscriptionActive = franchisee?.metadata?.subscription_status === 'active';
-  const canApprove = franchisee?.metadata?.status === 'pending_approval' && subscriptionActive;
+  const canApprove =
+    franchisee?.metadata?.status === 'pending_approval' &&
+    (!approvalRequiresActiveSubscription || subscriptionActive);
 
   const loadFranchisee = async () => {
     try {
@@ -133,7 +137,7 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
   const handleApprove = async () => {
     if (!franchisee) return;
 
-    if (!subscriptionActive) {
+    if (approvalRequiresActiveSubscription && !subscriptionActive) {
       alert('No se puede aprobar hasta que la suscripción esté activa.');
       return;
     }
@@ -384,7 +388,9 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
         )}
       </div>
 
-      {franchisee.metadata?.status === 'pending_approval' && !subscriptionActive && (
+      {approvalRequiresActiveSubscription &&
+        franchisee.metadata?.status === 'pending_approval' &&
+        !subscriptionActive && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
           {subscriptionBlockMessage}
         </div>

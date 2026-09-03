@@ -1,3 +1,4 @@
+
 # Cómo se da de alta un nuevo proveedor en la plataforma
 
 **Versión**: v1.0
@@ -263,3 +264,4 @@ Una vez aprobado y con acceso activo, el proveedor entra en su portal y ya puede
 ---
 
 *Este documento describe únicamente qué necesita frontend de la API y qué espera recibir. No prescribe cómo implementar workers, colas, sincronización con Odoo ni detalles internos de MercurJS.*
+

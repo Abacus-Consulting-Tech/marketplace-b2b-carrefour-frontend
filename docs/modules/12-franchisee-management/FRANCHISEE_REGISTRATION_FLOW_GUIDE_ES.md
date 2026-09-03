@@ -39,41 +39,39 @@ Un admin decide incorporar a un nuevo franquiciado. Hay dos formas de empezar:
     "id": "inv_123",
     "name": "María García",
     "email": "maria.garcia@email.com",
-    "registrationUrl": "https://.../franchisee/register?...",
+    "registrationUrl": "https://.../franchisee/register?token=inv_123...",
     "status": "pending",
     "createdAt": "2026-09-02T10:00:00Z"
   }
 }
 ```
 
-> Hoy esto no existe en backend. Frontend lo simula generando el enlace localmente y mostrándolo al admin para que lo copie.
+> Backend ya ha compartido el contrato esperado. En DEV el frontend sigue pudiendo simular este enlace para QA cuando el endpoint real no esté disponible.
 
 ### 2. El formulario de registro público
 
-El franquiciado abre el enlace y rellena el formulario. Para franquiciados, hoy el flujo tiene 4 pasos: datos personales, datos de empresa, datos financieros y pago con tarjeta.
+El franquiciado abre el enlace y rellena el formulario. El contrato actual exige `invitationToken` y `password`. El paso de pago con Stripe solo debe mostrarse cuando billing esté habilitado.
 
 **Qué llamamos:**
 - `POST /franchisee/register` — al final del formulario enviamos:
 ```json
 {
+  "invitationToken": "inv_123",
   "firstName": "María",
   "lastName": "García López",
   "email": "maria.garcia@email.com",
+  "password": "<minimo 8 caracteres>",
   "phone": "+34 600 123 456",
   "companyName": "Carrefour Express Sur",
   "taxId": "B12345678",
   "fiscalAddress": "Calle Mayor 123",
   "municipality": "Madrid",
   "postalCode": "28001",
-  "country": "España",
-  "iban": "ES1234567890123456789012",
-  "bankHolderName": "María García López",
-  "swiftBic": "CAIXESBB",
-  "cardHolderName": "María García López",
-  "stripePaymentMethodId": "pm_1AbCdEfGh"
+  "country": "ES"
 }
 ```
-  `swiftBic` es opcional. Esperamos recibir de vuelta:
+
+Cuando billing está habilitado, el frontend crea primero `stripePaymentMethodId` en navegador y lo añade a la petición. La respuesta puede incluir:
 ```json
 {
   "franchisee": {
@@ -84,28 +82,31 @@ El franquiciado abre el enlace y rellena el formulario. Para franquiciados, hoy 
     "metadata": {
       "company_name": "Carrefour Express Sur",
       "status": "pending_approval",
-      "subscription_status": "active",
-      "current_period_end": "2027-09-02T10:00:00Z",
+      "subscription_status": "pending",
       "onboarding_status": "pending_approval"
     }
+  },
+  "billing": {
+    "client_secret": "pi_..._secret_..."
   }
 }
 ```
 
-> Este endpoint todavía no existe en backend. Es el hueco principal para poder cerrar el onboarding real.
+> Si billing está deshabilitado, frontend no debe pedir ni enviar `stripePaymentMethodId`.
 
 ### 3. El pago
 
-El franquiciado debe completar el paso de pago con tarjeta antes de que la solicitud pueda ser aprobada.
+El franquiciado solo ve el paso de pago cuando billing está habilitado.
 
 **Qué llama frontend:**
 - Frontend llama directamente a Stripe en el navegador mediante Stripe Elements para validar la tarjeta y obtener un `payment_method_id`.
-- Esa referencia viaja dentro de `POST /franchisee/register`.
+- Esa referencia viaja dentro de `POST /franchisee/register` como `stripePaymentMethodId`.
+- Si backend devuelve `billing.client_secret`, frontend debe confirmar el pago con Stripe Elements.
 
 **Estado real hoy en frontend:**
 - ✅ El formulario de pago y la tokenización de tarjeta con `stripe.createPaymentMethod(...)` ya están implementados.
-- ❌ El cobro real de la cuota y la creación real de la suscripción todavía no existen en backend.
-- ❌ `POST /franchisee/register` sigue mockeado, así que hoy no hay alta real ni confirmación real de pago.
+- ✅ El flujo ya no envía IBAN ni datos de tarjeta al backend; solo `stripePaymentMethodId` cuando billing está activo.
+- ⚠️ En DEV la validación end-to-end con backend real sigue pendiente; el frontend mantiene modo mock para QA.
 
 **Qué necesitamos en backend aunque no lo llame el frontend directamente:**
 - `POST /webhooks/stripe` — para recibir eventos como `customer.subscription.created`, `invoice.paid`, `invoice.payment_failed` y `customer.subscription.deleted`, y actualizar:
@@ -114,9 +115,9 @@ El franquiciado debe completar el paso de pago con tarjeta antes de que la solic
   - `stripe_subscription_id`
   - `current_period_end`
 
-> ✅ Decidido a nivel de contrato: el pago debe cobrarse en el momento del registro, antes de que el admin vea la solicitud.
+> ✅ Decidido a nivel de contrato: el pago debe cobrarse en el momento del registro, antes de que el admin vea la solicitud, pero solo cuando billing esté activado en la política administrable.
 >
-> ⚠️ Estado actual de implementación: ese cobro real todavía no está resuelto end-to-end; hoy solo capturamos el `payment_method_id` en frontend y simulamos el alta en modo mock.
+> ⚠️ Estado actual de implementación: hasta exponer de forma segura la política de billing a la página pública, frontend refleja esa activación con `NEXT_PUBLIC_FRANCHISEE_BILLING_ENABLED`.
 
 ### 4. La factura (Odoo)
 

@@ -19,9 +19,14 @@ const personalDataSchema = z.object({
   firstName: z.string().min(2, 'El nombre debe tener al menos 2 caracteres'),
   lastName: z.string().min(2, 'Los apellidos deben tener al menos 2 caracteres'),
   email: z.string().email('Email inválido'),
+  password: z.string().min(8, 'La contraseña debe tener al menos 8 caracteres'),
+  confirmPassword: z.string().min(8, 'Debes repetir la contraseña'),
   phone: z
     .string()
     .regex(/^(\+?\d{1,3})?[\s\-]?\d{9,12}$/, 'Teléfono inválido. Ej: +34 600123456'),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Las contraseñas no coinciden',
+  path: ['confirmPassword'],
 });
 
 type PersonalDataFormValues = z.infer<typeof personalDataSchema>;
@@ -35,12 +40,20 @@ export function PersonalDataForm() {
       firstName: formData.firstName || '',
       lastName: formData.lastName || '',
       email: formData.email || '',
+      password: formData.password || '',
+      confirmPassword: formData.password || '',
       phone: formData.phone || '',
     },
   });
 
   const onSubmit = (data: PersonalDataFormValues) => {
-    updatePersonalData(data);
+    updatePersonalData({
+      firstName: data.firstName,
+      lastName: data.lastName,
+      email: data.email,
+      password: data.password,
+      phone: data.phone,
+    });
     nextStep();
   };
 
@@ -91,6 +104,34 @@ export function PersonalDataForm() {
                   <FormLabel>Email *</FormLabel>
                   <FormControl>
                     <Input type="email" placeholder="maria.garcia@email.com" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Contraseña *</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="Mínimo 8 caracteres" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="confirmPassword"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Repetir Contraseña *</FormLabel>
+                  <FormControl>
+                    <Input type="password" placeholder="Repite tu contraseña" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

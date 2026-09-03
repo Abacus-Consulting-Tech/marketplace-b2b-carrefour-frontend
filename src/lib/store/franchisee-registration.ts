@@ -10,13 +10,15 @@ import type {
   Franchisee,
   FranchiseeInvitationPrefill,
   FranchiseeRegistrationForm,
+  RegisterFranchiseeResponse,
 } from '@/types/franchisees';
 import { franchiseeRegistrationApi } from '@/lib/api/franchisee-registration-client';
+import { isFranchiseeBillingEnabled } from '@/lib/config/franchisee-billing';
 
 type SubmissionStatus = 'idle' | 'submitting' | 'submitted' | 'error';
 
 interface FranchiseeRegistrationState {
-  // Current step (0-based index: 0=personal, 1=company, 2=financial)
+  // Current step (0-based index: 0=personal, 1=company, 2=payment(optional))
   currentStep: number;
 
   // Form data
@@ -40,7 +42,8 @@ interface FranchiseeRegistrationState {
   applyInvitationPrefill: (data: FranchiseeInvitationPrefill) => void;
 
   // Final submission
-  submit: (stripePaymentMethodId: string) => Promise<void>;
+  submit: (input?: { stripePaymentMethodId?: string; deferSuccess?: boolean }) => Promise<RegisterFranchiseeResponse>;
+  completeSubmission: (franchisee: Franchisee) => void;
 
   // Reset
   reset: () => void;
@@ -50,9 +53,11 @@ interface FranchiseeRegistrationState {
 }
 
 const initialFormData: Partial<FranchiseeRegistrationForm> = {
+  invitationToken: '',
   firstName: '',
   lastName: '',
   email: '',
+  password: '',
   phone: '',
   companyName: '',
   taxId: '',
@@ -60,11 +65,10 @@ const initialFormData: Partial<FranchiseeRegistrationForm> = {
   municipality: '',
   postalCode: '',
   country: 'España',
-  iban: '',
-  bankHolderName: '',
-  swiftBic: '',
   cardHolderName: '',
 };
+
+const billingEnabled = isFranchiseeBillingEnabled;
 
 export const useFranchiseeRegistration = create<FranchiseeRegistrationState>()(
   persist(
@@ -125,32 +129,70 @@ export const useFranchiseeRegistration = create<FranchiseeRegistrationState>()(
               firstName: firstName || state.formData.firstName || '',
               lastName: data.lastName || lastNameParts.join(' ') || state.formData.lastName || '',
               email: data.email || state.formData.email || '',
+              invitationToken: data.invitationToken || state.formData.invitationToken || '',
             },
           };
         });
       },
 
-      submit: async (stripePaymentMethodId: string) => {
+      submit: async (input) => {
         const { formData, isStepValid } = get();
+        const stripePaymentMethodId = input?.stripePaymentMethodId;
+        const deferSuccess = input?.deferSuccess === true;
 
-        if (!isStepValid(0) || !isStepValid(1) || !isStepValid(2)) {
-          return;
+        if (!isStepValid(0) || !isStepValid(1)) {
+          throw new Error('Faltan datos obligatorios para completar el alta.');
+        }
+
+        if (!formData.invitationToken?.trim()) {
+          const error = 'Invitación inválida o caducada. Solicita un nuevo enlace de alta.';
+          set({ status: 'error', error });
+          throw new Error(error);
+        }
+
+        if (billingEnabled && !stripePaymentMethodId) {
+          const error = 'Falta el método de pago requerido para completar el alta.';
+          set({ status: 'error', error });
+          throw new Error(error);
         }
 
         set({ status: 'submitting', error: null });
 
         try {
-          const { franchisee } = await franchiseeRegistrationApi.register({
-            ...(formData as FranchiseeRegistrationForm),
-            stripePaymentMethodId,
+          const response = await franchiseeRegistrationApi.register({
+            invitationToken: formData.invitationToken!.trim(),
+            firstName: formData.firstName!.trim(),
+            lastName: formData.lastName!.trim(),
+            email: formData.email!.trim(),
+            password: formData.password!,
+            phone: formData.phone!.trim(),
+            companyName: formData.companyName!.trim(),
+            taxId: formData.taxId!.trim(),
+            fiscalAddress: formData.fiscalAddress!.trim(),
+            municipality: formData.municipality!.trim(),
+            postalCode: formData.postalCode!.trim(),
+            country: formData.country!.trim(),
+            ...(stripePaymentMethodId ? { stripePaymentMethodId } : {}),
           });
-          set({ status: 'submitted', result: franchisee });
+
+          if (deferSuccess) {
+            set({ result: response.franchisee });
+          } else {
+            set({ status: 'submitted', result: response.franchisee });
+          }
+
+          return response;
         } catch (err) {
           set({
             status: 'error',
             error: err instanceof Error ? err.message : 'Error al enviar la solicitud',
           });
+          throw err;
         }
+      },
+
+      completeSubmission: (franchisee) => {
+        set({ status: 'submitted', result: franchisee, error: null });
       },
 
       reset: () => {
@@ -169,9 +211,12 @@ export const useFranchiseeRegistration = create<FranchiseeRegistrationState>()(
         switch (step) {
           case 0: // Datos personales
             return !!(
+              formData.invitationToken &&
               formData.firstName &&
               formData.lastName &&
               formData.email &&
+              formData.password &&
+              formData.password.length >= 8 &&
               formData.phone
             );
 
@@ -184,9 +229,6 @@ export const useFranchiseeRegistration = create<FranchiseeRegistrationState>()(
               formData.postalCode &&
               formData.country
             );
-
-          case 2: // Datos financieros
-            return !!(formData.iban && formData.bankHolderName);
 
           default:
             return false;

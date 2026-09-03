@@ -3,6 +3,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -23,6 +24,7 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { useFranchiseeRegistration } from '@/lib/store/franchisee-registration';
+import { isFranchiseeBillingEnabled } from '@/lib/config/franchisee-billing';
 
 // Validación NIF/CIF español
 const nifCifRegex = /^([0-9]{8}[A-Za-z]|[A-HJ-NP-SUVW][0-9]{7}[0-9A-J])$/;
@@ -41,7 +43,8 @@ const companyDataSchema = z.object({
 type CompanyDataFormValues = z.infer<typeof companyDataSchema>;
 
 export function CompanyDataForm() {
-  const { formData, updateCompanyData, nextStep, prevStep } = useFranchiseeRegistration();
+  const { formData, updateCompanyData, nextStep, prevStep, submit, status, error } =
+    useFranchiseeRegistration();
 
   const form = useForm<CompanyDataFormValues>({
     resolver: zodResolver(companyDataSchema),
@@ -55,14 +58,29 @@ export function CompanyDataForm() {
     },
   });
 
-  const onSubmit = (data: CompanyDataFormValues) => {
+  const onSubmit = async (data: CompanyDataFormValues) => {
     updateCompanyData(data);
-    nextStep();
+
+    if (isFranchiseeBillingEnabled) {
+      nextStep();
+      return;
+    }
+
+    await submit();
   };
+
+  const isSubmitting = status === 'submitting';
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+        {status === 'error' && error && (
+          <div className="flex items-start gap-2 rounded-lg bg-red-50 p-3 text-sm text-red-700">
+            <AlertCircle className="h-5 w-5 flex-shrink-0" />
+            <p>{error}</p>
+          </div>
+        )}
+
         <div className="rounded-lg border bg-card p-6">
           <h3 className="mb-4 text-lg font-semibold">Datos de la Empresa</h3>
 
@@ -175,11 +193,20 @@ export function CompanyDataForm() {
         </div>
 
         <div className="flex justify-between">
-          <Button type="button" variant="outline" onClick={prevStep}>
+          <Button type="button" variant="outline" onClick={prevStep} disabled={isSubmitting}>
             Anterior
           </Button>
-          <Button type="submit" size="lg">
-            Continuar
+          <Button type="submit" size="lg" disabled={isSubmitting}>
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Enviando...
+              </>
+            ) : isFranchiseeBillingEnabled ? (
+              'Continuar'
+            ) : (
+              'Enviar solicitud'
+            )}
           </Button>
         </div>
       </form>

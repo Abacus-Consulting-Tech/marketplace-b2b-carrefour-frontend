@@ -1,3 +1,4 @@
+
 # Guía de Alta de Franquiciado
 
 **Versión**: v1.0
@@ -11,8 +12,8 @@ Al terminar este proceso habrás:
 
 - enviado tu solicitud de alta
 - completado tus datos personales y de empresa
-- añadido tus datos bancarios
-- realizado el paso de pago
+- creado tu contraseña de acceso
+- completado el paso de pago si aparece en tu proceso
 
 Después de eso, el equipo de Carrefour revisará tu solicitud y te avisará cuando tu acceso esté listo.
 
@@ -24,8 +25,8 @@ Ten a mano esta información:
 - tu email y teléfono
 - los datos fiscales de tu empresa
 - tu dirección fiscal
-- tu IBAN
-- una tarjeta bancaria para completar el pago
+- una contraseña nueva para tu cuenta
+- una tarjeta bancaria solo si en tu formulario aparece el paso de pago
 
 Reserva entre 10 y 15 minutos para hacerlo con calma.
 
@@ -35,6 +36,11 @@ Reserva entre 10 y 15 minutos para hacerlo con calma.
 2. Entrarás en la página de alta de franquiciado.
 3. Verás un proceso por pasos. Solo tienes que ir completando cada pantalla y pulsar en continuar.
 
+Importante:
+
+- El enlace de invitación es personal.
+- Debes abrir el enlace completo que te haya enviado Carrefour.
+
 ## Paso 1. Datos personales
 
 En esta primera pantalla introduce tu información básica:
@@ -42,14 +48,16 @@ En esta primera pantalla introduce tu información básica:
 - nombre
 - apellidos
 - correo electrónico
+- contraseña
 - teléfono
 
 Qué hacer:
 
 1. Revisa si tu nombre o email ya aparecen rellenos.
 2. Completa los campos que falten.
-3. Comprueba que el email esté bien escrito, porque será importante para comunicaciones posteriores.
-4. Pulsa en **Continuar**.
+3. Crea tu contraseña siguiendo las indicaciones de la pantalla.
+4. Comprueba que el email esté bien escrito, porque será importante para comunicaciones posteriores.
+5. Pulsa en **Continuar**.
 
 Consejo:
 
@@ -78,42 +86,23 @@ Consejo:
 
 Si no estás seguro de un dato fiscal, es mejor comprobarlo antes de enviar la solicitud.
 
-## Paso 3. Datos bancarios
+## Paso 3. Pago, si aparece en tu proceso
 
-Ahora debes introducir la información bancaria necesaria para el alta.
-
-Te pueden pedir:
-
-- IBAN
-- titular de la cuenta
-- código SWIFT/BIC, si aplica
+En algunos casos, el proceso puede incluir una pantalla de pago con tarjeta.
 
 Qué hacer:
 
-1. Introduce el IBAN sin errores.
-2. Asegúrate de que el titular de la cuenta esté bien escrito.
-3. Si dispones de SWIFT/BIC, añádelo si se solicita.
-4. Pulsa en **Continuar**.
-
-Consejo:
-
-Revisa el IBAN dos veces. Un número mal escrito puede retrasar la validación.
-
-## Paso 4. Pago
-
-En la última pantalla realizarás el paso de pago con tu tarjeta.
-
-Qué hacer:
-
-1. Escribe el nombre del titular de la tarjeta.
-2. Introduce el número de tarjeta.
-3. Añade la fecha de caducidad.
-4. Introduce el código de seguridad.
-5. Acepta las condiciones si se muestran en pantalla.
-6. Pulsa en el botón final para enviar el alta.
+1. Revisa si la pantalla de pago aparece después de los datos de empresa.
+2. Si aparece, escribe el nombre del titular de la tarjeta.
+3. Introduce el número de tarjeta.
+4. Añade la fecha de caducidad.
+5. Introduce el código de seguridad.
+6. Acepta las condiciones si se muestran en pantalla.
+7. Pulsa en el botón final para enviar el alta.
 
 Importante:
 
+- Si no aparece esta pantalla, puedes enviar la solicitud sin ese paso.
 - Si algún dato de la tarjeta es incorrecto, la pantalla te lo indicará.
 - Si todo está bien, tu solicitud quedará enviada al terminar este paso.
 
@@ -142,7 +131,7 @@ Si hay algún problema con tus datos, es posible que el equipo se ponga en conta
 ## Recomendaciones útiles
 
 - Completa el proceso de una sola vez si puedes.
-- Revisa bien email, CIF/NIF e IBAN antes de continuar.
+- Revisa bien email, CIF/NIF y la contraseña antes de continuar.
 - Usa una conexión estable para evitar interrupciones.
 - Si cierras la página por error, vuelve a abrir el enlace y revisa si tus datos siguen guardados.
 
@@ -159,6 +148,10 @@ Si todavía no has enviado el formulario, corrígelo antes de continuar. Si ya l
 **No he recibido acceso al momento**
 
 Es normal. Primero hay una revisión interna antes de que tu cuenta quede activa.
+
+**No veo el paso de pago**
+
+Es posible que tu alta no lo requiera en este momento. Completa el resto del proceso normalmente.
 
 **He terminado, pero no sé cuál es el siguiente paso**
 

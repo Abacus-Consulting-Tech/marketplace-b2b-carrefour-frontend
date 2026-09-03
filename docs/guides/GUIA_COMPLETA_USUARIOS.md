@@ -62,6 +62,17 @@ Usa tu correo y contraseña corporativos.
 
 Serás redirigido automáticamente a tu panel correspondiente.
 
+### Altas e invitaciones
+
+Si vas a entrar por primera vez como franquiciado o proveedor invitado, usa siempre el enlace de alta que te haya enviado Carrefour.
+
+Guías recomendadas:
+
+- [Guía de Alta de Franquiciado](GUIA_ONBOARDING_FRANQUICIADO.md)
+- [Guía de Onboarding de Proveedor](GUIA_ONBOARDING_PROVEEDOR.md)
+- [Guía para Administrar Altas de Franquiciados](GUIA_ADMIN_ONBOARDING_FRANQUICIADO.md)
+- [Guía para Administrar Altas de Proveedores](GUIA_ADMIN_ONBOARDING_PROVEEDOR.md)
+
 ---
 
 ## 📱 Navegación General
@@ -303,6 +314,17 @@ Tarjetas con estadísticas clave:
 4. **Dev Tools** 🛠️  
    Acceso a herramientas de desarrollo (solo admins)
 
+### Altas de franquiciados y proveedores
+
+Además de la operativa diaria, los administradores también gestionan altas nuevas.
+
+Para ese proceso, usa estas guías específicas:
+
+- **Franquiciados:** invitación, revisión, aprobación y gestión de tiendas
+- **Proveedores:** invitación, revisión de pendientes, aprobación/rechazo y directorio
+
+Si necesitas el paso a paso completo, consulta las guías dedicadas de onboarding administrativo.
+
 ---
 
 ### 💰 Gestión de Márgenes
@@ -491,6 +513,19 @@ Accede a información técnica:
 - Pedidos pendientes
 - Gasto total
 - Acceso rápido al catálogo
+
+### Alta inicial como franquiciado
+
+Si todavía no tienes acceso activo, el alta se hace desde un enlace de invitación enviado por Carrefour.
+
+Qué debes saber:
+
+- primero completas tus datos personales y de empresa
+- defines tu contraseña de acceso
+- en algunos casos verás también un paso de pago antes de enviar la solicitud
+- después tu solicitud queda pendiente de revisión interna
+
+Para instrucciones detalladas, consulta la guía específica de alta de franquiciado.
 
 ### 🛒 Catálogo de Productos
 

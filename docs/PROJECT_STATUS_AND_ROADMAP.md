@@ -1,8 +1,8 @@
 # Estado del Proyecto y Roadmap - Marketplace B2B Carrefour
 
-**Fecha**: 26 de Agosto de 2026  
-**Última Actualización**: Martes 26 Agosto 17:15 UTC - 🎉 COMPLETE WORKFLOW VALIDATION  
-**Estado General**: 🟢 Frontend UI 85% | Integraciones Backend 35% | MVP Funcional 55%
+**Fecha**: 03 de Septiembre de 2026  
+**Última Actualización**: Miércoles 03 Septiembre 18:50 UTC - Onboarding franquiciados y documentación sincronizados  
+**Estado General**: ⚠️ DEV híbrido | Frontend UI ampliamente cubierto | Inventario API: 148 endpoints (77 working, 5 broken, 66 untested)
 
 > **📌 FUENTE DE VERDAD (Source of Truth)**  
 > Este documento, junto con la **Especificación Técnica v1.0** (PDF 23 páginas) y [Dev Tools](http://localhost:3000/admin/dev-tools), son las **fuentes oficiales** de verdad del proyecto.  
@@ -11,12 +11,12 @@
 > **⚠️ ACTUALIZACIÓN CRÍTICA (26/08/2026)**  
 > Tras comparar con la Especificación Técnica oficial, hemos identificado **gaps significativos** en integraciones críticas (Stripe, Odoo, liquidaciones). El roadmap ha sido actualizado con las **7 fases + Sprint 0** del spec y las **6 decisiones bloqueantes** que deben resolverse antes de desarrollo backend.
 
-> **🎉 VALIDACIÓN COMPLETA (26/08/2026 17:15 UTC)**  
+> **🎉 VALIDACIÓN BASE (26/08/2026 17:15 UTC) + SINCRONIZACIÓN 03/09/2026**  
 > El workflow completo de B2B ha sido validado end-to-end con el backend de Render DEV:
 > ✅ Vendor propone producto → Admin ve en pending → Admin actualiza markup → Vendor ve sus productos  
-> ✅ 39 endpoints validados con respuestas reales  
+> ✅ El inventario actual en `dev-tools` sube a 148 endpoints documentados  
 > ✅ Audit trail completo funcionando (proposed_by, updated_by, previous values)  
-> ✅ **Backend PRODUCTION-READY para todos los módulos validados**
+> ⚠️ El proyecto sigue en modo híbrido: módulos validados conviven con superficies mock o parciales
 
 **✅ INCIDENCIA RESUELTA**: Success page del checkout validada el 26/08. El flujo confirma pedido y renderiza `/marketplace/checkout-new/success?orderId=order_mock_1787743309226&display_id=CF-309226` correctamente.
 
@@ -40,8 +40,9 @@
 - ✅ **Checkout** - Wizard multi-paso (15 archivos, ~3,366 líneas)
 - ✅ **Openings** - Gestión de aperturas con documentos técnicos
 
-### 🎉 BACKEND INTEGRATION - PRODUCTION READY (26/08/2026):
-- ✅ **39 endpoints validados** con backend Render DEV
+### 🌐 BACKEND INTEGRATION - HYBRID DEV STATUS (03/09/2026):
+- ✅ **77 endpoints marcados como working** en el inventario actual de `dev-tools`
+- ⚠️ **5 endpoints broken** y **66 untested** en el inventario actual
 - ✅ **Complete workflow validated**: Vendor→Admin→Approval flow working
 - ✅ **Auth Module** (4 endpoints) - JWT admin + vendor working
 - ✅ **Orders Module** (12 endpoints) - Admin + Supplier + Franchisee all working
@@ -49,6 +50,7 @@
 - ✅ **Sellers Module** (7 endpoints) - CRUD + Markup GET/PATCH working
 - ✅ **Excel Import** (8 endpoints) - Bulk upload working
 - ✅ **Quotes Module** (6 endpoints) - Customer + Admin + Seller working
+- ⚠️ **Franchisees Module** - onboarding público ya sale a backend real por defecto; lista/detalle admin siguen condicionados por RBAC en `/admin/customers`
 - ✅ **Audit Trail** - proposed_by, updated_by, previous values all tracked
 - ✅ **Validation** - Duplicate detection, required fields, proper error handling
 - ⚠️ **Known RBAC Issue**: /admin/customers returns 403 (keep in mock mode)
@@ -68,8 +70,8 @@
 
 ### 📊 Cobertura Real vs Especificación Técnica:
 - **Frontend UI Mock**: 85% completo (13 de 18 módulos del spec)
-- **Integraciones Backend**: 35% completo (39 endpoints VALIDATED + 6 more INTEGRATED = 45 of ~165 totals)
-- **MVP Funcional End-to-End**: 55% completo
+- **Integraciones Backend**: inventario actual de 148 endpoints con 77 `working`, 5 `broken` y 66 `untested`
+- **MVP Funcional End-to-End**: operativo en modo híbrido, con `auth`, `suppliers`, `pricing`, `orders` y `quotes` usables en DEV
 - **Módulos del Spec Implementados**: 8 de 18 (44%)
 - **Workflow Validation**: ✅ 100% (Vendor→Admin→Approval complete)
 
@@ -1042,20 +1044,21 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 
 ---
 
-### 16.1. Franchisee Self-Service — Alta, Invitación y Tiendas (HOY - Martes 02 Septiembre)
-**Estado**: ✅ Completo (Mock) — sin contrato backend acordado todavía
+### 16.1. Franchisee Self-Service — Alta, Invitación y Tiendas (Actualizado 03 Septiembre)
+**Estado**: ✅ Completo (Híbrido) — onboarding real por defecto, administración general aún mock por RBAC
 
 **Lo que se hizo:**
-- Flujo completo de autoregistro público en `/franchisee/register`: 4 pasos (datos personales, empresa, financieros, pago con tarjeta vía Stripe Elements) usando Zustand + react-hook-form + zod, mismo patrón que el registro de proveedores
-- Pago con tarjeta real vía `stripe.createPaymentMethod` (validación real de Stripe en modo test) y expectativa de alta inmediata de suscripción antes de la aprobación admin
-- Acción ligera "Invitar Franquiciado" en `/admin/franchisees/new` (solo nombre + email), genera un enlace a `/franchisee/register` y simula el envío de email
+- Flujo de autoregistro público en `/franchisee/register`: 2 pasos obligatorios (datos personales con contraseña, empresa) y un paso opcional de Stripe cuando billing está activado, usando Zustand + react-hook-form + zod
+- Pago con tarjeta vía `stripe.createPaymentMethod` solo cuando billing está activado; el frontend envía exclusivamente `stripePaymentMethodId`
+- Acción ligera "Invitar Franquiciado" en `/admin/franchisees/new` (solo nombre + email), genera un enlace a `/franchisee/register` con token de invitación
+- `POST /franchisee/register` y `POST /admin/franchisees/invitations` ya salen a backend real por defecto, con flags específicos para volver temporalmente a mock si hace falta
 - Nuevo estado `pending_approval` en `FranchiseeMetadata.status`, alineado con el enum real confirmado por backend (`pending_approval | active | suspended | inactive`)
-- Metadatos de onboarding/suscripción en mock (`subscription_status`, `stripe_customer_id`, `stripe_subscription_id`, `current_period_end`, `onboarding_status`) para poder probar la aprobación realista
-- Botón "Aprobar Franquiciado" y pestaña "Estado y Notas" en el detalle de franquiciado (`/admin/franchisees/:id`), bloqueando la activación si `subscription_status !== active` e incluyendo la simulación del evento asíncrono de sincronización con Odoo (partner) tras la aprobación
+- Metadatos de onboarding/suscripción en mock (`subscription_status`, `stripe_customer_id`, `stripe_subscription_id`, `current_period_end`, `onboarding_status`) para poder probar la aprobación realista cuando billing está activado
+- Botón "Aprobar Franquiciado" y pestaña "Estado y Notas" en el detalle de franquiciado (`/admin/franchisees/:id`), bloqueando la activación por suscripción solo cuando billing está activado e incluyendo la simulación del evento asíncrono de sincronización con Odoo (partner) tras la aprobación
 - Filtro/tarjeta "Pendientes de Aprobación" en la lista de franquiciados
 - Gestión de tiendas del franquiciado: añadir/editar/eliminar tiendas desde `/admin/franchisees/:id` (dialog) y desde `/marketplace/profile` (self-service, persistido en localStorage)
 - Sección "Mis Facturas" en `/marketplace/profile`, hoy mockeada a la espera del endpoint backend
-- Persistencia compartida del mock de franquiciados en localStorage para que el alta pública y la vista admin lean el mismo estado en QA
+- Persistencia compartida del mock de franquiciados en localStorage para que, si `/admin/customers` sigue bloqueado, un alta real siga siendo visible en la UI admin durante QA
 - 3 franquiciados `pending_approval` añadidos al mock data para poder probar el flujo de aprobación sin tener que autoregistrarse primero
 
 **Archivos nuevos/modificados principales:**
@@ -1070,8 +1073,8 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 - `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE.md` (EN) y `FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md` (ES) — guía de contrato frontend-backend con endpoints, payloads y preguntas abiertas
 
 **Pendiente / bloqueado por backend** (ver guía de flujo para detalle):
-- ❌ `POST /franchisee/register`, `POST /admin/franchisees/invitations`, `POST /webhooks/stripe`, `GET /franchisee/:id/invoices`, `GET/POST/DELETE /franchisee/stores*` — no existen en backend, 100% mock o sin contrato cerrado
-- ✅ Pago decidido antes de la aprobación admin; sigue pendiente el backend real de Stripe Billing/webhooks
+- ⚠️ `POST /webhooks/stripe` sigue pendiente de validación real completa en DEV
+- ✅ Pago decidido antes de la aprobación admin cuando billing está habilitado; sigue pendiente la validación real de Stripe Billing/webhooks
 - ❓ Contrato real: `/admin/franchisees*` vs `/admin/customers*` sin confirmar con frontend
 - ❓ Activación de credenciales: falta decidir si sale como efecto de `PATCH /admin/franchisees/:id/status` o si necesita endpoint separado
 - ❌ Facturación real vía Odoo (solo la sincronización de contacto está confirmada, no la factura)
@@ -2451,7 +2454,7 @@ docs/
 - **Backend**: 15 documentos organizados en modules/
 - **Testing**: 7 guías de testing
 - **Technical**: 10+ documentos técnicos
-- **Guides**: 3+ guías de usuario
+- **Guides**: 5+ guías de usuario + versiones PDF para cliente
 - **SQL Scripts**: 4 módulos (Categories, Pricing, Orders, Quotes)
 - **README Files**: 12 índices (1 root + 1 testing + 10 modules)
 
@@ -2464,6 +2467,6 @@ docs/
 ---
 
 **Documento mantenido por**: Frontend Team  
-**Última actualización**: 25 Agosto 2026 - Documentación reorganizada y consolidada  
-**Próxima revisión**: Fin de Semana 4 (completar Checkout)  
+**Última actualización**: 03 Septiembre 2026 - Estado híbrido y onboarding sincronizados  
+**Próxima revisión**: Tras validación real de franchisee onboarding y siguientes cambios de inventario  
 **Contacto**: Ver email enviado a backend

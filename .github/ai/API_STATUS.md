@@ -9,7 +9,8 @@
 **Inventory Status**: 77 working, 5 broken, 66 untested
 **Status**: ⚠️ HYBRID DEV MODE
   - 🌐 Real en DEV: `auth`, `suppliers`, `pricing`, `orders`, `quotes`
-  - 🎭 Mock en DEV: `openings`, `franchisees`, `products`, `catalog`, `checkout`, `categories`
+  - ⚠️ Híbrido en DEV: `franchisees` (onboarding real por defecto; administración general aún mock por RBAC en `/admin/customers`)
+  - 🎭 Mock en DEV: `openings`, `products`, `catalog`, `checkout`, `categories`
   - ℹ️ `Real API Config` en `dev-tools` significa "apunta al backend", no "validado"
 
 ---
@@ -89,14 +90,14 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 - `GET /admin/customers/:id` — **BROKEN** (403 RBAC)
 - 8 endpoints adicionales siguen untested
 - `GET /store/customers/me` está inventariado pero no revalida el módulo completo
-- **Nuevo 2026-09-02 (self-service, propuesto — no construido en backend)**:
-  - `POST /admin/franchisees/invitations` — Invitar franquiciado (nombre + email)
-  - `POST /franchisee/register` — Autoregistro público (crea `status: pending_approval`, incluye pago Stripe y espera devolver `subscription_status`/`current_period_end`)
+- **Self-service de franquiciados (contrato backend recibido 2026-09-03, sin revalidación end-to-end en DEV)**:
+  - `POST /admin/franchisees/invitations` — Invitar franquiciado (nombre + email, devuelve `registrationUrl` con token)
+  - `POST /franchisee/register` — Autoregistro público con `invitationToken` + `password`; crea `status: pending_approval` y solo acepta `stripePaymentMethodId` cuando billing está habilitado
   - `POST /webhooks/stripe` — Webhook backend para altas, renovaciones y fallos de suscripción
   - `GET /franchisee/:id/invoices` — Lectura de facturas del franquiciado para el perfil
   - `GET /franchisee/stores`, `POST /franchisee/stores`, `DELETE /franchisee/stores/:id` — Gestión de tiendas del franquiciado (mock, persistido en localStorage, sin endpoint real)
-  - `PATCH /admin/franchisees/:id/status` ya inventariado (ver módulo `franchisee-management` más abajo) ahora también usado por la UI de aprobación y debe bloquear activación sin `subscription_status=active`
-- **Status**: ⚠️ PARTIAL EN BACKEND, MOCK EN DEV — self-service, facturas y stores siguen mock; contrato backend todavía por cerrar (ver `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md`)
+  - `PATCH /admin/franchisees/:id/status` ya inventariado (ver módulo `franchisee-management` más abajo) bloquea activación por suscripción solo cuando billing está habilitado
+- **Status**: ⚠️ PARTIAL EN BACKEND, HÍBRIDO EN DEV — `POST /admin/franchisees/invitations` y `POST /franchisee/register` ya salen a backend real por defecto; el listado/gestión general de franquiciados sigue en mock por el problema RBAC de `/admin/customers` (ver `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md`)
 
 ### Openings (24 endpoints)
 - `GET /admin/openings/projects` — **BROKEN** (404 en DEV)
@@ -143,7 +144,8 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 - `/store/products` — Responde sin catálogo utilizable en DEV; `catalog` y `products` siguen en mock para la UI franchisee
 - Checkout real bloqueado por dos gaps: `GET /store/products` devuelve `variant_id` no siempre válido para `/store/carts*`, y `POST /store/checkout/payment-intent` todavía responde con `client_secret` simulado en lugar de un PaymentIntent Stripe real
 - `/admin/orders/stats` — marcado como broken en el inventario actual
-- `/admin/franchisees/invitations`, `/franchisee/register`, `/webhooks/stripe`, `/franchisee/:id/invoices`, `/franchisee/stores*` — superficies de onboarding/autoservicio inventariadas desde frontend; **no existen en backend** o siguen sin contrato cerrado
+- `/webhooks/stripe`, `/franchisee/:id/invoices`, `/franchisee/stores*` — siguen sin validación real completa en DEV dentro del flujo de alta/autoservicio de franquiciados
+- `/admin/customers` y `/admin/customers/:id` siguen bloqueando la retirada total del mock en administración de franquiciados; el onboarding real espeja temporalmente el alta en el store mock para que QA pueda verla en la UI admin
 - `/admin/suppliers/invitations`, `/supplier/register`, `/admin/suppliers/:id/status` — onboarding de proveedor construido en frontend y validado en mock; siguen sin backend real o sin contrato cerrado
 - `PATCH /admin/sellers/:id`, `DELETE /admin/sellers/:id` — consumidos por el nuevo directorio admin de proveedores, pero no revalidados contra backend DEV en la ronda actual
 

@@ -17,6 +17,9 @@ import type {
   RegisterFranchiseeRequest,
   RegisterFranchiseeResponse,
 } from '@/types/franchisees';
+import { featureFlags } from '@/config/feature-flags';
+import { isFranchiseeBillingEnabled } from '@/lib/config/franchisee-billing';
+import { shouldUseMockFranchiseeRegistration } from '@/lib/config/franchisee-onboarding';
 import {
   initializeMockFranchiseesStorage,
   mockFranchisees,
@@ -28,8 +31,9 @@ import {
 // Flip this to true once backend confirms the contract — the shared 'franchisees'
 // feature flag isn't reused here on purpose, since this endpoint doesn't exist at all.
 const BACKEND_ENDPOINT_READY = false;
-const isMockMode = !BACKEND_ENDPOINT_READY;
+const isMockMode = shouldUseMockFranchiseeRegistration;
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
+const billingEnabled = isFranchiseeBillingEnabled;
 
 if (typeof window !== 'undefined') {
   console.log(
@@ -66,12 +70,30 @@ async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promi
 function mockRegisterFranchisee(
   request: RegisterFranchiseeRequest
 ): Promise<RegisterFranchiseeResponse> {
-  return new Promise((resolve) => {
+  return new Promise((resolve, reject) => {
     setTimeout(() => {
+      if (!request.invitationToken.trim()) {
+        reject(new Error('Invitación inválida o caducada. Solicita un nuevo enlace de alta.'));
+        return;
+      }
+
+      if (request.password.trim().length < 8) {
+        reject(new Error('La contraseña debe tener al menos 8 caracteres.'));
+        return;
+      }
+
+      if (!billingEnabled && request.stripePaymentMethodId) {
+        reject(new Error('Billing deshabilitado: reintenta el alta sin método de pago.'));
+        return;
+      }
+
+      if (billingEnabled && !request.stripePaymentMethodId) {
+        reject(new Error('Se requiere un método de pago para completar el alta.'));
+        return;
+      }
+
       initializeMockFranchiseesStorage();
       const now = new Date();
-      const currentPeriodEnd = new Date(now);
-      currentPeriodEnd.setFullYear(currentPeriodEnd.getFullYear() + 1);
 
       const franchisee: Franchisee = {
         id: `fran_${now.getTime()}`,
@@ -86,13 +108,14 @@ function mockRegisterFranchisee(
           city: request.municipality,
           country: request.country,
           status: 'pending_approval',
-          subscription_status: 'active',
-          stripe_customer_id: `cus_mock_${now.getTime()}`,
-          stripe_subscription_id: `sub_mock_${now.getTime()}`,
-          current_period_end: currentPeriodEnd.toISOString(),
+          subscription_status: billingEnabled ? 'pending' : undefined,
+          stripe_customer_id: billingEnabled ? `cus_mock_${now.getTime()}` : undefined,
+          stripe_subscription_id: billingEnabled ? `sub_mock_${now.getTime()}` : undefined,
           onboarding_status: 'pending_approval',
           is_active: false,
-          notes: `Alta autoservicio · IBAN: ${request.iban} · Titular: ${request.bankHolderName} · Cuota de alta pagada (Stripe payment_method: ${request.stripePaymentMethodId})`,
+          notes: billingEnabled
+            ? `Alta autoservicio con Stripe pendiente de confirmación · PaymentMethod: ${request.stripePaymentMethodId}`
+            : 'Alta autoservicio sin billing activo',
         },
         created_at: now.toISOString(),
         updated_at: now.toISOString(),
@@ -101,9 +124,34 @@ function mockRegisterFranchisee(
       mockFranchisees.push(franchisee);
       persistMockFranchisees();
 
-      resolve({ franchisee });
-    }, 1200); // Simulates waiting for the payment confirmation
+      resolve({
+        franchisee,
+        billing: billingEnabled
+          ? { client_secret: `pi_mock_${now.getTime()}_secret_mock` }
+          : undefined,
+      });
+    }, 1200);
   });
+}
+
+function syncFranchiseeIntoMockStore(franchisee: Franchisee) {
+  if (!featureFlags.shouldUseMock('franchisees')) {
+    return;
+  }
+
+  initializeMockFranchiseesStorage();
+
+  const existingIndex = mockFranchisees.findIndex(
+    (item) => item.id === franchisee.id || item.email === franchisee.email
+  );
+
+  if (existingIndex >= 0) {
+    mockFranchisees[existingIndex] = franchisee;
+  } else {
+    mockFranchisees.unshift(franchisee);
+  }
+
+  persistMockFranchisees();
 }
 
 export const franchiseeRegistrationApi = {
@@ -116,10 +164,14 @@ export const franchiseeRegistrationApi = {
       return mockRegisterFranchisee(request);
     }
 
-    return apiRequest<RegisterFranchiseeResponse>('/franchisee/register', {
+    const response = await apiRequest<RegisterFranchiseeResponse>('/franchisee/register', {
       method: 'POST',
       body: JSON.stringify(request),
     });
+
+    syncFranchiseeIntoMockStore(response.franchisee);
+
+    return response;
   },
 };
 

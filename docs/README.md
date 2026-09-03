@@ -1,6 +1,6 @@
 # Marketplace B2B Carrefour - Índice de Documentación
 
-**Última actualización**: 26 de Agosto de 2026
+**Última actualización**: 03 de Septiembre de 2026
 
 Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carrefour, reorganizada para mejor navegación.
 
@@ -11,7 +11,7 @@ Esta carpeta contiene toda la documentación del proyecto Marketplace B2B Carref
 Para información actualizada del proyecto, consultar estas **3 fuentes oficiales**:
 
 1. **📊 [Estado y Roadmap](PROJECT_STATUS_AND_ROADMAP.md)** ⭐ - Documento maestro con estado actual, módulos completados, roadmap y alineación con Especificación Técnica v1.0
-2. **🔧 [Dev Tools Panel](http://localhost:3000/admin/dev-tools)** - Panel en vivo con 122 endpoints API documentados
+2. **🔧 [Dev Tools Panel](http://localhost:3000/admin/dev-tools)** - Panel en vivo con el inventario actual de endpoints y flags activos
 3. **📚 [Documentación Técnica](technical/)** - Guías técnicas detalladas por módulo
 
 ---
@@ -112,6 +112,9 @@ Documentos sobre decisiones técnicas, alineación con backend y reuniones.
 - **[User Guide](guides/USER_GUIDE.md)** - Manual en inglés
 - **[Guía Onboarding Franquiciado](guides/GUIA_ONBOARDING_FRANQUICIADO.md)** - Alta paso a paso para franquiciados
 - **[Guía Onboarding Proveedor](guides/GUIA_ONBOARDING_PROVEEDOR.md)** - Alta paso a paso para proveedores
+- **[Guía Admin Onboarding Franquiciado](guides/GUIA_ADMIN_ONBOARDING_FRANQUICIADO.md)** - Proceso administrativo de alta de franquiciados
+- **[Guía Admin Onboarding Proveedor](guides/GUIA_ADMIN_ONBOARDING_PROVEEDOR.md)** - Proceso administrativo de alta de proveedores
+- Versiones PDF disponibles en la misma carpeta para compartir con cliente cuando sea necesario
 - **[Quick Test Openings](guides/QUICK_TEST_OPENINGS.md)** - Guía rápida de testing de aperturas
 - **[Supplier Registration](guides/SUPPLIER_REGISTRATION.md)** - Contrato backend del onboarding de proveedores
 - **[Mercur Hybrid Setup](guides/MERCUR_HYBRID_SETUP_GUIDE.md)** - Configuración híbrida

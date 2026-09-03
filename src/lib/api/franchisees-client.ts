@@ -17,6 +17,7 @@
  */
 
 import { featureFlags } from '@/config/feature-flags';
+import { shouldUseMockFranchiseeInvitations } from '@/lib/config/franchisee-onboarding';
 import type {
   Franchisee,
   FranchiseeMetadata,
@@ -60,6 +61,7 @@ import {
 // ============================================================================
 
 const isMockMode = featureFlags.shouldUseMock('franchisees');
+const isMockInviteMode = shouldUseMockFranchiseeInvitations;
 const API_BASE_URL = featureFlags.getApiBaseUrl('franchisees') || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
 
 // Log mode on initialization
@@ -316,17 +318,19 @@ function mockInviteFranchisee(request: InviteFranchiseeRequest): Promise<ApiResp
     setTimeout(() => {
       initializeMockFranchiseesStorage();
       const origin = typeof window !== 'undefined' ? window.location.origin : '';
-      const registrationUrl = `${origin}/franchisee/register?invited_name=${encodeURIComponent(request.name)}&invited_email=${encodeURIComponent(request.email)}`;
+      const invitationToken = `inv_${Date.now()}`;
+      const registrationUrl = `${origin}/franchisee/register?token=${encodeURIComponent(invitationToken)}&invited_name=${encodeURIComponent(request.name)}&invited_email=${encodeURIComponent(request.email)}`;
 
       console.log(`📧 [mock email] Invitación de franquiciado enviada a ${request.email}: ${registrationUrl}`);
 
       resolve({
         data: {
           invitation: {
-            id: `inv_${Date.now()}`,
+            id: invitationToken,
             name: request.name,
             email: request.email,
             registrationUrl,
+            invitationToken,
             status: 'pending',
             createdAt: new Date().toISOString(),
           },
@@ -646,10 +650,10 @@ export const franchiseesApi = {
 
   /**
    * Invite a franchisee (name + email only)
-   * POST /admin/franchisees/invitations (proposed endpoint, not built yet)
+   * POST /admin/franchisees/invitations
    */
   async inviteFranchisee(request: InviteFranchiseeRequest): Promise<ApiResponse<InviteFranchiseeResponse>> {
-    if (isMockMode) {
+    if (isMockInviteMode) {
       return mockInviteFranchisee(request);
     }
 

@@ -248,6 +248,7 @@ export interface FranchiseeInvitation {
   name: string;
   email: string;
   registrationUrl: string;
+  invitationToken?: string;
   status: 'pending' | 'used' | 'expired';
   createdAt: string;
 }
@@ -262,10 +263,13 @@ export interface InviteFranchiseeResponse {
 // ============================================================================
 
 export interface FranchiseeRegistrationForm {
+  invitationToken: string;
+
   // Paso 1: Datos personales
   firstName: string;
   lastName: string;
   email: string;
+  password: string;
   phone: string;
 
   // Paso 2: Datos de la empresa
@@ -277,28 +281,44 @@ export interface FranchiseeRegistrationForm {
   country: string;
 
   // Paso 3: Datos financieros
-  iban: string;
-  bankHolderName: string;
+  iban?: string;
+  bankHolderName?: string;
   swiftBic?: string; // Recomendado para cuentas fuera de España (ver bankAccount.swift en API_SPEC.md)
 
   // Paso 4: Pago (cuota de alta)
-  cardHolderName: string;
+  cardHolderName?: string;
 }
 
-export type RegisterFranchiseeRequest = FranchiseeRegistrationForm & {
-  // Stripe PaymentMethod id created client-side (see PaymentForm.tsx). The real
-  // charge/PaymentIntent flow still depends on backend (see open questions doc).
-  stripePaymentMethodId: string;
-};
+export interface RegisterFranchiseeRequest {
+  invitationToken: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  phone: string;
+  companyName: string;
+  taxId: string;
+  fiscalAddress: string;
+  municipality: string;
+  postalCode: string;
+  country: string;
+  stripePaymentMethodId?: string;
+}
+
+export interface RegisterFranchiseeBilling {
+  client_secret?: string;
+}
 
 export interface RegisterFranchiseeResponse {
   franchisee: Franchisee;
+  billing?: RegisterFranchiseeBilling;
 }
 
 export interface FranchiseeInvitationPrefill {
   firstName?: string;
   lastName?: string;
   email?: string;
+  invitationToken?: string;
 }
 
 // ============================================================================

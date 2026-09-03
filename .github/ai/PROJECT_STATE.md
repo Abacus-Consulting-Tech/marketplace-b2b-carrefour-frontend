@@ -103,7 +103,7 @@ Three user roles in separate app sections:
 
 See `API_STATUS.md` for detailed endpoint list. Summary:
 - **Stable for current DEV UI**: `auth`, `suppliers`, `pricing` (con fallback temporal en seller catalog), `orders`, `quotes`
-- **Partial in backend but kept mock in DEV**: `franchisees` (`/admin/customers*` GET devuelve `403`)
+- **Hybrid in DEV**: `franchisees` (invitations + public registration salen a backend real por defecto; `/admin/customers*` GET sigue devolviendo `403`)
 - **Mock in DEV**: `openings` (`/openings/projects` devuelve `404`), `products`, `catalog`, `checkout`, `categories`
 - **Source inventory snapshot**: 148 endpoints total, 77 `working`, 5 `broken`, 66 `untested`
 
@@ -134,10 +134,10 @@ See `API_STATUS.md` for detailed endpoint list. Summary:
   - Workaround: Feature flag `franchisees.useMock = true` (enabled by default)
   - Create/Update/Delete operations work normally
 
-- **Franchisee Self-Service (new 2026-09-02, still 100% mock)**: Admin "Invitar Franquiciado" (`/admin/franchisees/new`), public self-registration (`/franchisee/register`, 4-step form incl. Stripe payment step), admin approval action, and franchisee-owned store management (`/marketplace/profile`) are all built frontend-only
-  - Impact: No backend contract exists yet for `POST /franchisee/register`, `POST /admin/franchisees/invitations`, `POST /webhooks/stripe`, `GET /franchisee/:id/invoices`, or franchisee stores
-  - Workaround: Fully mock (registration mock pushes into the same in-memory `mockFranchisees` array the admin UI reads, stores persisted in localStorage)
-  - Blocking questions documented in `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md` (`/admin/franchisees*` vs `/admin/customers*` contract, invoices path, credential activation side effect, Odoo/Stripe handoff)
+- **Franchisee Self-Service (contract received 2026-09-03, hybrid in DEV)**: Admin "Invitar Franquiciado" (`/admin/franchisees/new`) y public self-registration (`/franchisee/register`, 2-step form plus optional Stripe payment step) ya llaman backend real por defecto; la administración general de franquiciados sigue mockeada por el RBAC de `/admin/customers`
+  - Impact: Onboarding ya puede usar endpoints reales, pero la retirada total del mock depende de validar list/detail admin, invoices y stores contra backend
+  - Workaround: si `franchisees.useMock = true`, un alta real se refleja también en el store mock para que QA la vea en la UI admin; billing sigue gobernado por `NEXT_PUBLIC_FRANCHISEE_BILLING_ENABLED` hasta exponer una lectura pública segura de la política
+  - Remaining questions documented in `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md` (RBAC real en admin customers, invoices path, credential activation side effect, Odoo/Stripe handoff)
 
 - **Supplier Catalog Mismatch**: `/seller/catalog-products` no devuelve datos utilizables en DEV
   - Impact: `/supplier/products` necesita fallback temporal a `/vendor/custom/products`

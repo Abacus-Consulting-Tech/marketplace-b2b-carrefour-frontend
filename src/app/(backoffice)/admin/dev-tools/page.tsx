@@ -3,7 +3,7 @@
  * 
  * Comprehensive documentation of all Medusa API endpoints used in the application.
  * 
- * 🌐 BACKEND INTEGRATION STATUS (Updated 2026-09-01):
+ * 🌐 BACKEND INTEGRATION STATUS (Updated 2026-09-03):
  * ✅ Auth: REAL API - VALIDATED
  * ✅ Admin Orders: REAL API - VALIDATED
  * ✅ Supplier/Vendor Orders: REAL API - VALIDATED
@@ -11,27 +11,28 @@
  * ✅ Excel Import: REAL API - INTEGRATED
  * ✅ Sellers: REAL API - VALIDATED
  * ✅ Quotes: REAL API - VALIDATED
- * ⚠️ Franchisees: backend route responds with RBAC `403`; frontend kept in mock for DEV
+ * ⚠️ Franchisees: admin customers still hit RBAC `403`, but invitations and public registration now call real backend by default
  * ⚠️ Openings: backend route `/openings/projects` responds `404`; frontend kept in mock for DEV
  * ⚠️ Products/Catalog: real endpoints respond but are currently empty in DEV; frontend kept in mock for DEV catalog/product UI
  * ⚠️ Checkout: kept in mock because Store API catalog is empty and cart flow cannot be validated end-to-end
  * 
- * 🎯 CURRENT DEV DECISION (2026-09-01):
+ * 🎯 CURRENT DEV DECISION (2026-09-03):
  * - Keep REAL in `auth`, `suppliers`, `pricing`, `orders`, `quotes`
- * - Keep MOCK in `openings`, `franchisees`, `products`, `catalog`, `checkout`, `categories`
+ * - Keep HYBRID in `franchisees` (real onboarding, mock admin list/detail while `/admin/customers` stays blocked)
+ * - Keep MOCK in `openings`, `products`, `catalog`, `checkout`, `categories`
  * 
- * Endpoint Summary (Total: 137 endpoints):
+ * Endpoint Summary (Total: 148 endpoints):
  * - Auth: 5 endpoints (login unificado, fallbacks legacy, sesión) ✅ REAL
  * - Admin: 1 endpoint (usuario actual) ✅ REAL
  * - Suppliers: 3 endpoints (sellers admin + vendor actual) ✅ REAL
- * - Franchisees: 10 endpoints (customers admin + direcciones + `store/customers/me`) ⚠️ MOCK EN DEV
+ * - Franchisees: 17 endpoints (customers admin + onboarding + stores/invoices surfaces) ⚠️ HÍBRIDO EN DEV
  * - Openings: 24 endpoints (projects, categories, documents, invitations, quotes, financing, status) ⚠️ MOCK EN DEV
  * - Pricing + Excel Import: 20 endpoints (pending products, markups, seller catalog, imports) ✅ REAL CON FALLBACK TEMPORAL
  * - Products: 8 endpoints (CRUD admin, stats, bulk operations, inventory) ⚠️ MOCK EN DEV
  * - Catalog: 2 endpoints (listado y detalle marketplace) ⚠️ MOCK EN DEV
  * - Store: 1 endpoint (regions) ⚠️ SIN VALIDAR
  * - Cart: 6 endpoints (cart operations + shipping options) ⚠️ SIN VALIDAR
- * - Checkout: 15 endpoints (address, shipping, payment, complete, order) ⚠️ MOCK EN DEV
+ * - Checkout: 24 endpoints (address, shipping, payment, complete, order) ⚠️ MOCK EN DEV
  * - Orders: 22 endpoints (admin, franchisee y supplier/vendor) ✅ REAL
  * - Quotes: 14 endpoints (franchisee + supplier) ✅ REAL
  * - Franchisee Management: 6 endpoints (CRUD, status, stats) ⚠️ SIN VALIDAR
@@ -59,6 +60,10 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { CheckCircle2, XCircle, AlertCircle, Database, Cloud, Settings, Code } from 'lucide-react';
 import { featureFlags } from '@/config/feature-flags';
+import {
+  shouldUseMockFranchiseeInvitations,
+  shouldUseMockFranchiseeRegistration,
+} from '@/lib/config/franchisee-onboarding';
 import { useAuthStore } from '@/lib/store/auth';
 
 interface EndpointInfo {
@@ -314,15 +319,15 @@ export default function DevToolsPage() {
       },
 
       // ========================================================================
-      // FRANCHISEE SELF-SERVICE (Proposed 2026-09-02 — not built in backend yet)
+      // FRANCHISEE SELF-SERVICE (Contract received 2026-09-03 — still not revalidated end-to-end in DEV)
       // See docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md
       // ========================================================================
       {
         path: '/admin/franchisees/invitations',
         method: 'POST',
         module: 'franchisees',
-        description: 'Invitar franquiciado (nombre + email, genera enlace a /franchisee/register)',
-        usesRealAPI: false,
+        description: 'Invitar franquiciado (nombre + email, devuelve registrationUrl con token de un solo uso para /franchisee/register)',
+        usesRealAPI: !shouldUseMockFranchiseeInvitations,
         status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/franchisees/invitations'
@@ -331,8 +336,8 @@ export default function DevToolsPage() {
         path: '/franchisee/register',
         method: 'POST',
         module: 'franchisees',
-        description: 'Autoregistro público de franquiciado (crea con status: pending_approval, incluye pago Stripe y debe devolver subscription_status/current_period_end)',
-        usesRealAPI: false,
+        description: 'Autoregistro público con invitationToken + password; crea pending_approval y solo acepta stripePaymentMethodId si billing está habilitado; puede devolver billing.client_secret',
+        usesRealAPI: !shouldUseMockFranchiseeRegistration,
         status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/franchisee/register'
@@ -341,7 +346,7 @@ export default function DevToolsPage() {
         path: '/webhooks/stripe',
         method: 'POST',
         module: 'franchisees',
-        description: 'Webhook Stripe para altas/renovaciones/fallos de suscripción; actualiza subscription_status, stripe ids y current_period_end',
+        description: 'Webhook Stripe para altas, renovaciones y fallos de suscripción; actualiza subscription_status, stripe ids y current_period_end',
         usesRealAPI: false,
         status: 'untested',
         requiresAuth: false,
@@ -2002,6 +2007,18 @@ export default function DevToolsPage() {
                 <div className="flex justify-between p-2 border-b">
                   <span className="text-muted-foreground">MOCK_FRANCHISEES:</span>
                   <span>{process.env.NEXT_PUBLIC_MOCK_FRANCHISEES || 'true'}</span>
+                </div>
+                <div className="flex justify-between p-2 border-b">
+                  <span className="text-muted-foreground">MOCK_FRANCHISEE_INVITATIONS:</span>
+                  <span>{process.env.NEXT_PUBLIC_MOCK_FRANCHISEE_INVITATIONS || 'false'}</span>
+                </div>
+                <div className="flex justify-between p-2 border-b">
+                  <span className="text-muted-foreground">MOCK_FRANCHISEE_REGISTRATION:</span>
+                  <span>{process.env.NEXT_PUBLIC_MOCK_FRANCHISEE_REGISTRATION || 'false'}</span>
+                </div>
+                <div className="flex justify-between p-2 border-b">
+                  <span className="text-muted-foreground">FRANCHISEE_BILLING_ENABLED:</span>
+                  <span>{process.env.NEXT_PUBLIC_FRANCHISEE_BILLING_ENABLED || 'false'}</span>
                 </div>
               </div>
             </CardContent>
