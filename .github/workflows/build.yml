@@ -13,7 +13,9 @@
 # salen del GitHub Environment del target (docs/DEPLOYMENT.md).
 #
 # Gates:
-#   audit: npm audit --omit=dev --audit-level=high (solo deps de runtime).
+#   audit: audit-ci (npm audit high, solo deps de runtime) con la allowlist de
+#          riesgo aceptado declarada en audit-ci.jsonc (hoy: next 14.x, sin
+#          parche disponible; migracion en docs/feature/03_next-16-migration.md).
 #   test : vitest --passWithNoTests (hoy no hay tests: docs/fix/01).
 #   El build en si (next build + tsc) es el tercer gate.
 
@@ -45,7 +47,9 @@ jobs:
         with:
           node-version: 24
       # Trabaja sobre el lockfile: no necesita npm ci.
-      - run: npm audit --omit=dev --audit-level=high
+      # audit-ci = npm audit (high, solo runtime) + allowlist de riesgo aceptado.
+      # Cada entrada de la allowlist esta justificada en audit-ci.jsonc.
+      - run: npx --yes audit-ci@^7 --config audit-ci.jsonc
 
   test:
     runs-on: ubuntu-latest
