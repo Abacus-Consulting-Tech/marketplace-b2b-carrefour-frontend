@@ -95,7 +95,7 @@ Three user roles in separate app sections:
 
 1. **Quotations**: Admin creates opening → invites suppliers → supplier creates quotation → franchisee reviews & selects → digital signature → admin validation
 2. **Product Catalog**: Supplier uploads products → pending approval → admin reviews markup → approved products visible in catalog
-3. **Orders**: Franchisee selects products & checkout → order confirmed → supplier fulfillment → tracking updates → order complete
+3. **Orders**: Franchisee selects products → review grouped by supplier → Stripe payment → backend webhook confirms order → supplier fulfillment → tracking updates → order complete
 
 ---
 
@@ -116,6 +116,7 @@ See `API_STATUS.md` for detailed endpoint list. Summary:
 - RBAC fix for `/admin/customers*` to move franchisees out of mock in DEV
 - Backend availability for `/openings/projects` and related openings flows
 - Store catalog data quality to unlock real cart/checkout validation end-to-end
+- Definir contrato específico de estado post-pago para el checkout tras webhook Stripe
 
 **Blocking issues (6 decisions needed):**
 - Stripe Billing (annual subscriptions)
@@ -153,8 +154,8 @@ See `API_STATUS.md` for detailed endpoint list. Summary:
 - **RBAC Permissions**: `/admin/customers` (GET) broken on Medusa backend
   
 - **Checkout / Store Catalog**: Store API no devuelve hoy catálogo utilizable para validar carrito y checkout real
-  - Impact: `GET /store/products` devuelve `variant_id` no siempre válido para `/store/carts*`, y el contrato custom `POST /store/checkout/payment-intent` todavía responde con `client_secret` simulado
-  - Workaround: Mantener checkout mock; cuando se pruebe la UI real, usar el flujo OOTB de `/store/carts*` más `POST /store/checkout/payment-intent` y confirmar el estado final solo desde backend tras webhook Stripe
+  - Impact: `GET /store/products` devuelve `variant_id` no siempre válido para `/store/carts*`, el checkout real sigue sin cerrarse end-to-end en DEV y aún falta un contrato dedicado para consultar el estado final tras webhook Stripe
+  - Workaround: Mantener checkout mock en DEV; la UI ya está preparada para Stripe-only con `payment-collections`, agrupación por proveedor y success page de confirmación asíncrona
 
 - **Stripe**: JS integrated but PaymentIntents flow not fully tested
 

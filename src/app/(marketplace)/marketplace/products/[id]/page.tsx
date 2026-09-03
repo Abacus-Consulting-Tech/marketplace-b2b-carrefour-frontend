@@ -59,6 +59,8 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
       quantity,
       image: product.thumbnail,
       variantId: selectedVariant.id,
+      supplierId: product.supplier_id || product.supplier?.id,
+      supplierName: product.supplier?.name,
     });
     
     toast({

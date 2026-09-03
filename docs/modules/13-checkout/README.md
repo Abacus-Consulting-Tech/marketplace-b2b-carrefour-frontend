@@ -1,7 +1,7 @@
 # Módulo 13: Checkout (Flujo de Compra Completo)
 
 ## Estado
-⚠️ **Frontend completado, validación real pendiente en DEV** - el módulo sigue en mock (31/08/2026)
+⚠️ **Frontend actualizado y alineado al flujo objetivo, validación real pendiente en DEV** - el módulo sigue en mock por bloqueo catálogo/carrito (03/09/2026)
 
 ## Descripción
 Flujo completo de checkout para franquiciados, integrando carrito, dirección, envío, pago y confirmación de pedido. Es el módulo más extenso del sistema (15 archivos, ~3,366 líneas).
@@ -13,9 +13,10 @@ Flujo completo de checkout para franquiciados, integrando carrito, dirección, e
 
 ### Frontend Implementado
 - **15 archivos** creados (~3,366 líneas de código)
-- **Flujo multi-step**: Cart → Address → Shipping → Payment → Confirmation
-- **Extensiones de Medusa**: Custom checkout extensions
-- **Integración Stripe**: Pagos con tarjeta
+- **Flujo multi-step actual**: Address → Review → Secure Payment → Async Confirmation
+- **Integración Stripe**: Pago visible solo con tarjeta
+- **Review agrupada por proveedor**: prepara el split operativo con pedido comercial único
+- **Confirmación asíncrona**: la success page ya no afirma confirmación inmediata
 - **Validación completa**: Todos los pasos con validación
 
 ### Features Principales
@@ -46,19 +47,15 @@ Flujo completo de checkout para franquiciados, integrando carrito, dirección, e
 
 4. **Payment Step (Pago)**
    - Integración con Stripe
-   - Formulario de tarjeta seguro
-   - Validación de datos de tarjeta
-   - Resumen del pedido
-   - Términos y condiciones
-   - Procesamiento seguro
+- Stripe Elements como camino principal
+- Sin transferencia bancaria en el flujo principal
+- Procesamiento seguro
 
 5. **Confirmation Step (Confirmación)**
-   - Número de pedido generado
-   - Detalles completos del pedido
-   - Información de pago
-   - Estado inicial
-   - Botón para ver pedido
-   - Email de confirmación enviado
+- Número de pedido generado
+- Estado `processing`, `confirmed` o `manual_review`
+- Polling temporal del pedido franquiciado mientras se define el endpoint final de estado post-pago
+- Preparada para mostrar bloques por proveedor cuando backend exponga subórdenes o metadata
 
 6. **Extensiones de Checkout**
    - Custom hooks para cada paso
@@ -107,7 +104,7 @@ src/types/checkout.ts (156 líneas)
 
 - Este README documenta el flujo objetivo de checkout.
 - El frontend real alineado actualmente no depende de un namespace custom `/checkout/*` como superficie backend estable.
-- La implementación real está basada en rutas Store/Medusa de carrito y checkout (`/store/carts*`, `/store/shipping-options`, `/store/orders/:id`).
+- La implementación real está basada en rutas Store/Medusa de carrito y checkout (`/store/carts*`, `/store/shipping-options`) y lectura temporal de `GET /franchisee/orders/:id` para la success page.
 - Aun así, el flujo no puede validarse end-to-end en DEV porque el catálogo real no devuelve datos utilizables para construir carrito y completar compra.
 - Por eso `checkout` sigue en mock en la configuración híbrida recomendada.
 

@@ -132,6 +132,8 @@ export const mapMercurCartToCartState = (cart: MercurCart): MappedMercurCart => 
       backendLineItemId: item.id,
       offerId: item.metadata?.offer_id,
       variantId: item.variant_id ?? undefined,
+      supplierId: typeof item.metadata?.supplier_id === 'string' ? item.metadata.supplier_id : undefined,
+      supplierName: typeof item.metadata?.supplier_name === 'string' ? item.metadata.supplier_name : undefined,
     })),
     summary: {
       subtotal: cart.item_subtotal ?? cart.subtotal - cart.shipping_total,

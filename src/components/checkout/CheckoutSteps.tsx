@@ -2,7 +2,7 @@
  * Checkout Steps Component - Marketplace B2B Carrefour
  * 
  * Visual stepper para el proceso de checkout
- * Muestra los 3 pasos: Dirección → Pago → Revisión
+ * Muestra los 3 pasos: Dirección → Revisión → Pago
  */
 
 'use client'
@@ -23,14 +23,14 @@ const STEPS: Step[] = [
     description: 'Dónde quieres recibir tu pedido',
   },
   {
-    id: 'payment',
-    title: 'Método de pago',
-    description: 'Cómo quieres pagar',
-  },
-  {
     id: 'review',
     title: 'Revisar pedido',
-    description: 'Confirma los detalles',
+    description: 'Agrupado por proveedor',
+  },
+  {
+    id: 'payment',
+    title: 'Pago seguro',
+    description: 'Confirmación con Stripe',
   },
 ]
 

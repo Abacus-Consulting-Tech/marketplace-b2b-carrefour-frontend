@@ -14,6 +14,10 @@ Para información actualizada del proyecto, consultar estas **3 fuentes oficiale
 2. **🔧 [Dev Tools Panel](http://localhost:3000/admin/dev-tools)** - Panel en vivo con el inventario actual de endpoints y flags activos
 3. **📚 [Documentación Técnica](technical/)** - Guías técnicas detalladas por módulo
 
+**Nota 03/09/2026**: el checkout vivo ya está documentado como flujo Stripe-only con confirmación asíncrona y agrupación por proveedor en review. El backend sigue pendiente de validación end-to-end en DEV.
+
+**Nota 03/09/2026 - Franquiciados**: el módulo de franquiciados ya tiene una guía backend actualizada con rutas actuales `/admin/customers*`, onboarding nuevo, rutas legacy `/admin/franchisees*` y estado real `working` / `broken` / `untested` en DEV.
+
 ---
 
 ## 📁 Estructura de Documentación (Reorganizada 26/08/2026)
@@ -65,6 +69,7 @@ Documentos sobre decisiones técnicas, alineación con backend y reuniones.
 - `08-franchisee-orders/` - Pedidos de franquiciados
 - `09-admin-orders/` - Vista global de pedidos (2 documentos + SQL)
 - `10-quotes/` - Presupuestos (2 documentos + SQL 840 líneas)
+- `12-franchisee-management/` - Gestión de franquiciados y onboarding (README + backend guide actualizado + flujo de registro)
 
 **Ver detalles completos**: [modules/README.md](modules/README.md)
 
@@ -96,6 +101,7 @@ Documentos sobre decisiones técnicas, alineación con backend y reuniones.
 **Carpeta: [`testing/`](testing/)** - 7 guías de testing por módulo
 
 - **[Índice de Testing](testing/README.md)** - Resumen de todas las guías
+- **[Quick Test Checkout](testing/QUICK_TEST_CHECKOUT.md)** - Validación rápida del checkout Stripe-only y la success page asíncrona
 - `TESTING_CATALOG.md` - Testing del catálogo
 - `TESTING_PRODUCT_MANAGEMENT.md` - Testing CRUD de productos
 - `TESTING_CATEGORY_MANAGEMENT.md` - Testing de categorías
@@ -208,5 +214,5 @@ Para dudas sobre la documentación:
 
 ---
 
-**Última actualización**: 25 de Agosto de 2026  
+**Última actualización**: 03 de Septiembre de 2026  
 **Mantenido por**: Frontend Team

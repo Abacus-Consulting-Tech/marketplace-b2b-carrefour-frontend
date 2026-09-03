@@ -16,8 +16,8 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { productsApi } from "@/lib/api/products-client";
-import { mockSuppliers, mockCategories } from "@/lib/api/products-mock";
-import type { Product } from "@/types/products";
+import { mockSuppliers } from "@/lib/api/products-mock";
+import type { Product, ProductCategory } from "@/types/products";
 import { Search, ShoppingCart, Filter, Package, ArrowLeft } from "lucide-react";
 import { useCartStore } from "@/lib/store/cart";
 import { useToast } from "@/hooks/use-toast";
@@ -63,6 +63,28 @@ export default function ShopPage({ searchParams }: ShopPageProps) {
     }
   };
 
+  const availableCategories = products.reduce<ProductCategory[]>((categories, product) => {
+    for (const category of product.categories || []) {
+      const alreadyIncluded = categories.some(
+        (candidate) => candidate.id === category.id || candidate.handle === category.handle
+      );
+
+      if (!alreadyIncluded) {
+        categories.push(category);
+      }
+    }
+
+    return categories;
+  }, []);
+
+  const effectiveSelectedCategory =
+    selectedCategory === "all" ||
+    availableCategories.some(
+      (category) => category.id === selectedCategory || category.handle === selectedCategory
+    )
+      ? selectedCategory
+      : "all";
+
   const filteredProducts = products
     .filter((product) => {
       // Only show published products
@@ -75,8 +97,10 @@ export default function ShopPage({ searchParams }: ShopPageProps) {
 
       // Category filter
       const matchesCategory =
-        selectedCategory === "all" ||
-        product.categories?.some((cat) => cat.id === selectedCategory);
+        effectiveSelectedCategory === "all" ||
+        product.categories?.some(
+          (cat) => cat.id === effectiveSelectedCategory || cat.handle === effectiveSelectedCategory
+        );
 
       // Supplier filter
       const matchesSupplier =
@@ -101,7 +125,9 @@ export default function ShopPage({ searchParams }: ShopPageProps) {
     });
 
   // Get current category info for breadcrumb
-  const currentCategory = mockCategories.find((cat) => cat.id === selectedCategory);
+  const currentCategory = availableCategories.find(
+    (category) => category.id === effectiveSelectedCategory || category.handle === effectiveSelectedCategory
+  );
 
   const handleAddToCart = (product: Product) => {
     if (product.variants.length === 0) {
@@ -123,6 +149,8 @@ export default function ShopPage({ searchParams }: ShopPageProps) {
       quantity: 1,
       price,
       image: product.thumbnail,
+      supplierId: product.supplier_id || product.supplier?.id,
+      supplierName: product.supplier?.name,
     });
 
     toast({
@@ -149,11 +177,11 @@ export default function ShopPage({ searchParams }: ShopPageProps) {
             </Link>
           </div>
           <h1 className="text-3xl font-bold text-slate-900">
-            {currentCategory && selectedCategory !== "all"
+            {currentCategory && effectiveSelectedCategory !== "all"
               ? currentCategory.name
               : "Todos los productos"}
           </h1>
-          {currentCategory && selectedCategory !== "all" && (
+          {currentCategory && effectiveSelectedCategory !== "all" && (
             <p className="text-slate-600 mt-1">{currentCategory.description}</p>
           )}
         </div>
@@ -183,13 +211,13 @@ export default function ShopPage({ searchParams }: ShopPageProps) {
                 <Filter className="inline w-4 h-4 mr-2" />
                 Categoría
               </label>
-              <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+              <Select value={effectiveSelectedCategory} onValueChange={setSelectedCategory}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todas las categorías</SelectItem>
-                  {mockCategories.map((category) => (
+                  {availableCategories.map((category) => (
                     <SelectItem key={category.id} value={category.id}>
                       {category.name}
                     </SelectItem>

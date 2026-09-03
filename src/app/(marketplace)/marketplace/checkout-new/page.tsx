@@ -9,10 +9,11 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { featureFlags } from '@/config/feature-flags'
 import { useCartStore } from '@/lib/store/cart'
 import { CheckoutSteps } from '@/components/checkout/CheckoutSteps'
 import { AddressForm } from '@/components/checkout/AddressForm'
-import { PaymentForm } from '@/components/checkout/PaymentForm'
+import StripePaymentForm from '@/components/checkout/StripePaymentForm'
 import { CheckoutReview } from '@/components/checkout/CheckoutReview'
 import { CheckoutSummary } from '@/components/checkout/CheckoutSummary'
 import { completeCart } from '@/lib/api/checkout-client'
@@ -25,10 +26,10 @@ export default function CheckoutNewPage() {
   const [currentStep, setCurrentStep] = useState<CheckoutStep>('address')
   const [completedSteps, setCompletedSteps] = useState<CheckoutStep[]>([])
   const [shippingAddress, setShippingAddress] = useState<ShippingAddress | null>(null)
-  const [paymentMethod, setPaymentMethod] = useState<PaymentMethod | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isRedirectingToSuccess, setIsRedirectingToSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const paymentMethod: PaymentMethod = { type: 'card' }
 
   // Redirect if cart is empty
   useEffect(() => {
@@ -46,28 +47,37 @@ export default function CheckoutNewPage() {
     thumbnail: item.image,
     quantity: item.quantity,
     price: item.price, // already in cents
+    supplierId: item.supplierId,
+    supplierName: item.supplierName,
   }))
 
   // Handle address form submission
   const handleAddressSubmit = (address: ShippingAddress) => {
     setShippingAddress(address)
     setCompletedSteps(prev => Array.from(new Set<CheckoutStep>([...prev, 'address'])))
-    setCurrentStep('payment')
-    setError(null)
-  }
-
-  // Handle payment form submission
-  const handlePaymentSubmit = (payment: PaymentMethod) => {
-    setPaymentMethod(payment)
-    setCompletedSteps(prev => Array.from(new Set<CheckoutStep>([...prev, 'payment'])))
     setCurrentStep('review')
     setError(null)
   }
 
-  // Handle order confirmation
-  const handleOrderConfirm = async () => {
-    if (!shippingAddress || !paymentMethod) {
-      setError('Faltan datos de dirección o pago')
+  const handleProceedToPayment = () => {
+    if (!shippingAddress) {
+      setError('Faltan los datos de dirección para continuar con el pago')
+      return
+    }
+
+    if (featureFlags.getCheckoutSource() === 'real' && !cartId) {
+      setError('El checkout real requiere un carrito sincronizado con el backend. El catálogo actual todavía no expone identificadores válidos para una compra real completa.')
+      return
+    }
+
+    setCompletedSteps(prev => Array.from(new Set<CheckoutStep>([...prev, 'review'])))
+    setCurrentStep('payment')
+    setError(null)
+  }
+
+  const handleStripePaymentComplete = async () => {
+    if (!shippingAddress) {
+      setError('Faltan datos de dirección para finalizar el pedido')
       return
     }
 
@@ -75,29 +85,28 @@ export default function CheckoutNewPage() {
     setError(null)
 
     try {
-      // Complete the cart and create order (pass cartId for Medusa integration)
       const order = await completeCart(
         {
           shippingAddress,
           paymentMethod,
         },
         checkoutItems,
-        cartId // 🌐 Medusa cart ID from Zustand store
+        cartId
       )
 
-      // Mark review as completed
-      setCompletedSteps(prev => Array.from(new Set<CheckoutStep>([...prev, 'review'])))
-
-      // Debug: Log order details
-      console.log('✅ Order created:', order)
-      console.log('📍 Redirecting to success page with:', {
-        orderId: order.id,
-        display_id: order.display_id,
-        fullUrl: `/marketplace/checkout-new/success?orderId=${order.id}&display_id=${order.display_id}`
-      })
+      setCompletedSteps(prev => Array.from(new Set<CheckoutStep>([...prev, 'payment'])))
 
       setIsRedirectingToSuccess(true)
-      router.replace(`/marketplace/checkout-new/success?orderId=${order.id}&display_id=${order.display_id}`)
+      const successParams = new URLSearchParams({
+        orderId: order.id,
+        display_id: order.display_id,
+      })
+
+      if (cartId) {
+        successParams.set('cartId', cartId)
+      }
+
+      router.replace(`/marketplace/checkout-new/success?${successParams.toString()}`)
     } catch (err) {
       console.error('Error completing order:', err)
       setError(err instanceof Error ? err.message : 'Error al procesar el pedido. Por favor, intenta de nuevo.')
@@ -119,9 +128,9 @@ export default function CheckoutNewPage() {
   // Handle back navigation
   const handleBack = () => {
     if (currentStep === 'payment') {
-      setCurrentStep('address')
+      setCurrentStep('review')
     } else if (currentStep === 'review') {
-      setCurrentStep('payment')
+      setCurrentStep('address')
     }
     setError(null)
   }
@@ -129,10 +138,6 @@ export default function CheckoutNewPage() {
   // Handle edit actions from review
   const handleEditAddress = () => {
     setCurrentStep('address')
-  }
-
-  const handleEditPayment = () => {
-    setCurrentStep('payment')
   }
 
   if (items.length === 0 && !isSubmitting && !isRedirectingToSuccess) {
@@ -189,23 +194,21 @@ export default function CheckoutNewPage() {
               )}
 
               {currentStep === 'payment' && (
-                <PaymentForm
-                  initialPayment={paymentMethod || undefined}
-                  onSubmit={handlePaymentSubmit}
+                <StripePaymentForm
+                  cartId={cartId || 'mock-checkout'}
+                  onComplete={handleStripePaymentComplete}
                   onBack={handleBack}
-                  isSubmitting={isSubmitting}
                 />
               )}
 
-              {currentStep === 'review' && shippingAddress && paymentMethod && (
+              {currentStep === 'review' && shippingAddress && (
                 <CheckoutReview
                   shippingAddress={shippingAddress}
                   paymentMethod={paymentMethod}
                   items={checkoutItems}
-                  onConfirm={handleOrderConfirm}
+                  onConfirm={handleProceedToPayment}
                   onBack={handleBack}
                   onEditAddress={handleEditAddress}
-                  onEditPayment={handleEditPayment}
                   isSubmitting={isSubmitting}
                 />
               )}

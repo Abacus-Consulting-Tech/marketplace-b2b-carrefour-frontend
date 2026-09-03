@@ -1,23 +1,38 @@
 # Checkout - Backend Implementation Guide
 
 **Módulo**: Flujo de Compra Completo (Multi-Step Checkout)  
-**Estado Frontend**: ✅ Completado (25/08/2026)  
+**Estado Frontend**: ✅ Actualizado (03/09/2026)  
 **Prioridad Backend**: CRÍTICA - Flujo core del negocio
 
 ---
 
 ## 📋 Resumen Ejecutivo
 
-Flujo completo de checkout multi-paso que convierte un carrito en un pedido confirmado:
+Flujo completo de checkout multi-paso que convierte un carrito en un pedido en confirmación hasta que backend valida el pago:
 1. **Cart**: Validar carrito y productos
 2. **Address**: Guardar direcciones de envío y facturación
 3. **Shipping**: Seleccionar método de envío
-4. **Payment**: Procesar pago con Stripe
-5. **Confirmation**: Crear pedido y enviar confirmación
+4. **Review**: Mostrar agrupación visual por proveedor antes del cobro
+5. **Payment**: Procesar pago con Stripe
+6. **Confirmation**: Crear pedido, esperar webhook y exponer estado final
 
 **Integración**: Cart, Customer, Stripe, Shipping, Order  
-**Extensiones**: 10 custom checkout extensions para Medusa Workflow  
-**SLA**: < 3 segundos por paso, < 10 segundos total
+**Extensiones**: combinar Store/Medusa OOTB con contrato mínimo de estado post-webhook  
+**SLA**: < 3 segundos por paso visible, con confirmación post-pago asíncrona tolerante a webhook
+
+## ✅ Decisiones frontend ya tomadas
+
+- Checkout visible con un único método de pago: tarjeta con Stripe
+- Pedido comercial único para el franquiciado
+- Agrupación visual por proveedor en la revisión antes del pago
+- Success page sin confirmación inmediata: primero `processing`, luego `confirmed` o `manual_review`
+- Mientras no exista endpoint específico de estado post-pago, el frontend reutiliza temporalmente `GET /franchisee/orders/:id`
+
+## 🔴 Contratos backend todavía por definir
+
+- Endpoint específico para consultar el estado final del pedido tras el webhook Stripe
+- Shape del pedido padre y del desglose por proveedor/subórdenes
+- Metadata mínima para que la success page muestre el split real por proveedor
 
 ---
 

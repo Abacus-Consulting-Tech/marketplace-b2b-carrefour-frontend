@@ -7,7 +7,21 @@
 Sistema completo de gestión de franquiciados desde el panel de administración. Permite a los administradores crear, editar, activar/desactivar franquiciados, y ver sus estadísticas de compra.
 
 ## Documentos Backend
-- [FRANCHISEE_MANAGEMENT_BACKEND.md](FRANCHISEE_MANAGEMENT_BACKEND.md) - Especificaciones completas para backend
+- [FRANCHISEE_MANAGEMENT_BACKEND.md](FRANCHISEE_MANAGEMENT_BACKEND.md) - Guía API actualizada con rutas actuales, nuevas y legacy; bodies reales; y estado `working` / `broken` / `untested`
+- [FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md](FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md) - Flujo funcional del alta de franquiciado y contrato esperado del onboarding público
+
+## Nota de vigencia
+
+Este módulo ya no puede describirse solo como un CRUD admin clásico.
+
+Situación real a 03/09/2026:
+
+- el frontend admin principal consume `/admin/customers*`
+- el cambio de estado sigue saliendo por `/admin/franchisees/:id/status`
+- el onboarding público ya documenta `/admin/franchisees/invitations` y `/franchisee/register`
+- el checkout del franquiciado ya lee direcciones reales por `GET /store/customers/me`
+- `GET /admin/customers` y `GET /admin/customers/:id` siguen bloqueados por `403 RBAC` en DEV
+- `POST /store/customers/me/addresses` sigue bloqueado por `401 Unauthorized` en DEV
 
 ## Resumen Técnico
 
@@ -74,6 +88,8 @@ src/types/franchisees.ts (333 líneas)
 ```
 
 ## Endpoints API Necesarios
+
+Este README resume el módulo. La referencia canónica de endpoints, bodies y estado validado está ahora en [FRANCHISEE_MANAGEMENT_BACKEND.md](FRANCHISEE_MANAGEMENT_BACKEND.md).
 
 ## ⚠️ Realidad validada en DEV (2026-08-31)
 
@@ -185,7 +201,7 @@ Response 201:
 
 ### 4. Actualizar Franquiciado
 ```http
-PATCH /admin/customers/:id
+POST /admin/customers/:id
 Authorization: Bearer {token}
 Content-Type: application/json
 
@@ -225,7 +241,7 @@ Response 200:
 
 ### 6. Obtener Estadísticas del Franquiciado
 ```http
-GET /admin/franchisees/:id/stats
+GET /admin/customers/:id/stats
 Authorization: Bearer {token}
 
 Query Params:
@@ -258,6 +274,14 @@ Response 200:
 
 ## Mock Data
 - 5-10 franquiciados de prueba con diferentes estados
+
+## Estado operativo en DEV
+
+- `GET /admin/customers` → `broken` (`403 RBAC`)
+- `GET /admin/customers/:id` → `broken` (`403 RBAC`)
+- `GET /store/customers/me` → `working`
+- `POST /store/customers/me/addresses` → `broken` (`401 Unauthorized`)
+- resto del módulo → `untested` o pendiente de contrato final
 - Datos realistas (nombres, empresas, direcciones)
 - Historial de pedidos vinculado
 - Estadísticas calculadas

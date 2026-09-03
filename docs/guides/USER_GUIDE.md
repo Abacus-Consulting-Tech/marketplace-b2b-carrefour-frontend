@@ -142,24 +142,26 @@ En la página de detalle encontrarás:
 
 1. Hacer clic en "Proceder al Pago"
 2. **Dirección de Entrega**:
-   - Seleccionar dirección guardada o agregar nueva
-   - Agregar notas especiales de entrega
-3. **Método de Envío**:
-   - Seleccionar método preferido (si hay opciones)
-4. **Método de Pago**:
-   - Tarjeta de crédito/débito
-   - Transferencia bancaria
-   - Cuenta de crédito (si aplica)
-5. **Resumen**:
+   - Seleccionar una de las direcciones de tienda ya guardadas en tu cuenta
+   - Si solo hay una, podrás confirmarla directamente
+   - Si no aparece la tienda que necesitas, contacta con el equipo administrador para que la den de alta
+3. **Resumen del Pedido**:
    - Revisar todos los detalles
+   - Ver los productos agrupados por proveedor cuando aplique
    - Leer y aceptar términos
-   - Hacer clic en "Confirmar Pedido"
+4. **Pago Seguro**:
+   - Tarjeta de crédito/débito
+   - Introducir la tarjeta en el formulario seguro de Stripe
+5. **Confirmación**:
+   - La plataforma puede mostrar primero un estado de confirmación en proceso
+   - No repita el pago si la pantalla indica que se está validando
 
 #### Paso 4: Confirmación
 
 - Ver número de pedido generado
-- Descargar resumen del pedido
-- Recibir email de confirmación
+- Ver estado del pedido: en confirmación, confirmado o revisión manual
+- Recibir email de confirmación cuando backend complete el proceso
+- Consultar "Mis Pedidos" para el seguimiento
 
 ### Gestionar Pedidos
 
@@ -250,6 +252,14 @@ En el detalle del pedido:
    - Dirección
    - Información de facturación
 4. Hacer clic en "Guardar Cambios"
+
+#### Gestionar Tiendas y Direcciones
+
+1. Verifica en checkout que aparece la tienda correcta antes de pagar
+2. Si tu cuenta tiene varias tiendas, selecciona la dirección adecuada para ese pedido
+3. Si falta una tienda o una dirección está desactualizada, solicita la actualización al equipo administrador
+
+**Importante**: La dirección seleccionada en checkout determina dónde se entregará el pedido.
 
 #### Cambiar Contraseña
 

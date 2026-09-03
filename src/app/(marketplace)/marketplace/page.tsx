@@ -4,9 +4,11 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { productsApi } from "@/lib/api/products-client";
 import { mockCategories } from "@/lib/api/products-mock";
 import { ShoppingCart, Package, Users, Megaphone, Signpost, Sparkles } from "lucide-react";
 import { useCartStore } from "@/lib/store/cart";
+import type { Product, ProductCategory } from "@/types/products";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   Users: <Users className="w-5 h-5 text-blue-600" />,
@@ -17,11 +19,55 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 export default function MarketplaceLandingPage() {
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [categories, setCategories] = useState<ProductCategory[]>(mockCategories);
   const cart = useCartStore((state) => state.items);
 
   useEffect(() => {
-    setIsLoading(false);
+    const fetchCategories = async () => {
+      try {
+        const response = await productsApi.listCatalogProducts({});
+        const publishedProducts = (response.data?.products || []).filter(
+          (product: Product) => product.status === "published"
+        );
+
+        const derivedCategories = publishedProducts.reduce<ProductCategory[]>((result, product) => {
+          for (const category of product.categories || []) {
+            const exists = result.some(
+              (candidate) => candidate.id === category.id || candidate.handle === category.handle
+            );
+
+            if (!exists) {
+              const visualMatch = mockCategories.find(
+                (candidate) =>
+                  candidate.id === category.id ||
+                  candidate.handle === category.handle ||
+                  candidate.name.toLowerCase() === category.name.toLowerCase()
+              );
+
+              result.push({
+                ...visualMatch,
+                ...category,
+                imageUrl: category.imageUrl || visualMatch?.imageUrl,
+                icon: category.icon || visualMatch?.icon,
+              });
+            }
+          }
+
+          return result;
+        }, []);
+
+        if (derivedCategories.length > 0) {
+          setCategories(derivedCategories);
+        }
+      } catch (error) {
+        console.error("Error fetching marketplace categories:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchCategories();
   }, []);
 
   return (
@@ -60,7 +106,7 @@ export default function MarketplaceLandingPage() {
 
         {/* Categories Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 mb-16">
-          {mockCategories.map((category) => {
+          {categories.map((category) => {
             const iconName = (category.icon || "Package") as keyof typeof ICON_MAP;
             const Icon = ICON_MAP[iconName];
             return (
@@ -104,6 +150,12 @@ export default function MarketplaceLandingPage() {
             );
           })}
         </div>
+
+        {!isLoading && categories.length === 0 && (
+          <div className="rounded-lg border border-dashed border-slate-300 bg-white/80 px-6 py-10 text-center text-slate-600 mb-16">
+            No hay categorías disponibles en el catálogo.
+          </div>
+        )}
 
         {/* CTA Section */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-800 rounded-lg p-12 text-center text-white">

@@ -22,7 +22,7 @@ Esta carpeta contiene la documentación organizada por módulos que se ha enviad
 | 9 | **Admin Orders** | `09-admin-orders/` | ADMIN_ORDERS_COMPLETED.md, BACKEND_ORDER_SEED_REQUEST.md |
 | 10 | **Quotes** | `10-quotes/` | QUOTES_COMPLETADO.md (ES), QUOTES_MODULE_COMPLETED.md (EN) |
 | 11 | **Supplier Products** | `11-supplier-products/` | README.md, SUPPLIER_PRODUCTS_BACKEND.md |
-| 12 | **Franchisee Management** | `12-franchisee-management/` | README.md, FRANCHISEE_MANAGEMENT_BACKEND.md |
+| 12 | **Franchisee Management** | `12-franchisee-management/` | README.md, FRANCHISEE_MANAGEMENT_BACKEND.md, FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md |
 | 13 | **Checkout** | `13-checkout/` | README.md, CHECKOUT_BACKEND.md |
 
 ---
@@ -99,9 +99,9 @@ Situación validada a 2026-08-31:
 
 ### 12. Franchisee Management (Gestión de Franquiciados)
 - **Frontend**: CRUD de franquiciados desde admin (10 archivos, ~2,511 líneas)
-- **Backend Docs**: README.md + FRANCHISEE_MANAGEMENT_BACKEND.md con 6 endpoints
-- **Estado documental**: ✅ Documentación creada (25/08/2026)
-- **Estado validado en DEV**: ⚠️ Parcial en backend, mock en UI; `/admin/customers*` GET devuelve `403`
+- **Backend Docs**: README.md + FRANCHISEE_MANAGEMENT_BACKEND.md + FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md
+- **Estado documental**: ✅ Documentación actualizada (03/09/2026) con rutas actuales `/admin/customers*`, onboarding nuevo y rutas legacy `/admin/franchisees*`
+- **Estado validado en DEV**: ⚠️ Parcial en backend, mock en UI; `/admin/customers*` GET devuelve `403`, `GET /store/customers/me` sí funciona y `POST /store/customers/me/addresses` devuelve `401`
 
 ### 13. Checkout (Flujo de Compra)
 - **Frontend**: Checkout multi-step completo (15 archivos, ~3,366 líneas)
@@ -114,11 +114,11 @@ Situación validada a 2026-08-31:
 ## 📊 Estadísticas
 
 - **Total Módulos**: 13
-- **Documentos Enviados**: 21 archivos
+- **Documentos Enviados**: 22 archivos
 - **Módulos con Backend Docs**: 12/13
 - **SQL Scripts**: 4 módulos (Categories, Pricing, Orders, Quotes)
-- **Endpoints Documentados**: 122 endpoints totales
-- **Inventario operativo actual en source of truth**: 137 endpoints
+- **Endpoints Documentados**: 122+ endpoints totales
+- **Inventario operativo actual en source of truth**: 149 endpoints
 
 ---
 
@@ -130,5 +130,5 @@ Situación validada a 2026-08-31:
 
 ---
 
-**Última Actualización**: 31 de Agosto de 2026
+**Última Actualización**: 03 de Septiembre de 2026
 **Mantenedor**: Frontend Team

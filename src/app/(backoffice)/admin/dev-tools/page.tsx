@@ -14,7 +14,7 @@
  * ⚠️ Franchisees: admin customers still hit RBAC `403`, but invitations and public registration now call real backend by default
  * ⚠️ Openings: backend route `/openings/projects` responds `404`; frontend kept in mock for DEV
  * ⚠️ Products/Catalog: real endpoints respond but are currently empty in DEV; frontend kept in mock for DEV catalog/product UI
- * ⚠️ Checkout: kept in mock because Store API catalog is empty and cart flow cannot be validated end-to-end
+ * ⚠️ Checkout: frontend ya refleja Stripe-only, agrupación por proveedor y confirmación asíncrona; backend sigue en mock en DEV por catálogo Store inconsistente y falta de contrato final post-webhook
  * 
  * 🎯 CURRENT DEV DECISION (2026-09-03):
  * - Keep REAL in `auth`, `suppliers`, `pricing`, `orders`, `quotes`
@@ -32,7 +32,7 @@
  * - Catalog: 2 endpoints (listado y detalle marketplace) ⚠️ MOCK EN DEV
  * - Store: 1 endpoint (regions) ⚠️ SIN VALIDAR
  * - Cart: 6 endpoints (cart operations + shipping options) ⚠️ SIN VALIDAR
- * - Checkout: 24 endpoints (address, shipping, payment, complete, order) ⚠️ MOCK EN DEV
+ * - Checkout: 24 endpoints (address, shipping, payment, complete, order) ⚠️ MOCK EN DEV, pero la UX ya está alineada al flujo objetivo con Stripe y confirmación diferida
  * - Orders: 22 endpoints (admin, franchisee y supplier/vendor) ✅ REAL
  * - Quotes: 14 endpoints (franchisee + supplier) ✅ REAL
  * - Franchisee Management: 6 endpoints (CRUD, status, stats) ⚠️ SIN VALIDAR
@@ -938,7 +938,7 @@ export default function DevToolsPage() {
         path: '/store/carts/:id/payment-collections',
         method: 'POST',
         module: 'checkout',
-        description: 'Crear colección de pago (Stripe) (no validado end-to-end en DEV)',
+        description: 'Crear colección de pago Stripe para `StripePaymentForm`; superficie preferida por el frontend actual cuando `checkout` salga de mock',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
         status: 'untested',
         requiresAuth: false,
@@ -948,7 +948,7 @@ export default function DevToolsPage() {
         path: '/store/checkout/payment-intent',
         method: 'POST',
         module: 'checkout',
-        description: 'Crear PaymentIntent custom para checkout; hoy devuelve client_secret simulado y sigue pendiente la integración Stripe real',
+        description: 'Surface custom/propuesta para crear PaymentIntent; sigue untested y el frontend actual no la usa como camino principal',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
         status: 'untested',
         requiresAuth: true,
@@ -958,7 +958,7 @@ export default function DevToolsPage() {
         path: '/store/checkout/complete',
         method: 'POST',
         module: 'checkout',
-        description: 'Completar checkout custom; crea pedido en pending_payment y la confirmación final depende del webhook Stripe',
+        description: 'Surface custom/propuesta para cerrar checkout; si se mantiene, la confirmación final debe depender del webhook Stripe y no del callback del navegador',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
         status: 'untested',
         requiresAuth: true,
@@ -968,7 +968,7 @@ export default function DevToolsPage() {
         path: '/store/carts/:id/complete',
         method: 'POST',
         module: 'checkout',
-        description: 'Completar carrito y crear pedido (no validado end-to-end en DEV)',
+        description: 'Completar carrito OOTB y crear pedido; la UI ya no lo interpreta como confirmación inmediata, sino como inicio de la confirmación asíncrona',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
         status: 'untested',
         requiresAuth: false,
@@ -978,7 +978,7 @@ export default function DevToolsPage() {
         path: '/store/orders/:id',
         method: 'GET',
         module: 'checkout',
-        description: 'Obtener detalles del pedido creado (no validado end-to-end en DEV)',
+        description: 'Lectura de pedido Store; inventariada, pero la success page actual usa temporalmente `/franchisee/orders/:id` hasta definir contrato específico de estado post-pago',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
         status: 'untested',
         requiresAuth: false,
@@ -988,11 +988,21 @@ export default function DevToolsPage() {
         path: '/store/customers/me',
         method: 'GET',
         module: 'franchisees',
-        description: 'Obtener perfil de cliente actual',
+        description: 'Obtener perfil de cliente actual; validado para leer `shipping_addresses` y alimentar la selección de direcciones del checkout franquiciado',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'untested',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/store/customers/me'
+      },
+      {
+        path: '/store/customers/me/addresses',
+        method: 'POST',
+        module: 'franchisees',
+        description: 'Alta self-service de nuevas direcciones/tiendas para el franquiciado autenticado. Intento validado en DEV con `franchisee@carrefour.dev` devolviendo `401 Unauthorized`, por lo que la UI de checkout solo puede seleccionar direcciones ya existentes y `Mis tiendas` sigue pendiente de integración real',
+        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
+        status: 'broken',
+        requiresAuth: true,
+        medusaEndpoint: '/store/customers/me/addresses'
       },
       
       // ========================================================================
@@ -1247,7 +1257,7 @@ export default function DevToolsPage() {
         path: '/franchisee/orders/:id',
         method: 'GET',
         module: 'orders',
-        description: 'Detalle de mi pedido',
+        description: 'Detalle de mi pedido; reutilizado por la success page como fuente temporal de estado post-pago mientras se define un endpoint específico de checkout status',
         usesRealAPI: !featureFlags.shouldUseMock('orders'),
         status: 'working',
         requiresAuth: true,
@@ -1640,7 +1650,7 @@ export default function DevToolsPage() {
         path: '/store/payment-collections/:id',
         method: 'GET',
         module: 'checkout',
-        description: 'Obtener estado de pago (no validado end-to-end en DEV)',
+        description: 'Obtener estado de la colección de pago; candidato natural para un futuro contrato de confirmación post-webhook si backend decide exponerlo',
         usesRealAPI: !featureFlags.shouldUseMock('checkout'),
         status: 'untested',
         requiresAuth: false,

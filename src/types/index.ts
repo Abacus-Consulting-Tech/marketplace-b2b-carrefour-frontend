@@ -283,6 +283,8 @@ export interface CartItem {
   backendLineItemId?: string
   offerId?: string
   variantId?: string
+  supplierId?: string
+  supplierName?: string
 }
 
 export interface CartSummary {

@@ -940,30 +940,31 @@ Tener a mano estas credenciales para la demo:
 **Qué mostrar (flujo completo):**
 
 **Paso 1: Dirección de Envío**
-- Formulario completo con validación
-- Campos: nombre, dirección, ciudad, CP, país
-- Validación en tiempo real
+- Selección de una tienda/dirección ya guardada en la cuenta del franquiciado
+- Si existen varias direcciones, el usuario elige la adecuada para ese pedido
+- Si no hay direcciones cargadas, puede aparecer formulario manual como fallback UX
+- No prometer todavía alta self-service persistida de nuevas tiendas en DEV
 
-**Paso 2: Método de Pago**
-- Opciones:
-  - 💳 Stripe (tarjeta)
-  - 🏦 Transferencia bancaria
-  - 📅 Pago diferido (30 días)
-- Formulario de tarjeta (modo test)
-
-**Paso 3: Revisión y Confirmación**
+**Paso 2: Revisión del Pedido**
 - Resumen completo del pedido
-- Totales calculados
-- **Confirmar pedido**
+- Productos agrupados por proveedor
+- Total único del pedido
+- Botón: "Continuar al pago seguro"
+
+**Paso 3: Pago Seguro**
+- 💳 Stripe (tarjeta)
+- Formulario de tarjeta seguro
+- Cobro único aunque haya varios proveedores
 
 **Página de Confirmación**
 - Número de pedido generado
-- Resumen del pedido
-- Estado y siguiente paso
+- Estado inicial de confirmación asíncrona
+- Mensaje de espera hasta que backend confirme el pedido
+- Posible desglose por proveedor si backend ya expone el split
 - Botón: "Ver mis pedidos"
 - Página de confirmación tras completar el pedido
 
-**Mensaje clave**: *"Proceso de checkout completo con múltiples métodos de pago y confirmación inmediata"*
+**Mensaje clave**: *"Proceso de checkout Stripe-only con pedido único, selección de tienda existente, revisión por proveedor y confirmación asíncrona"*
 
 ---
 
@@ -1197,10 +1198,12 @@ Tener a mano estas credenciales para la demo:
 
 ### P: ¿Cómo se procesan los pagos?
 
-**R**: **3 métodos implementados**:
-1. **Stripe**: Integración completa (modo test)
-2. **Transferencia**: Genera instrucciones
-3. **Pago Diferido**: Para franquiciados con crédito
+**R**: **Actualmente el flujo visible de checkout usa 1 método de pago implementado**:
+1. **Stripe**: Tarjeta en formulario seguro
+
+**Importante**:
+- Transferencia no forma parte del checkout visible actual
+- Pago diferido/crédito no forma parte del MVP operativo actual
 
 **Demo**: Proceso completo de checkout con tarjeta test.
 

@@ -115,8 +115,9 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 - `store`: 1 endpoint (`/store/regions`) todavía untested
 - `cart`: 6 endpoints untested
 - `checkout`: 17 endpoints untested, incluyendo `POST /store/checkout/payment-intent` y `POST /store/checkout/complete`
-- Los dos endpoints custom de checkout ya están documentados, pero `payment-intent` sigue devolviendo `client_secret` simulado y `complete` deja el pedido en `pending_payment` hasta webhook Stripe
-- El checkout real sigue bloqueado porque Store API no devuelve catálogo utilizable de forma consistente y `GET /store/products` entrega `variant_id` que no siempre sirve para el carrito real
+- El frontend actual ya está alineado a un flujo Stripe-only con `POST /store/carts/:id/payment-collections`, `POST /store/carts/:id/complete` y success page de confirmación asíncrona
+- Los dos endpoints custom de checkout siguen documentados como superficies propuestas/untested; no son el camino principal de la UI actual
+- El checkout real sigue bloqueado porque Store API no devuelve catálogo utilizable de forma consistente, `GET /store/products` entrega `variant_id` que no siempre sirve para el carrito real y todavía falta un contrato final para consultar estado post-webhook
 - **Status**: 🎭 MOCK EN DEV
 
 ### Categories
@@ -142,7 +143,7 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 - `/admin/openings/projects` — `404` en DEV; `openings` sigue en mock
 - `/seller/catalog-products` — Mismatch con backend: el seller catalog llega vacío mientras `/vendor/custom/products` sí devuelve datos
 - `/store/products` — Responde sin catálogo utilizable en DEV; `catalog` y `products` siguen en mock para la UI franchisee
-- Checkout real bloqueado por dos gaps: `GET /store/products` devuelve `variant_id` no siempre válido para `/store/carts*`, y `POST /store/checkout/payment-intent` todavía responde con `client_secret` simulado en lugar de un PaymentIntent Stripe real
+- Checkout real bloqueado por tres gaps: `GET /store/products` devuelve `variant_id` no siempre válido para `/store/carts*`, el catálogo store no permite hoy una compra real coherente end-to-end en DEV y todavía no existe un contrato final para exponer el estado del pedido tras el webhook Stripe
 - `/admin/orders/stats` — marcado como broken en el inventario actual
 - `/webhooks/stripe`, `/franchisee/:id/invoices`, `/franchisee/stores*` — siguen sin validación real completa en DEV dentro del flujo de alta/autoservicio de franquiciados
 - `/admin/customers` y `/admin/customers/:id` siguen bloqueando la retirada total del mock en administración de franquiciados; el onboarding real espeja temporalmente el alta en el store mock para que QA pueda verla en la UI admin

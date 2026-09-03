@@ -1,18 +1,19 @@
-# ✅ Checkout Completo - INTEGRACIÓN MEDUSA TOTAL
+# ✅ Checkout Completo - UX Alineada al Flujo Stripe
 
-## 🌐 **INTEGRACIÓN MEDUSA COMPLETA**
+## 🌐 **ESTADO ACTUAL**
 
-El nuevo checkout está **100% integrado con Medusa Store API** usando MercurJS client.
+El checkout actual ya refleja la UX objetivo del backend, pero el módulo sigue en modo híbrido en DEV.
 
 ### **Modo de Operación**
 - ✅ **Mock Mode**: Desarrollo local sin backend (por defecto)
-- ✅ **Real Mode**: Llamadas API completas a Medusa
+- ✅ **Real Mode preparado**: Llamadas Store/Medusa listas para activarse cuando catálogo y contrato post-pago queden cerrados
 
 ### **API Calls Implementadas**
 1. `updateCart()` - Actualiza dirección de envío
 2. `addShippingMethod()` - Añade método de envío
 3. `createPaymentCollection()` - Inicializa pago con Stripe
 4. `completeCart()` - Finaliza y crea orden
+5. `getCheckoutOrderStatus()` - Consulta temporalmente el pedido del franquiciado para reflejar confirmación asíncrona
 
 ### **Switch Automático**
 ```typescript
@@ -39,8 +40,9 @@ if (featureFlags.getCheckoutSource() === 'mock') {
 - ✅ `CheckoutSteps.tsx` - Stepper visual 3 pasos
 - ✅ `CheckoutSummary.tsx` - Resumen lateral con totales
 - ✅ `AddressForm.tsx` - Formulario dirección de envío
-- ✅ `PaymentForm.tsx` - Formulario pago (tarjeta + transferencia)
-- ✅ `CheckoutReview.tsx` - Revisión final pre-confirmación
+- ✅ `StripePaymentForm.tsx` - Pago seguro con Stripe Elements o simulación mock
+- ✅ `PaymentForm.tsx` - Componente legacy que ya no forma parte del flujo principal
+- ✅ `CheckoutReview.tsx` - Revisión final pre-cobro con agrupación por proveedor
 - ✅ `index.ts` - Barrel exports para imports limpios
 
 **Nota**: El componente se llama `CheckoutReview` (no `OrderReview`) para evitar conflicto con el componente existente en el checkout legacy.
@@ -55,9 +57,9 @@ if (featureFlags.getCheckoutSource() === 'mock') {
 
 ### ✨ Flujo Multi-Paso
 1. **Dirección de envío** - Validación completa, solo España
-2. **Método de pago** - Tarjeta o transferencia B2B
-3. **Revisión** - Verificación final con opción de editar
-4. **Confirmación** - Página de éxito con detalles del pedido
+2. **Revisión** - Verificación final con agrupación por proveedor y pedido comercial único
+3. **Pago seguro** - Tarjeta con Stripe
+4. **Confirmación asíncrona** - Página de espera/confirmación según el estado real del pedido
 
 ### 🔧 Validaciones
 - ✅ Campos obligatorios marcados con `*`
@@ -67,9 +69,9 @@ if (featureFlags.getCheckoutSource() === 'mock') {
 - ✅ CVV (3-4 dígitos)
 - ✅ Teléfono español
 
-### 💳 Métodos de Pago
-- **Tarjeta de crédito**: Visa, Mastercard, Amex
-- **Transferencia bancaria**: Condiciones B2B (30 días, descuento 2% en 7 días)
+### 💳 Método de Pago Activo
+- **Tarjeta de crédito**: Visa, Mastercard, Amex mediante Stripe Elements
+- **Transferencia bancaria**: retirada del flujo principal de checkout
 
 ### 📊 Cálculos Automáticos
 - Subtotal de productos
@@ -116,25 +118,24 @@ Provincia: Madrid
 CP: 28013
 ```
 
-**Paso 2 - Pago:**
-- **Opción A (Tarjeta):**
+**Paso 2 - Revisión:**
+- Verificar dirección, productos y agrupación por proveedor
+- Aceptar términos y condiciones
+- Click en "Continuar al pago seguro"
+
+**Paso 3 - Pago:**
+- **Tarjeta (real o mock según entorno):**
   ```
   Número: 4242 4242 4242 4242
   Titular: JUAN PEREZ
   Caducidad: 12/28
   CVV: 123
   ```
-- **Opción B (Transferencia):** Solo seleccionar y continuar
-
-**Paso 3 - Revisión:**
-- Verificar todos los datos
-- Aceptar términos y condiciones
-- Click "Confirmar pedido"
 
 **Paso 4 - Confirmación:**
-- Se muestra página de éxito
-- Display del número de pedido
-- Detalles completos
+- Se muestra pantalla de confirmación asíncrona
+- Primero puede aparecer "Pago recibido, confirmando pedido"
+- Después pasa a confirmado o revisión manual según el estado real
 - Acciones: "Ver mis pedidos" o "Seguir comprando"
 
 ---
@@ -189,20 +190,23 @@ Cuando `useMock=false`, el checkout ejecuta:
    - Por defecto usa envío gratuito B2B
 
 3. **Step 3**: `createPaymentCollection({ cart_id, provider_id: 'stripe' })`
-   - Solo si método de pago es tarjeta
-   - Inicializa sesión de pago con Stripe
+  - Inicializa la sesión de pago con Stripe
 
 4. **Step 4**: `completeCart(cartId)`
    - Finaliza el carrito
    - Crea la orden en Medusa
-   - Retorna `{ type: 'order', order: MercurOrder }`
+  - La UI no lo interpreta como confirmación final inmediata
+
+5. **Step 5**: `getCheckoutOrderStatus(orderId)`
+  - Consulta temporalmente `GET /franchisee/orders/:id`
+  - Refleja `processing`, `confirmed` o `manual_review`
 
 **Logs en Consola:**
 ```
 🌐 Checkout: Using REAL Medusa API
 📦 Step 1: Updating cart with shipping address...
 🚚 Step 2: Adding shipping method...
-💳 Step 3: Initializing payment session...
+💳 Step 3: Stripe payment already confirmed on client, waiting for backend completion...
 ✅ Step 4: Completing cart and creating order...
 🎉 Order created successfully: order_01XXXXX
 ```

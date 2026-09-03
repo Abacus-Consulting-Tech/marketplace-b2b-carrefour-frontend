@@ -70,6 +70,8 @@ export interface MercurCartLineItem {
   variant_sku?: string | null
   metadata?: {
     offer_id?: string
+    supplier_id?: string
+    supplier_name?: string
     [key: string]: unknown
   } | null
 }

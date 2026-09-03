@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, CreditCard, AlertCircle } from "lucide-react";
 import { createPaymentCollection } from "@/lib/api/mercur-store-client";
+import { featureFlags } from "@/config/feature-flags";
 import { loadStripe } from "@stripe/stripe-js";
 import {
   Elements,
@@ -28,12 +29,28 @@ function StripePaymentFormContent({
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string>("");
   const [paymentReady, setPaymentReady] = useState(false);
+  const isMockCheckout = featureFlags.getCheckoutSource() === "mock";
 
   const stripe = useStripe();
   const elements = useElements();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (isMockCheckout) {
+      try {
+        setProcessing(true);
+        setError("");
+        await new Promise(resolve => setTimeout(resolve, 1200));
+        onComplete();
+      } catch (err) {
+        const mockError = err as { message?: string };
+        setError(mockError.message || "Error al simular el pago");
+      } finally {
+        setProcessing(false);
+      }
+      return;
+    }
 
     if (!stripe || !elements) {
       setError("Stripe no está cargado correctamente");
@@ -44,7 +61,6 @@ function StripePaymentFormContent({
       setProcessing(true);
       setError("");
 
-      // 1. Create payment collection to get client_secret
       const paymentCollection = await createPaymentCollection({
         cart_id: cartId,
         provider_id: "stripe",
@@ -56,13 +72,11 @@ function StripePaymentFormContent({
         throw new Error("No se pudo obtener el client_secret");
       }
 
-      // 2. Get card element
       const cardElement = elements.getElement(CardElement);
       if (!cardElement) {
         throw new Error("Card element no encontrado");
       }
 
-      // 3. Confirm payment with Stripe
       const { error: stripeError, paymentIntent } = await stripe.confirmCardPayment(
         clientSecret,
         {
@@ -77,12 +91,12 @@ function StripePaymentFormContent({
         return;
       }
 
-      if (paymentIntent.status === "succeeded") {
-        // Payment successful, move to next step
+      if (paymentIntent?.status === "succeeded") {
         onComplete();
-      } else {
-        setError("El pago no se pudo completar. Por favor, intenta de nuevo.");
+        return;
       }
+
+      setError("El pago no se pudo completar. Por favor, intenta de nuevo.");
     } catch (err) {
       const error = err as { message?: string };
       console.error("Error processing payment:", error);
@@ -102,36 +116,45 @@ function StripePaymentFormContent({
 
         <Card>
           <CardContent className="p-6">
-            <CardElement
-              options={{
-                style: {
-                  base: {
-                    fontSize: "16px",
-                    color: "#424770",
-                    "::placeholder": {
-                      color: "#aab7c4",
+            {isMockCheckout ? (
+              <div className="space-y-3 text-sm text-slate-700">
+                <p>Modo mock activo: el pago con tarjeta se simulará para validar la experiencia de checkout.</p>
+                <p className="text-slate-500">Cuando el checkout real esté habilitado, aquí se cargará Stripe Elements con la tarjeta real.</p>
+              </div>
+            ) : (
+              <CardElement
+                options={{
+                  style: {
+                    base: {
+                      fontSize: "16px",
+                      color: "#424770",
+                      "::placeholder": {
+                        color: "#aab7c4",
+                      },
+                    },
+                    invalid: {
+                      color: "#9e2146",
                     },
                   },
-                  invalid: {
-                    color: "#9e2146",
-                  },
-                },
-              }}
-              onChange={(event) => {
-                setPaymentReady(event.complete);
-                if (event.error) {
-                  setError(event.error.message);
-                } else {
-                  setError("");
-                }
-              }}
-            />
+                }}
+                onChange={(event) => {
+                  setPaymentReady(event.complete);
+                  if (event.error) {
+                    setError(event.error.message);
+                  } else {
+                    setError("");
+                  }
+                }}
+              />
+            )}
           </CardContent>
         </Card>
 
         <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-700">
-            🔒 Tu información de pago está segura y encriptada con Stripe
+            {isMockCheckout
+              ? "El pedido quedará en confirmación simulada para validar el flujo frontend."
+              : "Tu información de pago está segura y encriptada con Stripe. La confirmación final del pedido depende del webhook backend."}
           </p>
         </div>
       </div>
@@ -147,14 +170,14 @@ function StripePaymentFormContent({
         <Button type="button" variant="outline" onClick={onBack} disabled={processing}>
           Atrás
         </Button>
-        <Button type="submit" disabled={processing || !paymentReady}>
+        <Button type="submit" disabled={processing || (!isMockCheckout && !paymentReady)}>
           {processing ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />
               Procesando...
             </>
           ) : (
-            "Pagar Ahora"
+            "Pagar y enviar pedido"
           )}
         </Button>
       </div>
@@ -163,9 +186,23 @@ function StripePaymentFormContent({
 }
 
 export default function StripePaymentForm(props: StripePaymentFormProps) {
-  const stripePromise = loadStripe(
-    process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || ""
-  );
+  const isMockCheckout = featureFlags.getCheckoutSource() === "mock";
+  const publishableKey = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || "";
+
+  if (isMockCheckout) {
+    return <StripePaymentFormContent {...props} />;
+  }
+
+  if (!publishableKey) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>Falta la clave pública de Stripe para completar el checkout real.</AlertDescription>
+      </Alert>
+    );
+  }
+
+  const stripePromise = loadStripe(publishableKey);
 
   return (
     <Elements stripe={stripePromise}>

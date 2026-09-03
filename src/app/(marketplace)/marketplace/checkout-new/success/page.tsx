@@ -7,41 +7,158 @@
 
 'use client'
 
-import { useEffect } from 'react'
+import { Suspense, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
-import { CheckCircle, Package, ArrowRight } from 'lucide-react'
+import { AlertCircle, ArrowRight, CheckCircle, Clock3, Package, Store } from 'lucide-react'
 import { useCartStore } from '@/lib/store/cart'
+import { formatPrice, getCheckoutOrderStatus, type CheckoutOrderStatus } from '@/lib/api/checkout-client'
+import type { FranchiseeOrder } from '@/types/orders-franchisee'
 
-export default function CheckoutSuccessPage() {
+interface SupplierOrderGroup {
+  id: string
+  name: string
+  total: number
+  status?: string
+  itemCount: number
+}
+
+function getSupplierGroups(order: FranchiseeOrder | null): SupplierOrderGroup[] {
+  if (!order) {
+    return []
+  }
+
+  const metadata = order.metadata as Record<string, unknown> | undefined
+  const supplierOrders = Array.isArray(metadata?.supplier_orders)
+    ? metadata?.supplier_orders as Array<Record<string, unknown>>
+    : []
+
+  if (supplierOrders.length > 0) {
+    return supplierOrders.map((supplierOrder, index) => ({
+      id: typeof supplierOrder.id === 'string' ? supplierOrder.id : `supplier-order-${index}`,
+      name:
+        typeof supplierOrder.supplier_name === 'string'
+          ? supplierOrder.supplier_name
+          : `Proveedor ${index + 1}`,
+      total: typeof supplierOrder.total === 'number' ? supplierOrder.total : 0,
+      status: typeof supplierOrder.status === 'string' ? supplierOrder.status : undefined,
+      itemCount: typeof supplierOrder.item_count === 'number' ? supplierOrder.item_count : 0,
+    }))
+  }
+
+  return [
+    {
+      id: order.supplier_id || order.id,
+      name: order.supplier_name || 'Proveedor asignado',
+      total: order.total,
+      status: order.status,
+      itemCount: order.items.length,
+    },
+  ]
+}
+
+function CheckoutSuccessContent() {
   const searchParams = useSearchParams()
   const clearCart = useCartStore((state) => state.clearCart)
   const orderId = searchParams.get('orderId') || 'unknown'
   const displayId = searchParams.get('display_id') || `CF-${orderId.slice(-5).toUpperCase()}`
+  const [status, setStatus] = useState<CheckoutOrderStatus | 'manual_review'>(orderId === 'unknown' ? 'manual_review' : 'processing')
+  const [order, setOrder] = useState<FranchiseeOrder | null>(null)
+  const [message, setMessage] = useState('Estamos validando el pago y confirmando el pedido con el backend.')
+
+  const supplierGroups = useMemo(() => getSupplierGroups(order), [order])
 
   useEffect(() => {
     clearCart()
   }, [clearCart])
 
+  useEffect(() => {
+    if (orderId === 'unknown') {
+      setStatus('manual_review')
+      setMessage('No hemos recibido todavía el identificador final del pedido.')
+      return
+    }
+
+    let cancelled = false
+    let timer: ReturnType<typeof setTimeout> | undefined
+    let attempts = 0
+    const maxAttempts = 6
+
+    const pollOrderStatus = async () => {
+      const result = await getCheckoutOrderStatus(orderId)
+
+      if (cancelled) {
+        return
+      }
+
+      if (result.order) {
+        setOrder(result.order)
+      }
+
+      setMessage(result.message || 'Estamos validando el pago y confirmando el pedido con el backend.')
+
+      if (result.status === 'confirmed' || result.status === 'failed') {
+        setStatus(result.status)
+        return
+      }
+
+      attempts += 1
+
+      if (attempts >= maxAttempts) {
+        setStatus('manual_review')
+        setMessage('El pago se ha enviado correctamente, pero la confirmación final está tardando más de lo habitual. Puedes revisar el pedido en unos minutos.')
+        return
+      }
+
+      setStatus('processing')
+      timer = setTimeout(pollOrderStatus, 3000)
+    }
+
+    void pollOrderStatus()
+
+    return () => {
+      cancelled = true
+      if (timer) {
+        clearTimeout(timer)
+      }
+    }
+  }, [orderId])
+
+  const title = status === 'confirmed'
+    ? '¡Pedido confirmado!'
+    : status === 'failed'
+      ? 'No hemos podido confirmar el pedido'
+      : status === 'manual_review'
+        ? 'Estamos finalizando tu pedido'
+        : 'Pago recibido, confirmando pedido'
+
+  const subtitle = status === 'confirmed'
+    ? 'Tu pedido ya está registrado y comenzará su preparación.'
+    : status === 'failed'
+      ? 'Revisa el estado del pago o contacta con soporte antes de volver a intentarlo.'
+      : status === 'manual_review'
+        ? 'El backend sigue procesando la confirmación. No repitas el pago.'
+        : 'Stripe ha aceptado el cobro y ahora esperamos la confirmación definitiva del backend.'
+
+  const HeaderIcon = status === 'confirmed' ? CheckCircle : status === 'failed' ? AlertCircle : Clock3
+        const nextStepBulletClass = status === 'failed' ? 'bg-red-600' : 'bg-blue-600'
+
   return (
     <div className="min-h-screen bg-gray-50 py-16">
       <div className="mx-auto max-w-3xl px-4 sm:px-6 lg:px-8">
-        {/* Success Header */}
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-green-100">
-            <CheckCircle className="h-10 w-10 text-green-600" />
+          <div className={`mx-auto flex h-16 w-16 items-center justify-center rounded-full ${status === 'confirmed' ? 'bg-green-100' : status === 'failed' ? 'bg-red-100' : 'bg-amber-100'}`}>
+            <HeaderIcon className={`h-10 w-10 ${status === 'confirmed' ? 'text-green-600' : status === 'failed' ? 'text-red-600' : 'text-amber-600'}`} />
           </div>
           <h1 className="mt-6 text-3xl font-bold text-gray-900">
-            ¡Pedido confirmado!
+            {title}
           </h1>
           <p className="mt-2 text-lg text-gray-600">
-            Tu pedido ha sido procesado correctamente
+            {subtitle}
           </p>
         </div>
 
-        {/* Order Details Card */}
         <div className="mt-12 rounded-lg border border-gray-200 bg-white shadow-sm">
-          {/* Order Header */}
           <div className="border-b border-gray-200 bg-gray-50 px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
@@ -61,7 +178,6 @@ export default function CheckoutSuccessPage() {
             </div>
           </div>
 
-          {/* Order Status */}
           <div className="border-b border-gray-200 px-6 py-6">
             <div className="flex items-center gap-4">
               <div className="flex-shrink-0">
@@ -69,16 +185,15 @@ export default function CheckoutSuccessPage() {
               </div>
               <div>
                 <h3 className="text-base font-medium text-gray-900">
-                  Estado: Confirmado
+                  Estado: {status === 'confirmed' ? 'Confirmado' : status === 'failed' ? 'Incidencia de pago' : 'En confirmación'}
                 </h3>
                 <p className="mt-1 text-sm text-gray-600">
-                  Tu pedido está siendo procesado
+                  {message}
                 </p>
               </div>
             </div>
           </div>
 
-          {/* Order ID Info */}
           <div className="px-6 py-6">
             <h3 className="text-base font-semibold text-gray-900">
               Detalles del pedido
@@ -86,38 +201,107 @@ export default function CheckoutSuccessPage() {
             <dl className="mt-4 space-y-3 text-sm">
               <div className="flex justify-between">
                 <dt className="text-gray-600">Número de pedido:</dt>
-                <dd className="font-medium text-gray-900">{displayId}</dd>
+                <dd className="font-medium text-gray-900">{order?.display_id || displayId}</dd>
               </div>
               <div className="flex justify-between">
                 <dt className="text-gray-600">ID de transacción:</dt>
                 <dd className="font-mono text-xs text-gray-500">{orderId}</dd>
               </div>
+              {order && (
+                <>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-600">Estado del pago:</dt>
+                    <dd className="font-medium text-gray-900">{order.payment_status}</dd>
+                  </div>
+                  <div className="flex justify-between">
+                    <dt className="text-gray-600">Total:</dt>
+                    <dd className="font-medium text-gray-900">{formatPrice(order.total)}</dd>
+                  </div>
+                </>
+              )}
             </dl>
           </div>
         </div>
 
-        {/* Next Steps */}
-        <div className="mt-8 rounded-lg border border-blue-200 bg-blue-50 p-6">
-          <h3 className="text-base font-semibold text-blue-900">
+        {supplierGroups.length > 0 && (
+          <div className="mt-8 rounded-lg border border-gray-200 bg-white p-6 shadow-sm">
+            <h3 className="flex items-center gap-2 text-base font-semibold text-gray-900">
+              <Store className="h-5 w-5 text-gray-500" />
+              Gestión por proveedor
+            </h3>
+            <div className="mt-4 space-y-3">
+              {supplierGroups.map(group => (
+                <div key={group.id} className="flex items-center justify-between rounded-lg border border-gray-200 px-4 py-3">
+                  <div>
+                    <p className="font-medium text-gray-900">{group.name}</p>
+                    <p className="text-sm text-gray-500">{group.itemCount} producto(s)</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium text-gray-900">{formatPrice(group.total)}</p>
+                    {group.status && <p className="text-sm text-gray-500">{group.status}</p>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className={`mt-8 rounded-lg border p-6 ${status === 'failed' ? 'border-red-200 bg-red-50' : 'border-blue-200 bg-blue-50'}`}>
+          <h3 className={`text-base font-semibold ${status === 'failed' ? 'text-red-900' : 'text-blue-900'}`}>
             Próximos pasos
           </h3>
-          <ul className="mt-4 space-y-2 text-sm text-blue-700">
-            <li className="flex items-start gap-2">
-              <span className="mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-600"></span>
-              <span>Recibirás un email de confirmación con los detalles del pedido</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-600"></span>
-              <span>Prepararemos tu pedido y te notificaremos cuando esté listo para envío</span>
-            </li>
-            <li className="flex items-start gap-2">
-              <span className="mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-blue-600"></span>
-              <span>Puedes hacer seguimiento en la sección &ldquo;Mis Pedidos&rdquo;</span>
-            </li>
+          <ul className={`mt-4 space-y-2 text-sm ${status === 'failed' ? 'text-red-700' : 'text-blue-700'}`}>
+            {status === 'confirmed' && (
+              <>
+                <li className="flex items-start gap-2">
+                  <span className={`mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${nextStepBulletClass}`}></span>
+                  <span>El pedido ya está confirmado y pasará a preparación.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className={`mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${nextStepBulletClass}`}></span>
+                  <span>Podrás seguir su evolución y las entregas por proveedor desde Mis pedidos.</span>
+                </li>
+              </>
+            )}
+            {status === 'processing' && (
+              <>
+                <li className="flex items-start gap-2">
+                  <span className={`mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${nextStepBulletClass}`}></span>
+                  <span>No cierres la compra ni repitas el pago. El backend está esperando la confirmación definitiva.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className={`mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${nextStepBulletClass}`}></span>
+                  <span>Si el estado no cambia en unos minutos, revisa Mis pedidos o contacta con soporte.</span>
+                </li>
+              </>
+            )}
+            {status === 'manual_review' && (
+              <>
+                <li className="flex items-start gap-2">
+                  <span className={`mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${nextStepBulletClass}`}></span>
+                  <span>La sincronización está tardando más de lo habitual, pero eso no implica un fallo automático.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className={`mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${nextStepBulletClass}`}></span>
+                  <span>Consulta Mis pedidos en unos minutos para validar si el pedido ya apareció.</span>
+                </li>
+              </>
+            )}
+            {status === 'failed' && (
+              <>
+                <li className="flex items-start gap-2">
+                  <span className={`mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${nextStepBulletClass}`}></span>
+                  <span>Verifica si el cargo llegó a completarse antes de intentar un nuevo pago.</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className={`mt-0.5 h-1.5 w-1.5 flex-shrink-0 rounded-full ${nextStepBulletClass}`}></span>
+                  <span>Si el problema persiste, comparte el ID de transacción con soporte.</span>
+                </li>
+              </>
+            )}
           </ul>
         </div>
 
-        {/* Actions */}
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/marketplace/orders"
@@ -135,6 +319,24 @@ export default function CheckoutSuccessPage() {
         </div>
       </div>
     </div>
+  )
+}
+
+function CheckoutSuccessFallback() {
+  return (
+    <div className="min-h-screen bg-gray-50 py-16">
+      <div className="mx-auto max-w-3xl px-4 text-center text-gray-600 sm:px-6 lg:px-8">
+        Cargando confirmación del pedido...
+      </div>
+    </div>
+  )
+}
+
+export default function CheckoutSuccessPage() {
+  return (
+    <Suspense fallback={<CheckoutSuccessFallback />}>
+      <CheckoutSuccessContent />
+    </Suspense>
   )
 }
 

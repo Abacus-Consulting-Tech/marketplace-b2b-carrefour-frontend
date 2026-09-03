@@ -1,363 +1,855 @@
-# Franchisee Management - Backend Implementation Guide
+# Franchisee Management - Backend API Guide
 
-**Módulo**: Gestión de Franquiciados (Admin CRUD)  
-**Estado Frontend**: ✅ Completado (25/08/2026)  
-**Prioridad Backend**: Alta - Módulo core del sistema
+**Módulo**: Gestión de Franquiciados  
+**Versión**: v2.0  
+**Última actualización**: 2026-09-03  
+**Fuente de verdad del inventario**: `src/app/(backoffice)/admin/dev-tools/page.tsx`
 
----
-
-## 📋 Resumen Ejecutivo
-
-Sistema administrativo que permite gestionar franquiciados de Carrefour:
-- CRUD completo de franquiciados
-- Activación/desactivación de cuentas
-- Estadísticas de compra y comportamiento
-- Integración con sistema de pedidos
-- Gestión de usuarios asociados
-
-**Usuarios**: Solo administradores  
-**Integración**: Auth, Orders, Stores
+Este documento sustituye la guía antigua basada en un CRUD idealizado de `/admin/franchisees*` y describe el estado real del módulo desde frontend: qué endpoints usamos hoy, cuáles son legacy, cuáles son nuevos, qué body enviamos y qué está `working`, `broken` o `untested` en DEV.
 
 ---
 
-## 🗄️ Modelo de Datos
+## Resumen rápido
 
-### Franchisee
-```typescript
-{
-  id: string;
-  first_name: string;
-  last_name: string;
-  email: string; // único
-  phone: string;
-  company_name: string;
-  tax_id: string; // CIF - único
-  status: 'active' | 'inactive';
-  address: {
-    street: string;
-    city: string;
-    postal_code: string;
-    country: string; // ISO code
-    province?: string;
-  };
-  user_id: string; // FK a tabla users
-  metadata: {
-    credit_limit?: number;
-    special_discount?: number; // porcentaje
-    allowed_categories?: string[]; // futuro
-    notes?: string; // notas internas admin
-  };
-  created_at: Date;
-  updated_at: Date;
-  status_updated_at?: Date;
-  deleted_at?: Date; // soft delete
-}
-```
+### Familias de endpoints que conviven hoy
 
-### FranchiseeStore (relación N:N)
-```typescript
-{
-  id: string;
-  franchisee_id: string;
-  store_id: string;
-  is_primary: boolean;
-  created_at: Date;
-}
-```
+1. **Admin actual consumido por frontend**: `/admin/customers*`
+2. **Onboarding/autoservicio nuevo**: `/admin/franchisees/invitations`, `/franchisee/register`, `/store/customers/me`
+3. **Legacy inventariado**: `/admin/franchisees*`
+
+### Estado real en DEV
+
+- `GET /store/customers/me` está **working** y ya alimenta las direcciones reales del checkout.
+- `GET /admin/customers` y `GET /admin/customers/:id` están **broken** por `403 RBAC`.
+- `POST /store/customers/me/addresses` está **broken** en DEV: devuelve `401 Unauthorized` con token de franquiciado.
+- El resto de endpoints de franquiciados siguen **untested** o son contratos todavía no cerrados con backend.
+
+### Problema de contrato más importante
+
+Frontend administra franquiciados principalmente con `/admin/customers*`, pero todavía existe una familia legacy `/admin/franchisees*` en inventario. Además, el cliente frontend ya llama a `GET /admin/customers/:id/stats`, mientras `dev-tools` solo inventaría `GET /admin/franchisees/:id/stats`. Ese punto debe unificarse.
 
 ---
 
-## 🔌 Endpoints API
+## Leyenda de estado
 
-### 1. GET /admin/franchisees
-**Descripción**: Listar todos los franquiciados
+- `working`: validado en DEV o usable para el flujo actual
+- `broken`: probado y falla con error conocido
+- `untested`: inventariado, pero no revalidado explícitamente en DEV
+- `legacy`: ruta antigua inventariada; no es la familia principal del frontend actual
 
-**Headers**:
+---
+
+## 1. Endpoints actuales consumidos por frontend
+
+### 1.1 Admin CRUD base sobre customers
+
+#### `GET /admin/customers`
+
+- **Uso en frontend**: listado admin de franquiciados
+- **Cliente**: `franchiseesApi.listFranchisees(...)`
+- **Estado DEV**: `broken`
+- **Error conocido**: `403 Forbidden` por RBAC
+
+**Query params que envía frontend**
+
+```text
+q=<search>
+limit=<number>
+offset=<number>
+expand=<string>
+has_account=<true|false>
 ```
-Authorization: Bearer {admin_token}
+
+**Ejemplo real**
+
+```http
+GET /admin/customers?q=madrid&limit=20&offset=0&expand=groups,shipping_addresses&has_account=true
+Authorization: Bearer <admin_token>
 ```
 
-**Query Parameters**:
-```
-?status=active&search=carrefour&page=1&limit=20&sort=created_at:desc
-```
+**Respuesta esperada por frontend**
 
-| Parámetro | Tipo | Descripción |
-|-----------|------|-------------|
-| `status` | string | `active`, `inactive`, `all` |
-| `search` | string | Buscar en nombre, email, empresa, tax_id |
-| `page` | number | Número de página (default: 1) |
-| `limit` | number | Items por página (default: 20, max: 100) |
-| `sort` | string | Campo:dirección (`created_at:desc`) |
-
-**Response 200**:
 ```json
 {
-  "franchisees": [
+  "customers": [
     {
-      "id": "fran_01HMYB7Z8WC9K2N5J4X6P7Q8R9",
-      "first_name": "Juan",
-      "last_name": "Pérez",
-      "email": "juan.perez@carrefour-madrid.com",
+      "id": "cus_123",
+      "email": "franchisee@carrefour.dev",
+      "first_name": "María",
+      "last_name": "García",
       "phone": "+34 600 123 456",
-      "company_name": "Carrefour Express Madrid Centro",
-      "tax_id": "B12345678",
-      "status": "active",
-      "address": {
-        "street": "Calle Mayor 1",
-        "city": "Madrid",
-        "postal_code": "28001",
-        "country": "ES",
-        "province": "Madrid"
+      "has_account": true,
+      "shipping_addresses": [],
+      "groups": [],
+      "metadata": {
+        "company_name": "Carrefour Express Sur",
+        "tax_id": "B12345678",
+        "status": "pending_approval",
+        "subscription_status": "pending"
       },
-      "user_id": "user_xxx",
-      "created_at": "2026-01-15T10:00:00Z",
-      "updated_at": "2026-08-25T15:30:00Z",
-      "stats": {
-        "total_orders": 45,
-        "total_spent_cents": 1250050, // en centavos
-        "last_order_date": "2026-08-20T14:30:00Z"
-      }
+      "created_at": "2026-09-03T10:00:00Z",
+      "updated_at": "2026-09-03T10:00:00Z"
     }
   ],
-  "count": 120,
-  "limit": 20,
+  "count": 1,
   "offset": 0,
-  "total": 120
+  "limit": 20
 }
 ```
 
----
+#### `GET /admin/customers/:id`
 
-### 2. GET /admin/franchisees/:id
-**Descripción**: Obtener detalle completo de un franquiciado
+- **Uso en frontend**: detalle admin de un franquiciado
+- **Cliente**: `franchiseesApi.getFranchisee({ id, expand })`
+- **Estado DEV**: `broken`
+- **Error conocido**: `403 Forbidden` por RBAC
 
-**Response 200**:
+**Query params opcionales**
+
+```text
+expand=billing_address,shipping_addresses,groups,orders
+```
+
+**Respuesta esperada**
+
 ```json
 {
-  "franchisee": {
-    "id": "fran_xxx",
-    "first_name": "Juan",
-    "last_name": "Pérez",
-    ...todos los campos,
-    "user": {
-      "id": "user_xxx",
-      "email": "juan.perez@carrefour-madrid.com",
-      "role": "franchisee",
-      "is_active": true,
-      "last_login": "2026-08-25T09:15:00Z"
-    },
-    "stores": [
+  "customer": {
+    "id": "cus_123",
+    "email": "franchisee@carrefour.dev",
+    "first_name": "María",
+    "last_name": "García",
+    "shipping_addresses": [
       {
-        "id": "store_xxx",
-        "name": "Madrid Centro",
-        "address": {
-          "street": "Calle Mayor 1",
-          "city": "Madrid",
-          "postal_code": "28001"
+        "id": "addr_123",
+        "address_1": "Gran Vía 1",
+        "city": "Madrid",
+        "country_code": "es",
+        "province": "Madrid",
+        "postal_code": "28013",
+        "metadata": {
+          "store_name": "Tienda Centro",
+          "store_code": "CRF-MAD-001"
         },
-        "is_primary": true
+        "created_at": "2026-09-03T10:00:00Z",
+        "updated_at": "2026-09-03T10:00:00Z"
       }
     ],
-    "recent_orders": [
+    "groups": [],
+    "metadata": {
+      "company_name": "Carrefour Express Sur",
+      "tax_id": "B12345678",
+      "status": "active"
+    },
+    "created_at": "2026-09-03T10:00:00Z",
+    "updated_at": "2026-09-03T10:00:00Z"
+  }
+}
+```
+
+#### `POST /admin/customers`
+
+- **Uso en frontend**: alta admin directa de franquiciado
+- **Cliente**: `franchiseesApi.createFranchisee(request)`
+- **Estado DEV**: `untested`
+
+**Body real que construye frontend**
+
+```json
+{
+  "email": "maria.garcia@email.com",
+  "first_name": "María",
+  "last_name": "García",
+  "phone": "+34 600 123 456",
+  "password": "TempPass123!",
+  "metadata": {
+    "company_name": "Carrefour Express Sur",
+    "tax_id": "B12345678",
+    "store_name": "Tienda Centro",
+    "store_code": "CRF-MAD-001",
+    "city": "Madrid",
+    "region": "Madrid",
+    "country": "ES",
+    "credit_limit": 10000,
+    "discount_tier": "silver",
+    "payment_terms": 30,
+    "is_active": true,
+    "notes": "Alta manual desde admin"
+  },
+  "groups": [
+    { "id": "group_b2b_franchisees" }
+  ]
+}
+```
+
+**Respuesta esperada**
+
+```json
+{
+  "customer": {
+    "id": "cus_123",
+    "email": "maria.garcia@email.com",
+    "first_name": "María",
+    "last_name": "García",
+    "metadata": {
+      "company_name": "Carrefour Express Sur"
+    },
+    "created_at": "2026-09-03T10:00:00Z",
+    "updated_at": "2026-09-03T10:00:00Z"
+  }
+}
+```
+
+#### `POST /admin/customers/:id`
+
+- **Uso en frontend**: edición admin de datos y notas
+- **Cliente**: `franchiseesApi.updateFranchisee(id, request)`
+- **Estado DEV**: `untested`
+
+**Body real**
+
+```json
+{
+  "first_name": "María",
+  "last_name": "García López",
+  "phone": "+34 600 123 999",
+  "billing_address_id": "addr_billing_123",
+  "metadata": {
+    "notes": "Cliente premium",
+    "status": "active",
+    "payment_terms": 30
+  },
+  "groups": [
+    { "id": "group_b2b_franchisees" }
+  ]
+}
+```
+
+**Respuesta esperada**
+
+```json
+{
+  "customer": {
+    "id": "cus_123",
+    "email": "maria.garcia@email.com",
+    "first_name": "María",
+    "last_name": "García López",
+    "metadata": {
+      "notes": "Cliente premium",
+      "status": "active"
+    },
+    "updated_at": "2026-09-03T10:30:00Z"
+  }
+}
+```
+
+#### `DELETE /admin/customers/:id`
+
+- **Uso en frontend**: eliminación admin de franquiciado
+- **Cliente**: `franchiseesApi.deleteFranchisee(id)`
+- **Estado DEV**: `untested`
+
+**Respuesta esperada**
+
+```json
+{
+  "id": "cus_123",
+  "object": "customer",
+  "deleted": true
+}
+```
+
+### 1.2 Direcciones del franquiciado gestionadas por admin
+
+#### `GET /admin/customers/:id/addresses`
+
+- **Uso en frontend**: inventariado, pero la UI suele leer las direcciones vía `expand=shipping_addresses`
+- **Estado DEV**: `untested`
+
+**Respuesta esperada**
+
+Idealmente debería devolver `customer.shipping_addresses` o una lista compatible con el tipo `Address[]`.
+
+#### `POST /admin/customers/:id/addresses`
+
+- **Uso en frontend**: alta de tienda/dirección desde detalle admin
+- **Cliente**: `franchiseesApi.addAddress(franchiseeId, request)`
+- **Estado DEV**: `untested`
+
+**Body real**
+
+```json
+{
+  "address": {
+    "first_name": "María",
+    "last_name": "García",
+    "company": "Carrefour Express Sur",
+    "address_1": "Gran Vía 1",
+    "address_2": "Local 2",
+    "city": "Madrid",
+    "country_code": "es",
+    "province": "Madrid",
+    "postal_code": "28013",
+    "phone": "+34 600 123 456",
+    "metadata": {
+      "store_name": "Tienda Centro",
+      "store_code": "CRF-MAD-001"
+    }
+  }
+}
+```
+
+**Respuesta esperada**
+
+```json
+{
+  "customer": {
+    "id": "cus_123",
+    "shipping_addresses": [
       {
-        "id": "order_xxx",
-        "display_id": "CF-10045",
-        "total_cents": 168795,
-        "status": "shipped",
-        "created_at": "2026-08-20T14:30:00Z"
-      }
-    ],
-    "favorite_products": [
-      {
-        "product_id": "prod_xxx",
-        "title": "Polo Corporativo",
-        "times_ordered": 12,
-        "total_spent_cents": 220000
+        "id": "addr_123",
+        "address_1": "Gran Vía 1",
+        "city": "Madrid",
+        "country_code": "es",
+        "postal_code": "28013",
+        "metadata": {
+          "store_name": "Tienda Centro",
+          "store_code": "CRF-MAD-001"
+        },
+        "created_at": "2026-09-03T10:00:00Z",
+        "updated_at": "2026-09-03T10:00:00Z"
       }
     ]
   }
 }
 ```
 
----
+#### `PATCH /admin/customers/:id/addresses/:addressId`
 
-### 3. POST /admin/franchisees
-**Descripción**: Crear nuevo franquiciado
+- **Uso en frontend**: edición de tienda/dirección desde admin
+- **Cliente**: `franchiseesApi.updateAddress(franchiseeId, addressId, request)`
+- **Estado DEV**: `untested`
 
-**Headers**:
-```
-Authorization: Bearer {admin_token}
-Content-Type: application/json
-```
+**Body real**
 
-**Body**:
 ```json
 {
   "first_name": "María",
-  "last_name": "González",
-  "email": "maria.gonzalez@carrefour-bcn.com",
-  "phone": "+34 600 987 654",
-  "company_name": "Carrefour Express Barcelona Sur",
-  "tax_id": "B98765432",
-  "address": {
-    "street": "Paseo de Gracia 100",
-    "city": "Barcelona",
-    "postal_code": "08008",
-    "country": "ES",
-    "province": "Barcelona"
-  },
-  "user": {
-    "email": "maria.gonzalez@carrefour-bcn.com",
-    "password": "TempPass123!",
-    "send_welcome_email": true
-  },
-  "status": "active",
+  "last_name": "García",
+  "company": "Carrefour Express Sur",
+  "address_1": "Gran Vía 3",
+  "address_2": "Local 4",
+  "city": "Madrid",
+  "country_code": "es",
+  "province": "Madrid",
+  "postal_code": "28013",
+  "phone": "+34 600 123 456",
   "metadata": {
-    "credit_limit": 10000,
-    "notes": "Nueva apertura - priorizar atención"
+    "store_name": "Tienda Centro Reformada",
+    "store_code": "CRF-MAD-001"
   }
 }
 ```
 
-**Response 201**:
+**Respuesta esperada**
+
 ```json
 {
-  "franchisee": {
-    "id": "fran_new",
-    ...datos del franquiciado creado
-  },
-  "user": {
-    "id": "user_new",
-    "email": "maria.gonzalez@carrefour-bcn.com",
-    "role": "franchisee"
-  },
-  "welcome_email_sent": true
+  "customer": {
+    "id": "cus_123",
+    "shipping_addresses": []
+  }
 }
 ```
 
-**Validaciones**:
-- ✅ Email único
-- ✅ Tax ID único
-- ✅ Formato tax ID español: `[A-Z]\d{8}`
-- ✅ Teléfono formato español: `+34 \d{3} \d{3} \d{3}`
-- ✅ first_name, last_name, company_name requeridos
-- ✅ Password mínimo 8 caracteres (al menos 1 mayúscula, 1 número)
+#### `DELETE /admin/customers/:id/addresses/:addressId`
 
-**Errores**:
+- **Uso en frontend**: borrado de tienda/dirección desde admin
+- **Cliente**: `franchiseesApi.deleteAddress(franchiseeId, addressId)`
+- **Estado DEV**: `untested`
+
+**Respuesta esperada**
+
 ```json
-// 400 Bad Request
 {
-  "error": "Email already exists",
-  "code": "DUPLICATE_EMAIL",
-  "field": "email"
+  "customer": {
+    "id": "cus_123",
+    "shipping_addresses": []
+  }
 }
+```
 
-// 422 Unprocessable Entity
+### 1.3 Cambio de estado y aprobación
+
+#### `PATCH /admin/franchisees/:id/status`
+
+- **Uso en frontend**: aprobar, suspender o desactivar
+- **Cliente**: `franchiseesApi.updateFranchiseeStatus(id, status)`
+- **Estado DEV**: `untested`
+- **Observación**: esta es una ruta de la familia legacy `/admin/franchisees*`, pero el frontend la sigue usando para cambio de estado
+
+**Body real**
+
+```json
 {
-  "errors": [
-    {
-      "field": "tax_id",
-      "message": "Invalid Spanish tax ID format"
+  "status": "active"
+}
+```
+
+**Valores esperados**
+
+```text
+pending_approval
+active
+suspended
+inactive
+```
+
+**Regla de negocio esperada**
+
+- Si `status = active` y `subscription_status !== active`, backend debería rechazar la operación de forma consistente cuando billing esté habilitado.
+
+**Respuesta esperada**
+
+```json
+{
+  "customer": {
+    "id": "cus_123",
+    "metadata": {
+      "status": "active",
+      "subscription_status": "active",
+      "onboarding_status": "approved_pending_credentials"
     },
-    {
-      "field": "user.password",
-      "message": "Password must contain at least 1 uppercase letter and 1 number"
-    }
+    "updated_at": "2026-09-03T11:00:00Z"
+  }
+}
+```
+
+### 1.4 Lecturas auxiliares que la UI de franquiciados usa o tiene cableadas
+
+#### `GET /admin/orders?customer_id=:id`
+
+- **Uso en frontend**: historial de pedidos asociado al franquiciado desde admin
+- **Cliente**: `franchiseesApi.getFranchiseeOrders({ customer_id, limit, offset, status })`
+- **Estado DEV**: depende del módulo orders, hoy `working` para la UI actual
+
+**Query params**
+
+```text
+customer_id=<id>
+limit=<number>
+offset=<number>
+status=pending,completed,canceled
+```
+
+#### `GET /admin/customers/:id/stats`
+
+- **Uso en frontend**: estadísticas del franquiciado
+- **Cliente**: `franchiseesApi.getFranchiseeStats(franchiseeId)`
+- **Estado DEV**: `untested`
+- **Problema**: `dev-tools` no inventaría hoy esta ruta; inventaría `GET /admin/franchisees/:id/stats`
+
+**Respuesta esperada**
+
+```json
+{
+  "stats": {
+    "franchisee_id": "cus_123",
+    "total_orders": 12,
+    "total_spent": 4200,
+    "average_order_value": 350,
+    "last_order_date": "2026-09-03T10:00:00Z",
+    "orders_by_status": {
+      "pending": 1,
+      "completed": 10,
+      "canceled": 1
+    },
+    "orders_by_month": []
+  }
+}
+```
+
+#### `POST /admin/customers/bulk`
+
+- **Uso en frontend**: bulk update cableado en cliente, sin UI consolidada
+- **Estado DEV**: `untested`
+
+**Body real**
+
+```json
+{
+  "customer_ids": ["cus_123", "cus_456"],
+  "metadata": {
+    "payment_terms": 30,
+    "discount_tier": "silver"
+  },
+  "groups": [
+    { "id": "group_b2b_franchisees" }
   ]
 }
 ```
 
 ---
 
-### 4. PATCH /admin/franchisees/:id
-**Descripción**: Actualizar datos del franquiciado
+## 2. Endpoints nuevos de onboarding y autoservicio
 
-**Body**: Campos parciales a actualizar
+### 2.1 Invitación admin del franquiciado
+
+#### `POST /admin/franchisees/invitations`
+
+- **Uso en frontend**: invitar por nombre + email y obtener `registrationUrl`
+- **Cliente**: `franchiseesApi.inviteFranchisee(request)`
+- **Estado DEV**: `untested`
+- **Modo de frontend**: real por defecto salvo `NEXT_PUBLIC_MOCK_FRANCHISEE_INVITATIONS=true`
+
+**Body real**
+
 ```json
 {
-  "phone": "+34 600 111 222",
-  "company_name": "Carrefour Express Madrid Norte",
-  "address": {
-    "street": "Calle Nueva 50"
-  },
-  "metadata": {
-    "credit_limit": 15000,
-    "notes": "Ampliado límite de crédito"
+  "name": "María García",
+  "email": "maria.garcia@email.com"
+}
+```
+
+**Respuesta esperada**
+
+```json
+{
+  "invitation": {
+    "id": "inv_123",
+    "name": "María García",
+    "email": "maria.garcia@email.com",
+    "registrationUrl": "https://.../franchisee/register?token=inv_123",
+    "invitationToken": "inv_123",
+    "status": "pending",
+    "createdAt": "2026-09-03T10:00:00Z"
   }
 }
 ```
 
-**Response 200**: Franquiciado actualizado
+### 2.2 Registro público
 
-**Restricciones**:
-- No se puede cambiar `email` (requiere endpoint separado)
-- No se puede cambiar `tax_id` (inmutable)
-- No se puede cambiar `user_id` (inmutable)
+#### `POST /franchisee/register`
 
----
+- **Uso en frontend**: autorregistro público desde enlace con token
+- **Cliente**: `franchiseeRegistrationApi.register(request)`
+- **Estado DEV**: `untested`
+- **Modo de frontend**: real por defecto salvo `NEXT_PUBLIC_MOCK_FRANCHISEE_REGISTRATION=true`
 
-### 5. PATCH /admin/franchisees/:id/status
-**Descripción**: Activar o desactivar franquiciado
+**Body real sin billing**
 
-**Body**:
 ```json
 {
-  "status": "inactive",
-  "reason": "Suspensión temporal por incumplimiento de pagos"
+  "invitationToken": "inv_123",
+  "firstName": "María",
+  "lastName": "García López",
+  "email": "maria.garcia@email.com",
+  "password": "supersecret1",
+  "phone": "+34 600 123 456",
+  "companyName": "Carrefour Express Sur",
+  "taxId": "B12345678",
+  "fiscalAddress": "Calle Mayor 123",
+  "municipality": "Madrid",
+  "postalCode": "28001",
+  "country": "ES"
 }
 ```
 
-**Response 200**:
+**Body real con billing habilitado**
+
+```json
+{
+  "invitationToken": "inv_123",
+  "firstName": "María",
+  "lastName": "García López",
+  "email": "maria.garcia@email.com",
+  "password": "supersecret1",
+  "phone": "+34 600 123 456",
+  "companyName": "Carrefour Express Sur",
+  "taxId": "B12345678",
+  "fiscalAddress": "Calle Mayor 123",
+  "municipality": "Madrid",
+  "postalCode": "28001",
+  "country": "ES",
+  "stripePaymentMethodId": "pm_123"
+}
+```
+
+**Respuesta esperada**
+
 ```json
 {
   "franchisee": {
-    ...
-    "status": "inactive",
-    "status_updated_at": "2026-08-25T15:30:00Z",
+    "id": "cus_123",
+    "email": "maria.garcia@email.com",
+    "first_name": "María",
+    "last_name": "García López",
     "metadata": {
-      ...
-      "status_change_reason": "Suspensión temporal por incumplimiento de pagos"
-    }
+      "company_name": "Carrefour Express Sur",
+      "status": "pending_approval",
+      "subscription_status": "pending",
+      "onboarding_status": "pending_approval"
+    },
+    "created_at": "2026-09-03T10:00:00Z",
+    "updated_at": "2026-09-03T10:00:00Z"
   },
-  "user_disabled": true
+  "billing": {
+    "client_secret": "pi_..._secret_..."
+  }
 }
 ```
 
-**Side Effects**:
-- Usuario asociado se desactiva/activa automáticamente
-- Si `status = 'inactive'`, franquiciado no puede hacer pedidos
-- Pedidos en curso no se cancelan automáticamente
+### 2.3 Webhook Stripe del onboarding
+
+#### `POST /webhooks/stripe`
+
+- **Uso en frontend**: no lo llama directamente; depende del backend
+- **Estado DEV**: `untested`
+
+**Eventos relevantes esperados**
+
+```text
+customer.subscription.created
+invoice.paid
+invoice.payment_failed
+customer.subscription.deleted
+```
+
+**Efectos esperados en backend**
+
+- actualizar `subscription_status`
+- guardar `stripe_customer_id`
+- guardar `stripe_subscription_id`
+- guardar `current_period_end`
+
+### 2.4 Facturas del franquiciado
+
+#### `GET /franchisee/:id/invoices`
+
+- **Uso en frontend**: sección de facturas del perfil
+- **Estado DEV**: `untested`
+
+**Respuesta esperada**
+
+```json
+{
+  "invoices": [
+    {
+      "id": "inv_123",
+      "franchiseeId": "cus_123",
+      "number": "FAC-2026-0001",
+      "issueDate": "2026-09-03T10:00:00Z",
+      "amount": 299,
+      "currencyCode": "EUR",
+      "status": "paid",
+      "pdfUrl": "https://.../invoice.pdf"
+    }
+  ]
+}
+```
+
+### 2.5 Tiendas del franquiciado en autoservicio
+
+#### `GET /franchisee/stores`
+#### `POST /franchisee/stores`
+#### `DELETE /franchisee/stores/:id`
+
+- **Uso en frontend**: pantalla `Mis tiendas`
+- **Estado DEV**: `untested` como contrato backend y actualmente `mock/localStorage` en frontend
+- **Observación**: hoy no existe integración real; la pantalla pública persiste localmente
+
+**Body real previsto para `POST /franchisee/stores`**
+
+```json
+{
+  "name": "Tienda Centro",
+  "taxId": "B12345678",
+  "address": "Gran Vía 1",
+  "city": "Madrid",
+  "postalCode": "28013"
+}
+```
 
 ---
 
-### 6. GET /admin/franchisees/:id/stats
-**Descripción**: Obtener estadísticas detalladas del franquiciado
+## 3. Endpoints self-service Store que ya interactúan con checkout
 
-**Query Parameters**:
-```
-?from=2026-07-01&to=2026-08-25
+#### `GET /store/customers/me`
+
+- **Uso en frontend**: checkout del franquiciado para cargar `shipping_addresses`
+- **Cliente**: `getCustomer()` en `mercur-store-client`
+- **Estado DEV**: `working`
+
+**Headers esperados**
+
+```http
+Authorization: Bearer <franchisee_token>
+x-publishable-api-key: <publishable_key>
 ```
 
-**Response 200**:
+**Respuesta usada por frontend**
+
 ```json
 {
-  "stats": {
-    "period": {
-      "from": "2026-07-01T00:00:00Z",
-      "to": "2026-08-25T23:59:59Z"
-    },
-    "orders": {
-      "total_count": 45,
-      "total_spent_cents": 1250050,
-      "average_order_value_cents": 27779,
-      "order_frequency_days": 7,
-      "last_order_date": "2026-08-20T14:30:00Z"
-    },
-    "favorite_products": [
+  "customer": {
+    "id": "cus_123",
+    "email": "franchisee@carrefour.dev",
+    "first_name": "María",
+    "last_name": "García",
+    "shipping_addresses": [
       {
-        "product_id": "prod_001",
-        "title": "Polo Corporativo Carrefour",
+        "id": "addr_123",
+        "first_name": "María",
+        "last_name": "García",
+        "address_1": "Gran Vía 1",
+        "city": "Madrid",
+        "province": "Madrid",
+        "postal_code": "28013",
+        "country_code": "es",
+        "phone": "+34 600 123 456",
+        "metadata": {
+          "store_name": "Tienda Centro",
+          "store_code": "CRF-MAD-001"
+        }
+      }
+    ]
+  }
+}
+```
+
+#### `POST /store/customers/me/addresses`
+
+- **Uso en frontend**: todavía no consumido como persistencia real; sería el camino lógico para dar de alta nuevas tiendas desde checkout o perfil
+- **Estado DEV**: `broken`
+- **Error probado**: `401 Unauthorized` con `franchisee@carrefour.dev`
+
+**Body probado**
+
+```json
+{
+  "address": {
+    "first_name": "Carrefour",
+    "last_name": "Retiro",
+    "address_1": "Calle de Alcalá 120",
+    "address_2": "Local 1",
+    "city": "Madrid",
+    "province": "Madrid",
+    "postal_code": "28009",
+    "country_code": "es",
+    "phone": "+34910000001",
+    "metadata": {
+      "store_name": "Carrefour Express Retiro",
+      "store_code": "CRF-MAD-011"
+    }
+  }
+}
+```
+
+**Respuesta real observada en DEV**
+
+```json
+{
+  "message": "Unauthorized"
+}
+```
+
+---
+
+## 4. Endpoints legacy todavía inventariados
+
+Estas rutas siguen en `dev-tools`, pero **no son la familia principal del CRUD actual**. Deben mantenerse como referencia hasta que backend confirme si se eliminan o pasan a ser canónicas.
+
+#### `GET /admin/franchisees`
+- Estado DEV: `untested`
+- Rol: legacy para listado admin
+
+#### `GET /admin/franchisees/:id`
+- Estado DEV: `untested`
+- Rol: legacy para detalle admin
+
+#### `POST /admin/franchisees`
+- Estado DEV: `untested`
+- Rol: legacy para alta admin
+
+#### `PATCH /admin/franchisees/:id`
+- Estado DEV: `untested`
+- Rol: legacy para edición admin
+
+#### `PATCH /admin/franchisees/:id/status`
+- Estado DEV: `untested`
+- Rol: legacy, pero todavía usada por el frontend actual para aprobar/suspender
+
+#### `GET /admin/franchisees/:id/stats`
+- Estado DEV: `untested`
+- Rol: legacy para estadísticas
+- Conflicto actual: frontend cliente usa `GET /admin/customers/:id/stats`
+
+---
+
+## 5. Matriz consolidada de estado
+
+| Familia | Método y ruta | Frontend hoy | Estado DEV | Notas |
+|---|---|---|---|---|
+| Admin actual | `GET /admin/customers` | Sí | `broken` | `403 RBAC` |
+| Admin actual | `GET /admin/customers/:id` | Sí | `broken` | `403 RBAC` |
+| Admin actual | `POST /admin/customers` | Sí | `untested` | Alta admin directa |
+| Admin actual | `POST /admin/customers/:id` | Sí | `untested` | Edición admin |
+| Admin actual | `DELETE /admin/customers/:id` | Sí | `untested` | Borrado admin |
+| Admin actual | `GET /admin/customers/:id/addresses` | Parcial | `untested` | Normalmente se usa `expand` |
+| Admin actual | `POST /admin/customers/:id/addresses` | Sí | `untested` | Alta de tienda desde admin |
+| Admin actual | `PATCH /admin/customers/:id/addresses/:addressId` | Sí | `untested` | Edición de tienda desde admin |
+| Admin actual | `DELETE /admin/customers/:id/addresses/:addressId` | Sí | `untested` | Borrado de tienda desde admin |
+| Admin actual | `GET /admin/orders?customer_id=:id` | Sí | `working` | Depende del módulo orders |
+| Admin actual | `GET /admin/customers/:id/stats` | Sí | `untested` | No alineado con `dev-tools` |
+| Admin actual | `POST /admin/customers/bulk` | Cableado | `untested` | Sin UI consolidada |
+| Onboarding nuevo | `POST /admin/franchisees/invitations` | Sí | `untested` | Real por defecto |
+| Onboarding nuevo | `POST /franchisee/register` | Sí | `untested` | Real por defecto |
+| Onboarding nuevo | `POST /webhooks/stripe` | Indirecto | `untested` | Backend-only |
+| Onboarding nuevo | `GET /franchisee/:id/invoices` | Sí | `untested` | UI lista, backend pendiente |
+| Onboarding nuevo | `GET /franchisee/stores` | Sí | `untested` | Hoy mock/localStorage |
+| Onboarding nuevo | `POST /franchisee/stores` | Sí | `untested` | Hoy mock/localStorage |
+| Onboarding nuevo | `DELETE /franchisee/stores/:id` | Sí | `untested` | Hoy mock/localStorage |
+| Store self-service | `GET /store/customers/me` | Sí | `working` | Checkout usa `shipping_addresses` reales |
+| Store self-service | `POST /store/customers/me/addresses` | No persistente todavía | `broken` | `401 Unauthorized` |
+| Legacy | `GET /admin/franchisees` | No principal | `untested` | Ruta antigua |
+| Legacy | `GET /admin/franchisees/:id` | No principal | `untested` | Ruta antigua |
+| Legacy | `POST /admin/franchisees` | No principal | `untested` | Ruta antigua |
+| Legacy | `PATCH /admin/franchisees/:id` | No principal | `untested` | Ruta antigua |
+| Legacy | `PATCH /admin/franchisees/:id/status` | Sí | `untested` | Antigua pero aún usada |
+| Legacy | `GET /admin/franchisees/:id/stats` | No principal | `untested` | Antigua y solapa stats |
+
+---
+
+## 6. Decisiones que backend debe cerrar
+
+1. **Contrato canónico admin**: si el módulo debe vivir en `/admin/customers*` o `/admin/franchisees*`.
+2. **Ruta canónica de stats**: `GET /admin/customers/:id/stats` o `GET /admin/franchisees/:id/stats`.
+3. **Alta de tiendas por autoservicio**: si se habilita `POST /store/customers/me/addresses` o una familia propia `/franchisee/stores*`.
+4. **Estado del onboarding público**: si `POST /franchisee/register` queda definitivamente adoptado como contrato real.
+5. **Facturas del franquiciado**: confirmar si `GET /franchisee/:id/invoices` es la ruta final o si cambia.
+
+---
+
+## 7. Conclusión operativa
+
+Hoy frontend ya tiene cubiertas tres capas del módulo:
+
+- administración de franquiciados
+- onboarding público
+- selección de direcciones reales del franquiciado en checkout
+
+Lo que bloquea la retirada total del mock no es la UI, sino el contrato backend:
+
+- RBAC en `GET /admin/customers*`
+- falta de confirmación entre rutas `customers` y `franchisees`
+- falta de persistencia self-service para nuevas tiendas del franquiciado
+
+Si backend quiere priorizar el mínimo camino funcional, el orden recomendado es:
+
+1. arreglar `GET /admin/customers` y `GET /admin/customers/:id`
+2. confirmar una sola familia canónica para CRUD y stats
+3. cerrar `POST /franchisee/register`
+4. habilitar alta real de direcciones por `POST /store/customers/me/addresses` o sustituirla por un contrato oficial de tiendas
         "sku": "POLO-CRF-001",
         "times_ordered": 12,
         "total_quantity": 150,

@@ -6,29 +6,38 @@
 
 ## 📚 Guías Disponibles
 
+### Quick Tests
+
+1. **[Quick Test Checkout](QUICK_TEST_CHECKOUT.md)** ⭐ **NUEVO**  
+   Validación rápida del checkout actualizado
+   - Stripe-only
+   - Revisión agrupada por proveedor
+   - Confirmación asíncrona
+   - Smoke test mock + prueba negativa del bloqueo real
+
 ### Módulos Core
 
-1. **[Testing Catalog](TESTING_CATALOG.md)**  
+2. **[Testing Catalog](TESTING_CATALOG.md)**  
    Pruebas del catálogo de productos del franquiciado
    - Filtros y búsqueda
    - Visualización de productos
    - Navegación por categorías
    - Comparación de productos
 
-2. **[Testing Product Management](TESTING_PRODUCT_MANAGEMENT.md)**  
+3. **[Testing Product Management](TESTING_PRODUCT_MANAGEMENT.md)**  
    Pruebas del CRUD de productos (Admin/Proveedor)
    - Crear productos
    - Editar productos
    - Eliminar productos
    - Gestión de imágenes
 
-3. **[Testing Category Management](TESTING_CATEGORY_MANAGEMENT.md)**  
+4. **[Testing Category Management](TESTING_CATEGORY_MANAGEMENT.md)**  
    Pruebas de gestión de categorías
    - CRUD de categorías de productos
    - CRUD de categorías de aperturas
    - Jerarquías de categorías
 
-4. **[Testing Comparison](TESTING_COMPARISON.md)**  
+5. **[Testing Comparison](TESTING_COMPARISON.md)**  
    Pruebas del comparador de productos
    - Añadir productos a comparar
    - Vista de comparación
@@ -36,13 +45,13 @@
 
 ### Módulos de Invitaciones y Presupuestos
 
-5. **[Testing Invitations](TESTING_INVITATIONS.md)**  
+6. **[Testing Invitations](TESTING_INVITATIONS.md)**  
    Pruebas del sistema de invitaciones a proveedores
    - Crear invitaciones
    - Gestionar respuestas
    - Aceptar/rechazar invitaciones
 
-6. **[Testing Quote Form](TESTING_QUOTE_FORM.md)**  
+7. **[Testing Quote Form](TESTING_QUOTE_FORM.md)**  
    Pruebas del formulario de presupuestos
    - Crear presupuestos
    - Enviar a proveedores
@@ -50,7 +59,7 @@
 
 ### Módulos de Gestión
 
-7. **[Testing Franchisee Management](TESTING_FRANCHISEE_MANAGEMENT.md)**  
+8. **[Testing Franchisee Management](TESTING_FRANCHISEE_MANAGEMENT.md)**  
    Pruebas de gestión de franquiciados
    - CRUD de franquiciados
    - Perfiles y configuración
@@ -58,7 +67,7 @@
 
 ### Módulos de Openings
 
-8. **[Testing Openings Documents](TESTING_OPENINGS_DOCUMENTS.md)** ⭐ **NUEVO**  
+9. **[Testing Openings Documents](TESTING_OPENINGS_DOCUMENTS.md)**  
    Pruebas completas del módulo de Openings (Nuevas Aperturas)
    - Descarga de documentos técnicos
    - Filtros por categoría (6 categorías)
@@ -72,6 +81,7 @@
 
 | Módulo | Guía Disponible | Tipo Testing |
 |--------|----------------|--------------|
+| Checkout | ✅ | Quick manual |
 | Catálogo | ✅ | Manual |
 | Gestión de Productos | ✅ | Manual |
 | Gestión de Categorías | ✅ | Manual |
@@ -139,4 +149,4 @@ Próximamente se agregarán tests automatizados con:
 
 ---
 
-**Última actualización**: 25 de Agosto de 2026
+**Última actualización**: 03 de Septiembre de 2026

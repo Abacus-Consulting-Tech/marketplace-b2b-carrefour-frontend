@@ -1,8 +1,8 @@
 # Estado del Proyecto y Roadmap - Marketplace B2B Carrefour
 
 **Fecha**: 03 de Septiembre de 2026  
-**Última Actualización**: Miércoles 03 Septiembre 18:50 UTC - Onboarding franquiciados y documentación sincronizados  
-**Estado General**: ⚠️ DEV híbrido | Frontend UI ampliamente cubierto | Inventario API: 148 endpoints (77 working, 5 broken, 66 untested)
+**Última Actualización**: Jueves 03 Septiembre 21:10 UTC - Checkout consume direcciones reales; alta self-service de tiendas bloqueada en DEV  
+**Estado General**: ⚠️ DEV híbrido | Frontend UI ampliamente cubierto | Inventario API: 149 endpoints (78 working, 6 broken, 65 untested)
 
 > **📌 FUENTE DE VERDAD (Source of Truth)**  
 > Este documento, junto con la **Especificación Técnica v1.0** (PDF 23 páginas) y [Dev Tools](http://localhost:3000/admin/dev-tools), son las **fuentes oficiales** de verdad del proyecto.  
@@ -18,7 +18,9 @@
 > ✅ Audit trail completo funcionando (proposed_by, updated_by, previous values)  
 > ⚠️ El proyecto sigue en modo híbrido: módulos validados conviven con superficies mock o parciales
 
-**✅ INCIDENCIA RESUELTA**: Success page del checkout validada el 26/08. El flujo confirma pedido y renderiza `/marketplace/checkout-new/success?orderId=order_mock_1787743309226&display_id=CF-309226` correctamente.
+**✅ ACTUALIZACIÓN CHECKOUT (03/09/2026)**: La UI del checkout ya no afirma “pedido confirmado” inmediatamente tras pagar. Ahora usa pago con tarjeta como único método, agrupa la revisión por proveedor, lee las direcciones reales del franquiciado desde backend y muestra confirmación asíncrona mientras backend valida el pedido tras webhook Stripe.
+
+**⚠️ BLOQUEO DIRECCIONES/TIENDAS (03/09/2026)**: `GET /store/customers/me` ya permite leer `shipping_addresses` reales para el checkout del franquiciado, pero el alta self-service de nuevas direcciones por `POST /store/customers/me/addresses` devuelve `401 Unauthorized` en DEV. Como consecuencia, el checkout solo puede mostrar tiendas ya existentes en base de datos y la pantalla `Mis tiendas` sigue guardando en local hasta cerrar ese contrato backend.
 
 ---
 
@@ -41,8 +43,8 @@
 - ✅ **Openings** - Gestión de aperturas con documentos técnicos
 
 ### 🌐 BACKEND INTEGRATION - HYBRID DEV STATUS (03/09/2026):
-- ✅ **77 endpoints marcados como working** en el inventario actual de `dev-tools`
-- ⚠️ **5 endpoints broken** y **66 untested** en el inventario actual
+- ✅ **78 endpoints marcados como working** en el inventario actual de `dev-tools`
+- ⚠️ **6 endpoints broken** y **65 untested** en el inventario actual
 - ✅ **Complete workflow validated**: Vendor→Admin→Approval flow working
 - ✅ **Auth Module** (4 endpoints) - JWT admin + vendor working
 - ✅ **Orders Module** (12 endpoints) - Admin + Supplier + Franchisee all working
@@ -50,7 +52,7 @@
 - ✅ **Sellers Module** (7 endpoints) - CRUD + Markup GET/PATCH working
 - ✅ **Excel Import** (8 endpoints) - Bulk upload working
 - ✅ **Quotes Module** (6 endpoints) - Customer + Admin + Seller working
-- ⚠️ **Franchisees Module** - onboarding público ya sale a backend real por defecto; lista/detalle admin siguen condicionados por RBAC en `/admin/customers`
+- ⚠️ **Franchisees Module** - onboarding público ya sale a backend real por defecto; checkout ya consume `shipping_addresses` reales por `GET /store/customers/me`; lista/detalle admin siguen condicionados por RBAC en `/admin/customers` y el alta self-service de nuevas tiendas sigue bloqueada por `POST /store/customers/me/addresses` → `401`
 - ✅ **Audit Trail** - proposed_by, updated_by, previous values all tracked
 - ✅ **Validation** - Duplicate detection, required fields, proper error handling
 - ⚠️ **Known RBAC Issue**: /admin/customers returns 403 (keep in mock mode)
@@ -70,7 +72,7 @@
 
 ### 📊 Cobertura Real vs Especificación Técnica:
 - **Frontend UI Mock**: 85% completo (13 de 18 módulos del spec)
-- **Integraciones Backend**: inventario actual de 148 endpoints con 77 `working`, 5 `broken` y 66 `untested`
+- **Integraciones Backend**: inventario actual de 149 endpoints con 78 `working`, 6 `broken` y 65 `untested`
 - **MVP Funcional End-to-End**: operativo en modo híbrido, con `auth`, `suppliers`, `pricing`, `orders` y `quotes` usables en DEV
 - **Módulos del Spec Implementados**: 8 de 18 (44%)
 - **Workflow Validation**: ✅ 100% (Vendor→Admin→Approval complete)
@@ -83,13 +85,13 @@
 
 | ID | Módulo Spec | Estado | Completitud | Gap Crítico |
 |----|------------|--------|-------------|-------------|
-| M01 | Onboarding franquiciado | 🟡 60% | UI completa, falta Stripe Customer + cuota | Stripe Billing |
+| M01 | Onboarding franquiciado | 🟡 60% | UI completa; checkout ya reutiliza direcciones reales, pero alta self-service de tiendas sigue bloqueada | Stripe Billing |
 | **M02** | **Suscripción anual** | **❌ 0%** | **NO IMPLEMENTADO** | **🔴 BLOQUEANTE - Stripe Billing** |
 | **M03** | **Proveedores** | **🟡 75%** | CRUD + onboarding UI OK, falta Connect KYC y contrato backend de onboarding | **🔴 BLOQUEANTE - Stripe Connect** |
 | M04 | Catálogo | ✅ 100% | CRUD completo + aprobación | - |
 | M05 | Búsqueda | ✅ 100% | Integrado en catálogo | - |
 | M06 | Carrito B2B | ✅ 100% | Variant-aware, multi-proveedor | - |
-| M07 | Checkout | 🟡 80% | UI completa, falta PaymentIntent real | Stripe PaymentIntents |
+| M07 | Checkout | 🟡 85% | UI alineada a Stripe-only + confirmación asíncrona; ya lee direcciones reales, pero no puede crear nuevas tiendas y falta validación real end-to-end | Stripe PaymentIntents |
 | M08 | Pedidos | ✅ 95% | 3 vistas (Admin/Supplier/Franchisee), falta split backend | - |
 | M09 | Fulfillment | ✅ 90% | Tracking OK, falta prueba de entrega | - |
 | **M10** | **Incidencias** | **❌ 0%** | **NO IMPLEMENTADO** | **Sistema de tickets SLA** |
@@ -354,6 +356,7 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 - Compatible con Mercur framework
 
 **Documentación creada:**
+- `docs/testing/QUICK_TEST_CHECKOUT.md` - Smoke test rápido para el checkout Stripe-only, agrupación por proveedor y confirmación asíncrona
 - `docs/QUOTES_COMPLETADO.md` - Guía técnica completa (1,200 líneas)
 - `docs/modules/10-quotes/` - Documentación backend con SQL (840 líneas)
 
@@ -1083,17 +1086,17 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 
 ---
 
-### 17. Checkout - Proceso de Pago (Completado HOY 25/08)
-**Estado**: ✅ Completo (Mock)
+### 17. Checkout - Proceso de Pago (Actualizado 03 Septiembre)
+**Estado**: ✅ UI completa (Híbrido) | Backend checkout real aún no validable end-to-end en DEV
 
 **Lo que se hizo:**
-- Proceso de checkout completo multi-paso
-- Wizard con 3 pasos: Dirección → Pago → Revisión
-- Integración completa con Medusa Cart API
-- Contrato frontend definido para usar `/store/carts*` + endpoints custom `POST /store/checkout/payment-intent` y `POST /store/checkout/complete`
-- Validación exhaustiva en cada paso
-- Página de confirmación de pedido
-- Integración con sistema de pedidos
+- Proceso de checkout multi-paso actualizado a la semántica objetivo de backend
+- Wizard con 3 pasos: Dirección → Revisión → Pago seguro
+- Pago visible simplificado a tarjeta con Stripe; se elimina del flujo UX la transferencia bancaria y el pago diferido
+- Integración activa con `POST /store/carts/:id/payment-collections` y `POST /store/carts/:id/complete` como camino principal cuando `checkout` salga de mock
+- Review del pedido agrupada por proveedor para preparar el split operativo sin romper el pedido comercial único
+- Success page rehac​​ha para mostrar estados `processing`, `confirmed` o `manual_review` en lugar de confirmación inmediata
+- Polling temporal contra `GET /franchisee/orders/:id` como fuente de verdad post-pago mientras backend define un endpoint específico de checkout status
 
 **Archivos creados (15 archivos, ~3,366 líneas):**
 
@@ -1118,42 +1121,33 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 14. `src/lib/store/checkout.ts` - Zustand store (81 líneas)
 15. `src/types/checkout.ts` - Tipos TypeScript (227 líneas)
 
-**Features:**
+**Features actuales:**
 - **Paso 1 - Dirección de envío**:
   - Formulario completo (nombre, dirección, ciudad, CP, país)
   - Validación campo por campo
-  - Guardar dirección en cart de Medusa
-  - Opciones de envío (estándar, express, same-day)
-  - Cálculo automático de costes de envío
-  - Preview de dirección
-  - Autocompletado de direcciones guardadas
+  - Actualización de cart en el flujo real
 
-- **Paso 2 - Método de pago**:
-  - Múltiples métodos: Stripe, Transferencia, Pago Diferido
-  - Formulario Stripe completo con validación
-  - Integración con Stripe Elements
-  - Flujo previsto con `PaymentElement` y `client_secret` emitido por backend
-  - Datos de facturación
-  - Términos y condiciones checkbox
-  - Validación de método seleccionado
-
-- **Paso 3 - Revisión y confirmación**:
+- **Paso 2 - Revisión antes del cobro**:
   - Resumen completo del pedido
+  - Agrupación visual por proveedor
   - Lista de productos con imágenes
   - Desglose de precios (subtotal, IVA, envío, total)
   - Dirección de envío confirmada
-  - Método de pago confirmado
-  - Botón "Confirmar pedido"
-  - Loading state durante procesamiento
+  - Aviso explícito de pedido único con preparación por proveedor
+  - Botón "Continuar al pago seguro"
 
-- **Página de confirmación**:
-  - Número de pedido generado
-  - Resumen del pedido creado
-  - Instrucciones de pago (según método)
-  - Información de envío
-  - Timeline estimado de entrega
-  - Botones: Ver pedido, Seguir comprando
-  - Email de confirmación (simulado)
+- **Paso 3 - Pago seguro**:
+  - Integración con Stripe Elements cuando `checkout` está en modo real
+  - Simulación controlada cuando `checkout` sigue en mock
+  - Creación de `payment-collection` como superficie Stripe preferida
+  - Sin captura manual de PAN/CVV en el flujo principal
+
+- **Página de confirmación asíncrona**:
+  - Número de pedido e ID de transacción
+  - Estado visible: en confirmación, confirmado o revisión manual
+  - Polling del pedido real cuando existe acceso al endpoint de franquiciado
+  - Bloque preparado para desglose por proveedor cuando backend envíe subórdenes/metadata
+  - Botones: Ver mis pedidos, Seguir comprando
 
 - **Navegación del wizard**:
   - Stepper visual con pasos completados
@@ -1161,23 +1155,21 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
   - Validación antes de avanzar
   - No se puede saltar pasos
   - Indicadores de paso actual
-  - Breadcrumb navigation
 
 - **Integración Medusa**:
-  - `POST /store/carts/:id/shipping-address` - Guardar dirección
+  - `POST /store/carts/:id` - Guardar dirección/email en carrito
   - `POST /store/carts/:id/shipping-methods` - Seleccionar envío
-  - `POST /store/carts/:id/payment-sessions` - Iniciar pago
-  - `POST /store/carts/:id/payment-session` - Seleccionar método
-  - `POST /store/checkout/payment-intent` - Obtener `client_secret` de Stripe para el checkout
-  - `POST /store/checkout/complete` - Crear pedido en `pending_payment` mientras backend espera el webhook verificado
-  - `POST /store/carts/:id/complete` - Ruta OOTB Medusa documentada, pero el contrato frontend actual prioriza el flujo custom anterior
+  - `POST /store/carts/:id/payment-collections` - Crear colección de pago Stripe
+  - `POST /store/carts/:id/complete` - Completar carrito y dejar que backend termine la confirmación
+  - `GET /franchisee/orders/:id` - Lectura temporal para estado post-pago en la success page
+  - `POST /store/checkout/payment-intent` y `POST /store/checkout/complete` siguen documentados como superficies custom/propuestas, pero no son el camino principal del frontend actual
 
 **Limitaciones actuales conocidas:**
 - `GET /store/products` puede devolver `variant_id` que no siempre sirve para crear line items reales en `/store/carts*`
-- `POST /store/checkout/payment-intent` hoy devuelve un `client_secret` simulado; backend debe crear un PaymentIntent Stripe real antes de habilitar cobro end-to-end
+- El frontend ya está preparado para Stripe Elements, pero el módulo sigue en mock por la inconsistencia catálogo/carrito del Store API
 - La confirmación final del pago no debe salir del navegador: backend confirma el estado solo tras `POST /webhooks/stripe`
-  - Limpieza automática del carrito tras completar
-  - Creación de pedido en sistema
+- Falta definir un endpoint específico de estado post-pago para sustituir el polling temporal contra `GET /franchisee/orders/:id`
+- El split real por proveedor sigue pendiente de backend; la UI solo prepara la agrupación y la narrativa de pedido único
 
 - **UX/UI**:
   - Sidebar siempre visible con resumen
@@ -1189,18 +1181,20 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
   - Transiciones suaves entre pasos
   - Toast notifications de confirmación
 
-**Mock data**:
-- Métodos de envío: Estándar (€5), Express (€12), Same-day (€25)
-- Métodos de pago: Stripe (tarjeta), Transferencia, Pago diferido
+**Mock data / modo híbrido**:
+- Métodos de envío de prueba
+- Pago con tarjeta simulado cuando `checkout` permanece en mock
 - Direcciones de prueba autocompletadas
-- Órdenes generadas con display_id único
+- Órdenes generadas con `display_id` único
+- Success page mostrando confirmación diferida incluso en el camino mock
 
-**Bug checkout success page**:
-- ⚠️ Incidencia reportada: tras **Confirmar pedido**, la success page no llegaba a renderizar y el flujo volvía al marketplace o quedaba bloqueado.
-- ✅ Fix aplicado (26/08): se evita llamar `clearCart()` antes del redirect; ahora la página `/marketplace/checkout-new/success` limpia el carrito al montar.
-- ✅ Fix aplicado (26/08): el guard de carrito vacío no redirige mientras el pedido se envía/redirige a success, y la navegación usa `router.replace()`.
-- ✅ `npm run type-check` pasa correctamente.
-- ⏳ Pendiente: validación manual del flujo completo en navegador.
+**Últimos cambios relevantes (03/09):**
+- ✅ Se sustituye la captura manual de tarjeta del flujo principal por `StripePaymentForm`
+- ✅ Se elimina del checkout visible la transferencia bancaria y el pago diferido
+- ✅ La review agrupa productos por proveedor
+- ✅ La success page deja de afirmar confirmación inmediata y pasa a confirmación asíncrona
+- ✅ `npm run type-check` pasa correctamente tras la refactorización
+- ⏳ Pendiente: validación manual del flujo real cuando backend entregue catálogo Store coherente y contrato post-webhook
 
 **Características destacadas:**
 - ✅ 100% TypeScript con tipos estrictos

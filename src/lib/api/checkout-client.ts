@@ -8,16 +8,16 @@
  */
 
 import { featureFlags } from '@/config/feature-flags'
+import { apiRequest } from '@/lib/api/api-utils'
 import { 
   updateCart as medusaUpdateCart,
   addShippingMethod as medusaAddShippingMethod,
-  createPaymentCollection,
   completeCart as medusaCompleteCart,
   retrieveCart,
   type MercurCartAddress,
   type MercurOrder,
-  type MercurCart,
 } from '@/lib/api/mercur-store-client'
+import type { FranchiseeOrder } from '@/types/orders-franchisee'
 import type {
   ShippingAddress,
   PaymentMethod,
@@ -241,18 +241,9 @@ export async function completeCart(
       // Continue - some setups don't require shipping method
     }
 
-    // 3. Initialize payment session (if using card)
+    // 3. Payment is already handled in Stripe Elements before completing the cart
     if (request.paymentMethod.type === 'card') {
-      console.log('💳 Step 3: Initializing payment session...')
-      try {
-        await createPaymentCollection({
-          cart_id: cartId,
-          provider_id: 'stripe',
-        })
-      } catch (error) {
-        console.warn('Payment collection creation failed:', error)
-        // Continue - payment might be handled differently or manually
-      }
+      console.log('💳 Step 3: Stripe payment already confirmed on client, waiting for backend completion...')
     } else {
       console.log('🏦 Step 3: Bank transfer selected (no payment session needed)')
     }
@@ -302,6 +293,77 @@ export async function getOrder(orderId: string): Promise<Order> {
   // Note: Medusa Store API might not expose /store/orders/:id endpoint
   // You might need to use /store/customers/me/orders or admin endpoint
   throw new Error('Order retrieval endpoint not implemented. Use order data from checkout success.')
+}
+
+export type CheckoutOrderStatus = 'processing' | 'confirmed' | 'failed'
+
+export interface CheckoutOrderStatusResult {
+  status: CheckoutOrderStatus
+  order?: FranchiseeOrder
+  message?: string
+}
+
+export async function getCheckoutOrderStatus(orderId: string): Promise<CheckoutOrderStatusResult> {
+  if (featureFlags.getCheckoutSource() === 'mock') {
+    return {
+      status: 'confirmed',
+      message: 'Pedido confirmado en modo mock.',
+    }
+  }
+
+  try {
+    const data = await apiRequest<{ order?: FranchiseeOrder } | FranchiseeOrder>(`/franchisee/orders/${orderId}`)
+    const responseOrder = (data as { order?: FranchiseeOrder }).order
+    const order = responseOrder ?? (data as FranchiseeOrder)
+
+    if (!order) {
+      return {
+        status: 'processing',
+        message: 'Pago recibido. Esperando la confirmación final del pedido.',
+      }
+    }
+
+    if (
+      order.payment_status === 'captured' ||
+      ['confirmed', 'processing', 'shipped', 'delivered', 'completed'].includes(order.status)
+    ) {
+      return {
+        status: 'confirmed',
+        order,
+        message: 'Pedido confirmado correctamente.',
+      }
+    }
+
+    if (
+      order.payment_status === 'cancelled' ||
+      order.payment_status === 'refunded' ||
+      order.status === 'cancelled'
+    ) {
+      return {
+        status: 'failed',
+        order,
+        message: 'No hemos podido confirmar el pago del pedido.',
+      }
+    }
+
+    return {
+      status: 'processing',
+      order,
+      message: 'Pago autorizado. Estamos esperando la confirmación backend.',
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('No autorizado')) {
+      return {
+        status: 'processing',
+        message: 'El pago se recibió, pero todavía no podemos consultar el pedido con tu sesión actual.',
+      }
+    }
+
+    return {
+      status: 'processing',
+      message: 'Pago recibido. Seguimos esperando la confirmación definitiva del pedido.',
+    }
+  }
 }
 
 // ============================================================================
