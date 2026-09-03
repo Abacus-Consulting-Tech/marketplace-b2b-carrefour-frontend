@@ -19,6 +19,7 @@
 import { featureFlags } from '@/config/feature-flags';
 import type {
   Franchisee,
+  FranchiseeMetadata,
   Address,
   ListFranchiseesFilters,
   ListFranchiseesResponse,
@@ -38,6 +39,8 @@ import type {
   GetFranchiseeStatsResponse,
   BulkUpdateFranchiseesRequest,
   BulkUpdateFranchiseesResponse,
+  InviteFranchiseeRequest,
+  InviteFranchiseeResponse,
   ApiResponse,
 } from '@/types/franchisees';
 
@@ -48,6 +51,8 @@ import {
   getFranchiseesByFilters,
   getMockStatsForFranchisee,
   getMockOrdersForFranchisee,
+  initializeMockFranchiseesStorage,
+  persistMockFranchisees,
 } from './franchisees-mock';
 
 // ============================================================================
@@ -129,6 +134,7 @@ async function apiRequest<T>(
 function mockListFranchisees(filters?: ListFranchiseesFilters): Promise<ApiResponse<ListFranchiseesResponse>> {
   return new Promise((resolve) => {
     setTimeout(() => {
+      initializeMockFranchiseesStorage();
       let results = getFranchiseesByFilters({
         search: filters?.q,
         tier: filters?.groups?.[0],
@@ -157,6 +163,7 @@ function mockListFranchisees(filters?: ListFranchiseesFilters): Promise<ApiRespo
 function mockGetFranchisee(id: string): Promise<ApiResponse<GetFranchiseeResponse>> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
+      initializeMockFranchiseesStorage();
       const franchisee = getFranchiseeById(id);
       if (!franchisee) {
         reject(new Error('Franchisee not found'));
@@ -173,6 +180,7 @@ function mockGetFranchisee(id: string): Promise<ApiResponse<GetFranchiseeRespons
 function mockCreateFranchisee(request: CreateFranchiseeRequest): Promise<ApiResponse<CreateFranchiseeResponse>> {
   return new Promise((resolve) => {
     setTimeout(() => {
+      initializeMockFranchiseesStorage();
       const newFranchisee: Franchisee = {
         id: `cus_${Date.now()}`,
         email: request.email,
@@ -194,6 +202,7 @@ function mockCreateFranchisee(request: CreateFranchiseeRequest): Promise<ApiResp
       };
 
       mockFranchisees.push(newFranchisee);
+  persistMockFranchisees();
 
       resolve({
         data: { customer: newFranchisee },
@@ -209,6 +218,7 @@ function mockCreateFranchisee(request: CreateFranchiseeRequest): Promise<ApiResp
 function mockUpdateFranchisee(id: string, request: UpdateFranchiseeRequest): Promise<ApiResponse<UpdateFranchiseeResponse>> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
+      initializeMockFranchiseesStorage();
       const index = mockFranchisees.findIndex((f) => f.id === id);
       if (index === -1) {
         reject(new Error('Franchisee not found'));
@@ -226,6 +236,7 @@ function mockUpdateFranchisee(id: string, request: UpdateFranchiseeRequest): Pro
       } as Franchisee;
 
       mockFranchisees[index] = updated;
+  persistMockFranchisees();
 
       resolve({
         data: { customer: updated },
@@ -236,11 +247,103 @@ function mockUpdateFranchisee(id: string, request: UpdateFranchiseeRequest): Pro
 }
 
 /**
+ * Mock: Update franchisee status (approve / suspend / deactivate)
+ *
+ * Mirrors the confirmed backend behaviour: when a franchisee moves into
+ * 'active', we asynchronously (fire-and-forget) notify Odoo to create/update
+ * the partner — never inside this same call.
+ */
+function mockUpdateFranchiseeStatus(
+  id: string,
+  status: NonNullable<FranchiseeMetadata['status']>
+): Promise<ApiResponse<UpdateFranchiseeResponse>> {
+  return new Promise((resolve, reject) => {
+    setTimeout(() => {
+      initializeMockFranchiseesStorage();
+      const index = mockFranchisees.findIndex((f) => f.id === id);
+      if (index === -1) {
+        reject(new Error('Franchisee not found'));
+        return;
+      }
+
+      const previousStatus = mockFranchisees[index].metadata?.status;
+
+      const updated: Franchisee = {
+        ...mockFranchisees[index],
+        metadata: {
+          ...mockFranchisees[index].metadata,
+          status,
+          is_active: status === 'active',
+          onboarding_status:
+            status === 'active'
+              ? 'approved_pending_credentials'
+              : mockFranchisees[index].metadata?.subscription_status === 'active'
+                ? 'pending_approval'
+                : 'pending_payment',
+          ...(status === 'active' && previousStatus !== 'active'
+            ? { approved_at: new Date().toISOString(), approved_by: 'admin@carrefour.es' }
+            : {}),
+        },
+        updated_at: new Date().toISOString(),
+      };
+
+      mockFranchisees[index] = updated;
+  persistMockFranchisees();
+
+      if (status === 'active' && previousStatus === 'pending_approval') {
+        // Simulated outbox event, processed asynchronously (see FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md)
+        setTimeout(() => {
+          console.log(`🔄 [mock outbox] partner.franchisee_created emitido para ${updated.id} (sync Odoo en segundo plano)`);
+        }, 500);
+      }
+
+      resolve({
+        data: { customer: updated },
+        message: 'Franchisee status updated successfully',
+      });
+    }, 400);
+  });
+}
+
+/**
+ * Mock: Invite a franchisee (name + email only)
+ *
+ * Generates a link to the public self-registration page. There's no real
+ * email service, so the link is returned to the admin UI directly instead.
+ */
+function mockInviteFranchisee(request: InviteFranchiseeRequest): Promise<ApiResponse<InviteFranchiseeResponse>> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      initializeMockFranchiseesStorage();
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const registrationUrl = `${origin}/franchisee/register?invited_name=${encodeURIComponent(request.name)}&invited_email=${encodeURIComponent(request.email)}`;
+
+      console.log(`📧 [mock email] Invitación de franquiciado enviada a ${request.email}: ${registrationUrl}`);
+
+      resolve({
+        data: {
+          invitation: {
+            id: `inv_${Date.now()}`,
+            name: request.name,
+            email: request.email,
+            registrationUrl,
+            status: 'pending',
+            createdAt: new Date().toISOString(),
+          },
+        },
+        message: 'Invitation sent successfully',
+      });
+    }, 500);
+  });
+}
+
+/**
  * Mock: Delete franchisee
  */
 function mockDeleteFranchisee(id: string): Promise<ApiResponse<DeleteFranchiseeResponse>> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
+      initializeMockFranchiseesStorage();
       const index = mockFranchisees.findIndex((f) => f.id === id);
       if (index === -1) {
         reject(new Error('Franchisee not found'));
@@ -248,6 +351,7 @@ function mockDeleteFranchisee(id: string): Promise<ApiResponse<DeleteFranchiseeR
       }
 
       mockFranchisees.splice(index, 1);
+  persistMockFranchisees();
 
       resolve({
         data: {
@@ -267,6 +371,7 @@ function mockDeleteFranchisee(id: string): Promise<ApiResponse<DeleteFranchiseeR
 function mockAddAddress(franchiseeId: string, request: AddAddressRequest): Promise<ApiResponse<AddAddressResponse>> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
+      initializeMockFranchiseesStorage();
       const franchisee = getFranchiseeById(franchiseeId);
       if (!franchisee) {
         reject(new Error('Franchisee not found'));
@@ -285,6 +390,7 @@ function mockAddAddress(franchiseeId: string, request: AddAddressRequest): Promi
         franchisee.shipping_addresses = [];
       }
       franchisee.shipping_addresses.push(newAddress);
+      persistMockFranchisees();
 
       resolve({
         data: { customer: franchisee },
@@ -304,6 +410,7 @@ function mockUpdateAddress(
 ): Promise<ApiResponse<UpdateAddressResponse>> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
+      initializeMockFranchiseesStorage();
       const franchisee = getFranchiseeById(franchiseeId);
       if (!franchisee) {
         reject(new Error('Franchisee not found'));
@@ -321,6 +428,7 @@ function mockUpdateAddress(
         ...request,
         updated_at: new Date().toISOString(),
       };
+      persistMockFranchisees();
 
       resolve({
         data: { customer: franchisee },
@@ -336,6 +444,7 @@ function mockUpdateAddress(
 function mockDeleteAddress(franchiseeId: string, addressId: string): Promise<ApiResponse<AddAddressResponse>> {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
+      initializeMockFranchiseesStorage();
       const franchisee = getFranchiseeById(franchiseeId);
       if (!franchisee) {
         reject(new Error('Franchisee not found'));
@@ -348,6 +457,7 @@ function mockDeleteAddress(franchiseeId: string, addressId: string): Promise<Api
       }
 
       franchisee.shipping_addresses = franchisee.shipping_addresses.filter((a) => a.id !== addressId);
+  persistMockFranchisees();
 
       resolve({
         data: { customer: franchisee },
@@ -398,6 +508,7 @@ function mockGetFranchiseeStats(franchiseeId: string): Promise<ApiResponse<GetFr
 function mockBulkUpdateFranchisees(request: BulkUpdateFranchiseesRequest): Promise<ApiResponse<BulkUpdateFranchiseesResponse>> {
   return new Promise((resolve) => {
     setTimeout(() => {
+      initializeMockFranchiseesStorage();
       const updated: Franchisee[] = [];
 
       request.customer_ids.forEach((id) => {
@@ -415,6 +526,8 @@ function mockBulkUpdateFranchisees(request: BulkUpdateFranchiseesRequest): Promi
           updated.push(mockFranchisees[index]);
         }
       });
+
+      persistMockFranchisees();
 
       resolve({
         data: {
@@ -506,6 +619,41 @@ export const franchiseesApi = {
     }
 
     return apiRequest<UpdateFranchiseeResponse>(`/admin/customers/${id}`, {
+      method: 'POST',
+      body: JSON.stringify(request),
+    });
+  },
+
+  /**
+   * Update franchisee status (approve / suspend / deactivate)
+   * PATCH /admin/franchisees/:id/status (per backend notes; contract vs
+   * /admin/customers/:id still needs confirming with backend — see open
+   * questions in FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md)
+   */
+  async updateFranchiseeStatus(
+    id: string,
+    status: NonNullable<FranchiseeMetadata['status']>
+  ): Promise<ApiResponse<UpdateFranchiseeResponse>> {
+    if (isMockMode) {
+      return mockUpdateFranchiseeStatus(id, status);
+    }
+
+    return apiRequest<UpdateFranchiseeResponse>(`/admin/franchisees/${id}/status`, {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    });
+  },
+
+  /**
+   * Invite a franchisee (name + email only)
+   * POST /admin/franchisees/invitations (proposed endpoint, not built yet)
+   */
+  async inviteFranchisee(request: InviteFranchiseeRequest): Promise<ApiResponse<InviteFranchiseeResponse>> {
+    if (isMockMode) {
+      return mockInviteFranchisee(request);
+    }
+
+    return apiRequest<InviteFranchiseeResponse>('/admin/franchisees/invitations', {
       method: 'POST',
       body: JSON.stringify(request),
     });

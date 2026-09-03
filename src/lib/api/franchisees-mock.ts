@@ -13,6 +13,8 @@ import type {
   FranchiseeStats,
 } from '@/types/franchisees';
 
+export const MOCK_FRANCHISEES_STORAGE_KEY = 'mock-franchisees-storage';
+
 // ============================================================================
 // Customer Groups
 // ============================================================================
@@ -675,7 +677,117 @@ export const mockFranchisees: Franchisee[] = [
     created_at: '2026-05-22T13:15:00Z',
     updated_at: '2026-08-17T14:45:00Z',
   },
+
+  // ==========================================================================
+  // Pending approval (self-registered, awaiting admin review)
+  // ==========================================================================
+  {
+    id: 'fran_pending_001',
+    email: 'laura.fernandez@carrefour-oeste.es',
+    first_name: 'Laura',
+    last_name: 'Fernández Ortega',
+    phone: '+34 610 234 567',
+    has_account: false,
+    groups: [],
+    metadata: {
+      company_name: 'Carrefour Express Oeste',
+      tax_id: 'B55443322',
+      city: 'Alcorcón',
+      country: 'España',
+      status: 'pending_approval',
+      subscription_status: 'active',
+      stripe_customer_id: 'cus_mock_001',
+      stripe_subscription_id: 'sub_mock_001',
+      current_period_end: '2027-08-30T10:15:00Z',
+      onboarding_status: 'pending_approval',
+      is_active: false,
+      notes: 'Alta autoservicio · IBAN: ES1234567890123456789012 · Titular: Laura Fernández Ortega · Cuota de alta pagada (Stripe payment_method: pm_mock_001)',
+    },
+    created_at: '2026-08-30T10:15:00Z',
+    updated_at: '2026-08-30T10:15:00Z',
+  },
+  {
+    id: 'fran_pending_002',
+    email: 'ivan.molina@carrefour-est.es',
+    first_name: 'Iván',
+    last_name: 'Molina Reyes',
+    phone: '+34 622 345 678',
+    has_account: false,
+    groups: [],
+    metadata: {
+      company_name: 'Carrefour Market Est',
+      tax_id: 'B66554433',
+      city: 'Badalona',
+      country: 'España',
+      status: 'pending_approval',
+      subscription_status: 'active',
+      stripe_customer_id: 'cus_mock_002',
+      stripe_subscription_id: 'sub_mock_002',
+      current_period_end: '2027-08-31T16:40:00Z',
+      onboarding_status: 'pending_approval',
+      is_active: false,
+      notes: 'Alta autoservicio · IBAN: ES9876543210987654321098 · Titular: Iván Molina Reyes · Cuota de alta pagada (Stripe payment_method: pm_mock_002)',
+    },
+    created_at: '2026-08-31T16:40:00Z',
+    updated_at: '2026-08-31T16:40:00Z',
+  },
+  {
+    id: 'fran_pending_003',
+    email: 'noelia.santos@carrefour-sur.es',
+    first_name: 'Noelia',
+    last_name: 'Santos Delgado',
+    phone: '+34 633 456 789',
+    has_account: false,
+    groups: [],
+    metadata: {
+      company_name: 'Carrefour Express Sur',
+      tax_id: 'B77665544',
+      city: 'Dos Hermanas',
+      country: 'España',
+      status: 'pending_approval',
+      subscription_status: 'active',
+      stripe_customer_id: 'cus_mock_003',
+      stripe_subscription_id: 'sub_mock_003',
+      current_period_end: '2027-09-01T09:05:00Z',
+      onboarding_status: 'pending_approval',
+      is_active: false,
+      notes: 'Alta autoservicio · IBAN: PT50000201231234567890154 · Titular: Noelia Santos Delgado · Cuota de alta pagada (Stripe payment_method: pm_mock_003)',
+    },
+    created_at: '2026-09-01T09:05:00Z',
+    updated_at: '2026-09-01T09:05:00Z',
+  },
 ];
+
+let hasLoadedMockFranchiseesFromStorage = false;
+
+export function initializeMockFranchiseesStorage(): void {
+  if (typeof window === 'undefined' || hasLoadedMockFranchiseesFromStorage) {
+    return;
+  }
+
+  hasLoadedMockFranchiseesFromStorage = true;
+
+  const raw = localStorage.getItem(MOCK_FRANCHISEES_STORAGE_KEY);
+  if (!raw) {
+    localStorage.setItem(MOCK_FRANCHISEES_STORAGE_KEY, JSON.stringify(mockFranchisees));
+    return;
+  }
+
+  try {
+    const stored = JSON.parse(raw) as Franchisee[];
+    mockFranchisees.splice(0, mockFranchisees.length, ...stored);
+  } catch {
+    localStorage.setItem(MOCK_FRANCHISEES_STORAGE_KEY, JSON.stringify(mockFranchisees));
+  }
+}
+
+export function persistMockFranchisees(): void {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  localStorage.setItem(MOCK_FRANCHISEES_STORAGE_KEY, JSON.stringify(mockFranchisees));
+}
 
 // ============================================================================
 // Helper Functions
@@ -685,6 +797,7 @@ export const mockFranchisees: Franchisee[] = [
  * Get franchisee by ID
  */
 export function getFranchiseeById(id: string): Franchisee | undefined {
+  initializeMockFranchiseesStorage();
   return mockFranchisees.find((f) => f.id === id);
 }
 
@@ -697,6 +810,7 @@ export function getFranchiseesByFilters(filters: {
   region?: string;
   isActive?: boolean;
 }): Franchisee[] {
+  initializeMockFranchiseesStorage();
   let results = [...mockFranchisees];
 
   if (filters.search) {

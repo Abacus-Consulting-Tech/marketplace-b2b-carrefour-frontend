@@ -1,4 +1,3 @@
-# architect.agent.md
 ---
 name: Architect
 description: Analyze architecture, shared contracts and cross-module workflows.

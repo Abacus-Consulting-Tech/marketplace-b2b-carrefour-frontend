@@ -1,5 +1,3 @@
-# `.github/agents/api.agent.md`
-
 ---
 name: API
 description: Diagnose frontend/backend API integration and contract problems.

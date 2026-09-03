@@ -1,0 +1,236 @@
+# Cómo se da de alta un nuevo franquiciado en la plataforma 🏪
+
+Guía para el equipo de backend, escrita desde el punto de vista de frontend: qué pantallas existen, qué le pedimos a la API en cada paso, y qué esperamos que nos devuelva. Sin detalles internos de implementación, solo el contrato que necesitamos.
+
+---
+
+## 🙋 Quién participa
+
+- **Admin** — personal de Carrefour/marketplace
+- **Franquiciado** — la persona que se incorpora a la red
+- **Stripe** — gestiona el pago con tarjeta de crédito; lo llamamos directamente desde el frontend
+- **Odoo** — el sistema contable que emite la factura oficial; frontend solo necesita endpoints de lectura una vez exista la información
+
+---
+
+## 📖 La historia, paso a paso — y qué le pedimos a la API en cada uno
+
+### 1. La invitación
+
+Un admin decide incorporar a un nuevo franquiciado. Hay dos formas de empezar:
+- Usando el botón **"Invitar franquiciado"** en el panel de admin — solo un nombre y un email.
+- O enviando el enlace de registro manualmente por email, sin usar el botón.
+
+**Qué llamamos:**
+- `POST /admin/franchisees/invitations` — enviamos:
+```json
+{
+  "name": "María García",
+  "email": "maria.garcia@email.com"
+}
+```
+  Esperamos recibir algo así:
+```json
+{
+  "invitation": {
+    "id": "inv_123",
+    "name": "María García",
+    "email": "maria.garcia@email.com",
+    "registrationUrl": "https://.../franchisee/register?...",
+    "status": "pending",
+    "createdAt": "2026-09-02T10:00:00Z"
+  }
+}
+```
+
+> Hoy esto no existe en backend. Frontend lo simula generando el enlace localmente y mostrándolo al admin para que lo copie.
+
+### 2. El formulario de registro público
+
+El franquiciado abre el enlace y rellena el formulario. Para franquiciados, hoy el flujo tiene 4 pasos: datos personales, datos de empresa, datos financieros y pago con tarjeta.
+
+**Qué llamamos:**
+- `POST /franchisee/register` — al final del formulario enviamos:
+```json
+{
+  "firstName": "María",
+  "lastName": "García López",
+  "email": "maria.garcia@email.com",
+  "phone": "+34 600 123 456",
+  "companyName": "Carrefour Express Sur",
+  "taxId": "B12345678",
+  "fiscalAddress": "Calle Mayor 123",
+  "municipality": "Madrid",
+  "postalCode": "28001",
+  "country": "España",
+  "iban": "ES1234567890123456789012",
+  "bankHolderName": "María García López",
+  "swiftBic": "CAIXESBB",
+  "cardHolderName": "María García López",
+  "stripePaymentMethodId": "pm_1AbCdEfGh"
+}
+```
+  `swiftBic` es opcional. Esperamos recibir de vuelta:
+```json
+{
+  "franchisee": {
+    "id": "fran_123",
+    "email": "maria.garcia@email.com",
+    "first_name": "María",
+    "last_name": "García López",
+    "metadata": {
+      "company_name": "Carrefour Express Sur",
+      "status": "pending_approval",
+      "subscription_status": "active",
+      "current_period_end": "2027-09-02T10:00:00Z",
+      "onboarding_status": "pending_approval"
+    }
+  }
+}
+```
+
+> Este endpoint todavía no existe en backend. Es el hueco principal para poder cerrar el onboarding real.
+
+### 3. El pago
+
+El franquiciado paga la cuota de alta con tarjeta antes de que la solicitud pueda ser aprobada.
+
+**Qué llama frontend:**
+- Frontend llama directamente a Stripe en el navegador para validar la tarjeta y obtener un `payment_method_id`.
+- Esa referencia viaja dentro de `POST /franchisee/register`.
+
+**Qué necesitamos en backend aunque no lo llame el frontend directamente:**
+- `POST /webhooks/stripe` — para recibir eventos como `customer.subscription.created`, `invoice.paid`, `invoice.payment_failed` y `customer.subscription.deleted`, y actualizar:
+  - `subscription_status`
+  - `stripe_customer_id`
+  - `stripe_subscription_id`
+  - `current_period_end`
+
+> ✅ Decidido: el pago se cobra en el momento del registro, antes de que el admin vea la solicitud.
+
+### 4. La factura (Odoo)
+
+La generación y sincronización de la factura es cosa del backend. Frontend solo necesita un endpoint de lectura cuando la factura ya exista.
+
+**Qué esperamos poder llamar:**
+- `GET /franchisee/:id/invoices` — para mostrar en el perfil del franquiciado la lista de facturas emitidas.
+
+  Esperamos algo así:
+```json
+{
+  "invoices": [
+    {
+      "id": "inv_123",
+      "franchiseeId": "fran_123",
+      "number": "FAC-2026-0001",
+      "issueDate": "2026-09-02T10:00:00Z",
+      "amount": 299,
+      "currencyCode": "EUR",
+      "status": "paid",
+      "pdfUrl": "https://.../invoice.pdf"
+    }
+  ]
+}
+```
+
+> El perfil del franquiciado ya tiene esta sección montada en frontend y ahora mismo está mockeada.
+
+### 5. Validación del admin
+
+Un admin revisa la solicitud y la aprueba. También puede editar datos, cambiar estado y añadir notas internas.
+
+**Qué llamamos:**
+- `GET /admin/customers?q=&limit=20&offset=0&expand=groups,shipping_addresses` — para listar franquiciados.
+  - `q`: texto de búsqueda
+  - `limit`, `offset`: paginación
+  - `expand`: para traer grupos y tiendas
+  - además nos gustaría filtro backend por `status=pending_approval`
+- `GET /admin/customers/:id?expand=groups,shipping_addresses` — para el detalle.
+- `PATCH /admin/franchisees/:id/status` — enviamos:
+```json
+{ "status": "active" }
+```
+  `status` puede ser `pending_approval`, `active`, `suspended` o `inactive`.
+
+**Regla importante esperada en backend:**
+- Si se intenta pasar a `active` y `subscription_status !== "active"`, el backend debería rechazar la operación de forma consistente.
+
+**Efectos secundarios esperados al aprobar:**
+- enviar el email o enlace de activación de credenciales
+- mover `onboarding_status` a algo tipo `approved_pending_credentials`
+- emitir el evento/outbox para sincronizar el partner en Odoo
+
+- `POST /admin/customers/:id` — para guardar cambios de datos o notas internas, por ejemplo:
+```json
+{
+  "metadata": {
+    "notes": "Cliente premium, revisar límite de crédito"
+  }
+}
+```
+
+> Seguimos usando `/admin/customers/*` para listar, ver detalle y editar, pero también existe `/admin/franchisees/*` en backend. Necesitamos confirmar cuál es el contrato canónico.
+
+### 6. El perfil y las tiendas del franquiciado
+
+Un franquiciado aprobado puede tener varias tiendas y quiere gestionarlas desde su perfil.
+
+**Qué llamamos desde su perfil:**
+- `GET /franchisee/stores`
+- `POST /franchisee/stores` — enviamos:
+```json
+{
+  "name": "Tienda Centro",
+  "taxId": "B12345678",
+  "address": "Gran Vía 1",
+  "city": "Madrid",
+  "postalCode": "28013"
+}
+```
+- `DELETE /franchisee/stores/:id`
+
+**Qué llamamos desde admin en el detalle:**
+- `POST /admin/customers/:id/addresses`
+- `PATCH /admin/customers/:id/addresses/:addressId`
+- `DELETE /admin/customers/:id/addresses/:addressId`
+
+> `GET/POST/DELETE /franchisee/stores*` no existe todavía en backend. Hoy frontend lo persiste solo localmente para pruebas.
+
+---
+
+## 📋 Todas las llamadas en un solo sitio
+
+| Paso | Método y ruta | ¿Existe en backend? |
+|---|---|---|
+| Invitar franquiciado | `POST /admin/franchisees/invitations` | ❌ No |
+| Registro público | `POST /franchisee/register` | ❌ No |
+| Pago | *(directo a Stripe, sin pasar por vuestra API)* | — |
+| Webhook Stripe suscripciones | `POST /webhooks/stripe` | ❌ No |
+| Facturas del franquiciado | `GET /franchisee/:id/invoices` | ❌ No |
+| Listar franquiciados | `GET /admin/customers` | ⚠️ Existe pero sin confirmar si es el contrato correcto |
+| Detalle de franquiciado | `GET /admin/customers/:id` | ⚠️ Igual que arriba |
+| Cambiar estado / aprobar | `PATCH /admin/franchisees/:id/status` | ⚠️ Existe, pero debe validar `subscription_status === active` y disparar email/outbox |
+| Editar datos / notas | `POST /admin/customers/:id` | ⚠️ Sin confirmar |
+| Tiendas (autoservicio franquiciado) | `GET / POST / DELETE /franchisee/stores` | ❌ No |
+| Tiendas (desde admin) | `POST / PATCH / DELETE /admin/customers/:id/addresses` | ⚠️ Sin confirmar |
+
+---
+
+## 🚦 Qué ya está construido vs. qué es nuevo
+
+- ✅ Ya existe en frontend: pantallas de gestión de franquiciados, patrón de pago con tarjeta, formulario multi-paso.
+- 🆕 Ya está construido en frontend pero sin backend real: invitación por email, autorregistro con pago, aprobación condicionada a suscripción, sección de facturas y autoservicio de tiendas.
+
+---
+
+## ❓ Lo que necesitamos que confirméis
+
+1. **¿Cuál es el contrato real de admin?** `/admin/customers/*` o `/admin/franchisees/*`.
+2. **¿Vais a construir `POST /franchisee/register` ahora?** Sin él, el registro público seguirá siendo 100% simulado.
+3. **¿Confirmamos `GET /franchisee/:id/invoices`?** Si queréis otro path, necesitamos cerrarlo ya porque la UI ya existe.
+4. **¿Existirá `/franchisee/stores*`?** O preferís que las tiendas se gestionen siempre desde admin y el franquiciado solo las vea.
+5. **¿La activación de credenciales sale como efecto de `PATCH /admin/franchisees/:id/status`?** Si preferís un endpoint separado para eso, hay que acordarlo antes de construir esa UI.
+
+---
+
+*Este documento describe únicamente qué necesita frontend de la API y qué espera recibir. No prescribe cómo implementar colas, workers, sincronización con Odoo ni lógica interna.*

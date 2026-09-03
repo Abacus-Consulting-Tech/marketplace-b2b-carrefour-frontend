@@ -12,7 +12,9 @@ push a main o dev ──► audit ─┐
 pull_request       ──► audit ∥ test   (sin imagen)
 ```
 
-- **`audit`**: `npm audit --omit=dev --audit-level=high` — vulnerabilidades en deps de runtime.
+- **`audit`**: `audit-ci` (npm audit high sobre deps de runtime) con la allowlist de
+  riesgo aceptado de `audit-ci.jsonc` — hoy solo `next` 14.x, que no tiene parche
+  disponible ([docs/feature/03](feature/03_next-16-migration.md)).
 - **`test`**: `npm ci` + `vitest run --passWithNoTests` (hoy no hay tests:
   [docs/fix/01](fix/01_tests-inexistentes.md); el flag evita un rojo vacío).
 - **`build`**: `next build` dentro de `docker/Dockerfile` (incluye el chequeo de tipos).
@@ -144,8 +146,11 @@ Para desarrollo normal no hace falta Docker: `npm run dev` en el host.
 
 ## Limitaciones conocidas (dependen de otros equipos)
 
-- `dev` no compila y `npm audit` está rojo — el pipeline queda parado en sus gates hasta
-  los fixes ([docs/fix/03](fix/03_build-roto-y-env-production.md)).
+- `next` 14.x arrastra 21 advisories high sin parche disponible; el gate `audit` pasa
+  gracias a un **riesgo aceptado** declarado en `audit-ci.jsonc`. Retirarlo exige migrar
+  a Next 16 ([docs/feature/03](feature/03_next-16-migration.md), [docs/fix/03](fix/03_build-roto-y-env-production.md)).
+- `.env.production` con un token OIDC sigue versionado en un repo público
+  ([docs/fix/03](fix/03_build-roto-y-env-production.md) punto 3) — no afecta al despliegue.
 - CI sin tests reales ([docs/fix/01](fix/01_tests-inexistentes.md)).
 - Config horneada en build → imagen por entorno; el paso a runtime-config + standalone +
   `/api/health` está descrito en [docs/feature/02](feature/02_runtime-config-y-standalone.md).

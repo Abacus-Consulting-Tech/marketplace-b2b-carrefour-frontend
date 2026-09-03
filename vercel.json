@@ -4,7 +4,7 @@
       "main": false,
       "dev": false,
       "feature/mock-version": false,
-      "medusa-update": true
+      "medusa-update": false
     }
   },
   "github": {

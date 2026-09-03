@@ -1041,6 +1041,40 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 
 ---
 
+### 16.1. Franchisee Self-Service — Alta, Invitación y Tiendas (HOY - Martes 02 Septiembre)
+**Estado**: ✅ Completo (Mock) — sin contrato backend acordado todavía
+
+**Lo que se hizo:**
+- Flujo completo de autoregistro público en `/franchisee/register`: 4 pasos (datos personales, empresa, financieros, pago con tarjeta vía Stripe Elements) usando Zustand + react-hook-form + zod, mismo patrón que el registro de proveedores
+- Pago con tarjeta real vía `stripe.createPaymentMethod` (validación real de Stripe en modo test); el cargo real de la cuota de alta sigue pendiente de backend
+- Acción ligera "Invitar Franquiciado" en `/admin/franchisees/new` (solo nombre + email), genera un enlace a `/franchisee/register` y simula el envío de email
+- Nuevo estado `pending_approval` en `FranchiseeMetadata.status`, alineado con el enum real confirmado por backend (`pending_approval | active | suspended | inactive`)
+- Botón "Aprobar Franquiciado" y pestaña "Estado y Notas" en el detalle de franquiciado (`/admin/franchisees/:id`), incluyendo simulación del evento asíncrono de sincronización con Odoo (partner) tras la aprobación
+- Filtro/tarjeta "Pendientes de Aprobación" en la lista de franquiciados
+- Gestión de tiendas del franquiciado: añadir/editar/eliminar tiendas desde `/admin/franchisees/:id` (dialog) y desde `/marketplace/profile` (self-service, persistido en localStorage)
+- 3 franquiciados `pending_approval` añadidos al mock data para poder probar el flujo de aprobación sin tener que autoregistrarse primero
+
+**Archivos nuevos/modificados principales:**
+- `src/app/franchisee/register/page.tsx` + `src/components/franchisee/{PersonalDataForm,CompanyDataForm,FinancialDataForm,PaymentForm}.tsx`
+- `src/lib/store/franchisee-registration.ts`, `src/lib/api/franchisee-registration-client.ts`, `src/lib/api/franchisee-stores-client.ts`
+- `src/components/admin/InviteFranchiseeForm.tsx`
+- `src/lib/api/franchisees-client.ts` (+`inviteFranchisee`, `+updateFranchiseeStatus`), `src/lib/api/franchisees-mock.ts` (+3 pending)
+- `src/components/admin/{FranchiseesList,FranchiseeDetail,FranchiseeStatusBadge}.tsx`
+- `src/app/(marketplace)/marketplace/profile/page.tsx` (sección "Mis Tiendas")
+
+**Documentación creada:**
+- `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE.md` (EN) y `FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md` (ES) — guía simple con diagramas para backend, incluye sección de "Preguntas abiertas" tras revisión conjunta con backend
+
+**Pendiente / bloqueado por backend** (ver guía de flujo para detalle):
+- ❌ `POST /franchisee/register`, `POST /admin/franchisees/invitations`, `GET/POST/DELETE /franchisee/stores*` — no existen en backend, 100% mock
+- ❓ Orden pago-antes-o-después-de-aprobación sin decidir
+- ❓ Contrato real: `/admin/franchisees*` vs `/admin/customers*` sin confirmar con frontend
+- ❌ Facturación real vía Odoo (solo la sincronización de contacto está confirmada, no la factura)
+
+**Tiempo invertido**: ~1 día
+
+---
+
 ### 17. Checkout - Proceso de Pago (Completado HOY 25/08)
 **Estado**: ✅ Completo (Mock)
 
@@ -1330,6 +1364,7 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 - **Admin Orders (Global)**: ✅ **COMPLETO** (25/08/2026) - Vista global con filtros avanzados, prioridades, incidencias
 - **Supplier Products**: ✅ **COMPLETO** - CRUD completo con 8 archivos (~1,634 líneas), carga masiva incluida
 - **Franchisee Management**: ✅ **COMPLETO** - CRUD completo con 10 archivos (~2,511 líneas), formulario completo + lista + detalle
+- **Franchisee Self-Service (Alta/Invitación/Tiendas)**: ✅ **COMPLETO (Mock)** (02/09/2026) - Autoregistro público, invitación admin, aprobación, gestión de tiendas — sin contrato backend acordado (ver sección 16.1)
 
 ---
 

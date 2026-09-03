@@ -1,0 +1,30 @@
+// Gate `audit` del CI (.github/workflows/build.yml).
+//
+// Equivale a `npm audit --omit=dev --audit-level=high`, pero permite declarar
+// RIESGO ACEPTADO de forma explícita y revisable, cosa que `npm audit` no sabe hacer.
+//
+// ── Allowlist ────────────────────────────────────────────────────────────────
+// "next": el proyecto está pinchado en next 14.2.x (última: 14.2.35). A fecha de
+// 2026-09-02 next acumula 21 advisories high (SSRF, cache poisoning, request
+// smuggling, DoS, XSS...) cuyo rango afectado es `9.5.0 - 15.5.20`: NO existe
+// parche dentro de 14.x. El único fix es subir a next >= 16.3.x, un major con
+// breaking changes (cookies()/headers()/params pasan a async, cambia el caching
+// por defecto) que requiere migración y pruebas propias.
+//
+// Se acepta ese riesgo de forma temporal para no dejar el pipeline bloqueado.
+// Mitigación planificada: docs/feature/03_next-16-migration.md.
+// Contexto y estado: docs/fix/03_build-roto-y-env-production.md.
+//
+// ⚠️ Al allowlistear el módulo entero, una advisory NUEVA de next tampoco hará
+// fallar el gate. Es coherente con "aceptamos el riesgo de 14.x mientras dure",
+// pero obliga a revisar este fichero en cada revisión de la migración.
+// REVISAR: al cerrar la migración a next 16, BORRAR esta entrada por completo.
+//
+// postcss y nanoid NO están allowlisteados: se arreglaron de verdad vía
+// `overrides` en package.json (postcss 8.5.26, nanoid 3.3.18).
+{
+  "$schema": "https://github.com/IBM/audit-ci/raw/main/docs/schema.json",
+  "high": true,
+  "skip-dev": true,
+  "allowlist": ["next"]
+}

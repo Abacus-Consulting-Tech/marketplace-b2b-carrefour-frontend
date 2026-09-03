@@ -1,16 +1,38 @@
 'use client';
 
 import { Badge } from '@/components/ui/badge';
-import type { FranchiseeStatus, DiscountTier } from '@/types/franchisees';
-import { CheckCircle, XCircle, Clock, Crown, Star, Award, Circle } from 'lucide-react';
+import type { FranchiseeStatus, DiscountTier, FranchiseeMetadata } from '@/types/franchisees';
+import { CheckCircle, XCircle, Clock, Ban, Crown, Star, Award, Circle } from 'lucide-react';
 
 interface FranchiseeStatusBadgeProps {
   isActive: boolean;
+  // Real backend enum (pending_approval/active/suspended/inactive), confirmed 2026-09-02.
+  // Takes priority over isActive when present; isActive stays as a fallback for
+  // franchisees created before this field existed.
+  status?: FranchiseeMetadata['status'];
   className?: string;
 }
 
-export function FranchiseeStatusBadge({ isActive, className }: FranchiseeStatusBadgeProps) {
-  if (isActive) {
+export function FranchiseeStatusBadge({ isActive, status, className }: FranchiseeStatusBadgeProps) {
+  if (status === 'pending_approval') {
+    return (
+      <Badge variant="secondary" className={`bg-amber-100 text-amber-800 hover:bg-amber-100 ${className || ''}`}>
+        <Clock className="h-3 w-3 mr-1" />
+        Pendiente de Aprobación
+      </Badge>
+    );
+  }
+
+  if (status === 'suspended') {
+    return (
+      <Badge variant="secondary" className={`bg-red-100 text-red-800 hover:bg-red-100 ${className || ''}`}>
+        <Ban className="h-3 w-3 mr-1" />
+        Suspendido
+      </Badge>
+    );
+  }
+
+  if (status === 'active' || isActive) {
     return (
       <Badge variant="default" className={`bg-green-100 text-green-800 hover:bg-green-100 ${className || ''}`}>
         <CheckCircle className="h-3 w-3 mr-1" />

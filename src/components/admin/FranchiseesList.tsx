@@ -52,6 +52,7 @@ export default function FranchiseesList() {
     total: 0,
     active: 0,
     inactive: 0,
+    pending: 0,
     platinum: 0,
     gold: 0,
     silver: 0,
@@ -70,8 +71,8 @@ export default function FranchiseesList() {
         expand: 'groups,shipping_addresses',
       };
 
-      // Apply filters
-      if (statusFilter !== 'all') {
+      // Apply filters ('pending' is handled client-side below, not by the mock API)
+      if (statusFilter === 'active' || statusFilter === 'inactive') {
         filters.has_account = statusFilter === 'active';
       }
 
@@ -82,8 +83,14 @@ export default function FranchiseesList() {
       const response = await franchiseesApi.listFranchisees(filters);
 
       if (response.data) {
-        setFranchisees(response.data.customers);
-        setTotalCount(response.data.count);
+        // 'pending' isn't backed by the mock filters API yet, so it's applied client-side
+        const customers =
+          statusFilter === 'pending'
+            ? response.data.customers.filter((f) => f.metadata?.status === 'pending_approval')
+            : response.data.customers;
+
+        setFranchisees(customers);
+        setTotalCount(statusFilter === 'pending' ? customers.length : response.data.count);
 
         // Calculate stats
         calculateStats(response.data.customers);
@@ -99,6 +106,7 @@ export default function FranchiseesList() {
   const calculateStats = (data: Franchisee[]) => {
     const active = data.filter((f) => f.metadata?.is_active).length;
     const inactive = data.length - active;
+    const pending = data.filter((f) => f.metadata?.status === 'pending_approval').length;
 
     const platinum = data.filter((f) => f.metadata?.discount_tier === 'platinum').length;
     const gold = data.filter((f) => f.metadata?.discount_tier === 'gold').length;
@@ -109,6 +117,7 @@ export default function FranchiseesList() {
       total: data.length,
       active,
       inactive,
+      pending,
       platinum,
       gold,
       silver,
@@ -169,14 +178,14 @@ export default function FranchiseesList() {
           <Link href="/admin/franchisees/new">
             <Button>
               <Plus className="h-4 w-4 mr-2" />
-              Nuevo Franquiciado
+              Invitar Franquiciado
             </Button>
           </Link>
         </div>
       </div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <Card>
           <CardHeader className="pb-2">
             <CardDescription>Total Franquiciados</CardDescription>
@@ -187,6 +196,23 @@ export default function FranchiseesList() {
               <Building2 className="h-3 w-3 mr-1" />
               {stats.active} activos, {stats.inactive} inactivos
             </div>
+          </CardContent>
+        </Card>
+
+        <Card className={stats.pending > 0 ? 'border-amber-300' : undefined}>
+          <CardHeader className="pb-2">
+            <CardDescription>Pendientes de Aprobación</CardDescription>
+            <CardTitle className="text-2xl">{stats.pending}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <button
+              type="button"
+              className="flex items-center text-xs text-amber-700 hover:underline"
+              onClick={() => handleStatusFilter('pending')}
+            >
+              <Filter className="h-3 w-3 mr-1" />
+              Ver solicitudes de autoregistro
+            </button>
           </CardContent>
         </Card>
 
@@ -271,6 +297,7 @@ export default function FranchiseesList() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
+                  <SelectItem value="pending">Pendientes de aprobación</SelectItem>
                   <SelectItem value="active">Activos</SelectItem>
                   <SelectItem value="inactive">Inactivos</SelectItem>
                 </SelectContent>
@@ -307,7 +334,7 @@ export default function FranchiseesList() {
               <Link href="/admin/franchisees/new">
                 <Button className="mt-4">
                   <Plus className="h-4 w-4 mr-2" />
-                  Crear Franquiciado
+                  Invitar Franquiciado
                 </Button>
               </Link>
             </div>
@@ -378,7 +405,10 @@ export default function FranchiseesList() {
                         <DiscountTierBadge tier={franchisee.metadata?.discount_tier} />
                       </TableCell>
                       <TableCell>
-                        <FranchiseeStatusBadge isActive={franchisee.metadata?.is_active || false} />
+                        <FranchiseeStatusBadge
+                          isActive={franchisee.metadata?.is_active || false}
+                          status={franchisee.metadata?.status}
+                        />
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
