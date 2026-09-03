@@ -1,6 +1,6 @@
 # PROJECT STATE
 
-**Updated**: 2026-09-02
+**Updated**: 2026-09-03
 **Classification**: 🟡 SEMI-STABLE (update weekly or on module status change, NOT per endpoint)
 **Syncs FROM**: `API_STATUS.md` (every Friday 4 PM)
 **Hierarchy**: See `.github/ai/DOCUMENTATION_HIERARCHY.md` for official data flow
@@ -68,7 +68,7 @@ Three user roles in separate app sections:
 |--------|---------|----------|---------|
 | **Auth** | Login, sessions | ✅ | ✅ Ready |
 | **Pricing** | Product approval, markup | ✅ | ✅ Ready |
-| **Suppliers** | Vendor management | ✅ | ✅ Ready |
+| **Suppliers** | Vendor management + onboarding review | ✅ | ✅ Ready |
 | **Products** | Catalog CRUD, variants | ✅ | 🟡 Mock |
 | **Catalog** | Marketplace browsing for franchisees | ✅ | 🟡 Mock |
 | **Openings** | Store projects, documents | ✅ | 🟡 Mock |
@@ -105,7 +105,7 @@ See `API_STATUS.md` for detailed endpoint list. Summary:
 - **Stable for current DEV UI**: `auth`, `suppliers`, `pricing` (con fallback temporal en seller catalog), `orders`, `quotes`
 - **Partial in backend but kept mock in DEV**: `franchisees` (`/admin/customers*` GET devuelve `403`)
 - **Mock in DEV**: `openings` (`/openings/projects` devuelve `404`), `products`, `catalog`, `checkout`, `categories`
-- **Source inventory snapshot**: 137 endpoints total, 76 `working`, 6 `broken`, 55 `untested`
+- **Source inventory snapshot**: 148 endpoints total, 77 `working`, 5 `broken`, 66 `untested`
 
 ---
 
@@ -135,13 +135,17 @@ See `API_STATUS.md` for detailed endpoint list. Summary:
   - Create/Update/Delete operations work normally
 
 - **Franchisee Self-Service (new 2026-09-02, still 100% mock)**: Admin "Invitar Franquiciado" (`/admin/franchisees/new`), public self-registration (`/franchisee/register`, 4-step form incl. Stripe payment step), admin approval action, and franchisee-owned store management (`/marketplace/profile`) are all built frontend-only
-  - Impact: No backend contract exists yet for `POST /franchisee/register`, `POST /admin/franchisees/invitations`, or franchisee stores
+  - Impact: No backend contract exists yet for `POST /franchisee/register`, `POST /admin/franchisees/invitations`, `POST /webhooks/stripe`, `GET /franchisee/:id/invoices`, or franchisee stores
   - Workaround: Fully mock (registration mock pushes into the same in-memory `mockFranchisees` array the admin UI reads, stores persisted in localStorage)
-  - Blocking questions documented in `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md` (payment timing, invite requirement, `/admin/franchisees*` vs `/admin/customers*` contract, Odoo invoicing)
+  - Blocking questions documented in `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md` (`/admin/franchisees*` vs `/admin/customers*` contract, invoices path, credential activation side effect, Odoo/Stripe handoff)
 
 - **Supplier Catalog Mismatch**: `/seller/catalog-products` no devuelve datos utilizables en DEV
   - Impact: `/supplier/products` necesita fallback temporal a `/vendor/custom/products`
   - Workaround: Mantener el fallback frontend hasta alinear el backend
+
+- **Supplier Onboarding / Admin Directory (new 2026-09-03, hybrid)**: alta pública de proveedor, invitación admin, aprobación/rechazo desde cola y directorio admin con acciones Ver/Editar/Eliminar ya existen en frontend
+  - Impact: `POST /admin/suppliers/invitations`, `POST /supplier/register` y `PATCH /admin/suppliers/:id/status` siguen mock; `PATCH/DELETE /admin/sellers/:id` se consumen desde UI pero no están revalidados en DEV
+  - Workaround: flujo completo funcional en mock/localStorage; mantener `/admin/sellers*` como superficie canónica para lecturas y CRUD administrativo hasta cerrar contrato backend definitivo
 
 - **Openings Module (🟡 Mock)**: `/openings/projects` responde 404 en DEV
   - Impact: UI de openings sigue en mock para no romper navegación y detalle
@@ -149,6 +153,8 @@ See `API_STATUS.md` for detailed endpoint list. Summary:
 - **RBAC Permissions**: `/admin/customers` (GET) broken on Medusa backend
   
 - **Checkout / Store Catalog**: Store API no devuelve hoy catálogo utilizable para validar carrito y checkout real
+  - Impact: `GET /store/products` devuelve `variant_id` no siempre válido para `/store/carts*`, y el contrato custom `POST /store/checkout/payment-intent` todavía responde con `client_secret` simulado
+  - Workaround: Mantener checkout mock; cuando se pruebe la UI real, usar el flujo OOTB de `/store/carts*` más `POST /store/checkout/payment-intent` y confirmar el estado final solo desde backend tras webhook Stripe
 
 - **Stripe**: JS integrated but PaymentIntents flow not fully tested
 

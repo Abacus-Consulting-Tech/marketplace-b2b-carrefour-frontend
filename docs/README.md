@@ -110,8 +110,10 @@ Documentos sobre decisiones técnicas, alineación con backend y reuniones.
 
 - **[Guía Completa de Usuarios](guides/GUIA_COMPLETA_USUARIOS.md)** - Manual completo en español
 - **[User Guide](guides/USER_GUIDE.md)** - Manual en inglés
+- **[Guía Onboarding Franquiciado](guides/GUIA_ONBOARDING_FRANQUICIADO.md)** - Alta paso a paso para franquiciados
+- **[Guía Onboarding Proveedor](guides/GUIA_ONBOARDING_PROVEEDOR.md)** - Alta paso a paso para proveedores
 - **[Quick Test Openings](guides/QUICK_TEST_OPENINGS.md)** - Guía rápida de testing de aperturas
-- **[Supplier Registration](guides/SUPPLIER_REGISTRATION.md)** - Registro de proveedores
+- **[Supplier Registration](guides/SUPPLIER_REGISTRATION.md)** - Contrato backend del onboarding de proveedores
 - **[Mercur Hybrid Setup](guides/MERCUR_HYBRID_SETUP_GUIDE.md)** - Configuración híbrida
 
 ### 📦 Deployment

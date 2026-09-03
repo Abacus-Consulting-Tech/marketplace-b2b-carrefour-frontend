@@ -161,11 +161,61 @@ export default function DevToolsPage() {
         path: '/admin/sellers/:id',
         method: 'GET',
         module: 'suppliers',
-        description: 'Detalle de seller',
+        description: 'Detalle de seller / proveedor para el directorio admin',
         usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
         status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/admin/sellers/:id'
+      },
+      {
+        path: '/admin/sellers/:id',
+        method: 'PATCH',
+        module: 'suppliers',
+        description: 'Editar datos del proveedor desde el directorio admin (consumido por UI, no revalidado en DEV)',
+        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/sellers/:id'
+      },
+      {
+        path: '/admin/sellers/:id',
+        method: 'DELETE',
+        module: 'suppliers',
+        description: 'Eliminar proveedor desde el directorio admin (consumido por UI, no revalidado en DEV)',
+        usesRealAPI: !featureFlags.shouldUseMock('suppliers'),
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/sellers/:id'
+      },
+      {
+        path: '/admin/suppliers/invitations',
+        method: 'POST',
+        module: 'suppliers',
+        description: 'Invitar proveedor al flujo de onboarding (frontend mock validado en UI, contrato pendiente)',
+        usesRealAPI: false,
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/suppliers/invitations'
+      },
+      {
+        path: '/supplier/register',
+        method: 'POST',
+        module: 'suppliers',
+        description: 'Autorregistro público del proveedor sin password inicial; crea solicitud pending_approval',
+        usesRealAPI: false,
+        status: 'untested',
+        requiresAuth: false,
+        medusaEndpoint: '/supplier/register'
+      },
+      {
+        path: '/admin/suppliers/:id/status',
+        method: 'PATCH',
+        module: 'suppliers',
+        description: 'Acción de workflow para aprobar/rechazar onboarding de proveedor y mover onboarding_status (cola de pendientes admin)',
+        usesRealAPI: false,
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/suppliers/:id/status'
       },
       
       // ========================================================================
@@ -272,7 +322,7 @@ export default function DevToolsPage() {
         method: 'POST',
         module: 'franchisees',
         description: 'Invitar franquiciado (nombre + email, genera enlace a /franchisee/register)',
-        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
+        usesRealAPI: false,
         status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/franchisees/invitations'
@@ -888,6 +938,26 @@ export default function DevToolsPage() {
         status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/payment-collections'
+      },
+      {
+        path: '/store/checkout/payment-intent',
+        method: 'POST',
+        module: 'checkout',
+        description: 'Crear PaymentIntent custom para checkout; hoy devuelve client_secret simulado y sigue pendiente la integración Stripe real',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/store/checkout/payment-intent'
+      },
+      {
+        path: '/store/checkout/complete',
+        method: 'POST',
+        module: 'checkout',
+        description: 'Completar checkout custom; crea pedido en pending_payment y la confirmación final depende del webhook Stripe',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/store/checkout/complete'
       },
       {
         path: '/store/carts/:id/complete',

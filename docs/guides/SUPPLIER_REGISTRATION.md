@@ -1,407 +1,265 @@
-# Registro de Proveedores - Documentación
+# Cómo se da de alta un nuevo proveedor en la plataforma
 
-## Resumen
+**Versión**: v1.0
+**Última actualización**: 2026-09-03
 
-Sistema completo de registro de proveedores para el marketplace B2B Carrefour, que reemplaza el proceso anterior basado en Google Forms con una solución integrada en Next.js.
+Guía para el equipo de backend, escrita desde el punto de vista de frontend: qué pantallas existen, qué le pedimos a la API en cada paso, y qué esperamos que nos devuelva. Sin detalles internos de implementación, solo el contrato que necesitamos.
 
-## Arquitectura
+---
 
-### Flujo de Registro
+## Quién participa
 
-1. **Registro Público** (`/supplier/register`)
-   - Formulario multi-paso (3 páginas)
-   - Sin autenticación requerida
-   - Estado inicial: `pending`
+- **Admin** — personal de Carrefour/marketplace
+- **Proveedor** — la empresa que quiere vender en la plataforma
+- **MercurJS / Medusa** — base del modelo seller/member que queremos reutilizar
+- **Odoo** — sistema externo para la sincronización del partner proveedor después de la aprobación
 
-2. **Revisión Admin** (`/admin/suppliers`)
-   - Visualización de solicitudes pendientes
-   - Descarga de archivos CSV y ZIP
-   - Aprobar/Rechazar proveedores
+---
 
-3. **Aprobación**
-   - Procesamiento de CSV
-   - Creación de productos en Medusa
-   - Upload de imágenes a Medusa Storage
-   - Cambio de estado a `active`
-   - Notificación por email
+## La historia, paso a paso — y qué le pedimos a la API en cada uno
 
-## Estructura de Archivos
+### 1. La invitación
 
-### Tipos (`src/types/index.ts`)
+Un admin decide incorporar a un nuevo proveedor. Queremos el mismo patrón que en franquiciados:
 
-```typescript
-// Estado del proveedor
-type SupplierStatus = 'pending' | 'active' | 'rejected' | 'suspended'
+- El admin usa el botón **"Invitar proveedor"**.
+- Introduce solo nombre y email.
+- El proveedor recibe o copia un enlace público para completar su solicitud.
 
-// Entidad Supplier completa
-interface Supplier {
-  id: string
-  userId: string
-  status: SupplierStatus
-  
-  // Datos legales (página 1)
-  businessName: string
-  legalName: string
-  nifCif: string
-  fiscalAddress: string
-  municipality: string
-  postalCode: string
-  country: string
-  iban: string
-  email: string
-  phone: string
-  website?: string
-  
-  // Contacto (página 2)
-  contactName: string
-  contactSurname: string
-  contactPosition: string
-  contactEmail: string
-  contactPhone: string
-  
-  // Archivos (página 3)
-  productsCsvUrl?: string
-  imagesZipUrl?: string
-  
-  // Gestión admin
-  approvedBy?: string
-  approvedAt?: Date | string
-  rejectionReason?: string
-  
-  createdAt: string
-  updatedAt: string
-}
-```
+**Qué llamamos:**
+- `POST /admin/suppliers/invitations` — enviamos:
 
-### Store Zustand (`src/lib/store/supplier-registration.ts`)
-
-**Estado:**
-- `currentStep`: Página actual (0-2)
-- `formData`: Datos del formulario
-- `productsCsv`: Archivo CSV (no persistido)
-- `imagesZip`: Archivo ZIP (no persistido)
-
-**Acciones:**
-- `setCurrentStep(step)`: Cambiar página
-- `nextStep()`: Avanzar (con validación)
-- `prevStep()`: Retroceder
-- `updateLegalData(data)`: Actualizar página 1
-- `updateContactData(data)`: Actualizar página 2
-- `setProductsCsv(file)`: Guardar CSV
-- `setImagesZip(file)`: Guardar ZIP
-- `reset()`: Limpiar formulario
-- `isStepValid(step)`: Validar página
-
-### Componentes
-
-#### 1. Indicador de Progreso
-**Archivo:** `src/components/supplier/SupplierStepIndicator.tsx`
-- Muestra 3 pasos: Datos Legales → Contacto → Productos
-- Responsive: barra de progreso en móvil
-- Estados: completado, actual, pendiente
-
-#### 2. Formulario Página 1 - Datos Legales
-**Archivo:** `src/components/supplier/LegalDataForm.tsx`
-
-**Campos:**
-- Nombre Comercial
-- Razón Social
-- NIF/CIF (validación regex: `[0-9]{8}[A-Z]` o `[A-Z][0-9]{7}[0-9A-J]`)
-- Dirección Fiscal (textarea)
-- Municipio
-- Código Postal (5 dígitos)
-- País (select: España, Portugal, Francia)
-- IBAN (validación: ES + 22 dígitos)
-- Email (validación email)
-- Teléfono (formato internacional)
-- Website (opcional, validación URL)
-
-**Validación:** react-hook-form + zod
-
-#### 3. Formulario Página 2 - Contacto
-**Archivo:** `src/components/supplier/ContactDataForm.tsx`
-
-**Campos:**
-- Nombre
-- Apellidos
-- Cargo en la Empresa
-- Email de Contacto
-- Teléfono de Contacto
-
-**Navegación:** Botones Anterior/Continuar
-
-#### 4. Formulario Página 3 - Productos
-**Archivo:** `src/components/supplier/ProductsUploadForm.tsx`
-
-**Archivos:**
-- CSV/XLSX (máx 5MB)
-  - Estructura: `PROVEEDOR,IMAGEN,NOMBRE,DESCRIPCIÓN,CARACTERISTICAS,COSTE UNITARIO,PCB,IMPORTE,IVA,PLAZO ENTREGA`
-- ZIP (máx 50MB)
-  - Contiene imágenes PNG
-  - Nombres deben coincidir con columna IMAGEN del CSV
-
-**Características:**
-- Drag & drop
-- Validación de tipo y tamaño
-- Preview de archivos cargados
-- Indicador visual de estado
-
-#### 5. Página Principal de Registro
-**Archivo:** `src/app/(supplier)/supplier/register/page.tsx`
-- Orquesta los 3 formularios
-- Header informativo
-- Indicador de progreso
-- Renderiza formulario según `currentStep`
-
-#### 6. Panel Admin - Gestión de Proveedores
-**Archivo:** `src/app/(backoffice)/admin/suppliers/page.tsx`
-
-**Características:**
-- Dashboard con estadísticas (pendientes, activos, rechazados)
-- Lista de proveedores pendientes con:
-  - Información completa de la empresa
-  - Datos de contacto
-  - Enlaces para descargar CSV y ZIP
-- Botones de acción:
-  - **Aprobar**: Confirmación con diálogo, procesa productos
-  - **Rechazar**: Requiere motivo de rechazo
-
-**Diálogos:**
-1. **Aprobar Proveedor**: Confirmación con checklist de acciones
-2. **Rechazar Proveedor**: Campo de texto para motivo (obligatorio)
-
-### Utilidades
-
-#### CSV Parser (`src/lib/utils/csv-parser.ts`)
-
-**Funciones:**
-
-1. `parseProductsCSV(file: File): Promise<ProductFromCSV[]>`
-   - Lee archivo CSV/XLSX
-   - Parsea líneas respetando comillas
-   - Retorna array de productos
-
-2. `parseCSVLine(line: string): string[]`
-   - Parsea línea individual
-   - Maneja valores entre comillas
-   - Escapa comillas dobles
-
-3. `validateProducts(products): { valid, errors }`
-   - Valida campos obligatorios
-   - Verifica tipos de datos
-   - Valida formato de imagen (PNG)
-   - Retorna lista de errores
-
-4. `validateProductImages(products, zipFile): Promise<{ valid, errors }>`
-   - TODO: Implementar con librería JSZip
-   - Verificar que todas las imágenes existan en el ZIP
-
-5. `generateProductsSummary(products)`
-   - Calcula totales y promedios
-   - Útil para preview antes de enviar
-
-## Validaciones
-
-### Página 1 - Datos Legales
-- ✅ NIF/CIF: Formato español válido
-- ✅ Código Postal: 5 dígitos
-- ✅ IBAN: ES + 22 dígitos
-- ✅ Email: Formato válido
-- ✅ Teléfono: Formato internacional
-- ✅ Website: URL válida (opcional)
-
-### Página 2 - Contacto
-- ✅ Todos los campos obligatorios
-- ✅ Email: Formato válido
-- ✅ Teléfono: Formato internacional
-
-### Página 3 - Archivos
-- ✅ CSV: Tipo .csv/.xlsx, máx 5MB
-- ✅ ZIP: Tipo .zip, máx 50MB
-- ✅ Ambos archivos obligatorios
-
-### CSV de Productos
-- ✅ Nombre obligatorio
-- ✅ Imagen obligatoria (formato PNG)
-- ✅ Coste unitario > 0
-- ✅ PCB > 0
-- ✅ IVA entre 0-100
-
-## Integración Pendiente
-
-### Backend API
-
-**Endpoints necesarios:**
-
-```typescript
-// Crear proveedor
-POST /api/suppliers
-Body: FormData {
-  // Datos del formulario
-  businessName, legalName, nifCif, ...
-  // Archivos
-  productsCsv: File
-  imagesZip: File
-}
-Response: { id, status: 'pending', ... }
-
-// Listar proveedores (admin)
-GET /api/suppliers?status=pending
-Response: { suppliers: Supplier[] }
-
-// Aprobar proveedor
-POST /api/suppliers/:id/approve
-Body: { approvedBy: string }
-Response: { success: true }
-// Triggers:
-// 1. Parse CSV
-// 2. Create products in Medusa
-// 3. Upload images to Medusa Storage
-// 4. Update supplier status to 'active'
-// 5. Send email notification
-
-// Rechazar proveedor
-POST /api/suppliers/:id/reject
-Body: { rejectionReason: string }
-Response: { success: true }
-// Triggers:
-// 1. Update supplier status to 'rejected'
-// 2. Send email notification
-```
-
-### Medusa Backend
-
-**Entidades:**
-
-1. **Custom Entity: Supplier**
-   - Mapea a `Supplier` interface
-   - Relación con `User` (1:1)
-   - Campos adicionales para gestión
-
-2. **Productos**
-   - Creados desde CSV al aprobar
-   - Vinculados al supplier
-   - Imágenes subidas a Medusa Storage
-
-**Storage:**
-- Usar Medusa Storage para:
-  - CSV original (audit trail)
-  - ZIP de imágenes (backup)
-  - Imágenes individuales procesadas
-
-**Ejemplo CSV → Medusa Product:**
-```typescript
+```json
 {
-  title: row.nombre,
-  description: row.descripcion,
-  variants: [{
-    prices: [{ amount: row.costeUnitario * 100, currency_code: 'eur' }],
-    sku: generateSKU(row),
-    inventory_quantity: row.pcb,
-  }],
-  images: [{ url: uploadedImageUrl }],
-  metadata: {
-    proveedor: row.proveedor,
-    caracteristicas: row.caracteristicas,
-    plazoEntrega: row.plazoEntrega,
-    iva: row.iva,
+  "name": "Distribuciones Ejemplo S.L.",
+  "email": "contacto@proveedor.com"
+}
+```
+
+Esperamos recibir algo así:
+
+```json
+{
+  "invitation": {
+    "id": "sup_inv_123",
+    "name": "Distribuciones Ejemplo S.L.",
+    "email": "contacto@proveedor.com",
+    "registrationUrl": "https://.../supplier/register?...",
+    "status": "pending",
+    "createdAt": "2026-09-03T10:00:00Z"
   }
 }
 ```
 
-## UI/UX
+> Hoy esto no existe en backend. Frontend lo simula generando el enlace localmente y mostrándolo al admin para que lo copie.
 
-### Layout
-- **Registro:** Utiliza layout `(supplier)` - sin navbar/footer
-- **Admin:** Utiliza layout `(backoffice)` - con sidebar admin
+### 2. El formulario de registro público
 
-### Diseño
-- Gradiente de fondo en registro
-- Cards con bordes y sombras
-- Indicadores visuales de progreso
-- Estados de archivos (pendiente/cargado)
-- Botones con iconos
-- Badges de estado con colores
+El proveedor abre el enlace y rellena el formulario. A diferencia del flujo antiguo, ya no pedimos catálogo ni ZIP de imágenes en este momento. El onboarding inicial queda reducido a solicitud de alta, no a carga operativa.
 
-### Responsive
-- Grid adaptativo (1 col móvil, 2 cols desktop)
-- Indicador de progreso diferente en móvil (barra)
-- Tabla de admin con scroll horizontal
+Hoy el flujo público tiene 3 pasos:
 
-### Accesibilidad
-- Labels apropiados
-- ARIA attributes
-- Navegación por teclado
-- Mensajes de error descriptivos
+- datos legales
+- contacto principal
+- revisión final de la solicitud
 
-## Testing
+**Qué llamamos:**
+- `POST /supplier/register` — al final del formulario enviamos:
 
-### Casos de Prueba
-
-**Registro:**
-1. ✅ Completar formulario paso a paso
-2. ✅ Validación en cada página
-3. ✅ No permitir avanzar sin datos válidos
-4. ✅ Botón "Anterior" funciona
-5. ✅ Persistencia de datos entre páginas
-6. ✅ Upload de archivos
-7. ✅ Validación de tipos de archivo
-8. ✅ Límites de tamaño
-
-**Admin:**
-1. ✅ Listar proveedores pendientes
-2. ✅ Descargar CSV y ZIP
-3. ✅ Aprobar proveedor
-4. ✅ Rechazar proveedor (con motivo)
-5. ✅ Estadísticas actualizadas
-
-## Próximos Pasos
-
-1. **Integración Backend:**
-   - [ ] Crear endpoints en Medusa
-   - [ ] Implementar subida de archivos
-   - [ ] Procesar CSV y crear productos
-   - [ ] Sistema de notificaciones por email
-
-2. **CSV Processor:**
-   - [ ] Integrar librería JSZip para validar ZIP
-   - [ ] Implementar extracción de imágenes
-   - [ ] Upload batch de imágenes a Storage
-   - [ ] Manejo de errores en procesamiento
-
-3. **Portal del Proveedor:**
-   - [ ] Dashboard del proveedor
-   - [ ] Gestión de catálogo
-   - [ ] Pedidos recibidos
-   - [ ] Estadísticas
-
-4. **Mejoras:**
-   - [ ] Preview de CSV antes de enviar
-   - [ ] Edición de datos antes de aprobar (admin)
-   - [ ] Historial de cambios
-   - [ ] Notificaciones en tiempo real
-   - [ ] Búsqueda y filtros en admin
-
-## Comandos de Desarrollo
-
-```bash
-# Instalar dependencias (si es necesario)
-npm install react-hook-form @hookform/resolvers zod
-
-# Ejecutar en desarrollo
-npm run dev
-
-# Acceder al registro
-http://localhost:3000/supplier/register
-
-# Acceder al admin (requiere autenticación)
-http://localhost:3000/admin/suppliers
+```json
+{
+  "businessName": "Distribuciones Ejemplo",
+  "legalName": "Distribuciones Ejemplo S.L.",
+  "nifCif": "B12345678",
+  "fiscalAddress": "Calle Mayor 123",
+  "municipality": "Madrid",
+  "postalCode": "28001",
+  "country": "España",
+  "iban": "ES1234567890123456789012",
+  "email": "contacto@proveedor.com",
+  "phone": "+34 912 345 678",
+  "website": "https://proveedor.com",
+  "contactName": "María",
+  "contactSurname": "García López",
+  "contactPosition": "Directora Comercial",
+  "contactEmail": "maria.garcia@proveedor.com",
+  "contactPhone": "+34 600 123 456"
+}
 ```
 
-## Notas
+Esperamos recibir algo así:
 
-- El sistema NO migra datos existentes del Google Forms
-- El portal del proveedor ya existe, solo se implementa el registro
-- Los archivos no se persisten en localStorage (solo metadatos)
-- La validación del ZIP está pendiente de implementación completa
-- Las llamadas a API son placeholders (`alert()` temporales)
+```json
+{
+  "supplier": {
+    "id": "sup_123",
+    "userId": "member_pending_123",
+    "status": "pending",
+    "businessName": "Distribuciones Ejemplo",
+    "legalName": "Distribuciones Ejemplo S.L.",
+    "email": "contacto@proveedor.com",
+    "contactEmail": "maria.garcia@proveedor.com",
+    "metadata": {
+      "onboarding_status": "pending_approval",
+      "approval_notes": "",
+      "credentials_sent_at": null,
+      "odoo_sync_status": "pending"
+    }
+  }
+}
+```
+
+> Este endpoint todavía no existe en backend. Es el hueco principal para poder cerrar el onboarding real del proveedor.
+
+### 3. La revisión del admin
+
+Un admin revisa la solicitud, valida los datos y decide si aprobar o rechazar.
+
+En frontend ya existe esta estructura:
+
+- **Solicitudes pendientes** arriba, como cards con acciones rápidas de aprobación/rechazo.
+- **Directorio de proveedores** debajo, en tabla completa con búsqueda y filtro por estado.
+- Cada fila del directorio ya expone acciones **Ver**, **Editar** y **Eliminar**.
+
+**Qué llamamos para leer en admin:**
+- `GET /admin/sellers?q=&limit=20&offset=0` — para listar entidades proveedor.
+- `GET /admin/sellers/:id` — para el detalle del proveedor.
+
+**Qué llamamos para administración posterior a la revisión:**
+- `PATCH /admin/sellers/:id` — edición administrativa de datos legales/comerciales/contacto desde el directorio.
+- `DELETE /admin/sellers/:id` — eliminación administrativa del proveedor desde el directorio.
+
+**Qué llamamos para las acciones de workflow:**
+- `PATCH /admin/suppliers/:id/status` — enviamos por ejemplo:
+
+```json
+{
+  "status": "active",
+  "approvalNotes": "Solicitud aprobada. Pendiente de envío de credenciales."
+}
+```
+
+O para rechazo:
+
+```json
+{
+  "status": "rejected",
+  "approvalNotes": "Falta validar CIF y documentación legal."
+}
+```
+
+**Regla esperada en backend:**
+- La lectura de proveedor debería apoyarse en la entidad canónica de MercurJS (`seller`).
+- Las acciones de onboarding pueden vivir en rutas custom si la aprobación/rechazo no encajan limpiamente en el CRUD estándar.
+
+> Recomendación frontend: usar `/admin/sellers*` como lectura canónica y `/admin/suppliers/*` o `/admin/custom/sellers/*` para acciones de workflow.
+
+### 4. La aprobación y activación de credenciales
+
+El proveedor no debe definir password al solicitar el alta. Primero se revisa y aprueba. Después se le comunica cómo activar el acceso.
+
+**Qué necesitamos que haga backend al aprobar:**
+- mover `onboarding_status` a `approved_pending_credentials`
+- preparar o enviar email de activación
+- crear o activar las credenciales `member` del proveedor según el patrón de MercurJS
+
+**Qué puede necesitar backend como endpoint adicional o side effect:**
+- email con `activation_link` o `reset_password_link`
+- transición posterior a `credentials_sent`
+- transición final a `active` cuando el acceso quede operativo
+
+> ✅ Decidido: el password no se define en el alta inicial. La activación viene después de la aprobación.
+
+### 5. El rechazo y la resubmisión
+
+Si una solicitud se rechaza, frontend recomienda no borrar la trazabilidad.
+
+**Qué esperamos de backend:**
+- conservar motivo de rechazo
+- mantener histórico visible para admin
+- permitir un nuevo ciclo de revisión a partir de la información previa
+
+La política recomendada es:
+
+- rechazo con motivo
+- posibilidad de resubmisión posterior
+- nuevo ciclo de revisión sin perder el historial anterior
+
+> Esta parte sigue abierta para confirmación backend, pero es la recomendación operativa desde frontend.
+
+### 6. La sincronización con Odoo
+
+La creación o actualización del partner proveedor en Odoo debe ocurrir después de la aprobación, no durante la solicitud pública.
+
+**Qué esperamos como side effect backend:**
+- emitir un evento/outbox al aprobar
+- sincronizar el proveedor con Odoo de forma asíncrona
+- reflejar ese estado en `odoo_sync_status`
+
+Valores esperados para `odoo_sync_status`:
+
+- `pending`
+- `synced`
+- `failed`
+
+### 7. La carga de catálogo después del alta
+
+Una vez aprobado y con acceso activo, el proveedor entra en su portal y ya puede hacer la parte operativa:
+
+- login de proveedor
+- subida de CSV/XLSX
+- subida de ZIP de imágenes
+- propuesta/importación de productos
+
+**Importante:**
+- CSV/XLSX y ZIP ya no forman parte del onboarding inicial.
+- Esa fase queda movida al momento posterior a la aprobación.
+
+**Qué ya existe hoy en backend/flujo operativo relacionado:**
+- `POST /auth/member/emailpass` — login de proveedor una vez las credenciales existen
+- endpoints de catálogo/productos del proveedor ya documentados en el módulo correspondiente
+
+---
+
+## Todas las llamadas en un solo sitio
+
+| Paso | Método y ruta | ¿Existe en backend? |
+|---|---|---|
+| Invitar proveedor | `POST /admin/suppliers/invitations` | ❌ No |
+| Registro público proveedor | `POST /supplier/register` | ❌ No |
+| Listar proveedores en admin | `GET /admin/sellers` | ⚠️ Sí, pero hay que confirmar si cubre también la cola de onboarding |
+| Detalle de proveedor | `GET /admin/sellers/:id` | ⚠️ Sí, pero hay que confirmar si expone la metadata de onboarding necesaria |
+| Editar proveedor desde admin | `PATCH /admin/sellers/:id` | ⚠️ Posiblemente sí, pero falta validación explícita del contrato final |
+| Eliminar proveedor desde admin | `DELETE /admin/sellers/:id` | ⚠️ Posiblemente sí, pero falta validación explícita del contrato final |
+| Aprobar / rechazar onboarding | `PATCH /admin/suppliers/:id/status` | ❌ No |
+| Activación de credenciales | `email + activation/reset flow` | ❌ No cerrado todavía |
+| Login proveedor tras activación | `POST /auth/member/emailpass` | ✅ Sí |
+| Sincronización con Odoo | `evento/outbox al aprobar` | ❌ No cerrado todavía |
+| Carga de catálogo post-alta | `flujo operativo posterior` | ⚠️ Parcialmente existente |
+
+---
+
+## Qué ya está construido vs. qué es nuevo
+
+- ✅ Ya existe en frontend: página pública de registro de proveedor, formularios de datos legales y contacto, store multi-paso, panel admin de revisión, directorio admin full-width con búsqueda/filtro y acciones por fila, patrón de login proveedor con `member`.
+- 🆕 Ya está construido en frontend pero sin backend real: invitación de proveedor, autorregistro sin password inicial, revisión admin con approve/reject, success state pendiente de revisión, metadata de onboarding.
+- 🔄 Se ha movido fuera del onboarding inicial: carga de CSV/XLSX e imágenes ZIP. Esa parte ahora pertenece al flujo operativo posterior al alta.
+
+---
+
+## Lo que necesitamos que confirméis
+
+1. **¿La solicitud inicial crea directamente un `seller` de MercurJS en estado pendiente, o preferís una entidad separada tipo `supplier_application`?**
+2. **¿Dónde vivirá la metadata de onboarding?** `seller.metadata`, `member.metadata` o una tabla/registro específico.
+3. **¿Confirmamos `/admin/sellers` y `/admin/sellers/:id` como lectura canónica en admin?**
+4. **¿Qué endpoint queréis para aprobar/rechazar?** `PATCH /admin/suppliers/:id/status`, `/admin/custom/sellers/:id/approve`, otro.
+5. **¿Cómo queréis implementar la activación de credenciales tras la aprobación?** email de activación, reset password, invitación de member, otro mecanismo.
+6. **¿Qué estados exactos soportará el onboarding?** La propuesta frontend mínima es: `pending_approval`, `approved_pending_credentials`, `credentials_sent`, `active`, `rejected`.
+7. **¿Qué side effects son obligatorios al aprobar?** email de activación, outbox Odoo, inicialización comercial, auditoría, otros.
+8. **¿Qué reglas de deduplicación debéis aplicar antes de crear la solicitud?** Por ejemplo: CIF/NIF, email legal, nombre de empresa.
+9. **¿La invitación será obligatoria o también admitiremos alta pública sin invitación?**
+10. **¿Cómo queréis modelar la resubmisión tras rechazo?** misma entidad, nueva solicitud enlazada, estado `changes_requested`, otro patrón.
+
+---
+
+*Este documento describe únicamente qué necesita frontend de la API y qué espera recibir. No prescribe cómo implementar workers, colas, sincronización con Odoo ni detalles internos de MercurJS.*

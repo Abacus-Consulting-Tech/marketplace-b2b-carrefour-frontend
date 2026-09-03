@@ -1,17 +1,21 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Building2,
   Mail,
   Phone,
   Globe,
   User,
-  FileText,
-  FileArchive,
   CheckCircle,
   XCircle,
   Clock,
+  Plus,
+  Eye,
+  Pencil,
+  Trash2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -32,36 +36,24 @@ import {
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
 import { Supplier, SupplierStatus } from '@/types';
-
-// Mock data - Replace with API call
-const mockSuppliers: Supplier[] = [
-  {
-    id: '1',
-    userId: 'user-1',
-    status: 'pending',
-    businessName: 'Infoqus Aliado Empresarial',
-    legalName: 'Infoqus Aliado Empresarial, S.L.',
-    nifCif: 'B12345678',
-    fiscalAddress: 'Calle Mayor 123, 4º B',
-    municipality: 'Madrid',
-    postalCode: '28001',
-    country: 'España',
-    iban: 'ES1234567890123456789012',
-    email: 'info@infoqus.com',
-    phone: '+34 912345678',
-    website: 'https://www.infoqus.com',
-    contactName: 'María',
-    contactSurname: 'García López',
-    contactPosition: 'Directora Comercial',
-    contactEmail: 'maria.garcia@infoqus.com',
-    contactPhone: '+34 600123456',
-    productsCsvUrl: 'https://example.com/productos.csv',
-    imagesZipUrl: 'https://example.com/imagenes.zip',
-    createdAt: new Date('2025-01-15').toISOString(),
-    updatedAt: new Date('2025-01-15').toISOString(),
-  },
-];
+import { supplierRegistrationApi } from '@/lib/api/supplier-registration-client';
 
 const statusColors: Record<SupplierStatus, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
@@ -84,18 +76,135 @@ const statusLabels: Record<SupplierStatus, string> = {
   suspended: 'Suspendido',
 };
 
+function SupplierStatusTable({
+  suppliers,
+  emptyMessage,
+  onView,
+  onEdit,
+  onDelete,
+}: {
+  suppliers: Supplier[];
+  emptyMessage: string;
+  onView: (supplier: Supplier) => void;
+  onEdit: (supplier: Supplier) => void;
+  onDelete: (supplier: Supplier) => void;
+}) {
+  if (suppliers.length === 0) {
+    return <p className="py-8 text-center text-muted-foreground">{emptyMessage}</p>;
+  }
+
+  return (
+    <div className="overflow-x-auto">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Proveedor</TableHead>
+            <TableHead>Contacto</TableHead>
+            <TableHead>Estado</TableHead>
+            <TableHead>Onboarding</TableHead>
+            <TableHead>Notas</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {suppliers.map((supplier) => (
+            <TableRow key={supplier.id}>
+              <TableCell>
+                <div className="font-medium">{supplier.businessName}</div>
+                <div className="text-sm text-muted-foreground">{supplier.legalName}</div>
+                <div className="text-sm text-muted-foreground">NIF/CIF: {supplier.nifCif}</div>
+              </TableCell>
+              <TableCell>
+                <div>{supplier.contactName} {supplier.contactSurname}</div>
+                <div className="text-sm text-muted-foreground">{supplier.contactEmail}</div>
+                <div className="text-sm text-muted-foreground">{supplier.contactPhone}</div>
+              </TableCell>
+              <TableCell>
+                <Badge className={statusColors[supplier.status]}>
+                  <span className="mr-1 inline-flex">{statusIcons[supplier.status]}</span>
+                  {statusLabels[supplier.status]}
+                </Badge>
+              </TableCell>
+              <TableCell>
+                <div className="text-sm">{supplier.metadata?.onboarding_status || 'pending_approval'}</div>
+              </TableCell>
+              <TableCell>
+                <div className="max-w-[320px] text-sm text-muted-foreground">
+                  {supplier.metadata?.approval_notes || 'Sin notas'}
+                </div>
+              </TableCell>
+              <TableCell className="w-[220px]">
+                <div className="flex items-center justify-end gap-2">
+                  <Button type="button" variant="outline" size="sm" onClick={() => onView(supplier)}>
+                    <Eye className="mr-2 h-4 w-4" />
+                    Ver
+                  </Button>
+                  <Button type="button" variant="outline" size="sm" onClick={() => onEdit(supplier)}>
+                    <Pencil className="mr-2 h-4 w-4" />
+                    Editar
+                  </Button>
+                  <Button type="button" variant="destructive" size="sm" onClick={() => onDelete(supplier)}>
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Eliminar
+                  </Button>
+                </div>
+              </TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </div>
+  );
+}
+
 export default function SuppliersPage() {
-  const [suppliers] = useState<Supplier[]>(mockSuppliers);
+  const router = useRouter();
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
-  const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
+  const [actionType, setActionType] = useState<'approve' | 'reject' | 'delete' | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'rejected' | 'suspended'>('all');
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSuppliers() {
+      try {
+        setLoading(true);
+        const response = await supplierRegistrationApi.listSuppliers();
+        if (isMounted) {
+          setSuppliers(response.suppliers);
+        }
+      } catch (error) {
+        console.error('Error loading suppliers:', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadSuppliers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const refreshSuppliers = async () => {
+    const response = await supplierRegistrationApi.listSuppliers();
+    setSuppliers(response.suppliers);
+  };
 
   const handleApprove = async () => {
     if (!selectedSupplier) return;
 
-    // TODO: API call to approve supplier
-    console.log('Approving supplier:', selectedSupplier.id);
-    alert('Proveedor aprobado. Pendiente de integración con API.');
+    await supplierRegistrationApi.updateSupplierStatus(selectedSupplier.id, {
+      status: 'active',
+      approvalNotes: 'Solicitud aprobada. Pendiente de envío de credenciales.',
+    });
+    await refreshSuppliers();
     
     setSelectedSupplier(null);
     setActionType(null);
@@ -107,27 +216,78 @@ export default function SuppliersPage() {
       return;
     }
 
-    // TODO: API call to reject supplier
-    console.log('Rejecting supplier:', selectedSupplier.id, 'Reason:', rejectionReason);
-    alert('Proveedor rechazado. Pendiente de integración con API.');
+    await supplierRegistrationApi.updateSupplierStatus(selectedSupplier.id, {
+      status: 'rejected',
+      approvalNotes: rejectionReason,
+    });
+    await refreshSuppliers();
     
     setSelectedSupplier(null);
     setActionType(null);
     setRejectionReason('');
   };
 
+  const handleDelete = async () => {
+    if (!selectedSupplier) return;
+
+    await supplierRegistrationApi.deleteSupplier(selectedSupplier.id);
+    await refreshSuppliers();
+
+    setSelectedSupplier(null);
+    setActionType(null);
+  };
+
   const pendingSuppliers = suppliers.filter((s) => s.status === 'pending');
   const activeSuppliers = suppliers.filter((s) => s.status === 'active');
   const rejectedSuppliers = suppliers.filter((s) => s.status === 'rejected');
+  const managedSuppliers = suppliers.filter((s) => s.status !== 'pending');
+  const normalizedSearch = searchTerm.trim().toLowerCase();
+  const filteredManagedSuppliers = managedSuppliers.filter((supplier) => {
+    const matchesStatus = statusFilter === 'all' || supplier.status === statusFilter;
+    if (!matchesStatus) {
+      return false;
+    }
+
+    if (!normalizedSearch) {
+      return true;
+    }
+
+    const searchableFields = [
+      supplier.businessName,
+      supplier.legalName,
+      supplier.nifCif,
+      supplier.email,
+      supplier.contactEmail,
+      supplier.contactName,
+      supplier.contactSurname,
+    ]
+      .filter(Boolean)
+      .join(' ')
+      .toLowerCase();
+
+    return searchableFields.includes(normalizedSearch);
+  });
+
+  if (loading) {
+    return <div>Cargando proveedores...</div>;
+  }
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Gestión de Proveedores</h1>
-        <p className="text-muted-foreground">
-          Revisa y aprueba las solicitudes de registro de nuevos proveedores
-        </p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Gestión de Proveedores</h1>
+          <p className="text-muted-foreground">
+            Revisa y aprueba las solicitudes de registro de nuevos proveedores
+          </p>
+        </div>
+        <Link href="/admin/suppliers/invite">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Invitar proveedor
+          </Button>
+        </Link>
       </div>
 
       {/* Stats */}
@@ -239,31 +399,22 @@ export default function SuppliersPage() {
                         </p>
                       </div>
 
-                      {/* Files */}
-                      {(supplier.productsCsvUrl || supplier.imagesZipUrl) && (
-                        <div className="flex gap-3">
-                          {supplier.productsCsvUrl && (
-                            <a
-                              href={supplier.productsCsvUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-700 hover:bg-blue-100"
-                            >
-                              <FileText className="h-4 w-4" />
-                              Descargar CSV
-                            </a>
-                          )}
-                          {supplier.imagesZipUrl && (
-                            <a
-                              href={supplier.imagesZipUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 rounded-md bg-purple-50 px-3 py-2 text-sm text-purple-700 hover:bg-purple-100"
-                            >
-                              <FileArchive className="h-4 w-4" />
-                              Descargar ZIP
-                            </a>
-                          )}
+                      <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-900">
+                        <p className="font-medium">Estado de onboarding</p>
+                        <p className="mt-1">
+                          {supplier.metadata?.onboarding_status || 'pending_approval'}
+                        </p>
+                        <p className="mt-2 text-blue-800">
+                          La carga de CSV/XLSX e imágenes quedará disponible después de la aprobación.
+                        </p>
+                      </div>
+
+                      {supplier.metadata?.approval_notes && (
+                        <div className="rounded-md bg-muted/50 p-3">
+                          <p className="text-sm font-medium">Notas internas</p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {supplier.metadata.approval_notes}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -301,6 +452,55 @@ export default function SuppliersPage() {
         </CardContent>
       </Card>
 
+      <Card>
+        <CardHeader>
+          <CardTitle>Directorio de Proveedores</CardTitle>
+          <CardDescription>
+            Consulta proveedores ya revisados con búsqueda por nombre, contacto o CIF y filtro por estado
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div className="w-full md:max-w-md">
+              <Input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Buscar por nombre, CIF, email o contacto"
+              />
+            </div>
+            <div className="w-full md:w-56">
+              <Select
+                value={statusFilter}
+                onValueChange={(value) =>
+                  setStatusFilter(value as 'all' | 'active' | 'rejected' | 'suspended')
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filtrar por estado" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos los estados</SelectItem>
+                  <SelectItem value="active">Activos</SelectItem>
+                  <SelectItem value="rejected">Rechazados</SelectItem>
+                  <SelectItem value="suspended">Suspendidos</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <SupplierStatusTable
+            suppliers={filteredManagedSuppliers}
+            emptyMessage="No hay proveedores que coincidan con la búsqueda o el filtro"
+            onView={(supplier) => router.push(`/admin/suppliers/${supplier.id}`)}
+            onEdit={(supplier) => router.push(`/admin/suppliers/${supplier.id}/edit`)}
+            onDelete={(supplier) => {
+              setSelectedSupplier(supplier);
+              setActionType('delete');
+            }}
+          />
+        </CardContent>
+      </Card>
+
       {/* Approve Dialog */}
       <Dialog open={actionType === 'approve'} onOpenChange={() => setActionType(null)}>
         <DialogContent>
@@ -316,9 +516,9 @@ export default function SuppliersPage() {
             </p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
               <li>Se procesará el CSV y se crearán los productos en el catálogo</li>
-              <li>Las imágenes se subirán al storage</li>
-              <li>El proveedor recibirá un email de confirmación</li>
-              <li>Podrá acceder al portal del proveedor</li>
+              <li>El proveedor quedará aprobado a la espera del envío de credenciales</li>
+              <li>Se podrá enviar el email de activación en el siguiente paso</li>
+              <li>La carga de catálogo quedará habilitada después del acceso al portal</li>
             </ul>
           </div>
           <DialogFooter>
@@ -369,6 +569,37 @@ export default function SuppliersPage() {
             </Button>
             <Button variant="destructive" onClick={handleReject}>
               Confirmar Rechazo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={actionType === 'delete'}
+        onOpenChange={() => {
+          setActionType(null);
+          setSelectedSupplier(null);
+        }}
+      >
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Eliminar Proveedor</DialogTitle>
+            <DialogDescription>
+              ¿Seguro que quieres eliminar a {selectedSupplier?.businessName}? Esta acción borrará su registro mock.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setActionType(null);
+                setSelectedSupplier(null);
+              }}
+            >
+              Cancelar
+            </Button>
+            <Button variant="destructive" onClick={handleDelete}>
+              Eliminar proveedor
             </Button>
           </DialogFooter>
         </DialogContent>

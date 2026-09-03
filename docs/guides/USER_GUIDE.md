@@ -37,34 +37,31 @@ Es una plataforma en línea donde los franquiciados de Carrefour pueden:
 
 #### Para Franquiciados
 
-1. Visitar la página de registro
-2. Completar el formulario con:
-   - Email corporativo
-   - Contraseña segura
-   - Nombre del establecimiento
-   - NIF/CIF
-   - Dirección del establecimiento
-   - Teléfono de contacto
-3. Aceptar términos y condiciones
-4. Hacer clic en "Registrarse"
-5. Verificar el email recibido
-6. Esperar aprobación del administrador
+1. Abrir el enlace de alta enviado por Carrefour
+2. Completar el proceso paso a paso con datos personales, datos de empresa, datos bancarios y pago
+3. Enviar la solicitud final
+4. Esperar revisión del administrador
+5. Recibir la confirmación cuando el acceso esté listo
 
 **Nota**: El proceso de aprobación puede tomar 24-48 horas hábiles.
 
+**Guía detallada:** Ver [GUIA_ONBOARDING_FRANQUICIADO.md](GUIA_ONBOARDING_FRANQUICIADO.md).
+
 #### Para Proveedores
 
-1. Visitar la página de registro de proveedores
-2. Completar el formulario con información de la empresa
-3. Adjuntar documentación requerida:
-   - CIF de la empresa
-   - Certificaciones (si aplica)
-   - Referencias comerciales
-4. Aceptar términos y condiciones
-5. Enviar solicitud
-6. Esperar proceso de validación
+1. Abrir el enlace de alta enviado por Carrefour
+2. Completar los datos legales de la empresa
+3. Completar los datos de la persona de contacto
+4. Revisar la solicitud antes de enviarla
+5. Enviar la solicitud
+6. Esperar la validación del equipo de Carrefour
+7. Recibir después el email de activación del acceso
 
 **Nota**: El proceso de validación puede tomar hasta 5 días hábiles.
+
+**Importante**: La carga de catálogo y de imágenes no se hace en este paso inicial. Esa parte se habilita después de la aprobación del proveedor.
+
+**Guía detallada:** Ver [GUIA_ONBOARDING_PROVEEDOR.md](GUIA_ONBOARDING_PROVEEDOR.md).
 
 ### Iniciar Sesión
 
