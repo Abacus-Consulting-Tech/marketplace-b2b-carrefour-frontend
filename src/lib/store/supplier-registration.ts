@@ -1,17 +1,25 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import { SupplierRegistrationForm } from '@/types';
+import type {
+  Supplier,
+  SupplierInvitationPrefill,
+  SupplierRegistrationForm,
+} from '@/types';
+import { supplierRegistrationApi } from '@/lib/api/supplier-registration-client';
+
+type SubmissionStatus = 'idle' | 'submitting' | 'submitted' | 'error';
 
 interface SupplierRegistrationState {
-  // Current step (0-based index: 0=legal, 1=contact, 2=products)
+  // Current step (0-based index: 0=legal, 1=contact, 2=review)
   currentStep: number;
   
   // Form data
   formData: Partial<SupplierRegistrationForm>;
-  
-  // Files (stored separately to avoid persistence issues)
-  productsCsv: File | null;
-  imagesZip: File | null;
+
+  // Submission state
+  status: SubmissionStatus;
+  error: string | null;
+  result: Supplier | null;
   
   // Actions
   setCurrentStep: (step: number) => void;
@@ -21,8 +29,10 @@ interface SupplierRegistrationState {
   // Update form data for each page
   updateLegalData: (data: Partial<SupplierRegistrationForm>) => void;
   updateContactData: (data: Partial<SupplierRegistrationForm>) => void;
-  setProductsCsv: (file: File | null) => void;
-  setImagesZip: (file: File | null) => void;
+  applyInvitationPrefill: (data: SupplierInvitationPrefill) => void;
+
+  // Final submission
+  submit: () => Promise<void>;
   
   // Reset
   reset: () => void;
@@ -55,8 +65,9 @@ export const useSupplierRegistration = create<SupplierRegistrationState>()(
     (set, get) => ({
       currentStep: 0,
       formData: initialFormData,
-      productsCsv: null,
-      imagesZip: null,
+      status: 'idle',
+      error: null,
+      result: null,
 
       setCurrentStep: (step: number) => {
         set({ currentStep: step });
@@ -88,25 +99,74 @@ export const useSupplierRegistration = create<SupplierRegistrationState>()(
         }));
       },
 
-      setProductsCsv: (file) => {
-        set({ productsCsv: file });
+      applyInvitationPrefill: (data) => {
+        set((state) => {
+          const currentBusinessName = state.formData.businessName?.trim() || '';
+          const currentContactName = state.formData.contactName?.trim() || '';
+          const currentContactSurname = state.formData.contactSurname?.trim() || '';
+          const currentEmail = state.formData.email?.trim() || '';
+          const currentContactEmail = state.formData.contactEmail?.trim() || '';
+
+          if (
+            currentBusinessName ||
+            currentContactName ||
+            currentContactSurname ||
+            currentEmail ||
+            currentContactEmail
+          ) {
+            return state;
+          }
+
+          const fullName = (data.name || '').trim();
+          const [contactName, ...surnameParts] = fullName.split(/\s+/).filter(Boolean);
+
+          return {
+            formData: {
+              ...state.formData,
+              businessName: data.name || state.formData.businessName || '',
+              contactName: contactName || state.formData.contactName || '',
+              contactSurname: surnameParts.join(' ') || state.formData.contactSurname || '',
+              email: data.email || state.formData.email || '',
+              contactEmail: data.email || state.formData.contactEmail || '',
+            },
+          };
+        });
       },
 
-      setImagesZip: (file) => {
-        set({ imagesZip: file });
+      submit: async () => {
+        const { formData, isStepValid } = get();
+
+        if (!isStepValid(0) || !isStepValid(1)) {
+          return;
+        }
+
+        set({ status: 'submitting', error: null });
+
+        try {
+          const { supplier } = await supplierRegistrationApi.register(
+            formData as SupplierRegistrationForm
+          );
+          set({ status: 'submitted', result: supplier });
+        } catch (err) {
+          set({
+            status: 'error',
+            error: err instanceof Error ? err.message : 'Error al enviar la solicitud',
+          });
+        }
       },
 
       reset: () => {
         set({
           currentStep: 0,
           formData: initialFormData,
-          productsCsv: null,
-          imagesZip: null,
+          status: 'idle',
+          error: null,
+          result: null,
         });
       },
 
       isStepValid: (step: number) => {
-        const { formData, productsCsv, imagesZip } = get();
+        const { formData } = get();
 
         switch (step) {
           case 0: // Legal data
@@ -132,8 +192,8 @@ export const useSupplierRegistration = create<SupplierRegistrationState>()(
               formData.contactPhone
             );
 
-          case 2: // Products
-            return !!(productsCsv && imagesZip);
+          case 2: // Review
+            return get().isStepValid(0) && get().isStepValid(1);
 
           default:
             return false;
@@ -145,7 +205,7 @@ export const useSupplierRegistration = create<SupplierRegistrationState>()(
       partialize: (state) => ({
         currentStep: state.currentStep,
         formData: state.formData,
-        // Files are not persisted due to storage limitations
+        // Submission state is not persisted, always starts fresh
       }),
     }
   )

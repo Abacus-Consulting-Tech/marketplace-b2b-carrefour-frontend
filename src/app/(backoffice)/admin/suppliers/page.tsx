@@ -1,17 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import Link from 'next/link';
 import {
   Building2,
   Mail,
   Phone,
   Globe,
   User,
-  FileText,
-  FileArchive,
   CheckCircle,
   XCircle,
   Clock,
+  Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -33,35 +33,7 @@ import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Supplier, SupplierStatus } from '@/types';
-
-// Mock data - Replace with API call
-const mockSuppliers: Supplier[] = [
-  {
-    id: '1',
-    userId: 'user-1',
-    status: 'pending',
-    businessName: 'Infoqus Aliado Empresarial',
-    legalName: 'Infoqus Aliado Empresarial, S.L.',
-    nifCif: 'B12345678',
-    fiscalAddress: 'Calle Mayor 123, 4º B',
-    municipality: 'Madrid',
-    postalCode: '28001',
-    country: 'España',
-    iban: 'ES1234567890123456789012',
-    email: 'info@infoqus.com',
-    phone: '+34 912345678',
-    website: 'https://www.infoqus.com',
-    contactName: 'María',
-    contactSurname: 'García López',
-    contactPosition: 'Directora Comercial',
-    contactEmail: 'maria.garcia@infoqus.com',
-    contactPhone: '+34 600123456',
-    productsCsvUrl: 'https://example.com/productos.csv',
-    imagesZipUrl: 'https://example.com/imagenes.zip',
-    createdAt: new Date('2025-01-15').toISOString(),
-    updatedAt: new Date('2025-01-15').toISOString(),
-  },
-];
+import { supplierRegistrationApi } from '@/lib/api/supplier-registration-client';
 
 const statusColors: Record<SupplierStatus, string> = {
   pending: 'bg-yellow-100 text-yellow-800',
@@ -85,17 +57,51 @@ const statusLabels: Record<SupplierStatus, string> = {
 };
 
 export default function SuppliersPage() {
-  const [suppliers] = useState<Supplier[]>(mockSuppliers);
+  const [suppliers, setSuppliers] = useState<Supplier[]>([]);
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
   const [actionType, setActionType] = useState<'approve' | 'reject' | null>(null);
   const [rejectionReason, setRejectionReason] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    async function loadSuppliers() {
+      try {
+        setLoading(true);
+        const response = await supplierRegistrationApi.listSuppliers();
+        if (isMounted) {
+          setSuppliers(response.suppliers);
+        }
+      } catch (error) {
+        console.error('Error loading suppliers:', error);
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    }
+
+    loadSuppliers();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
+  const refreshSuppliers = async () => {
+    const response = await supplierRegistrationApi.listSuppliers();
+    setSuppliers(response.suppliers);
+  };
 
   const handleApprove = async () => {
     if (!selectedSupplier) return;
 
-    // TODO: API call to approve supplier
-    console.log('Approving supplier:', selectedSupplier.id);
-    alert('Proveedor aprobado. Pendiente de integración con API.');
+    await supplierRegistrationApi.updateSupplierStatus(selectedSupplier.id, {
+      status: 'active',
+      approvalNotes: 'Solicitud aprobada. Pendiente de envío de credenciales.',
+    });
+    await refreshSuppliers();
     
     setSelectedSupplier(null);
     setActionType(null);
@@ -107,9 +113,11 @@ export default function SuppliersPage() {
       return;
     }
 
-    // TODO: API call to reject supplier
-    console.log('Rejecting supplier:', selectedSupplier.id, 'Reason:', rejectionReason);
-    alert('Proveedor rechazado. Pendiente de integración con API.');
+    await supplierRegistrationApi.updateSupplierStatus(selectedSupplier.id, {
+      status: 'rejected',
+      approvalNotes: rejectionReason,
+    });
+    await refreshSuppliers();
     
     setSelectedSupplier(null);
     setActionType(null);
@@ -120,14 +128,26 @@ export default function SuppliersPage() {
   const activeSuppliers = suppliers.filter((s) => s.status === 'active');
   const rejectedSuppliers = suppliers.filter((s) => s.status === 'rejected');
 
+  if (loading) {
+    return <div>Cargando proveedores...</div>;
+  }
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold tracking-tight">Gestión de Proveedores</h1>
-        <p className="text-muted-foreground">
-          Revisa y aprueba las solicitudes de registro de nuevos proveedores
-        </p>
+      <div className="flex items-center justify-between gap-4">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Gestión de Proveedores</h1>
+          <p className="text-muted-foreground">
+            Revisa y aprueba las solicitudes de registro de nuevos proveedores
+          </p>
+        </div>
+        <Link href="/admin/suppliers/invite">
+          <Button>
+            <Plus className="mr-2 h-4 w-4" />
+            Invitar proveedor
+          </Button>
+        </Link>
       </div>
 
       {/* Stats */}
@@ -239,31 +259,22 @@ export default function SuppliersPage() {
                         </p>
                       </div>
 
-                      {/* Files */}
-                      {(supplier.productsCsvUrl || supplier.imagesZipUrl) && (
-                        <div className="flex gap-3">
-                          {supplier.productsCsvUrl && (
-                            <a
-                              href={supplier.productsCsvUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-700 hover:bg-blue-100"
-                            >
-                              <FileText className="h-4 w-4" />
-                              Descargar CSV
-                            </a>
-                          )}
-                          {supplier.imagesZipUrl && (
-                            <a
-                              href={supplier.imagesZipUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex items-center gap-2 rounded-md bg-purple-50 px-3 py-2 text-sm text-purple-700 hover:bg-purple-100"
-                            >
-                              <FileArchive className="h-4 w-4" />
-                              Descargar ZIP
-                            </a>
-                          )}
+                      <div className="rounded-md bg-blue-50 p-3 text-sm text-blue-900">
+                        <p className="font-medium">Estado de onboarding</p>
+                        <p className="mt-1">
+                          {supplier.metadata?.onboarding_status || 'pending_approval'}
+                        </p>
+                        <p className="mt-2 text-blue-800">
+                          La carga de CSV/XLSX e imágenes quedará disponible después de la aprobación.
+                        </p>
+                      </div>
+
+                      {supplier.metadata?.approval_notes && (
+                        <div className="rounded-md bg-muted/50 p-3">
+                          <p className="text-sm font-medium">Notas internas</p>
+                          <p className="mt-1 text-sm text-muted-foreground">
+                            {supplier.metadata.approval_notes}
+                          </p>
                         </div>
                       )}
                     </div>
@@ -316,9 +327,9 @@ export default function SuppliersPage() {
             </p>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm">
               <li>Se procesará el CSV y se crearán los productos en el catálogo</li>
-              <li>Las imágenes se subirán al storage</li>
-              <li>El proveedor recibirá un email de confirmación</li>
-              <li>Podrá acceder al portal del proveedor</li>
+              <li>El proveedor quedará aprobado a la espera del envío de credenciales</li>
+              <li>Se podrá enviar el email de activación en el siguiente paso</li>
+              <li>La carga de catálogo quedará habilitada después del acceso al portal</li>
             </ul>
           </div>
           <DialogFooter>

@@ -167,6 +167,36 @@ export default function DevToolsPage() {
         requiresAuth: true,
         medusaEndpoint: '/admin/sellers/:id'
       },
+      {
+        path: '/admin/suppliers/invitations',
+        method: 'POST',
+        module: 'suppliers',
+        description: 'Invitar proveedor al flujo de onboarding (frontend mock, contrato pendiente)',
+        usesRealAPI: false,
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/suppliers/invitations'
+      },
+      {
+        path: '/supplier/register',
+        method: 'POST',
+        module: 'suppliers',
+        description: 'Autorregistro público del proveedor sin password inicial; crea solicitud pending_approval',
+        usesRealAPI: false,
+        status: 'untested',
+        requiresAuth: false,
+        medusaEndpoint: '/supplier/register'
+      },
+      {
+        path: '/admin/suppliers/:id/status',
+        method: 'PATCH',
+        module: 'suppliers',
+        description: 'Acción de workflow para aprobar/rechazar onboarding de proveedor y mover onboarding_status',
+        usesRealAPI: false,
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/suppliers/:id/status'
+      },
       
       // ========================================================================
       // FRANCHISEES MODULE (Medusa Customers) - RBAC ISSUE

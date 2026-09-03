@@ -35,6 +35,24 @@ export interface User {
 // Supplier types
 export type SupplierStatus = 'pending' | 'active' | 'rejected' | 'suspended'
 
+export type SupplierOnboardingStatus =
+  | 'pending_approval'
+  | 'approved_pending_credentials'
+  | 'credentials_sent'
+  | 'active'
+  | 'rejected'
+
+export interface SupplierMetadata {
+  onboarding_status?: SupplierOnboardingStatus
+  approval_notes?: string
+  credentials_sent_at?: string
+  odoo_sync_status?: 'pending' | 'synced' | 'failed'
+  invited_name?: string
+  invited_email?: string
+  reviewed_by?: string
+  reviewed_at?: string
+}
+
 export interface Supplier {
   id: string
   userId: string
@@ -68,6 +86,7 @@ export interface Supplier {
   approvedBy?: string
   approvedAt?: Date | string
   rejectionReason?: string
+  metadata?: SupplierMetadata
   
   createdAt: string
   updatedAt: string
@@ -93,10 +112,45 @@ export interface SupplierRegistrationForm {
   contactPosition: string
   contactEmail: string
   contactPhone: string
-  
-  // Página 3
-  productsCsv?: File
-  imagesZip?: File
+}
+
+export interface SupplierInvitation {
+  id: string
+  name: string
+  email: string
+  registrationUrl: string
+  status: 'pending' | 'accepted' | 'expired'
+  createdAt: string
+}
+
+export interface SupplierInvitationPrefill {
+  name?: string
+  email?: string
+}
+
+export interface RegisterSupplierRequest extends SupplierRegistrationForm {}
+
+export interface RegisterSupplierResponse {
+  supplier: Supplier
+}
+
+export interface InviteSupplierRequest {
+  name: string
+  email: string
+}
+
+export interface InviteSupplierResponse {
+  invitation: SupplierInvitation
+}
+
+export interface ListSuppliersResponse {
+  suppliers: Supplier[]
+  count: number
+}
+
+export interface UpdateSupplierStatusRequest {
+  status: SupplierStatus
+  approvalNotes?: string
 }
 
 export interface ProductFromCSV {
