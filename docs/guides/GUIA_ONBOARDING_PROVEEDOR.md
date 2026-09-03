@@ -118,6 +118,8 @@ Eso significa que:
 
 En esa pantalla también puedes ver que el estado queda pendiente de revisión.
 
+Además, verás opciones para volver al inicio o ir a la pantalla de acceso cuando el equipo te indique que tu cuenta ya está preparada.
+
 ## Qué pasa después
 
 Después de enviar tu solicitud:

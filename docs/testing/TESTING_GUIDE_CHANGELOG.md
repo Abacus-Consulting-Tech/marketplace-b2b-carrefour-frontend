@@ -520,33 +520,21 @@ Authorization: Bearer eyJhbGc...
 - ✅ Cannot proceed without valid data
 - ✅ Advances to page 3 on success
 
-**Steps - Page 3: Productos**
+**Steps - Page 3: Revisión**
 1. Verify step indicator shows "Paso 3 de 3"
-2. Upload CSV file:
-   - Drag & drop or click to upload
-   - File: Test CSV with product structure
-   - Max size: 5MB
-   - Format: `.csv` or `.xlsx`
-3. Verify CSV structure shown:
-   ```
-   PROVEEDOR,IMAGEN,NOMBRE,DESCRIPCIÓN,CARACTERISTICAS,COSTE UNITARIO,PCB,IMPORTE,IVA,PLAZO ENTREGA
-   ```
-4. Upload ZIP file:
-   - Drag & drop or click to upload
-   - File: ZIP with PNG images
-   - Max size: 50MB
-   - Format: `.zip`
-5. Verify both files show green checkmark when uploaded
+2. Review the legal/company summary
+3. Review the contact person summary
+4. Click "Anterior" and confirm you can return to page 2 with data preserved
+5. Return again to page 3
 6. Click "Enviar Solicitud"
 
 **Expected Result - Page 3:**
 - ✅ "Anterior" button returns to page 2 (data preserved)
-- ✅ CSV validation: type (.csv/.xlsx) and size (max 5MB)
-- ✅ ZIP validation: type (.zip) and size (max 50MB)
-- ✅ Both files required to enable submit button
-- ✅ File preview shows name and size
+- ✅ Summary of company and contact data displayed
+- ✅ Informational message explains that approval happens before portal access
+- ✅ Informational message explains that catalog/image upload comes after approval
 - ✅ Success message after submission
-- ✅ Note: "Pendiente de integración con API" (temporary)
+- ✅ Request remains in pending review status
 
 ---
 
@@ -569,16 +557,6 @@ Authorization: Bearer eyJhbGc...
 - Input: `notanemail`
 - Expected: ❌ "Email inválido"
 
-**Test File Size Limits:**
-- CSV > 5MB: ❌ "El archivo es demasiado grande. Máximo 5MB."
-- ZIP > 50MB: ❌ "El archivo es demasiado grande. Máximo 50MB."
-
-**Test Wrong File Types:**
-- Upload `.txt` as CSV: ❌ "Formato no válido. Solo se aceptan archivos CSV o XLSX."
-- Upload `.rar` as ZIP: ❌ "Formato no válido. Solo se aceptan archivos ZIP."
-
----
-
 #### Test Case: Form Persistence
 **Steps:**
 1. Fill page 1 completely
@@ -599,7 +577,7 @@ Authorization: Bearer eyJhbGc...
 - ✅ Returns to last page (step indicator correct)
 - ✅ All fields repopulated
 
-**Note:** Files (CSV/ZIP) are NOT persisted (too large for localStorage)
+**Note:** The request data is persisted in localStorage during the mock flow.
 
 ---
 
@@ -626,7 +604,7 @@ Revisa y aprueba las solicitudes de registro de nuevos proveedores
 [Card] Rechazados: 0    [XCircle icon]
 ```
 
-**Expected Supplier Card:**
+**Expected Pending Supplier Card:**
 ```
 🏢 Infoqus Aliado Empresarial    [Badge: Pendiente]
 Infoqus Aliado Empresarial, S.L. · NIF/CIF: B12345678
@@ -639,15 +617,12 @@ Calle Mayor 123, 4º B, Madrid (28001), España
 María García López · Directora Comercial
 maria.garcia@test-supplier.com · +34 600123456
 
-[Download CSV]  [Download ZIP]
-
 [Aprobar]  [Rechazar]
 ```
 
 **Verification:**
 - ✅ All supplier data displayed correctly
-- ✅ Company info, contact person, and files shown
-- ✅ CSV and ZIP download links functional
+- ✅ Company info and contact person shown
 - ✅ Status badge shows "Pendiente" (yellow)
 - ✅ Action buttons visible
 
@@ -664,10 +639,9 @@ Aprobar Proveedor
 ¿Confirmas que quieres aprobar a Infoqus Aliado Empresarial?
 
 Al aprobar este proveedor:
-• Se procesará el CSV y se crearán los productos en el catálogo
-• Las imágenes se subirán al storage
-• El proveedor recibirá un email de confirmación
-• Podrá acceder al portal del proveedor
+• El proveedor quedará aprobado pendiente del envío de credenciales
+• Se podrá enviar el email de activación en el siguiente paso
+• La carga de catálogo quedará habilitada después del acceso al portal
 
 [Cancelar]  [Confirmar Aprobación]
 ```
@@ -677,16 +651,15 @@ Al aprobar este proveedor:
 **Expected Result:**
 - ✅ Dialog shows approval checklist
 - ✅ Green confirmation button
-- ✅ Alert: "Proveedor aprobado. Pendiente de integración con API."
 - ✅ Dialog closes
 - ✅ Supplier status changes to 'active'
-- ✅ Card moves to "Activos" section
+- ✅ Supplier leaves the pending queue
+- ✅ Supplier appears in the full-width admin directory
 
 **Note:** Full backend integration pending:
-- CSV parsing and product creation
-- Image upload to Medusa Storage
-- Email notification
-- User account activation
+- Public register endpoint
+- Approval workflow endpoint
+- Email notification / credential activation
 
 ---
 
@@ -716,80 +689,43 @@ Motivo del Rechazo *
 
 **Expected Result:**
 - ✅ Rejection reason required
-- ✅ Alert: "Proveedor rechazado. Pendiente de integración con API."
 - ✅ Dialog closes
 - ✅ Supplier status changes to 'rejected'
-- ✅ Card moves to "Rechazados" section
+- ✅ Supplier leaves the pending queue
+- ✅ Supplier remains visible in the full-width admin directory filtered as rejected
 
 ---
 
-### 4.3 CSV Validation Testing
+### 4.3 Admin Directory Testing
 
-#### Test Case: Parse Valid CSV
-**Test Data:**
-```csv
-PROVEEDOR,IMAGEN,NOMBRE,DESCRIPCIÓN,CARACTERISTICAS,COSTE UNITARIO,PCB,IMPORTE,IVA,PLAZO ENTREGA
-Test Supplier,producto-001.png,Arroz Integral 5kg,Arroz ecológico,Origen: España,12.50,12,150.00,10,2-3 días
-Test Supplier,producto-002.png,Aceite Oliva 1L,Aceite virgen extra,AOVE Primera presión,8.50,6,51.00,10,24 horas
-```
+#### Test Case: Search and Filter in Supplier Directory
+**Steps:**
+1. Approve at least 2 suppliers and reject at least 1
+2. Go to `/admin/suppliers`
+3. Scroll to "Directorio de Proveedores"
+4. Search by company name, CIF, and contact email
+5. Filter by `Activos`
+6. Filter by `Rechazados`
 
-**Expected Parsing:**
-```javascript
-[
-  {
-    proveedor: "Test Supplier",
-    imagen: "producto-001.png",
-    nombre: "Arroz Integral 5kg",
-    descripcion: "Arroz ecológico",
-    caracteristicas: "Origen: España",
-    costeUnitario: 12.50,
-    pcb: 12,
-    importe: 150.00,
-    iva: 10,
-    plazoEntrega: "2-3 días"
-  },
-  // ...
-]
-```
+**Expected Result:**
+- ✅ The table occupies full width below the pending queue
+- ✅ Search filters by company, legal name, CIF, supplier email, and contact person
+- ✅ Status filter limits rows correctly
+- ✅ Pending suppliers do not appear in this directory
 
-**Verification:**
-- ✅ CSV header row skipped
-- ✅ Comma-separated values parsed correctly
-- ✅ Quoted values with commas handled
-- ✅ Numbers converted to float/int
-- ✅ 10 columns per row
+#### Test Case: Row Actions
+**Steps:**
+1. In the supplier directory, click `Ver`
+2. Confirm the detail page opens with company and contact data
+3. Click `Editar`
+4. Modify one field and save
+5. Return to the directory and confirm the updated value appears
+6. Click `Eliminar` on a test supplier and confirm the dialog
 
----
-
-#### Test Case: CSV Validation Errors
-**Test Missing Required Fields:**
-```csv
-PROVEEDOR,IMAGEN,NOMBRE,DESCRIPCIÓN,CARACTERISTICAS,COSTE UNITARIO,PCB,IMPORTE,IVA,PLAZO ENTREGA
-Test Supplier,,Producto Sin Imagen,Descripción,Características,10.00,1,10.00,10,1 día
-```
-
-**Expected Error:**
-- ❌ "Línea 2: El nombre de la imagen es obligatorio"
-
-**Test Invalid Image Format:**
-```csv
-PROVEEDOR,IMAGEN,NOMBRE,DESCRIPCIÓN,CARACTERISTICAS,COSTE UNITARIO,PCB,IMPORTE,IVA,PLAZO ENTREGA
-Test Supplier,producto.jpg,Producto con JPG,Descripción,Características,10.00,1,10.00,10,1 día
-```
-
-**Expected Error:**
-- ❌ "Línea 2: La imagen debe ser un archivo PNG (producto.jpg)"
-
-**Test Invalid Numeric Values:**
-```csv
-PROVEEDOR,IMAGEN,NOMBRE,DESCRIPCIÓN,CARACTERISTICAS,COSTE UNITARIO,PCB,IMPORTE,IVA,PLAZO ENTREGA
-Test Supplier,producto.png,Producto,Descripción,Características,-5.00,0,10.00,150,1 día
-```
-
-**Expected Errors:**
-- ❌ "Línea 2: El coste unitario debe ser mayor que 0"
-- ❌ "Línea 2: El PCB debe ser mayor que 0"
-- ❌ "Línea 2: El IVA debe estar entre 0 y 100"
+**Expected Result:**
+- ✅ `Ver` opens the admin detail page for that provider
+- ✅ `Editar` opens the admin edit page and persists the change in the mock store
+- ✅ `Eliminar` removes the provider after confirmation
 
 ---
 
@@ -805,8 +741,7 @@ Test Supplier,producto.png,Producto,Descripción,Características,-5.00,0,10.00,
    - Go to `/supplier/register` (no auth)
    - Complete page 1: Legal data
    - Complete page 2: Contact person
-   - Upload CSV with 5 products
-   - Upload ZIP with 5 PNG images
+   - Complete page 3: Review and submit
    - Submit registration
    - ✅ Status: `pending`
 
@@ -814,8 +749,6 @@ Test Supplier,producto.png,Producto,Descripción,Características,-5.00,0,10.00,
    - Login as admin
    - Go to `/admin/suppliers`
    - ✅ See supplier in "Pendientes" (1)
-   - Download and verify CSV structure
-   - Download and verify ZIP contents (manual)
    - Review all company and contact data
 
 3. **Approval Process**
@@ -823,20 +756,18 @@ Test Supplier,producto.png,Producto,Descripción,Características,-5.00,0,10.00,
    - Review checklist in dialog
    - Confirm approval
    - ✅ Status changes to `active`
-   - ✅ (Backend): CSV processed → Products created
-   - ✅ (Backend): Images uploaded to Medusa Storage
-   - ✅ (Backend): Email sent to supplier
+   - ✅ Supplier appears in admin directory as active
+   - ✅ (Future backend): Email sent to supplier
 
 4. **Post-Approval** (Future)
    - Supplier logs in to portal
-   - Views their products in catalog
-   - Manages orders
+   - Uploads catalog and images after approval
+   - Manages products and orders
 
 **Verification Points:**
 - ✅ No authentication required for registration
 - ✅ Form validation works at each step
 - ✅ Data persists across pages
-- ✅ Files upload successfully
 - ✅ Admin sees complete supplier information
 - ✅ Approval workflow triggers correctly
 - ✅ Status updates reflected in UI

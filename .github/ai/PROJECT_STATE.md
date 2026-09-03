@@ -1,6 +1,6 @@
 # PROJECT STATE
 
-**Updated**: 2026-09-02
+**Updated**: 2026-09-03
 **Classification**: 🟡 SEMI-STABLE (update weekly or on module status change, NOT per endpoint)
 **Syncs FROM**: `API_STATUS.md` (every Friday 4 PM)
 **Hierarchy**: See `.github/ai/DOCUMENTATION_HIERARCHY.md` for official data flow
@@ -68,7 +68,7 @@ Three user roles in separate app sections:
 |--------|---------|----------|---------|
 | **Auth** | Login, sessions | ✅ | ✅ Ready |
 | **Pricing** | Product approval, markup | ✅ | ✅ Ready |
-| **Suppliers** | Vendor management | ✅ | ✅ Ready |
+| **Suppliers** | Vendor management + onboarding review | ✅ | ✅ Ready |
 | **Products** | Catalog CRUD, variants | ✅ | 🟡 Mock |
 | **Catalog** | Marketplace browsing for franchisees | ✅ | 🟡 Mock |
 | **Openings** | Store projects, documents | ✅ | 🟡 Mock |
@@ -105,7 +105,7 @@ See `API_STATUS.md` for detailed endpoint list. Summary:
 - **Stable for current DEV UI**: `auth`, `suppliers`, `pricing` (con fallback temporal en seller catalog), `orders`, `quotes`
 - **Partial in backend but kept mock in DEV**: `franchisees` (`/admin/customers*` GET devuelve `403`)
 - **Mock in DEV**: `openings` (`/openings/projects` devuelve `404`), `products`, `catalog`, `checkout`, `categories`
-- **Source inventory snapshot**: 137 endpoints total, 76 `working`, 6 `broken`, 55 `untested`
+- **Source inventory snapshot**: 148 endpoints total, 77 `working`, 5 `broken`, 66 `untested`
 
 ---
 
@@ -142,6 +142,10 @@ See `API_STATUS.md` for detailed endpoint list. Summary:
 - **Supplier Catalog Mismatch**: `/seller/catalog-products` no devuelve datos utilizables en DEV
   - Impact: `/supplier/products` necesita fallback temporal a `/vendor/custom/products`
   - Workaround: Mantener el fallback frontend hasta alinear el backend
+
+- **Supplier Onboarding / Admin Directory (new 2026-09-03, hybrid)**: alta pública de proveedor, invitación admin, aprobación/rechazo desde cola y directorio admin con acciones Ver/Editar/Eliminar ya existen en frontend
+  - Impact: `POST /admin/suppliers/invitations`, `POST /supplier/register` y `PATCH /admin/suppliers/:id/status` siguen mock; `PATCH/DELETE /admin/sellers/:id` se consumen desde UI pero no están revalidados en DEV
+  - Workaround: flujo completo funcional en mock/localStorage; mantener `/admin/sellers*` como superficie canónica para lecturas y CRUD administrativo hasta cerrar contrato backend definitivo
 
 - **Openings Module (🟡 Mock)**: `/openings/projects` responde 404 en DEV
   - Impact: UI de openings sigue en mock para no romper navegación y detalle

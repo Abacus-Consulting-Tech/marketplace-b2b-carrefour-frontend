@@ -57,10 +57,10 @@ function SupplierRegisterContent() {
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
             <Button asChild>
-              <Link href="/admin/suppliers">Ir al listado de proveedores</Link>
+              <Link href="/">Ir al inicio</Link>
             </Button>
             <Button asChild variant="outline">
-              <Link href="/login">Volver al inicio de sesión</Link>
+              <Link href="/login">Iniciar sesión</Link>
             </Button>
           </div>
         </div>

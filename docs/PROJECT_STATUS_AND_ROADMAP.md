@@ -35,6 +35,7 @@
 - ✅ **Admin Orders** - Vista global con prioridades e incidencias
 - ✅ **Quotes** - Sistema de presupuestos con firmas digitales
 - ✅ **Supplier Products** - CRUD completo con carga masiva
+- ✅ **Supplier Onboarding** - Invitación admin, alta pública, revisión y directorio admin con búsqueda/acciones
 - ✅ **Franchisee Management** - CRUD completo
 - ✅ **Checkout** - Wizard multi-paso (15 archivos, ~3,366 líneas)
 - ✅ **Openings** - Gestión de aperturas con documentos técnicos
@@ -82,7 +83,7 @@
 |----|------------|--------|-------------|-------------|
 | M01 | Onboarding franquiciado | 🟡 60% | UI completa, falta Stripe Customer + cuota | Stripe Billing |
 | **M02** | **Suscripción anual** | **❌ 0%** | **NO IMPLEMENTADO** | **🔴 BLOQUEANTE - Stripe Billing** |
-| **M03** | **Proveedores** | **🟡 70%** | CRUD OK, falta Connect KYC | **🔴 BLOQUEANTE - Stripe Connect** |
+| **M03** | **Proveedores** | **🟡 75%** | CRUD + onboarding UI OK, falta Connect KYC y contrato backend de onboarding | **🔴 BLOQUEANTE - Stripe Connect** |
 | M04 | Catálogo | ✅ 100% | CRUD completo + aprobación | - |
 | M05 | Búsqueda | ✅ 100% | Integrado en catálogo | - |
 | M06 | Carrito B2B | ✅ 100% | Variant-aware, multi-proveedor | - |

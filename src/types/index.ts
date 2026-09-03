@@ -153,6 +153,10 @@ export interface UpdateSupplierStatusRequest {
   approvalNotes?: string
 }
 
+export interface UpdateSupplierRequest extends Partial<RegisterSupplierRequest> {
+  metadata?: Partial<SupplierMetadata>
+}
+
 export interface ProductFromCSV {
   proveedor: string
   imagen: string

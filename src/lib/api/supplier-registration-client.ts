@@ -12,6 +12,7 @@ import type {
   RegisterSupplierResponse,
   Supplier,
   SupplierInvitation,
+  UpdateSupplierRequest,
   UpdateSupplierStatusRequest,
 } from '@/types';
 
@@ -186,6 +187,68 @@ export const supplierRegistrationApi = {
       suppliers,
       count: suppliers.length,
     };
+  },
+
+  async getSupplierById(supplierId: string): Promise<{ supplier: Supplier }> {
+    if (!isMockMode) {
+      return apiRequest<{ supplier: Supplier }>(`/admin/sellers/${supplierId}`);
+    }
+
+    const supplier = getMockSuppliers().find((item) => item.id === supplierId);
+
+    if (!supplier) {
+      throw new Error('Proveedor no encontrado');
+    }
+
+    return { supplier };
+  },
+
+  async updateSupplier(
+    supplierId: string,
+    request: UpdateSupplierRequest
+  ): Promise<{ supplier: Supplier }> {
+    if (!isMockMode) {
+      return apiRequest<{ supplier: Supplier }>(`/admin/sellers/${supplierId}`, {
+        method: 'PATCH',
+        body: JSON.stringify(request),
+      });
+    }
+
+    const suppliers = getMockSuppliers();
+    const supplierIndex = suppliers.findIndex((supplier) => supplier.id === supplierId);
+
+    if (supplierIndex === -1) {
+      throw new Error('Proveedor no encontrado');
+    }
+
+    const updatedSupplier: Supplier = {
+      ...suppliers[supplierIndex],
+      ...request,
+      updatedAt: new Date().toISOString(),
+    };
+
+    suppliers[supplierIndex] = updatedSupplier;
+    persistMockSuppliers(suppliers);
+
+    return { supplier: updatedSupplier };
+  },
+
+  async deleteSupplier(supplierId: string): Promise<void> {
+    if (!isMockMode) {
+      await apiRequest<void>(`/admin/sellers/${supplierId}`, {
+        method: 'DELETE',
+      });
+      return;
+    }
+
+    const suppliers = getMockSuppliers();
+    const nextSuppliers = suppliers.filter((supplier) => supplier.id !== supplierId);
+
+    if (nextSuppliers.length === suppliers.length) {
+      throw new Error('Proveedor no encontrado');
+    }
+
+    persistMockSuppliers(nextSuppliers);
   },
 
   async updateSupplierStatus(

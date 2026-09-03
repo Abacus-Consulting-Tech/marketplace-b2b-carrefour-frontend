@@ -5,8 +5,8 @@
 **Source of Truth**: `src/app/(backoffice)/admin/dev-tools/page.tsx` (EndpointInfo array)
 **Hierarchy**: See `.github/ai/DOCUMENTATION_HIERARCHY.md` for official data flow
 **Backend**: https://marketplace-b2b-backend-dev.onrender.com
-**Total Endpoint Inventory**: 146
-**Inventory Status**: 77 working, 5 broken, 64 untested
+**Total Endpoint Inventory**: 148
+**Inventory Status**: 77 working, 5 broken, 66 untested
 **Status**: ⚠️ HYBRID DEV MODE
   - 🌐 Real en DEV: `auth`, `suppliers`, `pricing`, `orders`, `quotes`
   - 🎭 Mock en DEV: `openings`, `franchisees`, `products`, `catalog`, `checkout`, `categories`
@@ -53,11 +53,14 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 - `DELETE /auth/session` — Logout (untested)
 - **Status**: ✅ WORKING para el flujo actual de login; sesión/logout pendientes de validación explícita
 
-### Suppliers (3 endpoints)
+### Suppliers (5 seller endpoints + 3 onboarding surfaces)
 - `GET /admin/sellers` — Listado de sellers (working)
-- `GET /admin/sellers/:id` — Detalle de seller (working)
+- `GET /admin/sellers/:id` — Detalle de seller / proveedor (working)
+- `PATCH /admin/sellers/:id` — Edición administrativa del proveedor desde el directorio admin (untested)
+- `DELETE /admin/sellers/:id` — Eliminación administrativa del proveedor desde el directorio admin (untested)
 - `GET /vendor/sellers/me` — Seller actual (working)
-- **Status**: ✅ WORKING — Validado en DEV
+- Superficies nuevas de onboarding/frontend mock inventariadas: `POST /admin/suppliers/invitations`, `POST /supplier/register`, `PATCH /admin/suppliers/:id/status`
+- **Status**: ✅ WORKING para seller reads del flujo actual; onboarding público, aprobación y acciones admin adicionales siguen mock/propuestas o sin revalidación explícita en DEV
 
 ### Pricing + Excel Import (20 endpoints)
 - Cola de aprobaciones, markups, propuestas de producto y 8 endpoints de importación Excel
@@ -141,6 +144,8 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 - Checkout real bloqueado por dos gaps: `GET /store/products` devuelve `variant_id` no siempre válido para `/store/carts*`, y `POST /store/checkout/payment-intent` todavía responde con `client_secret` simulado en lugar de un PaymentIntent Stripe real
 - `/admin/orders/stats` — marcado como broken en el inventario actual
 - `/admin/franchisees/invitations`, `/franchisee/register`, `/webhooks/stripe`, `/franchisee/:id/invoices`, `/franchisee/stores*` — superficies de onboarding/autoservicio inventariadas desde frontend; **no existen en backend** o siguen sin contrato cerrado
+- `/admin/suppliers/invitations`, `/supplier/register`, `/admin/suppliers/:id/status` — onboarding de proveedor construido en frontend y validado en mock; siguen sin backend real o sin contrato cerrado
+- `PATCH /admin/sellers/:id`, `DELETE /admin/sellers/:id` — consumidos por el nuevo directorio admin de proveedores, pero no revalidados contra backend DEV en la ronda actual
 
 ---
 

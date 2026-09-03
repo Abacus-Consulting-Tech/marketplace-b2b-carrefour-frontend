@@ -115,9 +115,19 @@ Esperamos recibir algo así:
 
 Un admin revisa la solicitud, valida los datos y decide si aprobar o rechazar.
 
+En frontend ya existe esta estructura:
+
+- **Solicitudes pendientes** arriba, como cards con acciones rápidas de aprobación/rechazo.
+- **Directorio de proveedores** debajo, en tabla completa con búsqueda y filtro por estado.
+- Cada fila del directorio ya expone acciones **Ver**, **Editar** y **Eliminar**.
+
 **Qué llamamos para leer en admin:**
 - `GET /admin/sellers?q=&limit=20&offset=0` — para listar entidades proveedor.
 - `GET /admin/sellers/:id` — para el detalle del proveedor.
+
+**Qué llamamos para administración posterior a la revisión:**
+- `PATCH /admin/sellers/:id` — edición administrativa de datos legales/comerciales/contacto desde el directorio.
+- `DELETE /admin/sellers/:id` — eliminación administrativa del proveedor desde el directorio.
 
 **Qué llamamos para las acciones de workflow:**
 - `PATCH /admin/suppliers/:id/status` — enviamos por ejemplo:
@@ -219,6 +229,8 @@ Una vez aprobado y con acceso activo, el proveedor entra en su portal y ya puede
 | Registro público proveedor | `POST /supplier/register` | ❌ No |
 | Listar proveedores en admin | `GET /admin/sellers` | ⚠️ Sí, pero hay que confirmar si cubre también la cola de onboarding |
 | Detalle de proveedor | `GET /admin/sellers/:id` | ⚠️ Sí, pero hay que confirmar si expone la metadata de onboarding necesaria |
+| Editar proveedor desde admin | `PATCH /admin/sellers/:id` | ⚠️ Posiblemente sí, pero falta validación explícita del contrato final |
+| Eliminar proveedor desde admin | `DELETE /admin/sellers/:id` | ⚠️ Posiblemente sí, pero falta validación explícita del contrato final |
 | Aprobar / rechazar onboarding | `PATCH /admin/suppliers/:id/status` | ❌ No |
 | Activación de credenciales | `email + activation/reset flow` | ❌ No cerrado todavía |
 | Login proveedor tras activación | `POST /auth/member/emailpass` | ✅ Sí |
@@ -229,7 +241,7 @@ Una vez aprobado y con acceso activo, el proveedor entra en su portal y ya puede
 
 ## Qué ya está construido vs. qué es nuevo
 
-- ✅ Ya existe en frontend: página pública de registro de proveedor, formularios de datos legales y contacto, store multi-paso, panel admin de revisión, patrón de login proveedor con `member`.
+- ✅ Ya existe en frontend: página pública de registro de proveedor, formularios de datos legales y contacto, store multi-paso, panel admin de revisión, directorio admin full-width con búsqueda/filtro y acciones por fila, patrón de login proveedor con `member`.
 - 🆕 Ya está construido en frontend pero sin backend real: invitación de proveedor, autorregistro sin password inicial, revisión admin con approve/reject, success state pendiente de revisión, metadata de onboarding.
 - 🔄 Se ha movido fuera del onboarding inicial: carga de CSV/XLSX e imágenes ZIP. Esa parte ahora pertenece al flujo operativo posterior al alta.
 
