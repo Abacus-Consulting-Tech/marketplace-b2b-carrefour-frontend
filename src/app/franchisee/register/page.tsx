@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { CheckCircle2 } from 'lucide-react';
 import { useFranchiseeRegistration } from '@/lib/store/franchisee-registration';
@@ -35,7 +35,7 @@ const steps = [
   },
 ];
 
-export default function FranchiseeRegisterPage() {
+function FranchiseeRegisterContent() {
   const searchParams = useSearchParams();
   const { currentStep, status, result, applyInvitationPrefill } = useFranchiseeRegistration();
 
@@ -107,5 +107,28 @@ export default function FranchiseeRegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function FranchiseeRegisterFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">
+      <div className="container mx-auto max-w-4xl px-4">
+        <div className="mb-8 text-center">
+          <h1 className="text-3xl font-bold tracking-tight">Registro de Franquiciado</h1>
+          <p className="mt-2 text-muted-foreground">
+            Cargando formulario de alta...
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function FranchiseeRegisterPage() {
+  return (
+    <Suspense fallback={<FranchiseeRegisterFallback />}>
+      <FranchiseeRegisterContent />
+    </Suspense>
   );
 }
