@@ -427,58 +427,51 @@ export const calculateShippingExtension = {
 }
 ```
 
-### 3. Process Payment Extension
+### 4. Crear Payment Intent (Stripe)
 ```typescript
-// Integración con Stripe
+POST /store/checkout/payment-intent
 export const processPaymentExtension = {
+
+Body:
+{
+  "cart_id": "cart_xxx"
+}
   name: "process-stripe-payment",
   when: "before",
   hook: "order.complete",
-  async handler(checkout, context) {
-    const { payment_intent_id } = context;
-    
-    // Confirmar pago en Stripe
-    const payment = await stripe.paymentIntents.confirm(payment_intent_id);
-    
-    if (payment.status !== 'succeeded') {
-      throw new Error('Payment failed');
+  "client_secret": "pi_xxx_secret_yyy",
+  "payment_intent_id": "pi_xxx",
+  "amount": 15625,
+  "currency_code": "eur"
     }
     
+
+Nota: a fecha actual el `client_secret` está simulado. Backend debe reemplazarlo por uno real antes de montar `PaymentElement` con cobro end-to-end.
     return { payment_id: payment.id };
   }
 }
-```
+POST /store/checkout/complete
 
 ## Mock Data
 - Carrito de prueba con 3-5 productos
 - 2-3 direcciones guardadas por franquiciado
 - Opciones de envío estándar y express
-- Stripe en modo test
-- Códigos de descuento de prueba
+  "cart_id": "cart_xxx",
+  "payment_intent_id": "pi_xxx"
 
 ## Integración con Otros Módulos
 
 ### Con Cart (Carrito):
-- Checkout usa cart_id como base
-- Validar stock antes de proceder
-- Actualizar cantidades si necesario
-
-### Con Auth (Usuario):
-- Franquiciado debe estar autenticado
-- Cargar direcciones guardadas
-- Asociar pedido a customer_id
-
-### Con Orders (Pedidos):
-- Al completar checkout → crear Order
-- Generar display_id único
-- Crear Payment record
-- Crear Fulfillment record
-
-### Con Stripe:
-- Crear Payment Intent
-- Confirmar pago
+  "success": true,
+  "order_id": "order_xxx",
+  "status": "pending_payment",
+  "total": 15625,
+  "payment_intent_id": "pi_xxx",
+  "message": "Order created. Payment processing."
 - Webhook para actualizaciones
 - Manejo de errores de pago
+
+La confirmación definitiva del pago debe venir solo de backend tras `POST /webhooks/stripe`.
 
 ## Notas para Backend
 1. **Validaciones**:

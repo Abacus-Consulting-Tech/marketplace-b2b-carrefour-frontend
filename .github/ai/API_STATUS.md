@@ -1,12 +1,12 @@
 # API STATUS
 
-**Updated**: 2026-09-02 (from dev-tools)
+**Updated**: 2026-09-03 (from dev-tools)
 **Classification**: 🟢 VOLATILE (update every 3-5 endpoints or weekly)
 **Source of Truth**: `src/app/(backoffice)/admin/dev-tools/page.tsx` (EndpointInfo array)
 **Hierarchy**: See `.github/ai/DOCUMENTATION_HIERARCHY.md` for official data flow
 **Backend**: https://marketplace-b2b-backend-dev.onrender.com
-**Total Endpoint Inventory**: 143
-**Inventory Status**: 76 working, 6 broken, 61 untested
+**Total Endpoint Inventory**: 146
+**Inventory Status**: 77 working, 5 broken, 64 untested
 **Status**: ⚠️ HYBRID DEV MODE
   - 🌐 Real en DEV: `auth`, `suppliers`, `pricing`, `orders`, `quotes`
   - 🎭 Mock en DEV: `openings`, `franchisees`, `products`, `catalog`, `checkout`, `categories`
@@ -81,17 +81,19 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 
 ## Kept In Mock In DEV
 
-### Franchisees (16 endpoints)
+### Franchisees (17 endpoints)
 - `GET /admin/customers` — **BROKEN** (403 RBAC)
 - `GET /admin/customers/:id` — **BROKEN** (403 RBAC)
 - 8 endpoints adicionales siguen untested
 - `GET /store/customers/me` está inventariado pero no revalida el módulo completo
 - **Nuevo 2026-09-02 (self-service, propuesto — no construido en backend)**:
   - `POST /admin/franchisees/invitations` — Invitar franquiciado (nombre + email)
-  - `POST /franchisee/register` — Autoregistro público (crea `status: pending_approval`, incluye pago Stripe)
+  - `POST /franchisee/register` — Autoregistro público (crea `status: pending_approval`, incluye pago Stripe y espera devolver `subscription_status`/`current_period_end`)
+  - `POST /webhooks/stripe` — Webhook backend para altas, renovaciones y fallos de suscripción
+  - `GET /franchisee/:id/invoices` — Lectura de facturas del franquiciado para el perfil
   - `GET /franchisee/stores`, `POST /franchisee/stores`, `DELETE /franchisee/stores/:id` — Gestión de tiendas del franquiciado (mock, persistido en localStorage, sin endpoint real)
-  - `PATCH /admin/franchisees/:id/status` ya inventariado (ver módulo `franchisee-management` más abajo) ahora también usado por la UI de aprobación
-- **Status**: ⚠️ PARTIAL EN BACKEND, MOCK EN DEV — self-service y stores 100% mock, sin contrato backend acordado (ver open questions en `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md`)
+  - `PATCH /admin/franchisees/:id/status` ya inventariado (ver módulo `franchisee-management` más abajo) ahora también usado por la UI de aprobación y debe bloquear activación sin `subscription_status=active`
+- **Status**: ⚠️ PARTIAL EN BACKEND, MOCK EN DEV — self-service, facturas y stores siguen mock; contrato backend todavía por cerrar (ver `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md`)
 
 ### Openings (24 endpoints)
 - `GET /admin/openings/projects` — **BROKEN** (404 en DEV)
@@ -105,11 +107,12 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 - Aunque algunas rutas reales responden, la UI de catálogo/producto se mantiene en mock hasta que haya datos válidos
 - **Status**: 🎭 MOCK EN DEV
 
-### Cart + Checkout + Store (22 endpoints)
+### Cart + Checkout + Store (24 endpoints)
 - `store`: 1 endpoint (`/store/regions`) todavía untested
 - `cart`: 6 endpoints untested
-- `checkout`: 15 endpoints untested
-- El checkout real sigue bloqueado porque Store API no devuelve catálogo utilizable para completar carrito y pago de extremo a extremo
+- `checkout`: 17 endpoints untested, incluyendo `POST /store/checkout/payment-intent` y `POST /store/checkout/complete`
+- Los dos endpoints custom de checkout ya están documentados, pero `payment-intent` sigue devolviendo `client_secret` simulado y `complete` deja el pedido en `pending_payment` hasta webhook Stripe
+- El checkout real sigue bloqueado porque Store API no devuelve catálogo utilizable de forma consistente y `GET /store/products` entrega `variant_id` que no siempre sirve para el carrito real
 - **Status**: 🎭 MOCK EN DEV
 
 ### Categories
@@ -135,9 +138,9 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 - `/admin/openings/projects` — `404` en DEV; `openings` sigue en mock
 - `/seller/catalog-products` — Mismatch con backend: el seller catalog llega vacío mientras `/vendor/custom/products` sí devuelve datos
 - `/store/products` — Responde sin catálogo utilizable en DEV; `catalog` y `products` siguen en mock para la UI franchisee
-- Checkout real bloqueado por ausencia de datos utilizables en Store API para validar carrito y `offer_id`
+- Checkout real bloqueado por dos gaps: `GET /store/products` devuelve `variant_id` no siempre válido para `/store/carts*`, y `POST /store/checkout/payment-intent` todavía responde con `client_secret` simulado en lugar de un PaymentIntent Stripe real
 - `/admin/orders/stats` — marcado como broken en el inventario actual
-- `/admin/franchisees/invitations`, `/franchisee/register`, `/franchisee/stores*` — endpoints propuestos por frontend (2026-09-02), **no existen en backend**; 100% mock, sin acuerdo de contrato todavía
+- `/admin/franchisees/invitations`, `/franchisee/register`, `/webhooks/stripe`, `/franchisee/:id/invoices`, `/franchisee/stores*` — superficies de onboarding/autoservicio inventariadas desde frontend; **no existen en backend** o siguen sin contrato cerrado
 
 ---
 

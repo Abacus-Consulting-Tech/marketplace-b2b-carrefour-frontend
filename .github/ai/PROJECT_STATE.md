@@ -135,9 +135,9 @@ See `API_STATUS.md` for detailed endpoint list. Summary:
   - Create/Update/Delete operations work normally
 
 - **Franchisee Self-Service (new 2026-09-02, still 100% mock)**: Admin "Invitar Franquiciado" (`/admin/franchisees/new`), public self-registration (`/franchisee/register`, 4-step form incl. Stripe payment step), admin approval action, and franchisee-owned store management (`/marketplace/profile`) are all built frontend-only
-  - Impact: No backend contract exists yet for `POST /franchisee/register`, `POST /admin/franchisees/invitations`, or franchisee stores
+  - Impact: No backend contract exists yet for `POST /franchisee/register`, `POST /admin/franchisees/invitations`, `POST /webhooks/stripe`, `GET /franchisee/:id/invoices`, or franchisee stores
   - Workaround: Fully mock (registration mock pushes into the same in-memory `mockFranchisees` array the admin UI reads, stores persisted in localStorage)
-  - Blocking questions documented in `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md` (payment timing, invite requirement, `/admin/franchisees*` vs `/admin/customers*` contract, Odoo invoicing)
+  - Blocking questions documented in `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md` (`/admin/franchisees*` vs `/admin/customers*` contract, invoices path, credential activation side effect, Odoo/Stripe handoff)
 
 - **Supplier Catalog Mismatch**: `/seller/catalog-products` no devuelve datos utilizables en DEV
   - Impact: `/supplier/products` necesita fallback temporal a `/vendor/custom/products`
@@ -149,6 +149,8 @@ See `API_STATUS.md` for detailed endpoint list. Summary:
 - **RBAC Permissions**: `/admin/customers` (GET) broken on Medusa backend
   
 - **Checkout / Store Catalog**: Store API no devuelve hoy catálogo utilizable para validar carrito y checkout real
+  - Impact: `GET /store/products` devuelve `variant_id` no siempre válido para `/store/carts*`, y el contrato custom `POST /store/checkout/payment-intent` todavía responde con `client_secret` simulado
+  - Workaround: Mantener checkout mock; cuando se pruebe la UI real, usar el flujo OOTB de `/store/carts*` más `POST /store/checkout/payment-intent` y confirmar el estado final solo desde backend tras webhook Stripe
 
 - **Stripe**: JS integrated but PaymentIntents flow not fully tested
 

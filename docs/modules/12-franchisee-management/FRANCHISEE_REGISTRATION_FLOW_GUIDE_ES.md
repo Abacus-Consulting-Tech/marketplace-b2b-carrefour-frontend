@@ -1,5 +1,8 @@
 # Cómo se da de alta un nuevo franquiciado en la plataforma 🏪
 
+**Versión**: v1.1
+**Última actualización**: 2026-09-03
+
 Guía para el equipo de backend, escrita desde el punto de vista de frontend: qué pantallas existen, qué le pedimos a la API en cada paso, y qué esperamos que nos devuelva. Sin detalles internos de implementación, solo el contrato que necesitamos.
 
 ---
@@ -93,11 +96,16 @@ El franquiciado abre el enlace y rellena el formulario. Para franquiciados, hoy 
 
 ### 3. El pago
 
-El franquiciado paga la cuota de alta con tarjeta antes de que la solicitud pueda ser aprobada.
+El franquiciado debe completar el paso de pago con tarjeta antes de que la solicitud pueda ser aprobada.
 
 **Qué llama frontend:**
-- Frontend llama directamente a Stripe en el navegador para validar la tarjeta y obtener un `payment_method_id`.
+- Frontend llama directamente a Stripe en el navegador mediante Stripe Elements para validar la tarjeta y obtener un `payment_method_id`.
 - Esa referencia viaja dentro de `POST /franchisee/register`.
+
+**Estado real hoy en frontend:**
+- ✅ El formulario de pago y la tokenización de tarjeta con `stripe.createPaymentMethod(...)` ya están implementados.
+- ❌ El cobro real de la cuota y la creación real de la suscripción todavía no existen en backend.
+- ❌ `POST /franchisee/register` sigue mockeado, así que hoy no hay alta real ni confirmación real de pago.
 
 **Qué necesitamos en backend aunque no lo llame el frontend directamente:**
 - `POST /webhooks/stripe` — para recibir eventos como `customer.subscription.created`, `invoice.paid`, `invoice.payment_failed` y `customer.subscription.deleted`, y actualizar:
@@ -106,7 +114,9 @@ El franquiciado paga la cuota de alta con tarjeta antes de que la solicitud pued
   - `stripe_subscription_id`
   - `current_period_end`
 
-> ✅ Decidido: el pago se cobra en el momento del registro, antes de que el admin vea la solicitud.
+> ✅ Decidido a nivel de contrato: el pago debe cobrarse en el momento del registro, antes de que el admin vea la solicitud.
+>
+> ⚠️ Estado actual de implementación: ese cobro real todavía no está resuelto end-to-end; hoy solo capturamos el `payment_method_id` en frontend y simulamos el alta en modo mock.
 
 ### 4. La factura (Odoo)
 
@@ -204,7 +214,7 @@ Un franquiciado aprobado puede tener varias tiendas y quiere gestionarlas desde 
 |---|---|---|
 | Invitar franquiciado | `POST /admin/franchisees/invitations` | ❌ No |
 | Registro público | `POST /franchisee/register` | ❌ No |
-| Pago | *(directo a Stripe, sin pasar por vuestra API)* | — |
+| Pago | *(frontend ya tokeniza tarjeta con Stripe; falta cobro real backend)* | ⚠️ Parcial |
 | Webhook Stripe suscripciones | `POST /webhooks/stripe` | ❌ No |
 | Facturas del franquiciado | `GET /franchisee/:id/invoices` | ❌ No |
 | Listar franquiciados | `GET /admin/customers` | ⚠️ Existe pero sin confirmar si es el contrato correcto |
@@ -219,7 +229,8 @@ Un franquiciado aprobado puede tener varias tiendas y quiere gestionarlas desde 
 ## 🚦 Qué ya está construido vs. qué es nuevo
 
 - ✅ Ya existe en frontend: pantallas de gestión de franquiciados, patrón de pago con tarjeta, formulario multi-paso.
-- 🆕 Ya está construido en frontend pero sin backend real: invitación por email, autorregistro con pago, aprobación condicionada a suscripción, sección de facturas y autoservicio de tiendas.
+- 🆕 Ya está construido en frontend pero sin backend real: invitación por email, autorregistro con Stripe Elements, aprobación condicionada a suscripción, sección de facturas y autoservicio de tiendas.
+- ⚠️ En el onboarding de pago, lo único real hoy es la obtención del `payment_method_id`; el cobro/suscripción real sigue pendiente de backend.
 
 ---
 
@@ -230,6 +241,7 @@ Un franquiciado aprobado puede tener varias tiendas y quiere gestionarlas desde 
 3. **¿Confirmamos `GET /franchisee/:id/invoices`?** Si queréis otro path, necesitamos cerrarlo ya porque la UI ya existe.
 4. **¿Existirá `/franchisee/stores*`?** O preferís que las tiendas se gestionen siempre desde admin y el franquiciado solo las vea.
 5. **¿La activación de credenciales sale como efecto de `PATCH /admin/franchisees/:id/status`?** Si preferís un endpoint separado para eso, hay que acordarlo antes de construir esa UI.
+6. **¿Cómo queréis materializar el cobro real de onboarding?** Ahora mismo frontend ya puede enviar `stripePaymentMethodId`, pero falta decidir e implementar en backend la creación real de cliente/suscripción/cobro antes de activar el flujo end-to-end.
 
 ---
 

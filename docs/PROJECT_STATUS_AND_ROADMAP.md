@@ -1046,29 +1046,33 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 
 **Lo que se hizo:**
 - Flujo completo de autoregistro público en `/franchisee/register`: 4 pasos (datos personales, empresa, financieros, pago con tarjeta vía Stripe Elements) usando Zustand + react-hook-form + zod, mismo patrón que el registro de proveedores
-- Pago con tarjeta real vía `stripe.createPaymentMethod` (validación real de Stripe en modo test); el cargo real de la cuota de alta sigue pendiente de backend
+- Pago con tarjeta real vía `stripe.createPaymentMethod` (validación real de Stripe en modo test) y expectativa de alta inmediata de suscripción antes de la aprobación admin
 - Acción ligera "Invitar Franquiciado" en `/admin/franchisees/new` (solo nombre + email), genera un enlace a `/franchisee/register` y simula el envío de email
 - Nuevo estado `pending_approval` en `FranchiseeMetadata.status`, alineado con el enum real confirmado por backend (`pending_approval | active | suspended | inactive`)
-- Botón "Aprobar Franquiciado" y pestaña "Estado y Notas" en el detalle de franquiciado (`/admin/franchisees/:id`), incluyendo simulación del evento asíncrono de sincronización con Odoo (partner) tras la aprobación
+- Metadatos de onboarding/suscripción en mock (`subscription_status`, `stripe_customer_id`, `stripe_subscription_id`, `current_period_end`, `onboarding_status`) para poder probar la aprobación realista
+- Botón "Aprobar Franquiciado" y pestaña "Estado y Notas" en el detalle de franquiciado (`/admin/franchisees/:id`), bloqueando la activación si `subscription_status !== active` e incluyendo la simulación del evento asíncrono de sincronización con Odoo (partner) tras la aprobación
 - Filtro/tarjeta "Pendientes de Aprobación" en la lista de franquiciados
 - Gestión de tiendas del franquiciado: añadir/editar/eliminar tiendas desde `/admin/franchisees/:id` (dialog) y desde `/marketplace/profile` (self-service, persistido en localStorage)
+- Sección "Mis Facturas" en `/marketplace/profile`, hoy mockeada a la espera del endpoint backend
+- Persistencia compartida del mock de franquiciados en localStorage para que el alta pública y la vista admin lean el mismo estado en QA
 - 3 franquiciados `pending_approval` añadidos al mock data para poder probar el flujo de aprobación sin tener que autoregistrarse primero
 
 **Archivos nuevos/modificados principales:**
 - `src/app/franchisee/register/page.tsx` + `src/components/franchisee/{PersonalDataForm,CompanyDataForm,FinancialDataForm,PaymentForm}.tsx`
-- `src/lib/store/franchisee-registration.ts`, `src/lib/api/franchisee-registration-client.ts`, `src/lib/api/franchisee-stores-client.ts`
+- `src/lib/store/franchisee-registration.ts`, `src/lib/api/franchisee-registration-client.ts`, `src/lib/api/franchisee-stores-client.ts`, `src/lib/api/franchisee-invoices-client.ts`
 - `src/components/admin/InviteFranchiseeForm.tsx`
 - `src/lib/api/franchisees-client.ts` (+`inviteFranchisee`, `+updateFranchiseeStatus`), `src/lib/api/franchisees-mock.ts` (+3 pending)
 - `src/components/admin/{FranchiseesList,FranchiseeDetail,FranchiseeStatusBadge}.tsx`
-- `src/app/(marketplace)/marketplace/profile/page.tsx` (sección "Mis Tiendas")
+- `src/app/(marketplace)/marketplace/profile/page.tsx` (secciones "Mis Tiendas" y "Mis Facturas")
 
 **Documentación creada:**
-- `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE.md` (EN) y `FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md` (ES) — guía simple con diagramas para backend, incluye sección de "Preguntas abiertas" tras revisión conjunta con backend
+- `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE.md` (EN) y `FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md` (ES) — guía de contrato frontend-backend con endpoints, payloads y preguntas abiertas
 
 **Pendiente / bloqueado por backend** (ver guía de flujo para detalle):
-- ❌ `POST /franchisee/register`, `POST /admin/franchisees/invitations`, `GET/POST/DELETE /franchisee/stores*` — no existen en backend, 100% mock
-- ❓ Orden pago-antes-o-después-de-aprobación sin decidir
+- ❌ `POST /franchisee/register`, `POST /admin/franchisees/invitations`, `POST /webhooks/stripe`, `GET /franchisee/:id/invoices`, `GET/POST/DELETE /franchisee/stores*` — no existen en backend, 100% mock o sin contrato cerrado
+- ✅ Pago decidido antes de la aprobación admin; sigue pendiente el backend real de Stripe Billing/webhooks
 - ❓ Contrato real: `/admin/franchisees*` vs `/admin/customers*` sin confirmar con frontend
+- ❓ Activación de credenciales: falta decidir si sale como efecto de `PATCH /admin/franchisees/:id/status` o si necesita endpoint separado
 - ❌ Facturación real vía Odoo (solo la sincronización de contacto está confirmada, no la factura)
 
 **Tiempo invertido**: ~1 día
@@ -1082,6 +1086,7 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 - Proceso de checkout completo multi-paso
 - Wizard con 3 pasos: Dirección → Pago → Revisión
 - Integración completa con Medusa Cart API
+- Contrato frontend definido para usar `/store/carts*` + endpoints custom `POST /store/checkout/payment-intent` y `POST /store/checkout/complete`
 - Validación exhaustiva en cada paso
 - Página de confirmación de pedido
 - Integración con sistema de pedidos
@@ -1123,6 +1128,7 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
   - Múltiples métodos: Stripe, Transferencia, Pago Diferido
   - Formulario Stripe completo con validación
   - Integración con Stripe Elements
+  - Flujo previsto con `PaymentElement` y `client_secret` emitido por backend
   - Datos de facturación
   - Términos y condiciones checkbox
   - Validación de método seleccionado
@@ -1158,7 +1164,14 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
   - `POST /store/carts/:id/shipping-methods` - Seleccionar envío
   - `POST /store/carts/:id/payment-sessions` - Iniciar pago
   - `POST /store/carts/:id/payment-session` - Seleccionar método
-  - `POST /store/carts/:id/complete` - Completar orden
+  - `POST /store/checkout/payment-intent` - Obtener `client_secret` de Stripe para el checkout
+  - `POST /store/checkout/complete` - Crear pedido en `pending_payment` mientras backend espera el webhook verificado
+  - `POST /store/carts/:id/complete` - Ruta OOTB Medusa documentada, pero el contrato frontend actual prioriza el flujo custom anterior
+
+**Limitaciones actuales conocidas:**
+- `GET /store/products` puede devolver `variant_id` que no siempre sirve para crear line items reales en `/store/carts*`
+- `POST /store/checkout/payment-intent` hoy devuelve un `client_secret` simulado; backend debe crear un PaymentIntent Stripe real antes de habilitar cobro end-to-end
+- La confirmación final del pago no debe salir del navegador: backend confirma el estado solo tras `POST /webhooks/stripe`
   - Limpieza automática del carrito tras completar
   - Creación de pedido en sistema
 

@@ -363,112 +363,99 @@ function calculateShipping(cart, address, option) {
 
 ---
 
-### 4. POST /checkout/:id/payment-intent
-**Descripción**: Crear Payment Intent en Stripe
+### 4. POST /store/checkout/payment-intent
+**Descripción**: Crear el PaymentIntent custom del checkout B2B
+
+**Body**:
+```json
+{
+  "cart_id": "cart_..."
+}
+```
 
 **Response 200**:
 ```json
 {
-  "payment_intent": {
-    "id": "pi_3NxxxxxxxxxxxxxxxxxxxxYZ",
-    "client_secret": "pi_3Nxxxxxxxxxxxxx_secret_yyyyyyyyyyyy",
-    "amount": 23490, // en centavos
-    "currency": "eur",
-    "status": "requires_payment_method",
-    "description": "Pedido Carrefour B2B - Checkout checkout_xxx",
-    "metadata": {
-      "checkout_id": "checkout_xxx",
-      "customer_id": "cus_xxx",
-      "cart_id": "cart_xxx"
-    }
-  },
-  "publishable_key": "pk_test_xxxxxxxxxxxxxxxxxxxxxxxxxx"
+  "client_secret": "pi_..._secret_test",
+  "payment_intent_id": "pi_...",
+  "amount": 18500,
+  "currency_code": "eur"
 }
 ```
 
-**Stripe Integration**:
+**Estado actual del contrato**:
+- El formato de respuesta existe y ya sirve para cablear la secuencia frontend.
+- El `client_secret` sigue simulado a fecha de esta guía: backend debe sustituirlo por un PaymentIntent Stripe real antes de usar `stripe.confirmPayment`/`PaymentElement` en producción.
+- `400` si falta `cart_id` o el total es cero, `401` si no hay sesión autenticada y `404` si el carrito no existe.
+
+**Backend requerido**:
 ```javascript
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-async function createPaymentIntent(checkout) {
+async function createPaymentIntent(cart) {
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: checkout.total, // centavos
+    amount: cart.total,
     currency: 'eur',
     automatic_payment_methods: {
       enabled: true,
     },
-    description: `Pedido Carrefour B2B - Checkout ${checkout.id}`,
+    description: `Pedido Carrefour B2B - Cart ${cart.id}`,
     metadata: {
-      checkout_id: checkout.id,
-      customer_id: checkout.customer_id,
-      cart_id: checkout.cart_id,
-    },
-    // Idempotency key para evitar duplicados
-    idempotency_key: `checkout_${checkout.id}_payment_intent`,
+      cart_id: cart.id,
+      customer_id: cart.customer_id,
+    }
   });
-  
-  // Guardar payment_intent_id en checkout
-  await updateCheckout(checkout.id, {
+
+  return {
+    client_secret: paymentIntent.client_secret,
     payment_intent_id: paymentIntent.id,
-  });
-  
-  return paymentIntent;
+    amount: cart.total,
+    currency_code: cart.currency_code,
+  };
 }
 ```
 
 ---
 
-### 5. POST /checkout/:id/complete
-**Descripción**: Completar checkout y crear pedido
+### 5. POST /store/checkout/complete
+**Descripción**: Finalizar el checkout custom y crear el pedido en espera de confirmación de pago
 
 **Body**:
 ```json
 {
-  "payment_intent_id": "pi_3NxxxxxxxxxxxxxxxxxxxxYZ",
-  "payment_method_id": "pm_1NxxxxxxxxxxxxxxxxxxxxAB"
+  "cart_id": "cart_...",
+  "payment_intent_id": "pi_..."
 }
 ```
 
 **Response 200**:
 ```json
 {
-  "order": {
-    "id": "order_01HMYB7Z8WC9K2N5J4X6P7Q8R9",
-    "display_id": "CF-10050",
-    "status": "pending",
-    "fulfillment_status": "not_fulfilled",
-    "payment_status": "awaiting",
-    "email": "juan.perez@carrefour-madrid.com",
-    "currency_code": "eur",
-    "tax_rate": 21,
-    "region_id": "reg_01M0AAYKP7T4XSM0PWRYHQF0BE",
-    
-    "customer": {
-      "id": "cus_xxx",
-      "email": "juan.perez@carrefour-madrid.com",
-      "first_name": "Juan",
-      "last_name": "Pérez",
-      "metadata": {
-        "franchisee_id": "fran_xxx"
-      }
-    },
-    
-    "items": [
-      {
-        "id": "li_xxx",
-        "title": "Polo Corporativo Carrefour",
-        "variant_id": "variant_xxx",
-        "variant": {
-          "title": "Talla S",
-          "sku": "POLO-CRF-001-S"
-        },
-        "quantity": 10,
-        "unit_price": 1850,
-        "subtotal": 18500,
-        "tax_total": 3885,
-        "total": 22385
-      }
-    ],
+  "success": true,
+  "order_id": "order_...",
+  "status": "pending_payment",
+  "total": 18500,
+  "payment_intent_id": "pi_...",
+  "message": "Order created. Payment processing."
+}
+```
+
+**Regla de frontend/backend**:
+- Esta respuesta no confirma el cobro. La fuente de verdad es el webhook Stripe verificado.
+- El frontend debe mostrar `Procesando pago` y volver a consultar el pedido/backend hasta que el estado final exista allí.
+- `400` para cuerpo incompleto o carrito vacío, `401` sin sesión y `404` si el carrito no existe.
+
+### 6. Webhook Stripe
+**Descripción**: Confirmación definitiva del pago. No lo llama el frontend.
+
+```http
+POST /webhooks/stripe
+```
+
+- Debe validar `stripe-signature`
+- Debe ser idempotente
+- Debe marcar el pago/pedido como confirmado solo al procesar el evento firmado
+- El navegador nunca debe marcar el pedido como pagado por leer `paymentIntent.status` directamente
     
     "shipping_address": {
       "first_name": "Juan",

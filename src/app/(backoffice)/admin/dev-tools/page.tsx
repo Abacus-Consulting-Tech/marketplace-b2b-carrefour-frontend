@@ -272,7 +272,7 @@ export default function DevToolsPage() {
         method: 'POST',
         module: 'franchisees',
         description: 'Invitar franquiciado (nombre + email, genera enlace a /franchisee/register)',
-        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
+        usesRealAPI: false,
         status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/admin/franchisees/invitations'
@@ -888,6 +888,26 @@ export default function DevToolsPage() {
         status: 'untested',
         requiresAuth: false,
         medusaEndpoint: '/store/carts/:id/payment-collections'
+      },
+      {
+        path: '/store/checkout/payment-intent',
+        method: 'POST',
+        module: 'checkout',
+        description: 'Crear PaymentIntent custom para checkout; hoy devuelve client_secret simulado y sigue pendiente la integración Stripe real',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/store/checkout/payment-intent'
+      },
+      {
+        path: '/store/checkout/complete',
+        method: 'POST',
+        module: 'checkout',
+        description: 'Completar checkout custom; crea pedido en pending_payment y la confirmación final depende del webhook Stripe',
+        usesRealAPI: !featureFlags.shouldUseMock('checkout'),
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/store/checkout/complete'
       },
       {
         path: '/store/carts/:id/complete',
