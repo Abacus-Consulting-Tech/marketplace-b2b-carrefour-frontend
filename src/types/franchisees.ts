@@ -60,6 +60,14 @@ export interface FranchiseeMetadata {
   is_active?: boolean;
   approved_at?: string;
   approved_by?: string;
+  status?: 'pending_approval' | 'active' | 'suspended' | 'inactive'; // Confirmed enum per backend notes (2026-09-02)
+
+  // Subscription & onboarding
+  subscription_status?: 'pending' | 'active' | 'past_due' | 'canceled';
+  stripe_customer_id?: string;
+  stripe_subscription_id?: string;
+  current_period_end?: string;
+  onboarding_status?: 'pending_payment' | 'pending_approval' | 'approved_pending_credentials' | 'credentials_sent' | 'active';
   
   // Statistics (cached)
   total_orders?: number;
@@ -225,6 +233,129 @@ export interface DeleteFranchiseeResponse {
   deleted: boolean;
 }
 
+// ============================================================================
+// Invite Franchisee (lightweight admin action: name + email only, sends the
+// franchisee a link to /franchisee/register to complete their own data)
+// ============================================================================
+
+export interface InviteFranchiseeRequest {
+  name: string;
+  email: string;
+}
+
+export interface FranchiseeInvitation {
+  id: string;
+  name: string;
+  email: string;
+  registrationUrl: string;
+  status: 'pending' | 'used' | 'expired';
+  createdAt: string;
+}
+
+export interface InviteFranchiseeResponse {
+  invitation: FranchiseeInvitation;
+}
+
+// ============================================================================
+// Public Self-Registration (proposed flow, backend endpoint not built yet —
+// see docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md)
+// ============================================================================
+
+export interface FranchiseeRegistrationForm {
+  // Paso 1: Datos personales
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+
+  // Paso 2: Datos de la empresa
+  companyName: string;
+  taxId: string;
+  fiscalAddress: string;
+  municipality: string;
+  postalCode: string;
+  country: string;
+
+  // Paso 3: Datos financieros
+  iban: string;
+  bankHolderName: string;
+  swiftBic?: string; // Recomendado para cuentas fuera de España (ver bankAccount.swift en API_SPEC.md)
+
+  // Paso 4: Pago (cuota de alta)
+  cardHolderName: string;
+}
+
+export type RegisterFranchiseeRequest = FranchiseeRegistrationForm & {
+  // Stripe PaymentMethod id created client-side (see PaymentForm.tsx). The real
+  // charge/PaymentIntent flow still depends on backend (see open questions doc).
+  stripePaymentMethodId: string;
+};
+
+export interface RegisterFranchiseeResponse {
+  franchisee: Franchisee;
+}
+
+export interface FranchiseeInvitationPrefill {
+  firstName?: string;
+  lastName?: string;
+  email?: string;
+}
+
+// ============================================================================
+// Franchisee Stores (a franchisee can own several physical stores)
+// ============================================================================
+
+export interface FranchiseeStore {
+  id: string;
+  franchiseeId: string;
+  name: string;
+  taxId?: string;
+  address: string;
+  city: string;
+  postalCode?: string;
+  createdAt: string;
+}
+
+export interface CreateFranchiseeStoreRequest {
+  name: string;
+  taxId?: string;
+  address: string;
+  city: string;
+  postalCode?: string;
+}
+
+export interface ListFranchiseeStoresResponse {
+  stores: FranchiseeStore[];
+}
+
+export interface CreateFranchiseeStoreResponse {
+  store: FranchiseeStore;
+}
+
+export interface DeleteFranchiseeStoreResponse {
+  id: string;
+  deleted: boolean;
+}
+
+// ============================================================================
+// Franchisee Invoices (read-only from Odoo/backend when available)
+// ============================================================================
+
+export interface FranchiseeInvoice {
+  id: string;
+  franchiseeId: string;
+  number: string;
+  issueDate: string;
+  amount: number;
+  currencyCode: string;
+  status: 'paid' | 'pending' | 'failed';
+  pdfUrl?: string;
+}
+
+export interface ListFranchiseeInvoicesResponse {
+  invoices: FranchiseeInvoice[];
+}
+
 // Addresses
 export interface AddAddressRequest {
   address: {
@@ -304,7 +435,7 @@ export interface BulkUpdateFranchiseesResponse {
 // UI Helper Types
 // ============================================================================
 
-export type FranchiseeStatus = 'active' | 'inactive' | 'pending';
+export type FranchiseeStatus = 'active' | 'inactive' | 'pending_approval' | 'suspended';
 export type DiscountTier = 'basic' | 'silver' | 'gold' | 'platinum';
 
 export interface FranchiseeFilterOptions {

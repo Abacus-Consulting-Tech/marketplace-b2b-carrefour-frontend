@@ -1,6 +1,6 @@
 # PROJECT STATE
 
-**Updated**: 2026-08-31
+**Updated**: 2026-09-02
 **Classification**: 🟡 SEMI-STABLE (update weekly or on module status change, NOT per endpoint)
 **Syncs FROM**: `API_STATUS.md` (every Friday 4 PM)
 **Hierarchy**: See `.github/ai/DOCUMENTATION_HIERARCHY.md` for official data flow
@@ -133,6 +133,11 @@ See `API_STATUS.md` for detailed endpoint list. Summary:
   - Impact: Cannot list/fetch franchisees directly; using mock data as workaround
   - Workaround: Feature flag `franchisees.useMock = true` (enabled by default)
   - Create/Update/Delete operations work normally
+
+- **Franchisee Self-Service (new 2026-09-02, still 100% mock)**: Admin "Invitar Franquiciado" (`/admin/franchisees/new`), public self-registration (`/franchisee/register`, 4-step form incl. Stripe payment step), admin approval action, and franchisee-owned store management (`/marketplace/profile`) are all built frontend-only
+  - Impact: No backend contract exists yet for `POST /franchisee/register`, `POST /admin/franchisees/invitations`, or franchisee stores
+  - Workaround: Fully mock (registration mock pushes into the same in-memory `mockFranchisees` array the admin UI reads, stores persisted in localStorage)
+  - Blocking questions documented in `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md` (payment timing, invite requirement, `/admin/franchisees*` vs `/admin/customers*` contract, Odoo invoicing)
 
 - **Supplier Catalog Mismatch**: `/seller/catalog-products` no devuelve datos utilizables en DEV
   - Impact: `/supplier/products` necesita fallback temporal a `/vendor/custom/products`

@@ -10,10 +10,29 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { FranchiseeStatusBadge, DiscountTierBadge } from './FranchiseeStatusBadge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
+import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import {
   ArrowLeft,
   Edit,
   Trash2,
+  CheckCircle2,
   Mail,
   Phone,
   Building2,
@@ -38,6 +57,25 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const [approving, setApproving] = useState(false);
+  const [statusDraft, setStatusDraft] = useState<NonNullable<Franchisee['metadata']['status']>>('active');
+  const [notesDraft, setNotesDraft] = useState('');
+  const [savingStatusNotes, setSavingStatusNotes] = useState(false);
+  const [showAddStore, setShowAddStore] = useState(false);
+  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
+  const [deletingAddressId, setDeletingAddressId] = useState<string | null>(null);
+  const [savingStore, setSavingStore] = useState(false);
+  const [newStore, setNewStore] = useState({
+    company: '',
+    address_1: '',
+    address_2: '',
+    city: '',
+    province: '',
+    postal_code: '',
+    phone: '',
+  });
+  const subscriptionActive = franchisee?.metadata?.subscription_status === 'active';
+  const canApprove = franchisee?.metadata?.status === 'pending_approval' && subscriptionActive;
 
   const loadFranchisee = async () => {
     try {
@@ -50,7 +88,10 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
       ]);
 
       if (franchiseeResponse.data?.customer) {
-        setFranchisee(franchiseeResponse.data.customer);
+        const customer = franchiseeResponse.data.customer;
+        setFranchisee(customer);
+        setStatusDraft(customer.metadata?.status || (customer.metadata?.is_active ? 'active' : 'inactive'));
+        setNotesDraft(customer.metadata?.notes || '');
       }
 
       if (statsResponse.data?.stats) {
@@ -89,6 +130,125 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
     }
   };
 
+  const handleApprove = async () => {
+    if (!franchisee) return;
+
+    if (!subscriptionActive) {
+      alert('No se puede aprobar hasta que la suscripción esté activa.');
+      return;
+    }
+
+    try {
+      setApproving(true);
+      await franchiseesApi.updateFranchiseeStatus(franchisee.id, 'active');
+      await loadFranchisee();
+    } catch (err) {
+      console.error('Error approving franchisee:', err);
+      alert('Error al aprobar franquiciado: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+    } finally {
+      setApproving(false);
+    }
+  };
+
+  const handleSaveStatusNotes = async () => {
+    if (!franchisee) return;
+
+    try {
+      setSavingStatusNotes(true);
+
+      if (statusDraft !== franchisee.metadata?.status) {
+        await franchiseesApi.updateFranchiseeStatus(franchisee.id, statusDraft);
+      }
+
+      if (notesDraft !== (franchisee.metadata?.notes || '')) {
+        await franchiseesApi.updateFranchisee(franchisee.id, { metadata: { notes: notesDraft } });
+      }
+
+      await loadFranchisee();
+    } catch (err) {
+      console.error('Error saving status/notes:', err);
+      alert('Error al guardar: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+    } finally {
+      setSavingStatusNotes(false);
+    }
+  };
+
+  const handleAddStore = async () => {
+    if (!franchisee) return;
+
+    if (!newStore.company.trim() || !newStore.address_1.trim() || !newStore.city.trim() || !newStore.postal_code.trim()) {
+      alert('Nombre, dirección, ciudad y código postal son obligatorios.');
+      return;
+    }
+
+    const addressPayload = {
+      company: newStore.company,
+      address_1: newStore.address_1,
+      address_2: newStore.address_2 || undefined,
+      city: newStore.city,
+      province: newStore.province || undefined,
+      postal_code: newStore.postal_code,
+      phone: newStore.phone || undefined,
+      country_code: 'es',
+    };
+
+    try {
+      setSavingStore(true);
+
+      if (editingAddressId) {
+        await franchiseesApi.updateAddress(franchisee.id, editingAddressId, addressPayload);
+      } else {
+        await franchiseesApi.addAddress(franchisee.id, { address: addressPayload });
+      }
+
+      await loadFranchisee();
+      handleCloseStoreDialog();
+    } catch (err) {
+      console.error('Error saving store:', err);
+      alert('Error al guardar tienda: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+    } finally {
+      setSavingStore(false);
+    }
+  };
+
+  const handleEditStore = (address: NonNullable<Franchisee['shipping_addresses']>[number]) => {
+    setEditingAddressId(address.id);
+    setNewStore({
+      company: address.company || '',
+      address_1: address.address_1 || '',
+      address_2: address.address_2 || '',
+      city: address.city || '',
+      province: address.province || '',
+      postal_code: address.postal_code || '',
+      phone: address.phone || '',
+    });
+    setShowAddStore(true);
+  };
+
+  const handleCloseStoreDialog = () => {
+    setShowAddStore(false);
+    setEditingAddressId(null);
+    setNewStore({ company: '', address_1: '', address_2: '', city: '', province: '', postal_code: '', phone: '' });
+  };
+
+  const handleDeleteStore = async (address: NonNullable<Franchisee['shipping_addresses']>[number]) => {
+    if (!franchisee) return;
+
+    const confirmed = confirm(`¿Eliminar la tienda "${address.company || address.first_name}"?`);
+    if (!confirmed) return;
+
+    try {
+      setDeletingAddressId(address.id);
+      await franchiseesApi.deleteAddress(franchisee.id, address.id);
+      await loadFranchisee();
+    } catch (err) {
+      console.error('Error deleting store:', err);
+      alert('Error al eliminar tienda: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+    } finally {
+      setDeletingAddressId(null);
+    }
+  };
+
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
@@ -104,6 +264,36 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
       year: 'numeric',
     });
   };
+
+  const onboardingStatusLabel = (() => {
+    switch (franchisee?.metadata?.onboarding_status) {
+      case 'pending_payment':
+        return 'Pendiente de pago';
+      case 'pending_approval':
+        return 'Pendiente de aprobación';
+      case 'approved_pending_credentials':
+        return 'Aprobado, falta activar credenciales';
+      case 'credentials_sent':
+        return 'Email de activación enviado';
+      case 'active':
+        return 'Onboarding completado';
+      default:
+        return 'Pendiente de aprobación';
+    }
+  })();
+
+  const subscriptionBlockMessage = (() => {
+    switch (franchisee?.metadata?.subscription_status) {
+      case 'pending':
+        return 'La aprobación está bloqueada: la suscripción inicial todavía no se ha activado.';
+      case 'past_due':
+        return 'La aprobación está bloqueada: la suscripción tiene un pago vencido y debe regularizarse antes de activar al franquiciado.';
+      case 'canceled':
+        return 'La aprobación está bloqueada: la suscripción fue cancelada y debe reactivarse antes de activar al franquiciado.';
+      default:
+        return 'La aprobación está bloqueada hasta que la suscripción inicial esté activa.';
+    }
+  })();
 
   if (loading) {
     return (
@@ -154,6 +344,12 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualizar
           </Button>
+          {franchisee.metadata?.status === 'pending_approval' && (
+            <Button onClick={handleApprove} disabled={approving || !canApprove}>
+              <CheckCircle2 className="h-4 w-4 mr-2" />
+              {approving ? 'Aprobando...' : 'Aprobar Franquiciado'}
+            </Button>
+          )}
           <Link href={`/admin/franchisees/${franchisee.id}/edit`}>
             <Button variant="outline">
               <Edit className="h-4 w-4 mr-2" />
@@ -169,8 +365,17 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
 
       {/* Status & Tier */}
       <div className="flex gap-2">
-        <FranchiseeStatusBadge isActive={franchisee.metadata?.is_active || false} />
+        <FranchiseeStatusBadge
+          isActive={franchisee.metadata?.is_active || false}
+          status={franchisee.metadata?.status}
+        />
         <DiscountTierBadge tier={franchisee.metadata?.discount_tier} />
+        <Badge variant="outline">
+          Suscripción: {franchisee.metadata?.subscription_status || 'pending'}
+        </Badge>
+        <Badge variant="secondary">
+          Onboarding: {onboardingStatusLabel}
+        </Badge>
         {franchisee.has_account && (
           <Badge variant="outline">
             <Mail className="h-3 w-3 mr-1" />
@@ -178,6 +383,18 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
           </Badge>
         )}
       </div>
+
+      {franchisee.metadata?.status === 'pending_approval' && !subscriptionActive && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          {subscriptionBlockMessage}
+        </div>
+      )}
+
+      {franchisee.metadata?.onboarding_status === 'approved_pending_credentials' && !franchisee.has_account && (
+        <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
+          El franquiciado ya está aprobado, pero todavía falta enviar o completar la activación de credenciales.
+        </div>
+      )}
 
       {/* Stats Cards */}
       {stats && (
@@ -248,6 +465,7 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
       <Tabs defaultValue="info" className="w-full">
         <TabsList>
           <TabsTrigger value="info">Información</TabsTrigger>
+          <TabsTrigger value="status">Estado y Notas</TabsTrigger>
           <TabsTrigger value="addresses">Direcciones</TabsTrigger>
           <TabsTrigger value="orders">Pedidos</TabsTrigger>
           <TabsTrigger value="config">Configuración B2B</TabsTrigger>
@@ -334,13 +552,73 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
           </Card>
         </TabsContent>
 
+        {/* Status & Notes Tab */}
+        <TabsContent value="status" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Estado y Notas</CardTitle>
+              <CardDescription>
+                Cambia el estado del franquiciado y añade notas internas (visibles solo para el equipo admin)
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Estado</p>
+                <Select
+                  value={statusDraft}
+                  onValueChange={(value) => setStatusDraft(value as typeof statusDraft)}
+                >
+                  <SelectTrigger className="w-full md:w-64">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="pending_approval">Pendiente de Aprobación</SelectItem>
+                    <SelectItem value="active">Activo</SelectItem>
+                    <SelectItem value="suspended">Suspendido</SelectItem>
+                    <SelectItem value="inactive">Inactivo</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="grid grid-cols-1 gap-2 rounded-lg border p-4 text-sm md:grid-cols-2">
+                <div>
+                  <p className="text-muted-foreground">Estado de onboarding</p>
+                  <p className="font-medium">{onboardingStatusLabel}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Estado de suscripción</p>
+                  <p className="font-medium">{franchisee.metadata?.subscription_status || 'pending'}</p>
+                </div>
+                <div>
+                  <p className="text-muted-foreground">Próxima renovación</p>
+                  <p className="font-medium">{formatDate(franchisee.metadata?.current_period_end)}</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">Notas Internas</p>
+                <Textarea
+                  value={notesDraft}
+                  onChange={(e) => setNotesDraft(e.target.value)}
+                  placeholder="Notas visibles solo para el equipo admin..."
+                  className="min-h-[120px]"
+                />
+              </div>
+
+              <Button onClick={handleSaveStatusNotes} disabled={savingStatusNotes}>
+                {savingStatusNotes ? 'Guardando...' : 'Guardar Cambios'}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         {/* Addresses Tab */}
         <TabsContent value="addresses" className="space-y-4">
           <Card>
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle>Tiendas</CardTitle>
-                <Button size="sm">
+                <Button size="sm" onClick={() => setShowAddStore(true)}>
                   <MapPin className="h-4 w-4 mr-2" />
                   Añadir Tienda
                 </Button>
@@ -362,6 +640,21 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
                           {address.phone && (
                             <p className="text-sm text-muted-foreground">{address.phone}</p>
                           )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="ghost" size="sm" onClick={() => handleEditStore(address)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Editar
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDeleteStore(address)}
+                            disabled={deletingAddressId === address.id}
+                          >
+                            <Trash2 className="h-4 w-4 mr-2" />
+                            {deletingAddressId === address.id ? 'Eliminando...' : 'Eliminar'}
+                          </Button>
                         </div>
                       </div>
                       <div className="text-sm space-y-1">
@@ -441,6 +734,92 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Add Store Dialog */}
+      <Dialog open={showAddStore} onOpenChange={(open) => (open ? setShowAddStore(true) : handleCloseStoreDialog())}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{editingAddressId ? 'Editar Tienda' : 'Añadir Tienda'}</DialogTitle>
+            <DialogDescription>
+              Datos básicos de {editingAddressId ? 'esta' : 'la nueva'} tienda de este franquiciado.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2 md:col-span-2">
+              <Label>Nombre de la Tienda *</Label>
+              <Input
+                value={newStore.company}
+                onChange={(e) => setNewStore({ ...newStore, company: e.target.value })}
+                placeholder="Carrefour Express Sur"
+              />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label>Dirección *</Label>
+              <Input
+                value={newStore.address_1}
+                onChange={(e) => setNewStore({ ...newStore, address_1: e.target.value })}
+                placeholder="Calle Mayor 123"
+              />
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label>Dirección (línea 2)</Label>
+              <Input
+                value={newStore.address_2}
+                onChange={(e) => setNewStore({ ...newStore, address_2: e.target.value })}
+                placeholder="Local 3"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Ciudad *</Label>
+              <Input
+                value={newStore.city}
+                onChange={(e) => setNewStore({ ...newStore, city: e.target.value })}
+                placeholder="Madrid"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Provincia</Label>
+              <Input
+                value={newStore.province}
+                onChange={(e) => setNewStore({ ...newStore, province: e.target.value })}
+                placeholder="Madrid"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Código Postal *</Label>
+              <Input
+                value={newStore.postal_code}
+                onChange={(e) => setNewStore({ ...newStore, postal_code: e.target.value })}
+                placeholder="28001"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Teléfono</Label>
+              <Input
+                value={newStore.phone}
+                onChange={(e) => setNewStore({ ...newStore, phone: e.target.value })}
+                placeholder="+34 900 000 000"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCloseStoreDialog} disabled={savingStore}>
+              Cancelar
+            </Button>
+            <Button onClick={handleAddStore} disabled={savingStore}>
+              {savingStore ? 'Guardando...' : 'Guardar Tienda'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -121,11 +121,15 @@ export const featureFlags = {
     } satisfies ModuleConfig,
 
     franchisees: {
-      useMock: getMockFlag('NEXT_PUBLIC_MOCK_FRANCHISEES'),
+      // Defaults to mock: /admin/customers has a known RBAC 401/403 issue (see
+      // PROJECT_STATUS_AND_ROADMAP.md). apiBaseUrl intentionally left undefined —
+      // franchisees-client.ts already includes the full "/admin/customers" path
+      // in each call, so setting it here caused a doubled "/admin/customers/admin/customers" URL.
+      useMock: getMockFlag('NEXT_PUBLIC_MOCK_FRANCHISEES', true),
       backendReady: false,
-      apiBaseUrl: '/api/admin/customers',
-      notes: 'Franchisee management can be switched by env; backend readiness still needs functional confirmation',
-      lastUpdated: '2026-08-31',
+      apiBaseUrl: undefined,
+      notes: 'Franchisee management defaults to mock due to known RBAC issue on /admin/customers; override via env once backend confirms auth',
+      lastUpdated: '2026-09-02',
     } satisfies ModuleConfig,
 
     catalog: {

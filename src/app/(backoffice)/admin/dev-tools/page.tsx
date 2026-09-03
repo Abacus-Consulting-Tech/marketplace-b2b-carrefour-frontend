@@ -262,7 +262,82 @@ export default function DevToolsPage() {
         requiresAuth: true,
         medusaEndpoint: '/admin/customers/:id/addresses/:addressId'
       },
-      
+
+      // ========================================================================
+      // FRANCHISEE SELF-SERVICE (Proposed 2026-09-02 — not built in backend yet)
+      // See docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md
+      // ========================================================================
+      {
+        path: '/admin/franchisees/invitations',
+        method: 'POST',
+        module: 'franchisees',
+        description: 'Invitar franquiciado (nombre + email, genera enlace a /franchisee/register)',
+        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/admin/franchisees/invitations'
+      },
+      {
+        path: '/franchisee/register',
+        method: 'POST',
+        module: 'franchisees',
+        description: 'Autoregistro público de franquiciado (crea con status: pending_approval, incluye pago Stripe y debe devolver subscription_status/current_period_end)',
+        usesRealAPI: false,
+        status: 'untested',
+        requiresAuth: false,
+        medusaEndpoint: '/franchisee/register'
+      },
+      {
+        path: '/webhooks/stripe',
+        method: 'POST',
+        module: 'franchisees',
+        description: 'Webhook Stripe para altas/renovaciones/fallos de suscripción; actualiza subscription_status, stripe ids y current_period_end',
+        usesRealAPI: false,
+        status: 'untested',
+        requiresAuth: false,
+        medusaEndpoint: '/webhooks/stripe'
+      },
+      {
+        path: '/franchisee/:id/invoices',
+        method: 'GET',
+        module: 'franchisees',
+        description: 'Listar facturas del franquiciado para su perfil (UI ya preparada; backend pendiente)',
+        usesRealAPI: false,
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/franchisee/:id/invoices'
+      },
+      {
+        path: '/franchisee/stores',
+        method: 'GET',
+        module: 'franchisees',
+        description: 'Listar tiendas del franquiciado autenticado (mock, persistido en localStorage)',
+        usesRealAPI: false,
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/franchisee/stores'
+      },
+      {
+        path: '/franchisee/stores',
+        method: 'POST',
+        module: 'franchisees',
+        description: 'Añadir tienda del franquiciado (mock, persistido en localStorage)',
+        usesRealAPI: false,
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/franchisee/stores'
+      },
+      {
+        path: '/franchisee/stores/:id',
+        method: 'DELETE',
+        module: 'franchisees',
+        description: 'Eliminar tienda del franquiciado (mock, persistido en localStorage)',
+        usesRealAPI: false,
+        status: 'untested',
+        requiresAuth: true,
+        medusaEndpoint: '/franchisee/stores/:id'
+      },
+
       // ========================================================================
       // OPENINGS MODULE (Custom)
       // ========================================================================
@@ -1416,7 +1491,7 @@ export default function DevToolsPage() {
         path: '/admin/franchisees/:id/status',
         method: 'PATCH',
         module: 'franchisee-management',
-        description: 'Activar/desactivar franquiciado (ruta legacy/no validada en la ronda 2026-08-31)',
+        description: 'Cambiar estado del franquiciado; al activar debe exigir subscription_status=active y disparar email/outbox (ruta legacy/no validada en la ronda 2026-08-31)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
         status: 'untested',
         requiresAuth: true,

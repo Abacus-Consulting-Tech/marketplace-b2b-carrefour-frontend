@@ -1,10 +1,10 @@
-import FranchiseeForm from '@/components/admin/FranchiseeForm';
+import InviteFranchiseeForm from '@/components/admin/InviteFranchiseeForm';
 
 export const metadata = {
-  title: 'Nuevo Franquiciado | Admin Carrefour',
-  description: 'Crear el acceso inicial de un franquiciado',
+  title: 'Invitar Franquiciado | Admin Carrefour',
+  description: 'Invitar a un nuevo franquiciado a registrarse en la plataforma',
 };
 
 export default function NewFranchiseePage() {
-  return <FranchiseeForm mode="create" />;
+  return <InviteFranchiseeForm />;
 }

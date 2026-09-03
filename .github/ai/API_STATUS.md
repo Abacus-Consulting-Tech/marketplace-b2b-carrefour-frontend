@@ -1,12 +1,12 @@
 # API STATUS
 
-**Updated**: 2026-08-31 (from dev-tools)
+**Updated**: 2026-09-02 (from dev-tools)
 **Classification**: 🟢 VOLATILE (update every 3-5 endpoints or weekly)
 **Source of Truth**: `src/app/(backoffice)/admin/dev-tools/page.tsx` (EndpointInfo array)
 **Hierarchy**: See `.github/ai/DOCUMENTATION_HIERARCHY.md` for official data flow
 **Backend**: https://marketplace-b2b-backend-dev.onrender.com
-**Total Endpoint Inventory**: 137
-**Inventory Status**: 76 working, 6 broken, 55 untested
+**Total Endpoint Inventory**: 143
+**Inventory Status**: 76 working, 6 broken, 61 untested
 **Status**: ⚠️ HYBRID DEV MODE
   - 🌐 Real en DEV: `auth`, `suppliers`, `pricing`, `orders`, `quotes`
   - 🎭 Mock en DEV: `openings`, `franchisees`, `products`, `catalog`, `checkout`, `categories`
@@ -81,12 +81,17 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 
 ## Kept In Mock In DEV
 
-### Franchisees (10 endpoints)
+### Franchisees (16 endpoints)
 - `GET /admin/customers` — **BROKEN** (403 RBAC)
 - `GET /admin/customers/:id` — **BROKEN** (403 RBAC)
 - 8 endpoints adicionales siguen untested
 - `GET /store/customers/me` está inventariado pero no revalida el módulo completo
-- **Status**: ⚠️ PARTIAL EN BACKEND, MOCK EN DEV
+- **Nuevo 2026-09-02 (self-service, propuesto — no construido en backend)**:
+  - `POST /admin/franchisees/invitations` — Invitar franquiciado (nombre + email)
+  - `POST /franchisee/register` — Autoregistro público (crea `status: pending_approval`, incluye pago Stripe)
+  - `GET /franchisee/stores`, `POST /franchisee/stores`, `DELETE /franchisee/stores/:id` — Gestión de tiendas del franquiciado (mock, persistido en localStorage, sin endpoint real)
+  - `PATCH /admin/franchisees/:id/status` ya inventariado (ver módulo `franchisee-management` más abajo) ahora también usado por la UI de aprobación
+- **Status**: ⚠️ PARTIAL EN BACKEND, MOCK EN DEV — self-service y stores 100% mock, sin contrato backend acordado (ver open questions en `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md`)
 
 ### Openings (24 endpoints)
 - `GET /admin/openings/projects` — **BROKEN** (404 en DEV)
@@ -132,6 +137,7 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 - `/store/products` — Responde sin catálogo utilizable en DEV; `catalog` y `products` siguen en mock para la UI franchisee
 - Checkout real bloqueado por ausencia de datos utilizables en Store API para validar carrito y `offer_id`
 - `/admin/orders/stats` — marcado como broken en el inventario actual
+- `/admin/franchisees/invitations`, `/franchisee/register`, `/franchisee/stores*` — endpoints propuestos por frontend (2026-09-02), **no existen en backend**; 100% mock, sin acuerdo de contrato todavía
 
 ---
 
