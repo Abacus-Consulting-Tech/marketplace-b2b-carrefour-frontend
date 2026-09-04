@@ -54,13 +54,14 @@ import {
   initializeMockFranchiseesStorage,
   persistMockFranchisees,
 } from './franchisees-mock';
+import { getBackendBaseUrl } from './api-utils';
 
 // ============================================================================
 // Configuration
 // ============================================================================
 
 const isMockMode = featureFlags.shouldUseMock('franchisees');
-const API_BASE_URL = featureFlags.getApiBaseUrl('franchisees') || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
+const API_BASE_URL = featureFlags.getApiBaseUrl('franchisees') || getBackendBaseUrl('/backend');
 
 // Log mode on initialization
 if (typeof window !== 'undefined') {

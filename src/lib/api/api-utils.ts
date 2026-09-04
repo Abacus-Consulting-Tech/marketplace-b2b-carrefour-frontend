@@ -11,8 +11,12 @@ const PUBLISHABLE_API_KEY =
   process.env.NEXT_PUBLIC_MERCUR_PUBLISHABLE_API_KEY ||
   ''
 
+export function getBackendBaseUrl(clientPathPrefix = '/api'): string {
+  return typeof window !== 'undefined' ? clientPathPrefix : BACKEND_API_URL
+}
+
 function getApiBaseUrl(): string {
-  return typeof window !== 'undefined' ? '/api' : BACKEND_API_URL
+  return getBackendBaseUrl('/api')
 }
 
 /**
