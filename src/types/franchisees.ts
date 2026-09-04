@@ -1,8 +1,9 @@
 /**
  * Franchisee Management Types
- * 
- * Aligned with Medusa Customer entity + B2B extensions
- * Uses Medusa Admin API endpoints for customer management
+ *
+ * Canonical admin contract is the custom B2B `/admin/franchisees*` family.
+ * A small set of compatibility fields remains because some UI surfaces still
+ * read the older customer-shaped model while the migration is in progress.
  */
 
 // ============================================================================
@@ -40,65 +41,62 @@ export interface CustomerGroup {
 // ============================================================================
 
 export interface FranchiseeMetadata {
-  // Company info
   company_name?: string;
-  tax_id?: string;           // CIF/NIF
+  tax_id?: string;
   store_name?: string;
   store_code?: string;
-  
-  // Location
+  address?: string;
   city?: string;
+  municipality?: string;
+  postal_code?: string;
   region?: string;
   country?: string;
-  
-  // Business settings
-  credit_limit?: number;
-  discount_tier?: string;    // 'basic' | 'silver' | 'gold' | 'platinum'
-  payment_terms?: number;    // Days (e.g., 30, 60, 90)
-  
-  // Status & permissions
   is_active?: boolean;
   approved_at?: string;
   approved_by?: string;
-  status?: 'pending_approval' | 'active' | 'suspended' | 'inactive'; // Confirmed enum per backend notes (2026-09-02)
-
-  // Subscription & onboarding
-  subscription_status?: 'pending' | 'active' | 'past_due' | 'canceled';
+  status?: 'pending_approval' | 'active' | 'suspended' | 'inactive';
+  subscription_status?: 'not_configured' | 'pending' | 'active' | 'past_due' | 'canceled';
   stripe_customer_id?: string;
   stripe_subscription_id?: string;
   current_period_end?: string;
   onboarding_status?: 'pending_payment' | 'pending_approval' | 'approved_pending_credentials' | 'credentials_sent' | 'active';
-  
-  // Statistics (cached)
   total_orders?: number;
   total_spent?: number;
   last_order_at?: string;
-  
-  // Additional
   notes?: string;
   tags?: string[];
+  discount_tier?: string;
+  credit_limit?: number;
+  payment_terms?: number;
 }
 
 export interface Franchisee {
   id: string;
+  name?: string;
   email: string;
-  first_name: string;
-  last_name: string;
+  tax_id?: string;
+  contact_person?: string;
   phone?: string;
-  has_account: boolean;
-  
-  // Medusa customer fields
+  company_name?: string;
+  store_code?: string;
+  region?: string;
+  address?: string;
+  municipality?: string;
+  postal_code?: string;
+  country?: string;
+  status?: 'pending_approval' | 'active' | 'suspended' | 'inactive';
+  subscription_status?: 'not_configured' | 'pending' | 'active' | 'past_due' | 'canceled';
+
+  // Compatibility fields for existing UI during migration.
+  first_name?: string;
+  last_name?: string;
+  has_account?: boolean;
   billing_address_id?: string;
   billing_address?: Address;
   shipping_addresses?: Address[];
-  
-  // Group membership
   groups?: CustomerGroup[];
-  
-  // Metadata (B2B specific fields)
   metadata: FranchiseeMetadata;
-  
-  // Timestamps
+
   created_at: string;
   updated_at: string;
   deleted_at?: string;
@@ -149,11 +147,15 @@ export interface FranchiseeStats {
 // List Franchisees
 export interface ListFranchiseesFilters {
   q?: string;                  // Search query
+  search?: string;             // Backend compatibility alias
   limit?: number;              // Pagination
   offset?: number;
-  expand?: string;             // e.g., "billing_address,shipping_addresses,groups"
-  groups?: string[];           // Filter by customer group
+  take?: number;               // Backend compatibility alias
+  skip?: number;               // Backend compatibility alias
+  expand?: string;
+  groups?: string[];
   has_account?: boolean;
+  status?: FranchiseeStatus;
   created_at?: {
     lt?: string;
     gt?: string;
@@ -163,74 +165,75 @@ export interface ListFranchiseesFilters {
 }
 
 export interface ListFranchiseesResponse {
-  customers: Franchisee[];
-  count: number;
-  offset: number;
-  limit: number;
+  franchisees: Franchisee[];
+  total: number;
+  skip: number;
+  take: number;
+  customers?: Franchisee[];
+  count?: number;
+  offset?: number;
+  limit?: number;
 }
 
 // Create Franchisee
 export interface CreateFranchiseeRequest {
+  name: string;
   email: string;
-  first_name: string;
-  last_name: string;
+  tax_id: string;
+  contact_person?: string;
+  company_name?: string;
   phone?: string;
-  password?: string;          // If creating account
-  
-  // Metadata
-  metadata: {
-    company_name?: string;
-    tax_id?: string;
-    store_name?: string;
-    store_code?: string;
-    city?: string;
-    region?: string;
-    country?: string;
-    credit_limit?: number;
-    discount_tier?: string;
-    payment_terms?: number;
-    is_active?: boolean;
-    notes?: string;
-  };
-  
-  // Groups
-  groups?: { id: string }[];  // Add to "B2B Franchisees" group
+  store_code?: string;
+  region?: string;
+  address?: string;
+  municipality?: string;
+  postal_code?: string;
+  country?: string;
 }
 
 export interface CreateFranchiseeResponse {
-  customer: Franchisee;
+  franchisee: Franchisee;
+  customer?: Franchisee;
 }
 
 // Update Franchisee
 export interface UpdateFranchiseeRequest {
+  name?: string;
   email?: string;
-  first_name?: string;
-  last_name?: string;
+  tax_id?: string;
+  contact_person?: string;
+  company_name?: string;
   phone?: string;
-  billing_address_id?: string;
-  metadata?: Partial<FranchiseeMetadata>;
-  groups?: { id: string }[];
+  store_code?: string;
+  region?: string;
+  address?: string;
+  municipality?: string;
+  postal_code?: string;
+  country?: string;
 }
 
 export interface UpdateFranchiseeResponse {
-  customer: Franchisee;
+  franchisee: Franchisee;
+  customer?: Franchisee;
 }
 
 // Get Franchisee
 export interface GetFranchiseeRequest {
   id: string;
-  expand?: string;  // "billing_address,shipping_addresses,groups,orders"
+  expand?: string;
 }
 
 export interface GetFranchiseeResponse {
-  customer: Franchisee;
+  franchisee: Franchisee;
+  customer?: Franchisee;
 }
 
 // Delete Franchisee
 export interface DeleteFranchiseeResponse {
   id: string;
-  object: 'customer';
+  object?: 'franchisee' | 'customer';
   deleted: boolean;
+  deleted_at?: string;
 }
 
 // ============================================================================
@@ -333,7 +336,9 @@ export interface FranchiseeStore {
   address: string;
   city: string;
   postalCode?: string;
+  countryCode?: string;
   createdAt: string;
+  archivedAt?: string;
 }
 
 export interface CreateFranchiseeStoreRequest {
@@ -342,10 +347,12 @@ export interface CreateFranchiseeStoreRequest {
   address: string;
   city: string;
   postalCode?: string;
+  countryCode?: string;
 }
 
 export interface ListFranchiseeStoresResponse {
   stores: FranchiseeStore[];
+  total?: number;
 }
 
 export interface CreateFranchiseeStoreResponse {
@@ -394,7 +401,8 @@ export interface AddAddressRequest {
 }
 
 export interface AddAddressResponse {
-  customer: Franchisee;
+  franchisee?: Franchisee;
+  customer?: Franchisee;
 }
 
 export interface UpdateAddressRequest {
@@ -412,7 +420,8 @@ export interface UpdateAddressRequest {
 }
 
 export interface UpdateAddressResponse {
-  customer: Franchisee;
+  franchisee?: Franchisee;
+  customer?: Franchisee;
 }
 
 // Orders
@@ -448,7 +457,8 @@ export interface BulkUpdateFranchiseesRequest {
 
 export interface BulkUpdateFranchiseesResponse {
   updated: number;
-  customers: Franchisee[];
+  franchisees?: Franchisee[];
+  customers?: Franchisee[];
 }
 
 // ============================================================================

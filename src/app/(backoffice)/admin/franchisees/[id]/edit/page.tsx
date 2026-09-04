@@ -18,12 +18,10 @@ export default function EditFranchiseePage() {
     const loadFranchisee = async () => {
       try {
         setLoading(true);
-        const response = await franchiseesApi.getFranchisee({ 
-          id, 
-          expand: 'groups,shipping_addresses' 
-        });
-        if (response.data?.customer) {
-          setFranchisee(response.data.customer);
+        const response = await franchiseesApi.getFranchisee({ id });
+        const loaded = response.data?.franchisee || response.data?.customer;
+        if (loaded) {
+          setFranchisee(loaded);
         }
       } catch (err) {
         console.error('Error loading franchisee:', err);

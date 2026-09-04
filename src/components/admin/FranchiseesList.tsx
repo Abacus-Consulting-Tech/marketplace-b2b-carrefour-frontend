@@ -7,7 +7,7 @@ import type { Franchisee } from '@/types/franchisees';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { FranchiseeStatusBadge, DiscountTierBadge } from './FranchiseeStatusBadge';
+import { FranchiseeStatusBadge } from './FranchiseeStatusBadge';
 import {
   Table,
   TableBody,
@@ -28,12 +28,11 @@ import {
   Search,
   Filter,
   RefreshCw,
-  User,
   Building2,
   Mail,
   Phone,
   MapPin,
-  TrendingUp,
+  Calendar,
 } from 'lucide-react';
 
 export default function FranchiseesList() {
@@ -41,22 +40,17 @@ export default function FranchiseesList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [tierFilter, setTierFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [totalCount, setTotalCount] = useState(0);
   const [limit] = useState(20);
   const [offset, setOffset] = useState(0);
 
-  // Stats
   const [stats, setStats] = useState({
     total: 0,
     active: 0,
     inactive: 0,
     pending: 0,
-    platinum: 0,
-    gold: 0,
-    silver: 0,
-    basic: 0,
+    suspended: 0,
   });
 
   const loadFranchisees = async () => {
@@ -68,32 +62,23 @@ export default function FranchiseesList() {
         q: searchQuery || undefined,
         limit,
         offset,
-        expand: 'groups,shipping_addresses',
+        take: limit,
+        skip: offset,
+        status: statusFilter !== 'all' ? statusFilter : undefined,
       };
-
-      // Apply filters ('pending' is handled client-side below, not by the mock API)
-      if (statusFilter === 'active' || statusFilter === 'inactive') {
-        filters.has_account = statusFilter === 'active';
-      }
-
-      if (tierFilter !== 'all') {
-        filters.groups = [tierFilter];
-      }
 
       const response = await franchiseesApi.listFranchisees(filters);
 
       if (response.data) {
-        // 'pending' isn't backed by the mock filters API yet, so it's applied client-side
-        const customers =
-          statusFilter === 'pending'
-            ? response.data.customers.filter((f) => f.metadata?.status === 'pending_approval')
-            : response.data.customers;
+        const franchiseeItems = response.data.franchisees;
+        const filteredItems =
+          statusFilter === 'all'
+            ? franchiseeItems
+            : franchiseeItems.filter((item) => (item.status || item.metadata?.status) === statusFilter);
 
-        setFranchisees(customers);
-        setTotalCount(statusFilter === 'pending' ? customers.length : response.data.count);
-
-        // Calculate stats
-        calculateStats(response.data.customers);
+        setFranchisees(filteredItems);
+        setTotalCount(response.data.total);
+        calculateStats(franchiseeItems);
       }
     } catch (err) {
       console.error('Error loading franchisees:', err);
@@ -104,51 +89,32 @@ export default function FranchiseesList() {
   };
 
   const calculateStats = (data: Franchisee[]) => {
-    const active = data.filter((f) => f.metadata?.is_active).length;
-    const inactive = data.length - active;
-    const pending = data.filter((f) => f.metadata?.status === 'pending_approval').length;
-
-    const platinum = data.filter((f) => f.metadata?.discount_tier === 'platinum').length;
-    const gold = data.filter((f) => f.metadata?.discount_tier === 'gold').length;
-    const silver = data.filter((f) => f.metadata?.discount_tier === 'silver').length;
-    const basic = data.filter((f) => f.metadata?.discount_tier === 'basic').length;
+    const active = data.filter((f) => (f.status || f.metadata?.status) === 'active').length;
+    const inactive = data.filter((f) => (f.status || f.metadata?.status) === 'inactive').length;
+    const pending = data.filter((f) => (f.status || f.metadata?.status) === 'pending_approval').length;
+    const suspended = data.filter((f) => (f.status || f.metadata?.status) === 'suspended').length;
 
     setStats({
       total: data.length,
       active,
       inactive,
       pending,
-      platinum,
-      gold,
-      silver,
-      basic,
+      suspended,
     });
   };
 
   useEffect(() => {
     loadFranchisees();
-  }, [searchQuery, tierFilter, statusFilter, offset]);
+  }, [searchQuery, statusFilter, offset]);
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
     setOffset(0); // Reset pagination
   };
 
-  const handleTierFilter = (value: string) => {
-    setTierFilter(value);
-    setOffset(0);
-  };
-
   const handleStatusFilter = (value: string) => {
     setStatusFilter(value);
     setOffset(0);
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(amount);
   };
 
   const formatDate = (dateString?: string) => {
@@ -194,7 +160,7 @@ export default function FranchiseesList() {
           <CardContent>
             <div className="flex items-center text-xs text-muted-foreground">
               <Building2 className="h-3 w-3 mr-1" />
-              {stats.active} activos, {stats.inactive} inactivos
+              {stats.active} activos, {stats.pending} pendientes
             </div>
           </CardContent>
         </Card>
@@ -218,39 +184,39 @@ export default function FranchiseesList() {
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Platinum</CardDescription>
-            <CardTitle className="text-2xl">{stats.platinum}</CardTitle>
+            <CardDescription>Activos</CardDescription>
+            <CardTitle className="text-2xl">{stats.active}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 mr-1" />
-              Nivel más alto
+              <Filter className="h-3 w-3 mr-1" />
+              Estado operativo
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Gold & Silver</CardDescription>
-            <CardTitle className="text-2xl">{stats.gold + stats.silver}</CardTitle>
+            <CardDescription>Inactivos</CardDescription>
+            <CardTitle className="text-2xl">{stats.inactive}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center text-xs text-muted-foreground">
-              <TrendingUp className="h-3 w-3 mr-1" />
-              {stats.gold} gold, {stats.silver} silver
+              <Filter className="h-3 w-3 mr-1" />
+              Sin acceso operativo
             </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-2">
-            <CardDescription>Basic</CardDescription>
-            <CardTitle className="text-2xl">{stats.basic}</CardTitle>
+            <CardDescription>Suspendidos</CardDescription>
+            <CardTitle className="text-2xl">{stats.suspended}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center text-xs text-muted-foreground">
-              <User className="h-3 w-3 mr-1" />
-              Nivel estándar
+              <Filter className="h-3 w-3 mr-1" />
+              Requieren revisión
             </div>
           </CardContent>
         </Card>
@@ -273,33 +239,18 @@ export default function FranchiseesList() {
               </div>
             </div>
 
-            {/* Tier Filter */}
-            <div>
-              <Select value={tierFilter} onValueChange={handleTierFilter}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Filtrar por tier" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Todos los tiers</SelectItem>
-                  <SelectItem value="platinum">Platinum</SelectItem>
-                  <SelectItem value="gold">Gold</SelectItem>
-                  <SelectItem value="silver">Silver</SelectItem>
-                  <SelectItem value="basic">Basic</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
             {/* Status Filter */}
-            <div>
+            <div className="md:col-span-2">
               <Select value={statusFilter} onValueChange={handleStatusFilter}>
                 <SelectTrigger>
                   <SelectValue placeholder="Filtrar por estado" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Todos</SelectItem>
-                  <SelectItem value="pending">Pendientes de aprobación</SelectItem>
+                  <SelectItem value="pending_approval">Pendientes de aprobación</SelectItem>
                   <SelectItem value="active">Activos</SelectItem>
                   <SelectItem value="inactive">Inactivos</SelectItem>
+                  <SelectItem value="suspended">Suspendidos</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -327,7 +278,7 @@ export default function FranchiseesList() {
               <Building2 className="h-12 w-12 mx-auto text-muted-foreground mb-3" />
               <p className="text-lg font-medium">No hay franquiciados</p>
               <p className="text-muted-foreground mt-1">
-                {searchQuery || tierFilter !== 'all' || statusFilter !== 'all'
+                {searchQuery || statusFilter !== 'all'
                   ? 'No se encontraron resultados con los filtros aplicados'
                   : 'Comienza creando tu primer franquiciado'}
               </p>
@@ -346,9 +297,9 @@ export default function FranchiseesList() {
                     <TableHead>Franquiciado</TableHead>
                     <TableHead>Contacto</TableHead>
                     <TableHead>Ubicación</TableHead>
-                    <TableHead>Tier</TableHead>
                     <TableHead>Estado</TableHead>
-                    <TableHead>Total Gastado</TableHead>
+                    <TableHead>Suscripción</TableHead>
+                    <TableHead>Alta</TableHead>
                     <TableHead>Acciones</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -358,20 +309,23 @@ export default function FranchiseesList() {
                       <TableCell>
                         <div className="space-y-1">
                           <div className="font-medium">
-                            {franchisee.metadata?.company_name || `${franchisee.first_name} ${franchisee.last_name}`}
+                            {franchisee.name || franchisee.company_name || franchisee.metadata?.company_name || '-'}
                           </div>
                           <div className="text-xs text-muted-foreground">
-                            {franchisee.shipping_addresses?.length || 0} tienda{franchisee.shipping_addresses?.length === 1 ? '' : 's'} registrada{franchisee.shipping_addresses?.length === 1 ? '' : 's'}
+                            ID: {franchisee.id}
                           </div>
-                          {franchisee.metadata?.tax_id && (
+                          {(franchisee.tax_id || franchisee.metadata?.tax_id) && (
                             <div className="text-xs text-muted-foreground">
-                              CIF: {franchisee.metadata.tax_id}
+                              CIF: {franchisee.tax_id || franchisee.metadata?.tax_id}
                             </div>
                           )}
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="space-y-1">
+                          <div className="text-sm font-medium">
+                            {franchisee.contact_person || `${franchisee.first_name || ''} ${franchisee.last_name || ''}`.trim() || '-'}
+                          </div>
                           <div className="flex items-center text-sm">
                             <Mail className="h-3 w-3 mr-1 text-muted-foreground" />
                             {franchisee.email}
@@ -385,15 +339,13 @@ export default function FranchiseesList() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        {franchisee.shipping_addresses && franchisee.shipping_addresses.length > 0 ? (
+                        {franchisee.region || franchisee.municipality || franchisee.address ? (
                           <div className="flex items-start text-sm">
                             <MapPin className="h-3 w-3 mr-1 mt-0.5 text-muted-foreground flex-shrink-0" />
                             <div>
-                              <div>{franchisee.shipping_addresses[0].city}</div>
+                              <div>{franchisee.municipality || franchisee.region || '-'}</div>
                               <div className="text-xs text-muted-foreground">
-                                {franchisee.shipping_addresses.length > 1
-                                  ? `${franchisee.shipping_addresses.length} tiendas`
-                                  : franchisee.shipping_addresses[0].province}
+                                {franchisee.address || franchisee.region || '-'}
                               </div>
                             </div>
                           </div>
@@ -402,22 +354,20 @@ export default function FranchiseesList() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <DiscountTierBadge tier={franchisee.metadata?.discount_tier} />
-                      </TableCell>
-                      <TableCell>
                         <FranchiseeStatusBadge
-                          isActive={franchisee.metadata?.is_active || false}
-                          status={franchisee.metadata?.status}
+                          isActive={(franchisee.status || franchisee.metadata?.status) === 'active'}
+                          status={franchisee.status || franchisee.metadata?.status}
                         />
                       </TableCell>
                       <TableCell>
-                        <div className="space-y-1">
-                          <div className="font-medium">
-                            {formatCurrency(franchisee.metadata?.total_spent || 0)}
-                          </div>
-                          <div className="text-xs text-muted-foreground">
-                            {franchisee.metadata?.total_orders || 0} pedidos
-                          </div>
+                        <span className="text-sm">
+                          {franchisee.subscription_status || franchisee.metadata?.subscription_status || 'not_configured'}
+                        </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center text-sm text-muted-foreground">
+                          <Calendar className="h-3 w-3 mr-1" />
+                          {formatDate(franchisee.created_at)}
                         </div>
                       </TableCell>
                       <TableCell>

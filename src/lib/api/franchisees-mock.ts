@@ -817,8 +817,8 @@ export function getFranchiseesByFilters(filters: {
     const search = filters.search.toLowerCase();
     results = results.filter(
       (f) =>
-        f.first_name.toLowerCase().includes(search) ||
-        f.last_name.toLowerCase().includes(search) ||
+        f.first_name?.toLowerCase().includes(search) ||
+        f.last_name?.toLowerCase().includes(search) ||
         f.email.toLowerCase().includes(search) ||
         f.metadata.company_name?.toLowerCase().includes(search) ||
         f.metadata.store_code?.toLowerCase().includes(search) ||

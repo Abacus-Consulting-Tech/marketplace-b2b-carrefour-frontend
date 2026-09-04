@@ -79,6 +79,9 @@ function FranchiseeRegisterContent() {
   if (status === 'submitted' && result) {
     const hasSubscriptionInfo =
       !!result.metadata.subscription_status || !!result.metadata.current_period_end;
+    const displayName = result.first_name || result.contact_person || result.name || result.email;
+    const displayCompany = result.company_name || result.metadata.company_name || result.name || '-';
+    const displayStatus = result.status || result.metadata.status || 'pending_approval';
 
     return (
       <div className="min-h-screen bg-gradient-to-b from-gray-50 to-white py-12">
@@ -86,8 +89,8 @@ function FranchiseeRegisterContent() {
           <CheckCircle2 className="mx-auto h-16 w-16 text-green-600" />
           <h1 className="mt-6 text-3xl font-bold tracking-tight">Solicitud enviada</h1>
           <p className="mt-2 text-muted-foreground">
-            Gracias, {result.first_name}. Tu solicitud para{' '}
-            <strong>{result.metadata.company_name}</strong> está en revisión. Te avisaremos por
+            Gracias, {displayName}. Tu solicitud para{' '}
+            <strong>{displayCompany}</strong> está en revisión. Te avisaremos por
             email en cuanto un administrador la apruebe.
           </p>
           {hasSubscriptionInfo && (
@@ -103,7 +106,7 @@ function FranchiseeRegisterContent() {
             </p>
           )}
           <p className="mt-4 text-sm text-muted-foreground">
-            Estado: <span className="font-medium">{result.metadata.status}</span> · Referencia:{' '}
+            Estado: <span className="font-medium">{displayStatus}</span> · Referencia:{' '}
             {result.id}
           </p>
           <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">

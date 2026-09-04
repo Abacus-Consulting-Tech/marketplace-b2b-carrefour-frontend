@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Textarea } from '@/components/ui/textarea';
-import { Switch } from '@/components/ui/switch';
 import { AlertCircle, Save, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -28,51 +26,48 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
 
   // Form state
   const [formData, setFormData] = useState({
-    // Personal Info
-    first_name: franchisee?.first_name || '',
-    last_name: franchisee?.last_name || '',
+    name: franchisee?.name || franchisee?.company_name || '',
+    company_name: franchisee?.company_name || franchisee?.metadata?.company_name || '',
+    tax_id: franchisee?.tax_id || franchisee?.metadata?.tax_id || '',
+    contact_person: franchisee?.contact_person || `${franchisee?.first_name || ''} ${franchisee?.last_name || ''}`.trim(),
     email: franchisee?.email || '',
     phone: franchisee?.phone || '',
-    password: '',
-    
-    // B2B Config
-    discount_tier: franchisee?.metadata?.discount_tier || 'basic',
-    credit_limit: franchisee?.metadata?.credit_limit?.toString() || '5000',
-    payment_terms: franchisee?.metadata?.payment_terms || '30',
-    
-    // Status
-    is_active: franchisee?.metadata?.is_active ?? true,
-    
-    // Notes
-    notes: franchisee?.metadata?.notes || '',
+    store_code: franchisee?.store_code || franchisee?.metadata?.store_code || '',
+    region: franchisee?.region || franchisee?.metadata?.region || '',
+    address: franchisee?.address || franchisee?.metadata?.address || '',
+    municipality: franchisee?.municipality || franchisee?.metadata?.municipality || '',
+    postal_code: franchisee?.postal_code || franchisee?.metadata?.postal_code || '',
+    country: franchisee?.country || franchisee?.metadata?.country || 'ES',
   });
 
-  const validateField = (field: string, value: any): string | null => {
+  const validateField = (field: string, value: string): string | null => {
     switch (field) {
-      case 'first_name':
-        return !value?.trim() ? 'El nombre es obligatorio' : null;
-      case 'last_name':
-        return !value?.trim() ? 'Los apellidos son obligatorios' : null;
+      case 'name':
+        return !value?.trim() ? 'El nombre comercial es obligatorio' : null;
+      case 'company_name':
+        return !value?.trim() ? 'La razón social es obligatoria' : null;
+      case 'tax_id':
+        return !value?.trim() ? 'El CIF/NIF es obligatorio' : null;
+      case 'contact_person':
+        return !value?.trim() ? 'La persona de contacto es obligatoria' : null;
       case 'email':
         if (!value?.trim()) return 'El email es obligatorio';
         if (!value.includes('@')) return 'El email no es válido';
         return null;
-      case 'password':
-        if (mode === 'create') {
-          if (!value) return 'La contraseña es obligatoria';
-          if (value.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
-        }
-        return null;
+      case 'phone':
+        return !value?.trim() ? 'El teléfono es obligatorio' : null;
+      case 'region':
+        return !value?.trim() ? 'La región es obligatoria' : null;
+      case 'address':
+        return !value?.trim() ? 'La dirección es obligatoria' : null;
       default:
         return null;
     }
   };
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear general error when user starts typing
     if (error) setError(null);
-    // Validate field if it has been touched
     if (touched[field]) {
       const fieldError = validateField(field, value);
       setFieldErrors((prev) => ({
@@ -112,7 +107,7 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     const validationError = validateForm();
     if (validationError) {
       setError(validationError);
@@ -126,49 +121,48 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
     try {
       if (mode === 'create') {
         const request: CreateFranchiseeRequest = {
-          first_name: formData.first_name,
-          last_name: formData.last_name,
+          name: formData.name,
           email: formData.email,
+          tax_id: formData.tax_id,
+          contact_person: formData.contact_person || undefined,
+          company_name: formData.company_name || undefined,
           phone: formData.phone || undefined,
-          password: formData.password,
-          groups: [{ id: 'cg_b2b_franchisees' }],
-          metadata: {
-            discount_tier: formData.discount_tier as any,
-            credit_limit: parseFloat(formData.credit_limit),
-            payment_terms: parseInt(String(formData.payment_terms)),
-            is_active: formData.is_active,
-            notes: formData.notes || undefined,
-          },
+          store_code: formData.store_code || undefined,
+          region: formData.region || undefined,
+          address: formData.address || undefined,
+          municipality: formData.municipality || undefined,
+          postal_code: formData.postal_code || undefined,
+          country: formData.country || undefined,
         };
 
         const response = await franchiseesApi.createFranchisee(request);
-        
-        if (response.data?.customer) {
+
+        const created = response.data?.franchisee || response.data?.customer;
+        if (created) {
           setSuccess(true);
           setTimeout(() => {
-            router.push(`/admin/franchisees/${response.data.customer.id}`);
+            router.push(`/admin/franchisees/${created.id}`);
           }, 1000);
         }
       } else {
-        // Edit mode
         const request: UpdateFranchiseeRequest = {
-          first_name: formData.first_name,
-          last_name: formData.last_name,
+          name: formData.name,
           email: formData.email,
+          tax_id: formData.tax_id,
+          contact_person: formData.contact_person || undefined,
+          company_name: formData.company_name || undefined,
           phone: formData.phone || undefined,
-          metadata: {
-            ...franchisee?.metadata,
-            discount_tier: formData.discount_tier as any,
-            credit_limit: parseFloat(formData.credit_limit),
-            payment_terms: parseInt(String(formData.payment_terms)),
-            is_active: formData.is_active,
-            notes: formData.notes || undefined,
-          },
+          store_code: formData.store_code || undefined,
+          region: formData.region || undefined,
+          address: formData.address || undefined,
+          municipality: formData.municipality || undefined,
+          postal_code: formData.postal_code || undefined,
+          country: formData.country || undefined,
         };
 
         const response = await franchiseesApi.updateFranchisee(franchisee!.id, request);
-        
-        if (response.data?.customer) {
+
+        if (response.data?.franchisee || response.data?.customer) {
           setSuccess(true);
           setTimeout(() => {
             router.push(`/admin/franchisees/${franchisee!.id}`);
@@ -198,8 +192,8 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
           </h1>
           <p className="text-muted-foreground mt-1">
             {mode === 'create'
-              ? 'Crea el acceso inicial para que el franquiciado complete su perfil y tiendas'
-              : 'Actualiza la información del franquiciado'}
+              ? 'Crea manualmente un franquiciado usando el contrato canónico B2B'
+              : 'Actualiza los datos del franquiciado'}
           </p>
         </div>
       </div>
@@ -234,40 +228,72 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
       {/* Personal Information */}
       <Card>
         <CardHeader>
-          <CardTitle>Información Personal</CardTitle>
-          <CardDescription>Datos de contacto del responsable</CardDescription>
+          <CardTitle>Datos del Franquiciado</CardTitle>
+          <CardDescription>Información canónica del recurso `/admin/franchisees`</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="first_name">Nombre *</Label>
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="name">Nombre comercial *</Label>
               <Input
-                id="first_name"
-                value={formData.first_name}
-                onChange={(e) => handleChange('first_name', e.target.value)}
-                onBlur={() => handleBlur('first_name')}
-                placeholder="Juan"
+                id="name"
+                value={formData.name}
+                onChange={(e) => handleChange('name', e.target.value)}
+                onBlur={() => handleBlur('name')}
+                placeholder="Carrefour Express Centro"
                 required
-                className={fieldErrors.first_name ? 'border-red-500' : ''}
+                className={fieldErrors.name ? 'border-red-500' : ''}
               />
-              {fieldErrors.first_name && (
-                <p className="text-sm text-red-600">{fieldErrors.first_name}</p>
+              {fieldErrors.name && (
+                <p className="text-sm text-red-600">{fieldErrors.name}</p>
               )}
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="last_name">Apellidos *</Label>
+              <Label htmlFor="company_name">Razón social *</Label>
               <Input
-                id="last_name"
-                value={formData.last_name}
-                onChange={(e) => handleChange('last_name', e.target.value)}
-                onBlur={() => handleBlur('last_name')}
-                placeholder="García López"
+                id="company_name"
+                value={formData.company_name}
+                onChange={(e) => handleChange('company_name', e.target.value)}
+                onBlur={() => handleBlur('company_name')}
+                placeholder="Carrefour Express Centro SL"
                 required
-                className={fieldErrors.last_name ? 'border-red-500' : ''}
+                className={fieldErrors.company_name ? 'border-red-500' : ''}
               />
-              {fieldErrors.last_name && (
-                <p className="text-sm text-red-600">{fieldErrors.last_name}</p>
+              {fieldErrors.company_name && (
+                <p className="text-sm text-red-600">{fieldErrors.company_name}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tax_id">CIF/NIF *</Label>
+              <Input
+                id="tax_id"
+                value={formData.tax_id}
+                onChange={(e) => handleChange('tax_id', e.target.value)}
+                onBlur={() => handleBlur('tax_id')}
+                placeholder="B12345678"
+                required
+                className={fieldErrors.tax_id ? 'border-red-500' : ''}
+              />
+              {fieldErrors.tax_id && (
+                <p className="text-sm text-red-600">{fieldErrors.tax_id}</p>
+              )}
+            </div>
+
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="contact_person">Persona de contacto *</Label>
+              <Input
+                id="contact_person"
+                value={formData.contact_person}
+                onChange={(e) => handleChange('contact_person', e.target.value)}
+                onBlur={() => handleBlur('contact_person')}
+                placeholder="María García"
+                required
+                className={fieldErrors.contact_person ? 'border-red-500' : ''}
+              />
+              {fieldErrors.contact_person && (
+                <p className="text-sm text-red-600">{fieldErrors.contact_person}</p>
               )}
             </div>
 
@@ -295,67 +321,85 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
                 type="tel"
                 value={formData.phone}
                 onChange={(e) => handleChange('phone', e.target.value)}
+                onBlur={() => handleBlur('phone')}
                 placeholder="+34 600 123 456"
+                className={fieldErrors.phone ? 'border-red-500' : ''}
+              />
+              {fieldErrors.phone && (
+                <p className="text-sm text-red-600">{fieldErrors.phone}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="store_code">Código de tienda</Label>
+              <Input
+                id="store_code"
+                value={formData.store_code}
+                onChange={(e) => handleChange('store_code', e.target.value)}
+                placeholder="CRF-MAD-001"
               />
             </div>
 
-            {mode === 'create' && (
-              <div className="space-y-2 md:col-span-2">
-                <Label htmlFor="password">Contraseña temporal *</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={formData.password}
-                  onChange={(e) => handleChange('password', e.target.value)}
-                  onBlur={() => handleBlur('password')}
-                  placeholder="Contraseña temporal para el primer acceso"
-                  required
-                  minLength={8}
-                  className={fieldErrors.password ? 'border-red-500' : ''}
-                />
-                {fieldErrors.password ? (
-                  <p className="text-sm text-red-600">{fieldErrors.password}</p>
-                ) : (
-                  <p className="text-xs text-muted-foreground">
-                    La contraseña debe tener al menos 8 caracteres
-                  </p>
-                )}
-              </div>
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Status & Notes */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Estado y Notas</CardTitle>
-          <CardDescription>Estado de la cuenta y observaciones</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="space-y-0.5">
-              <Label htmlFor="is_active">Cuenta Activa</Label>
-              <p className="text-sm text-muted-foreground">
-                Permite al franquiciado acceder y realizar pedidos
-              </p>
+            <div className="space-y-2">
+              <Label htmlFor="region">Región *</Label>
+              <Input
+                id="region"
+                value={formData.region}
+                onChange={(e) => handleChange('region', e.target.value)}
+                onBlur={() => handleBlur('region')}
+                placeholder="Madrid"
+                className={fieldErrors.region ? 'border-red-500' : ''}
+              />
+              {fieldErrors.region && (
+                <p className="text-sm text-red-600">{fieldErrors.region}</p>
+              )}
             </div>
-            <Switch
-              id="is_active"
-              checked={formData.is_active}
-              onCheckedChange={(checked) => handleChange('is_active', checked)}
-            />
-          </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="notes">Notas Internas</Label>
-            <Textarea
-              id="notes"
-              value={formData.notes}
-              onChange={(e) => handleChange('notes', e.target.value)}
-              placeholder="Observaciones adicionales sobre este franquiciado..."
-              rows={4}
-            />
+            <div className="space-y-2 md:col-span-2">
+              <Label htmlFor="address">Dirección *</Label>
+              <Input
+                id="address"
+                value={formData.address}
+                onChange={(e) => handleChange('address', e.target.value)}
+                onBlur={() => handleBlur('address')}
+                placeholder="Gran Vía 1"
+                className={fieldErrors.address ? 'border-red-500' : ''}
+              />
+              {fieldErrors.address && (
+                <p className="text-sm text-red-600">{fieldErrors.address}</p>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="municipality">Municipio</Label>
+              <Input
+                id="municipality"
+                value={formData.municipality}
+                onChange={(e) => handleChange('municipality', e.target.value)}
+                placeholder="Madrid"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="postal_code">Código postal</Label>
+              <Input
+                id="postal_code"
+                value={formData.postal_code}
+                onChange={(e) => handleChange('postal_code', e.target.value)}
+                placeholder="28013"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="country">País</Label>
+              <Input
+                id="country"
+                value={formData.country}
+                onChange={(e) => handleChange('country', e.target.value.toUpperCase())}
+                placeholder="ES"
+                maxLength={2}
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

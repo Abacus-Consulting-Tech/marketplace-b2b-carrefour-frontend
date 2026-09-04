@@ -1,19 +1,10 @@
 /**
  * Franchisees API Client
- * 
- * Dual mode client (mock/real) for franchisee management
- * Mode controlled by feature flags in @/config/feature-flags
- * 
- * Medusa endpoints:
- * - GET /admin/customers
- * - POST /admin/customers  
- * - POST /admin/customers/:id
- * - DELETE /admin/customers/:id
- * - GET /admin/customers/:id/addresses
- * - POST /admin/customers/:id/addresses
- * - PATCH /admin/customers/:id/addresses/:addressId
- * - DELETE /admin/customers/:id/addresses/:addressId
- * - GET /admin/orders?customer_id=:id
+ *
+ * Canonical admin contract uses the custom B2B `/admin/franchisees*` family.
+ * This client still returns a small set of compatibility fields so the admin UI
+ * can be migrated incrementally without keeping the old `/admin/customers*`
+ * endpoints alive.
  */
 
 import { featureFlags } from '@/config/feature-flags';
@@ -64,6 +55,46 @@ const isMockMode = featureFlags.shouldUseMock('franchisees');
 const isMockInviteMode = shouldUseMockFranchiseeInvitations;
 const API_BASE_URL = featureFlags.getApiBaseUrl('franchisees') || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
 
+type BackendSubscriptionStatus = 'not_configured' | 'pending' | 'active' | 'past_due' | 'canceled';
+
+interface BackendFranchiseeRecord {
+  id: string;
+  name?: string;
+  email: string;
+  tax_id?: string;
+  contact_person?: string;
+  phone?: string;
+  company_name?: string;
+  store_code?: string;
+  region?: string;
+  address?: string;
+  municipality?: string;
+  postal_code?: string;
+  country?: string;
+  status?: 'pending_approval' | 'active' | 'suspended' | 'inactive';
+  subscription_status?: BackendSubscriptionStatus;
+  created_at: string;
+  updated_at: string;
+  deleted_at?: string;
+  notes?: string;
+  onboarding_status?: 'pending_payment' | 'pending_approval' | 'approved_pending_credentials' | 'credentials_sent' | 'active';
+  current_period_end?: string;
+  shipping_addresses?: Address[];
+}
+
+interface BackendListFranchiseesResponse {
+  franchisees: BackendFranchiseeRecord[];
+  total: number;
+  skip?: number;
+  take?: number;
+  offset?: number;
+  limit?: number;
+}
+
+interface BackendSingleFranchiseeResponse {
+  franchisee: BackendFranchiseeRecord;
+}
+
 // Log mode on initialization
 if (typeof window !== 'undefined') {
   console.log(
@@ -77,7 +108,129 @@ if (typeof window !== 'undefined') {
  */
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('auth_token') || null;
+  return localStorage.getItem('auth-token') || localStorage.getItem('auth_token') || null;
+}
+
+function splitNameParts(name?: string): { firstName?: string; lastName?: string } {
+  if (!name?.trim()) {
+    return {};
+  }
+
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: '' };
+  }
+
+  return {
+    firstName: parts[0],
+    lastName: parts.slice(1).join(' '),
+  };
+}
+
+function normalizeFranchisee(record: BackendFranchiseeRecord): Franchisee {
+  const nameSource = record.contact_person || record.name;
+  const { firstName, lastName } = splitNameParts(nameSource);
+  const status = record.status || 'pending_approval';
+  const companyName = record.company_name || record.name;
+
+  return {
+    id: record.id,
+    name: record.name,
+    email: record.email,
+    tax_id: record.tax_id,
+    contact_person: record.contact_person,
+    phone: record.phone,
+    company_name: companyName,
+    store_code: record.store_code,
+    region: record.region,
+    address: record.address,
+    municipality: record.municipality,
+    postal_code: record.postal_code,
+    country: record.country,
+    status,
+    subscription_status: record.subscription_status,
+    first_name: firstName,
+    last_name: lastName,
+    has_account: status !== 'pending_approval',
+    shipping_addresses: record.shipping_addresses || [],
+    metadata: {
+      company_name: companyName,
+      tax_id: record.tax_id,
+      store_code: record.store_code,
+      address: record.address,
+      municipality: record.municipality,
+      postal_code: record.postal_code,
+      region: record.region,
+      country: record.country,
+      status,
+      subscription_status: record.subscription_status,
+      onboarding_status: record.onboarding_status,
+      current_period_end: record.current_period_end,
+      notes: record.notes,
+      is_active: status === 'active',
+    },
+    created_at: record.created_at,
+    updated_at: record.updated_at,
+    deleted_at: record.deleted_at,
+  };
+}
+
+function toLegacySingleResponse(franchisee: Franchisee) {
+  return {
+    franchisee,
+    customer: franchisee,
+  };
+}
+
+function normalizeListResponse(response: BackendListFranchiseesResponse): ListFranchiseesResponse {
+  const franchisees = response.franchisees.map(normalizeFranchisee);
+  const skip = response.skip ?? response.offset ?? 0;
+  const take = response.take ?? response.limit ?? franchisees.length;
+
+  return {
+    franchisees,
+    total: response.total,
+    skip,
+    take,
+    customers: franchisees,
+    count: response.total,
+    offset: skip,
+    limit: take,
+  };
+}
+
+function mapCreateRequest(request: CreateFranchiseeRequest) {
+  return {
+    name: request.name,
+    email: request.email,
+    tax_id: request.tax_id,
+    contact_person: request.contact_person,
+    company_name: request.company_name,
+    phone: request.phone,
+    store_code: request.store_code,
+    region: request.region,
+    address: request.address,
+    municipality: request.municipality,
+    postal_code: request.postal_code,
+    country: request.country,
+  };
+}
+
+function mapUpdateRequest(request: UpdateFranchiseeRequest) {
+  return {
+    name: request.name,
+    email: request.email,
+    tax_id: request.tax_id,
+    contact_person: request.contact_person,
+    company_name: request.company_name,
+    phone: request.phone,
+    store_code: request.store_code,
+    region: request.region,
+    address: request.address,
+    municipality: request.municipality,
+    postal_code: request.postal_code,
+    country: request.country,
+  };
 }
 
 /**
@@ -146,10 +299,26 @@ function mockListFranchisees(filters?: ListFranchiseesFilters): Promise<ApiRespo
       const limit = filters?.limit || 20;
       const offset = filters?.offset || 0;
       const paginated = results.slice(offset, offset + limit);
+      const franchisees = paginated.map((item) => ({
+        ...item,
+        name: item.name || item.metadata?.company_name || `${item.first_name || ''} ${item.last_name || ''}`.trim(),
+        tax_id: item.tax_id || item.metadata?.tax_id,
+        company_name: item.company_name || item.metadata?.company_name,
+        contact_person: item.contact_person || `${item.first_name || ''} ${item.last_name || ''}`.trim(),
+        region: item.region || item.metadata?.region,
+        municipality: item.municipality || item.metadata?.city,
+        country: item.country || item.metadata?.country,
+        status: item.status || item.metadata?.status,
+        subscription_status: item.subscription_status || item.metadata?.subscription_status,
+      }));
 
       resolve({
         data: {
-          customers: paginated,
+          franchisees,
+          total: results.length,
+          skip: offset,
+          take: limit,
+          customers: franchisees,
           count: results.length,
           offset,
           limit,
@@ -171,7 +340,19 @@ function mockGetFranchisee(id: string): Promise<ApiResponse<GetFranchiseeRespons
         reject(new Error('Franchisee not found'));
         return;
       }
-      resolve({ data: { customer: franchisee } });
+      const normalized = {
+        ...franchisee,
+        name: franchisee.name || franchisee.metadata?.company_name || `${franchisee.first_name || ''} ${franchisee.last_name || ''}`.trim(),
+        tax_id: franchisee.tax_id || franchisee.metadata?.tax_id,
+        company_name: franchisee.company_name || franchisee.metadata?.company_name,
+        contact_person: franchisee.contact_person || `${franchisee.first_name || ''} ${franchisee.last_name || ''}`.trim(),
+        region: franchisee.region || franchisee.metadata?.region,
+        municipality: franchisee.municipality || franchisee.metadata?.city,
+        country: franchisee.country || franchisee.metadata?.country,
+        status: franchisee.status || franchisee.metadata?.status,
+        subscription_status: franchisee.subscription_status || franchisee.metadata?.subscription_status,
+      };
+      resolve({ data: toLegacySingleResponse(normalized) });
     }, 200);
   });
 }
@@ -184,18 +365,33 @@ function mockCreateFranchisee(request: CreateFranchiseeRequest): Promise<ApiResp
     setTimeout(() => {
       initializeMockFranchiseesStorage();
       const newFranchisee: Franchisee = {
-        id: `cus_${Date.now()}`,
+        id: `franchisee_${Date.now()}`,
+        name: request.name,
         email: request.email,
-        first_name: request.first_name,
-        last_name: request.last_name,
+        tax_id: request.tax_id,
+        contact_person: request.contact_person,
         phone: request.phone,
-        has_account: !!request.password,
-        groups: request.groups ? [mockB2BGroup] : [],
+        company_name: request.company_name || request.name,
+        store_code: request.store_code,
+        region: request.region,
+        address: request.address,
+        municipality: request.municipality,
+        postal_code: request.postal_code,
+        country: request.country,
+        has_account: false,
+        groups: [mockB2BGroup],
+        status: 'pending_approval',
         metadata: {
-          ...request.metadata,
-          is_active: true,
-          approved_at: new Date().toISOString(),
-          approved_by: 'admin@carrefour.es',
+          company_name: request.company_name || request.name,
+          tax_id: request.tax_id,
+          store_code: request.store_code,
+          region: request.region,
+          address: request.address,
+          municipality: request.municipality,
+          postal_code: request.postal_code,
+          country: request.country,
+          status: 'pending_approval',
+          is_active: false,
           total_orders: 0,
           total_spent: 0,
         },
@@ -207,7 +403,10 @@ function mockCreateFranchisee(request: CreateFranchiseeRequest): Promise<ApiResp
   persistMockFranchisees();
 
       resolve({
-        data: { customer: newFranchisee },
+        data: {
+          franchisee: newFranchisee,
+          customer: newFranchisee,
+        },
         message: 'Franchisee created successfully',
       });
     }, 400);
@@ -232,7 +431,14 @@ function mockUpdateFranchisee(id: string, request: UpdateFranchiseeRequest): Pro
         ...request,
         metadata: {
           ...mockFranchisees[index].metadata,
-          ...request.metadata,
+          company_name: request.company_name ?? mockFranchisees[index].metadata.company_name,
+          tax_id: request.tax_id ?? mockFranchisees[index].metadata.tax_id,
+          store_code: request.store_code ?? mockFranchisees[index].metadata.store_code,
+          region: request.region ?? mockFranchisees[index].metadata.region,
+          address: request.address ?? mockFranchisees[index].metadata.address,
+          municipality: request.municipality ?? mockFranchisees[index].metadata.municipality,
+          postal_code: request.postal_code ?? mockFranchisees[index].metadata.postal_code,
+          country: request.country ?? mockFranchisees[index].metadata.country,
         },
         updated_at: new Date().toISOString(),
       } as Franchisee;
@@ -241,7 +447,10 @@ function mockUpdateFranchisee(id: string, request: UpdateFranchiseeRequest): Pro
   persistMockFranchisees();
 
       resolve({
-        data: { customer: updated },
+        data: {
+          franchisee: updated,
+          customer: updated,
+        },
         message: 'Franchisee updated successfully',
       });
     }, 400);
@@ -300,7 +509,10 @@ function mockUpdateFranchiseeStatus(
       }
 
       resolve({
-        data: { customer: updated },
+        data: {
+          franchisee: updated,
+          customer: updated,
+        },
         message: 'Franchisee status updated successfully',
       });
     }, 400);
@@ -360,8 +572,9 @@ function mockDeleteFranchisee(id: string): Promise<ApiResponse<DeleteFranchiseeR
       resolve({
         data: {
           id,
-          object: 'customer',
+          object: 'franchisee',
           deleted: true,
+          deleted_at: new Date().toISOString(),
         },
         message: 'Franchisee deleted successfully',
       });
@@ -397,7 +610,7 @@ function mockAddAddress(franchiseeId: string, request: AddAddressRequest): Promi
       persistMockFranchisees();
 
       resolve({
-        data: { customer: franchisee },
+        data: { franchisee, customer: franchisee },
         message: 'Address added successfully',
       });
     }, 300);
@@ -435,7 +648,7 @@ function mockUpdateAddress(
       persistMockFranchisees();
 
       resolve({
-        data: { customer: franchisee },
+        data: { franchisee, customer: franchisee },
         message: 'Address updated successfully',
       });
     }, 300);
@@ -464,7 +677,7 @@ function mockDeleteAddress(franchiseeId: string, addressId: string): Promise<Api
   persistMockFranchisees();
 
       resolve({
-        data: { customer: franchisee },
+        data: { franchisee, customer: franchisee },
         message: 'Address deleted successfully',
       });
     }, 300);
@@ -565,17 +778,24 @@ export const franchiseesApi = {
 
     const params = new URLSearchParams();
     if (filters?.q) params.append('q', filters.q);
-    if (filters?.limit) params.append('limit', filters.limit.toString());
-    if (filters?.offset) params.append('offset', filters.offset.toString());
-    if (filters?.expand) params.append('expand', filters.expand);
-    if (filters?.has_account !== undefined) params.append('has_account', filters.has_account.toString());
+    if (filters?.search) params.append('search', filters.search);
+    if (filters?.limit !== undefined) params.append('limit', filters.limit.toString());
+    if (filters?.offset !== undefined) params.append('offset', filters.offset.toString());
+    if (filters?.take !== undefined) params.append('take', filters.take.toString());
+    if (filters?.skip !== undefined) params.append('skip', filters.skip.toString());
+    if (filters?.status) params.append('status', filters.status);
 
     const queryString = params.toString();
-    const endpoint = `/admin/customers${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/admin/franchisees${queryString ? `?${queryString}` : ''}`;
 
-    return apiRequest<ListFranchiseesResponse>(endpoint, {
+    const response = await apiRequest<BackendListFranchiseesResponse>(endpoint, {
       method: 'GET',
     });
+
+    return {
+      ...response,
+      data: normalizeListResponse(response.data),
+    };
   },
 
   /**
@@ -587,15 +807,16 @@ export const franchiseesApi = {
       return mockGetFranchisee(request.id);
     }
 
-    const params = new URLSearchParams();
-    if (request.expand) params.append('expand', request.expand);
-
-    const queryString = params.toString();
-    const endpoint = `/admin/customers/${request.id}${queryString ? `?${queryString}` : ''}`;
-
-    return apiRequest<GetFranchiseeResponse>(endpoint, {
+    const response = await apiRequest<BackendSingleFranchiseeResponse>(`/admin/franchisees/${request.id}`, {
       method: 'GET',
     });
+
+    const franchisee = normalizeFranchisee(response.data.franchisee);
+
+    return {
+      ...response,
+      data: toLegacySingleResponse(franchisee),
+    };
   },
 
   /**
@@ -607,10 +828,20 @@ export const franchiseesApi = {
       return mockCreateFranchisee(request);
     }
 
-    return apiRequest<CreateFranchiseeResponse>('/admin/customers', {
+    const response = await apiRequest<BackendSingleFranchiseeResponse>('/admin/franchisees', {
       method: 'POST',
-      body: JSON.stringify(request),
+      body: JSON.stringify(mapCreateRequest(request)),
     });
+
+    const franchisee = normalizeFranchisee(response.data.franchisee);
+
+    return {
+      ...response,
+      data: {
+        franchisee,
+        customer: franchisee,
+      },
+    };
   },
 
   /**
@@ -622,10 +853,20 @@ export const franchiseesApi = {
       return mockUpdateFranchisee(id, request);
     }
 
-    return apiRequest<UpdateFranchiseeResponse>(`/admin/customers/${id}`, {
-      method: 'POST',
-      body: JSON.stringify(request),
+    const response = await apiRequest<BackendSingleFranchiseeResponse>(`/admin/franchisees/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(mapUpdateRequest(request)),
     });
+
+    const franchisee = normalizeFranchisee(response.data.franchisee);
+
+    return {
+      ...response,
+      data: {
+        franchisee,
+        customer: franchisee,
+      },
+    };
   },
 
   /**
@@ -672,7 +913,7 @@ export const franchiseesApi = {
       return mockDeleteFranchisee(id);
     }
 
-    return apiRequest<DeleteFranchiseeResponse>(`/admin/customers/${id}`, {
+    return apiRequest<DeleteFranchiseeResponse>(`/admin/franchisees/${id}`, {
       method: 'DELETE',
     });
   },
@@ -757,7 +998,7 @@ export const franchiseesApi = {
       return mockGetFranchiseeStats(franchiseeId);
     }
 
-    return apiRequest<GetFranchiseeStatsResponse>(`/admin/customers/${franchiseeId}/stats`, {
+    return apiRequest<GetFranchiseeStatsResponse>(`/admin/franchisees/${franchiseeId}/stats`, {
       method: 'GET',
     });
   },
@@ -771,10 +1012,7 @@ export const franchiseesApi = {
       return mockBulkUpdateFranchisees(request);
     }
 
-    return apiRequest<BulkUpdateFranchiseesResponse>('/admin/customers/bulk', {
-      method: 'POST',
-      body: JSON.stringify(request),
-    });
+    throw new Error('Bulk update no está definido en el contrato canónico de /admin/franchisees.');
   },
 };
 

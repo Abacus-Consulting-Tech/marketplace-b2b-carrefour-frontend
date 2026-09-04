@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { franchiseesApi } from '@/lib/api/franchisees-client';
@@ -8,20 +8,10 @@ import type { Franchisee, FranchiseeStats } from '@/types/franchisees';
 import { isFranchiseeBillingEnabled } from '@/lib/config/franchisee-billing';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { FranchiseeStatusBadge, DiscountTierBadge } from './FranchiseeStatusBadge';
+import { FranchiseeStatusBadge } from './FranchiseeStatusBadge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
 import {
   Select,
   SelectContent,
@@ -41,7 +31,6 @@ import {
   Calendar,
   TrendingUp,
   ShoppingCart,
-  Euro,
   Clock,
   FileText,
   RefreshCw,
@@ -49,6 +38,22 @@ import {
 
 interface FranchiseeDetailProps {
   franchiseeId: string;
+}
+
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('es-ES', {
+    style: 'currency',
+    currency: 'EUR',
+  }).format(amount);
+}
+
+function formatDate(dateString?: string) {
+  if (!dateString) return '-';
+  return new Date(dateString).toLocaleDateString('es-ES', {
+    day: '2-digit',
+    month: 'long',
+    year: 'numeric',
+  });
 }
 
 export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps) {
@@ -59,27 +64,15 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
   const [error, setError] = useState<string | null>(null);
   const [deleting, setDeleting] = useState(false);
   const [approving, setApproving] = useState(false);
+  const [savingStatus, setSavingStatus] = useState(false);
   const [statusDraft, setStatusDraft] = useState<NonNullable<Franchisee['metadata']['status']>>('active');
-  const [notesDraft, setNotesDraft] = useState('');
-  const [savingStatusNotes, setSavingStatusNotes] = useState(false);
-  const [showAddStore, setShowAddStore] = useState(false);
-  const [editingAddressId, setEditingAddressId] = useState<string | null>(null);
-  const [deletingAddressId, setDeletingAddressId] = useState<string | null>(null);
-  const [savingStore, setSavingStore] = useState(false);
-  const [newStore, setNewStore] = useState({
-    company: '',
-    address_1: '',
-    address_2: '',
-    city: '',
-    province: '',
-    postal_code: '',
-    phone: '',
-  });
+
+  const currentStatus = franchisee?.status || franchisee?.metadata?.status || 'inactive';
+  const currentSubscription = franchisee?.subscription_status || franchisee?.metadata?.subscription_status || 'not_configured';
+  const onboardingStatus = franchisee?.metadata?.onboarding_status || 'pending_approval';
   const approvalRequiresActiveSubscription = isFranchiseeBillingEnabled;
-  const subscriptionActive = franchisee?.metadata?.subscription_status === 'active';
-  const canApprove =
-    franchisee?.metadata?.status === 'pending_approval' &&
-    (!approvalRequiresActiveSubscription || subscriptionActive);
+  const subscriptionActive = currentSubscription === 'active';
+  const canApprove = currentStatus === 'pending_approval' && (!approvalRequiresActiveSubscription || subscriptionActive);
 
   const loadFranchisee = async () => {
     try {
@@ -87,15 +80,14 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
       setError(null);
 
       const [franchiseeResponse, statsResponse] = await Promise.all([
-        franchiseesApi.getFranchisee({ id: franchiseeId, expand: 'groups,shipping_addresses' }),
+        franchiseesApi.getFranchisee({ id: franchiseeId }),
         franchiseesApi.getFranchiseeStats(franchiseeId),
       ]);
 
-      if (franchiseeResponse.data?.customer) {
-        const customer = franchiseeResponse.data.customer;
-        setFranchisee(customer);
-        setStatusDraft(customer.metadata?.status || (customer.metadata?.is_active ? 'active' : 'inactive'));
-        setNotesDraft(customer.metadata?.notes || '');
+      const loaded = franchiseeResponse.data?.franchisee || franchiseeResponse.data?.customer;
+      if (loaded) {
+        setFranchisee(loaded);
+        setStatusDraft(loaded.status || loaded.metadata?.status || 'inactive');
       }
 
       if (statsResponse.data?.stats) {
@@ -115,9 +107,9 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
 
   const handleDelete = async () => {
     if (!franchisee) return;
-    
+
     const confirmed = confirm(
-      `¿Estás seguro de que deseas eliminar a ${franchisee.metadata?.company_name}?\n\nEsta acción no se puede deshacer.`
+      `¿Estás seguro de que deseas eliminar a ${franchisee.name || franchisee.company_name || franchisee.email}?\n\nEsta acción no se puede deshacer.`
     );
 
     if (!confirmed) return;
@@ -154,123 +146,25 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
     }
   };
 
-  const handleSaveStatusNotes = async () => {
-    if (!franchisee) return;
-
-    try {
-      setSavingStatusNotes(true);
-
-      if (statusDraft !== franchisee.metadata?.status) {
-        await franchiseesApi.updateFranchiseeStatus(franchisee.id, statusDraft);
-      }
-
-      if (notesDraft !== (franchisee.metadata?.notes || '')) {
-        await franchiseesApi.updateFranchisee(franchisee.id, { metadata: { notes: notesDraft } });
-      }
-
-      await loadFranchisee();
-    } catch (err) {
-      console.error('Error saving status/notes:', err);
-      alert('Error al guardar: ' + (err instanceof Error ? err.message : 'Error desconocido'));
-    } finally {
-      setSavingStatusNotes(false);
-    }
-  };
-
-  const handleAddStore = async () => {
-    if (!franchisee) return;
-
-    if (!newStore.company.trim() || !newStore.address_1.trim() || !newStore.city.trim() || !newStore.postal_code.trim()) {
-      alert('Nombre, dirección, ciudad y código postal son obligatorios.');
+  const handleSaveStatus = async () => {
+    if (!franchisee || statusDraft === currentStatus) {
       return;
     }
 
-    const addressPayload = {
-      company: newStore.company,
-      address_1: newStore.address_1,
-      address_2: newStore.address_2 || undefined,
-      city: newStore.city,
-      province: newStore.province || undefined,
-      postal_code: newStore.postal_code,
-      phone: newStore.phone || undefined,
-      country_code: 'es',
-    };
-
     try {
-      setSavingStore(true);
-
-      if (editingAddressId) {
-        await franchiseesApi.updateAddress(franchisee.id, editingAddressId, addressPayload);
-      } else {
-        await franchiseesApi.addAddress(franchisee.id, { address: addressPayload });
-      }
-
-      await loadFranchisee();
-      handleCloseStoreDialog();
-    } catch (err) {
-      console.error('Error saving store:', err);
-      alert('Error al guardar tienda: ' + (err instanceof Error ? err.message : 'Error desconocido'));
-    } finally {
-      setSavingStore(false);
-    }
-  };
-
-  const handleEditStore = (address: NonNullable<Franchisee['shipping_addresses']>[number]) => {
-    setEditingAddressId(address.id);
-    setNewStore({
-      company: address.company || '',
-      address_1: address.address_1 || '',
-      address_2: address.address_2 || '',
-      city: address.city || '',
-      province: address.province || '',
-      postal_code: address.postal_code || '',
-      phone: address.phone || '',
-    });
-    setShowAddStore(true);
-  };
-
-  const handleCloseStoreDialog = () => {
-    setShowAddStore(false);
-    setEditingAddressId(null);
-    setNewStore({ company: '', address_1: '', address_2: '', city: '', province: '', postal_code: '', phone: '' });
-  };
-
-  const handleDeleteStore = async (address: NonNullable<Franchisee['shipping_addresses']>[number]) => {
-    if (!franchisee) return;
-
-    const confirmed = confirm(`¿Eliminar la tienda "${address.company || address.first_name}"?`);
-    if (!confirmed) return;
-
-    try {
-      setDeletingAddressId(address.id);
-      await franchiseesApi.deleteAddress(franchisee.id, address.id);
+      setSavingStatus(true);
+      await franchiseesApi.updateFranchiseeStatus(franchisee.id, statusDraft);
       await loadFranchisee();
     } catch (err) {
-      console.error('Error deleting store:', err);
-      alert('Error al eliminar tienda: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+      console.error('Error saving status:', err);
+      alert('Error al guardar el estado: ' + (err instanceof Error ? err.message : 'Error desconocido'));
     } finally {
-      setDeletingAddressId(null);
+      setSavingStatus(false);
     }
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('es-ES', {
-      style: 'currency',
-      currency: 'EUR',
-    }).format(amount);
-  };
-
-  const formatDate = (dateString?: string) => {
-    if (!dateString) return '-';
-    return new Date(dateString).toLocaleDateString('es-ES', {
-      day: '2-digit',
-      month: 'long',
-      year: 'numeric',
-    });
   };
 
   const onboardingStatusLabel = (() => {
-    switch (franchisee?.metadata?.onboarding_status) {
+    switch (onboardingStatus) {
       case 'pending_payment':
         return 'Pendiente de pago';
       case 'pending_approval':
@@ -287,7 +181,7 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
   })();
 
   const subscriptionBlockMessage = (() => {
-    switch (franchisee?.metadata?.subscription_status) {
+    switch (currentSubscription) {
       case 'pending':
         return 'La aprobación está bloqueada: la suscripción inicial todavía no se ha activado.';
       case 'past_due':
@@ -328,8 +222,7 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4">
         <div className="flex items-center gap-4">
           <Link href="/admin/franchisees">
             <Button variant="ghost" size="icon">
@@ -337,9 +230,9 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
             </Button>
           </Link>
           <div>
-            <h1 className="text-3xl font-bold">{franchisee.metadata?.company_name}</h1>
+            <h1 className="text-3xl font-bold">{franchisee.name || franchisee.company_name || franchisee.metadata.company_name}</h1>
             <p className="text-muted-foreground mt-1">
-              {franchisee.first_name} {franchisee.last_name}
+              {franchisee.contact_person || `${franchisee.first_name || ''} ${franchisee.last_name || ''}`.trim() || franchisee.email}
             </p>
           </div>
         </div>
@@ -348,7 +241,7 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualizar
           </Button>
-          {franchisee.metadata?.status === 'pending_approval' && (
+          {currentStatus === 'pending_approval' && (
             <Button onClick={handleApprove} disabled={approving || !canApprove}>
               <CheckCircle2 className="h-4 w-4 mr-2" />
               {approving ? 'Aprobando...' : 'Aprobar Franquiciado'}
@@ -367,42 +260,33 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
         </div>
       </div>
 
-      {/* Status & Tier */}
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <FranchiseeStatusBadge
-          isActive={franchisee.metadata?.is_active || false}
-          status={franchisee.metadata?.status}
+          isActive={currentStatus === 'active'}
+          status={currentStatus}
         />
-        <DiscountTierBadge tier={franchisee.metadata?.discount_tier} />
-        <Badge variant="outline">
-          Suscripción: {franchisee.metadata?.subscription_status || 'pending'}
-        </Badge>
-        <Badge variant="secondary">
-          Onboarding: {onboardingStatusLabel}
-        </Badge>
+        <Badge variant="outline">Suscripción: {currentSubscription}</Badge>
+        <Badge variant="secondary">Onboarding: {onboardingStatusLabel}</Badge>
         {franchisee.has_account && (
           <Badge variant="outline">
             <Mail className="h-3 w-3 mr-1" />
-            Cuenta Activa
+            Cuenta activa
           </Badge>
         )}
       </div>
 
-      {approvalRequiresActiveSubscription &&
-        franchisee.metadata?.status === 'pending_approval' &&
-        !subscriptionActive && (
+      {approvalRequiresActiveSubscription && currentStatus === 'pending_approval' && !subscriptionActive && (
         <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
           {subscriptionBlockMessage}
         </div>
       )}
 
-      {franchisee.metadata?.onboarding_status === 'approved_pending_credentials' && !franchisee.has_account && (
+      {onboardingStatus === 'approved_pending_credentials' && !franchisee.has_account && (
         <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 text-sm text-blue-800">
           El franquiciado ya está aprobado, pero todavía falta enviar o completar la activación de credenciales.
         </div>
       )}
 
-      {/* Stats Cards */}
       {stats && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
@@ -413,7 +297,7 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
             <CardContent>
               <div className="flex items-center text-xs text-muted-foreground">
                 <ShoppingCart className="h-3 w-3 mr-1" />
-                {stats.orders_by_status.pending} pendientes
+                {stats.orders_by_status.pending || 0} pendientes
               </div>
             </CardContent>
           </Card>
@@ -433,17 +317,13 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
 
           <Card>
             <CardHeader className="pb-2">
-              <CardDescription>Crédito Disponible</CardDescription>
-              <CardTitle className="text-2xl">
-                {formatCurrency(
-                  ((franchisee?.metadata?.credit_limit as number) || 0) - (stats?.total_spent || 0)
-                )}
-              </CardTitle>
+              <CardDescription>Estado de Suscripción</CardDescription>
+              <CardTitle className="text-lg">{currentSubscription}</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="flex items-center text-xs text-muted-foreground">
-                <Euro className="h-3 w-3 mr-1" />
-                Límite: {formatCurrency((franchisee?.metadata?.credit_limit as number) || 0)}
+                <Building2 className="h-3 w-3 mr-1" />
+                Estado operativo del alta
               </div>
             </CardContent>
           </Card>
@@ -467,118 +347,112 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
         </div>
       )}
 
-      {/* Details Tabs */}
       <Tabs defaultValue="info" className="w-full">
         <TabsList>
           <TabsTrigger value="info">Información</TabsTrigger>
-          <TabsTrigger value="status">Estado y Notas</TabsTrigger>
-          <TabsTrigger value="addresses">Direcciones</TabsTrigger>
+          <TabsTrigger value="status">Estado</TabsTrigger>
+          <TabsTrigger value="stores">Tiendas</TabsTrigger>
           <TabsTrigger value="orders">Pedidos</TabsTrigger>
-          <TabsTrigger value="config">Configuración B2B</TabsTrigger>
         </TabsList>
 
-        {/* Info Tab */}
         <TabsContent value="info" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Información General</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Nombre Completo</p>
-                  <div className="flex items-center">
-                    <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <p className="font-medium">
-                      {franchisee.first_name} {franchisee.last_name}
-                    </p>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <div className="flex items-center">
-                    <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <a href={`mailto:${franchisee.email}`} className="font-medium hover:underline">
-                      {franchisee.email}
-                    </a>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Teléfono</p>
-                  <div className="flex items-center">
-                    <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <p className="font-medium">{franchisee.phone || '-'}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Empresa</p>
-                  <div className="flex items-center">
-                    <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <p className="font-medium">{franchisee.metadata?.company_name || '-'}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">CIF/NIF</p>
-                  <p className="font-medium">{franchisee.metadata?.tax_id || '-'}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Tiendas registradas</p>
-                  <p className="font-medium">{franchisee.shipping_addresses?.length || 0}</p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Creado</p>
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <p className="font-medium">{formatDate(franchisee.created_at)}</p>
-                  </div>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Actualizado</p>
-                  <div className="flex items-center">
-                    <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
-                    <p className="font-medium">{formatDate(franchisee.updated_at)}</p>
-                  </div>
+            <CardContent className="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Nombre comercial</p>
+                <div className="flex items-center">
+                  <Building2 className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <p className="font-medium">{franchisee.name || franchisee.company_name || franchisee.metadata.company_name || '-'}</p>
                 </div>
               </div>
 
-              {franchisee.metadata?.notes && (
-                <div className="pt-4 border-t">
-                  <p className="text-sm text-muted-foreground mb-2">Notas Internas</p>
-                  <p className="text-sm">{franchisee.metadata.notes}</p>
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Razón social</p>
+                <p className="font-medium">{franchisee.company_name || franchisee.metadata.company_name || '-'}</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Persona de contacto</p>
+                <p className="font-medium">{franchisee.contact_person || `${franchisee.first_name || ''} ${franchisee.last_name || ''}`.trim() || '-'}</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Email</p>
+                <div className="flex items-center">
+                  <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <a href={`mailto:${franchisee.email}`} className="font-medium hover:underline">
+                    {franchisee.email}
+                  </a>
                 </div>
-              )}
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Teléfono</p>
+                <div className="flex items-center">
+                  <Phone className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <p className="font-medium">{franchisee.phone || '-'}</p>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">CIF/NIF</p>
+                <p className="font-medium">{franchisee.tax_id || franchisee.metadata.tax_id || '-'}</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Región</p>
+                <p className="font-medium">{franchisee.region || franchisee.metadata.region || '-'}</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Municipio</p>
+                <p className="font-medium">{franchisee.municipality || franchisee.metadata.municipality || '-'}</p>
+              </div>
+
+              <div className="space-y-1 md:col-span-2">
+                <p className="text-sm text-muted-foreground">Dirección</p>
+                <p className="font-medium">{franchisee.address || franchisee.metadata.address || '-'}</p>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Creado</p>
+                <div className="flex items-center">
+                  <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <p className="font-medium">{formatDate(franchisee.created_at)}</p>
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <p className="text-sm text-muted-foreground">Actualizado</p>
+                <div className="flex items-center">
+                  <Calendar className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <p className="font-medium">{formatDate(franchisee.updated_at)}</p>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Status & Notes Tab */}
         <TabsContent value="status" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Estado y Notas</CardTitle>
+              <CardTitle>Estado</CardTitle>
               <CardDescription>
-                Cambia el estado del franquiciado y añade notas internas (visibles solo para el equipo admin)
+                El contrato canónico confirma el cambio de estado por `PATCH /admin/franchisees/:id/status`. Las notas internas siguen sin una ruta confirmada.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Estado</p>
-                <Select
-                  value={statusDraft}
-                  onValueChange={(value) => setStatusDraft(value as typeof statusDraft)}
-                >
+                <p className="text-sm text-muted-foreground">Estado actual</p>
+                <Select value={statusDraft} onValueChange={(value) => setStatusDraft(value as typeof statusDraft)}>
                   <SelectTrigger className="w-full md:w-64">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="pending_approval">Pendiente de Aprobación</SelectItem>
+                    <SelectItem value="pending_approval">Pendiente de aprobación</SelectItem>
                     <SelectItem value="active">Activo</SelectItem>
                     <SelectItem value="suspended">Suspendido</SelectItem>
                     <SelectItem value="inactive">Inactivo</SelectItem>
@@ -593,82 +467,60 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
                 </div>
                 <div>
                   <p className="text-muted-foreground">Estado de suscripción</p>
-                  <p className="font-medium">{franchisee.metadata?.subscription_status || 'pending'}</p>
+                  <p className="font-medium">{currentSubscription}</p>
                 </div>
                 <div>
                   <p className="text-muted-foreground">Próxima renovación</p>
-                  <p className="font-medium">{formatDate(franchisee.metadata?.current_period_end)}</p>
+                  <p className="font-medium">{formatDate(franchisee.metadata.current_period_end)}</p>
                 </div>
               </div>
 
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Notas Internas</p>
+                <p className="text-sm text-muted-foreground">Notas internas disponibles</p>
                 <Textarea
-                  value={notesDraft}
-                  onChange={(e) => setNotesDraft(e.target.value)}
-                  placeholder="Notas visibles solo para el equipo admin..."
+                  value={franchisee.metadata.notes || ''}
+                  readOnly
                   className="min-h-[120px]"
+                  placeholder="No hay notas en el contrato confirmado"
                 />
               </div>
 
-              <Button onClick={handleSaveStatusNotes} disabled={savingStatusNotes}>
-                {savingStatusNotes ? 'Guardando...' : 'Guardar Cambios'}
+              <Button onClick={handleSaveStatus} disabled={savingStatus || statusDraft === currentStatus}>
+                {savingStatus ? 'Guardando...' : 'Guardar Estado'}
               </Button>
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Addresses Tab */}
-        <TabsContent value="addresses" className="space-y-4">
+        <TabsContent value="stores" className="space-y-4">
           <Card>
             <CardHeader>
-              <div className="flex justify-between items-center">
-                <CardTitle>Tiendas</CardTitle>
-                <Button size="sm" onClick={() => setShowAddStore(true)}>
-                  <MapPin className="h-4 w-4 mr-2" />
-                  Añadir Tienda
-                </Button>
-              </div>
+              <CardTitle>Tiendas y direcciones</CardTitle>
+              <CardDescription>
+                El backend ha validado el autoservicio `/franchisee/stores`, pero la edición admin de direcciones sigue pendiente de un contrato explícito.
+              </CardDescription>
             </CardHeader>
             <CardContent>
               {!franchisee.shipping_addresses || franchisee.shipping_addresses.length === 0 ? (
                 <div className="text-center py-8">
                   <MapPin className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                  <p className="text-muted-foreground">No hay tiendas registradas</p>
+                  <p className="text-muted-foreground">No hay tiendas o direcciones expuestas por este recurso</p>
                 </div>
               ) : (
                 <div className="space-y-4">
                   {franchisee.shipping_addresses.map((address) => (
-                    <div key={address.id} className="p-4 border rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
+                    <div key={address.id} className="rounded-lg border p-4">
+                      <div className="mb-2 flex items-start justify-between">
                         <div>
-                          <p className="font-medium">{address.company || address.first_name}</p>
-                          {address.phone && (
-                            <p className="text-sm text-muted-foreground">{address.phone}</p>
-                          )}
+                          <p className="font-medium">{address.company || address.first_name || 'Tienda'}</p>
+                          {address.phone && <p className="text-sm text-muted-foreground">{address.phone}</p>}
                         </div>
-                        <div className="flex gap-2">
-                          <Button variant="ghost" size="sm" onClick={() => handleEditStore(address)}>
-                            <Edit className="h-4 w-4 mr-2" />
-                            Editar
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteStore(address)}
-                            disabled={deletingAddressId === address.id}
-                          >
-                            <Trash2 className="h-4 w-4 mr-2" />
-                            {deletingAddressId === address.id ? 'Eliminando...' : 'Eliminar'}
-                          </Button>
-                        </div>
+                        <Badge variant="outline">Solo lectura</Badge>
                       </div>
-                      <div className="text-sm space-y-1">
+                      <div className="space-y-1 text-sm">
                         <p>{address.address_1}</p>
                         {address.address_2 && <p>{address.address_2}</p>}
-                        <p>
-                          {address.postal_code} {address.city}
-                        </p>
+                        <p>{address.postal_code} {address.city}</p>
                         <p>{address.province}</p>
                       </div>
                     </div>
@@ -679,7 +531,6 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
           </Card>
         </TabsContent>
 
-        {/* Orders Tab */}
         <TabsContent value="orders" className="space-y-4">
           <Card>
             <CardHeader>
@@ -691,141 +542,12 @@ export default function FranchiseeDetail({ franchiseeId }: FranchiseeDetailProps
             <CardContent>
               <div className="text-center py-8">
                 <ShoppingCart className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                <p className="text-muted-foreground">
-                  Historial de pedidos próximamente
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        {/* B2B Config Tab */}
-        <TabsContent value="config" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Configuración B2B</CardTitle>
-              <CardDescription>Condiciones comerciales y descuentos</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Nivel de Descuento</p>
-                  <DiscountTierBadge tier={franchisee.metadata?.discount_tier} />
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Límite de Crédito</p>
-                  <p className="font-medium text-lg">
-                    {formatCurrency(franchisee.metadata?.credit_limit || 0)}
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Días de Pago</p>
-                  <p className="font-medium text-lg">
-                    {franchisee.metadata?.payment_terms || 30} días
-                  </p>
-                </div>
-
-                <div className="space-y-1">
-                  <p className="text-sm text-muted-foreground">Crédito Disponible</p>
-                  <p className="font-medium text-lg">
-                    {formatCurrency(
-                      ((franchisee?.metadata?.credit_limit as number) || 0) - (stats?.total_spent || 0)
-                    )}
-                  </p>
-                </div>
+                <p className="text-muted-foreground">La vista detallada de pedidos sigue dependiendo del módulo orders.</p>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
-
-      {/* Add Store Dialog */}
-      <Dialog open={showAddStore} onOpenChange={(open) => (open ? setShowAddStore(true) : handleCloseStoreDialog())}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{editingAddressId ? 'Editar Tienda' : 'Añadir Tienda'}</DialogTitle>
-            <DialogDescription>
-              Datos básicos de {editingAddressId ? 'esta' : 'la nueva'} tienda de este franquiciado.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="space-y-2 md:col-span-2">
-              <Label>Nombre de la Tienda *</Label>
-              <Input
-                value={newStore.company}
-                onChange={(e) => setNewStore({ ...newStore, company: e.target.value })}
-                placeholder="Carrefour Express Sur"
-              />
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label>Dirección *</Label>
-              <Input
-                value={newStore.address_1}
-                onChange={(e) => setNewStore({ ...newStore, address_1: e.target.value })}
-                placeholder="Calle Mayor 123"
-              />
-            </div>
-
-            <div className="space-y-2 md:col-span-2">
-              <Label>Dirección (línea 2)</Label>
-              <Input
-                value={newStore.address_2}
-                onChange={(e) => setNewStore({ ...newStore, address_2: e.target.value })}
-                placeholder="Local 3"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Ciudad *</Label>
-              <Input
-                value={newStore.city}
-                onChange={(e) => setNewStore({ ...newStore, city: e.target.value })}
-                placeholder="Madrid"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Provincia</Label>
-              <Input
-                value={newStore.province}
-                onChange={(e) => setNewStore({ ...newStore, province: e.target.value })}
-                placeholder="Madrid"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Código Postal *</Label>
-              <Input
-                value={newStore.postal_code}
-                onChange={(e) => setNewStore({ ...newStore, postal_code: e.target.value })}
-                placeholder="28001"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Teléfono</Label>
-              <Input
-                value={newStore.phone}
-                onChange={(e) => setNewStore({ ...newStore, phone: e.target.value })}
-                placeholder="+34 900 000 000"
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={handleCloseStoreDialog} disabled={savingStore}>
-              Cancelar
-            </Button>
-            <Button onClick={handleAddStore} disabled={savingStore}>
-              {savingStore ? 'Guardando...' : 'Guardar Tienda'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

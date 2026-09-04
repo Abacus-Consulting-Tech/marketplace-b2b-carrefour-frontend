@@ -3,7 +3,7 @@
  * 
  * Comprehensive documentation of all Medusa API endpoints used in the application.
  * 
- * 🌐 BACKEND INTEGRATION STATUS (Updated 2026-09-03):
+ * 🌐 BACKEND INTEGRATION STATUS (Updated 2026-09-04):
  * ✅ Auth: REAL API - VALIDATED
  * ✅ Admin Orders: REAL API - VALIDATED
  * ✅ Supplier/Vendor Orders: REAL API - VALIDATED
@@ -11,35 +11,35 @@
  * ✅ Excel Import: REAL API - INTEGRATED
  * ✅ Sellers: REAL API - VALIDATED
  * ✅ Quotes: REAL API - VALIDATED
- * ⚠️ Franchisees: admin customers still hit RBAC `403`, but invitations and public registration now call real backend by default
+ * ⚠️ Franchisees: canonical admin contract is now `/admin/franchisees*`; list and stats were validated in DEV, while the remaining CRUD/status surfaces stay untested and `POST /store/customers/me/addresses` still returns `401` in DEV
  * ⚠️ Openings: backend route `/openings/projects` responds `404`; frontend kept in mock for DEV
  * ⚠️ Products/Catalog: real endpoints respond but are currently empty in DEV; frontend kept in mock for DEV catalog/product UI
  * ⚠️ Checkout: frontend ya refleja Stripe-only, agrupación por proveedor y confirmación asíncrona; backend sigue en mock en DEV por catálogo Store inconsistente y falta de contrato final post-webhook
  * 
- * 🎯 CURRENT DEV DECISION (2026-09-03):
+ * 🎯 CURRENT DEV DECISION (2026-09-04):
  * - Keep REAL in `auth`, `suppliers`, `pricing`, `orders`, `quotes`
- * - Keep HYBRID in `franchisees` (real onboarding, mock admin list/detail while `/admin/customers` stays blocked)
+ * - `franchisees` now uses `/admin/franchisees*` as canonical admin contract plus `/franchisee/stores` for self-service stores
  * - Keep MOCK in `openings`, `products`, `catalog`, `checkout`, `categories`
  * 
- * Endpoint Summary (Total: 148 endpoints):
+ * Endpoint Summary (Total: 143 endpoints):
  * - Auth: 5 endpoints (login unificado, fallbacks legacy, sesión) ✅ REAL
  * - Admin: 1 endpoint (usuario actual) ✅ REAL
- * - Suppliers: 3 endpoints (sellers admin + vendor actual) ✅ REAL
- * - Franchisees: 17 endpoints (customers admin + onboarding + stores/invoices surfaces) ⚠️ HÍBRIDO EN DEV
+ * - Suppliers: 8 endpoints (sellers admin + vendor actual + supplier status) ✅ REAL/PARCIAL
+ * - Franchisees: 9 endpoints (onboarding, self-service stores, checkout customer profile, invoices) ⚠️ HÍBRIDO EN DEV
  * - Openings: 24 endpoints (projects, categories, documents, invitations, quotes, financing, status) ⚠️ MOCK EN DEV
  * - Pricing + Excel Import: 20 endpoints (pending products, markups, seller catalog, imports) ✅ REAL CON FALLBACK TEMPORAL
- * - Products: 8 endpoints (CRUD admin, stats, bulk operations, inventory) ⚠️ MOCK EN DEV
- * - Catalog: 2 endpoints (listado y detalle marketplace) ⚠️ MOCK EN DEV
+ * - Products: 8 endpoints (CRUD admin, stats, bulk operations, inventory) ✅ REAL
+ * - Catalog: 2 endpoints (listado y detalle marketplace) ⚠️ PARCIAL EN DEV
  * - Store: 1 endpoint (regions) ⚠️ SIN VALIDAR
  * - Cart: 6 endpoints (cart operations + shipping options) ⚠️ SIN VALIDAR
- * - Checkout: 24 endpoints (address, shipping, payment, complete, order) ⚠️ MOCK EN DEV, pero la UX ya está alineada al flujo objetivo con Stripe y confirmación diferida
+ * - Checkout: 17 endpoints (address, shipping, payment, complete, order) ⚠️ MOCK EN DEV, pero la UX ya está alineada al flujo objetivo con Stripe y confirmación diferida
  * - Orders: 22 endpoints (admin, franchisee y supplier/vendor) ✅ REAL
  * - Quotes: 14 endpoints (franchisee + supplier) ✅ REAL
- * - Franchisee Management: 6 endpoints (CRUD, status, stats) ⚠️ SIN VALIDAR
+ * - Franchisee Management: 6 endpoints (CRUD, status, stats) ⚠️ PARCIAL EN DEV
  * 
  * Backend: https://marketplace-b2b-backend-dev.onrender.com
  * Status: ⚠️ HYBRID DEV MODE (real where validated, mock where backend remains broken/incomplete)
- * Confidence: 🟡 MEDIUM-HIGH (targeted real smoke validation completed 2026-08-31)
+ * Confidence: 🟡 MEDIUM-HIGH (targeted real smoke validation extended 2026-09-04 for franchisee admin list/stats)
  * 
  * Features:
  * - Filter by module
@@ -224,102 +224,7 @@ export default function DevToolsPage() {
       },
       
       // ========================================================================
-      // FRANCHISEES MODULE (Medusa Customers) - RBAC ISSUE
-      // Note: Returns 403 Forbidden - permission issue in backend
-      // ========================================================================
-      {
-        path: '/admin/customers',
-        method: 'GET',
-        module: 'franchisees',
-        description: 'Listar franquiciados (403 - RBAC)',
-        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'broken',
-        requiresAuth: true,
-        medusaEndpoint: '/admin/customers'
-      },
-      {
-        path: '/admin/customers/:id',
-        method: 'GET',
-        module: 'franchisees',
-        description: 'Detalle de franquiciado (403 - RBAC)',
-        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'broken',
-        requiresAuth: true,
-        medusaEndpoint: '/admin/customers/:id'
-      },
-      {
-        path: '/admin/customers',
-        method: 'POST',
-        module: 'franchisees',
-        description: 'Crear franquiciado (no validado en la ronda 2026-08-31)',
-        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'untested',
-        requiresAuth: true,
-        medusaEndpoint: '/admin/customers'
-      },
-      {
-        path: '/admin/customers/:id',
-        method: 'POST',
-        module: 'franchisees',
-        description: 'Actualizar franquiciado (no validado en la ronda 2026-08-31)',
-        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'untested',
-        requiresAuth: true,
-        medusaEndpoint: '/admin/customers/:id'
-      },
-      {
-        path: '/admin/customers/:id',
-        method: 'DELETE',
-        module: 'franchisees',
-        description: 'Eliminar franquiciado (no validado en la ronda 2026-08-31)',
-        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'untested',
-        requiresAuth: true,
-        medusaEndpoint: '/admin/customers/:id'
-      },
-      {
-        path: '/admin/customers/:id/addresses',
-        method: 'GET',
-        module: 'franchisees',
-        description: 'Listar direcciones de franquiciado (no validado en la ronda 2026-08-31)',
-        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'untested',
-        requiresAuth: true,
-        medusaEndpoint: '/admin/customers/:id/addresses'
-      },
-      {
-        path: '/admin/customers/:id/addresses',
-        method: 'POST',
-        module: 'franchisees',
-        description: 'Añadir dirección a franquiciado (no validado en la ronda 2026-08-31)',
-        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'untested',
-        requiresAuth: true,
-        medusaEndpoint: '/admin/customers/:id/addresses'
-      },
-      {
-        path: '/admin/customers/:id/addresses/:addressId',
-        method: 'PATCH',
-        module: 'franchisees',
-        description: 'Actualizar dirección (no validado en la ronda 2026-08-31)',
-        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'untested',
-        requiresAuth: true,
-        medusaEndpoint: '/admin/customers/:id/addresses/:addressId'
-      },
-      {
-        path: '/admin/customers/:id/addresses/:addressId',
-        method: 'DELETE',
-        module: 'franchisees',
-        description: 'Eliminar dirección (no validado en la ronda 2026-08-31)',
-        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'untested',
-        requiresAuth: true,
-        medusaEndpoint: '/admin/customers/:id/addresses/:addressId'
-      },
-
-      // ========================================================================
-      // FRANCHISEE SELF-SERVICE (Contract received 2026-09-03 — still not revalidated end-to-end in DEV)
+      // FRANCHISEE SELF-SERVICE (Canonical routes validated 2026-09-04)
       // See docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md
       // ========================================================================
       {
@@ -366,8 +271,8 @@ export default function DevToolsPage() {
         path: '/franchisee/stores',
         method: 'GET',
         module: 'franchisees',
-        description: 'Listar tiendas del franquiciado autenticado (mock, persistido en localStorage)',
-        usesRealAPI: false,
+        description: 'Listar tiendas persistentes del franquiciado autenticado',
+        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
         status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/franchisee/stores'
@@ -376,8 +281,8 @@ export default function DevToolsPage() {
         path: '/franchisee/stores',
         method: 'POST',
         module: 'franchisees',
-        description: 'Añadir tienda del franquiciado (mock, persistido en localStorage)',
-        usesRealAPI: false,
+        description: 'Crear tienda persistente del franquiciado autenticado',
+        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
         status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/franchisee/stores'
@@ -386,8 +291,8 @@ export default function DevToolsPage() {
         path: '/franchisee/stores/:id',
         method: 'DELETE',
         module: 'franchisees',
-        description: 'Eliminar tienda del franquiciado (mock, persistido en localStorage)',
-        usesRealAPI: false,
+        description: 'Archivar tienda del franquiciado autenticado',
+        usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
         status: 'untested',
         requiresAuth: true,
         medusaEndpoint: '/franchisee/stores/:id'
@@ -998,7 +903,7 @@ export default function DevToolsPage() {
         path: '/store/customers/me/addresses',
         method: 'POST',
         module: 'franchisees',
-        description: 'Alta self-service de nuevas direcciones/tiendas para el franquiciado autenticado. Intento validado en DEV con `franchisee@carrefour.dev` devolviendo `401 Unauthorized`, por lo que la UI de checkout solo puede seleccionar direcciones ya existentes y `Mis tiendas` sigue pendiente de integración real',
+        description: 'Alta self-service de nuevas direcciones de checkout para el franquiciado autenticado. Intento validado en DEV con `franchisee@carrefour.dev` devolviendo `401 Unauthorized`, por lo que el checkout solo puede seleccionar direcciones ya existentes; la gestión de `Mis tiendas` ya usa la ruta canónica `/franchisee/stores`',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
         status: 'broken',
         requiresAuth: true,
@@ -1536,9 +1441,9 @@ export default function DevToolsPage() {
         path: '/admin/franchisees',
         method: 'GET',
         module: 'franchisee-management',
-        description: 'Listar franquiciados (ruta legacy/no validada en la ronda 2026-08-31)',
+        description: 'Listar franquiciados (ruta canónica B2B; validada en DEV el 2026-09-04)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'untested',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/admin/franchisees'
       },
@@ -1546,7 +1451,7 @@ export default function DevToolsPage() {
         path: '/admin/franchisees/:id',
         method: 'GET',
         module: 'franchisee-management',
-        description: 'Detalle de franquiciado (ruta legacy/no validada en la ronda 2026-08-31)',
+        description: 'Detalle de franquiciado (ruta canónica B2B)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
         status: 'untested',
         requiresAuth: true,
@@ -1556,7 +1461,7 @@ export default function DevToolsPage() {
         path: '/admin/franchisees',
         method: 'POST',
         module: 'franchisee-management',
-        description: 'Crear franquiciado (ruta legacy/no validada en la ronda 2026-08-31)',
+        description: 'Crear franquiciado manualmente con el contrato B2B canónico',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
         status: 'untested',
         requiresAuth: true,
@@ -1566,7 +1471,7 @@ export default function DevToolsPage() {
         path: '/admin/franchisees/:id',
         method: 'PATCH',
         module: 'franchisee-management',
-        description: 'Actualizar franquiciado (ruta legacy/no validada en la ronda 2026-08-31)',
+        description: 'Actualizar franquiciado con campos canónicos en snake_case',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
         status: 'untested',
         requiresAuth: true,
@@ -1576,7 +1481,7 @@ export default function DevToolsPage() {
         path: '/admin/franchisees/:id/status',
         method: 'PATCH',
         module: 'franchisee-management',
-        description: 'Cambiar estado del franquiciado; al activar debe exigir subscription_status=active y disparar email/outbox (ruta legacy/no validada en la ronda 2026-08-31)',
+        description: 'Cambiar estado del franquiciado; al activar debe exigir subscription_status=active y disparar email/outbox',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
         status: 'untested',
         requiresAuth: true,
@@ -1586,9 +1491,9 @@ export default function DevToolsPage() {
         path: '/admin/franchisees/:id/stats',
         method: 'GET',
         module: 'franchisee-management',
-        description: 'Estadísticas del franquiciado (ruta legacy/no validada en la ronda 2026-08-31)',
+        description: 'Estadísticas del franquiciado (ruta canónica B2B; validada en DEV el 2026-09-04)',
         usesRealAPI: !featureFlags.shouldUseMock('franchisees'),
-        status: 'untested',
+        status: 'working',
         requiresAuth: true,
         medusaEndpoint: '/admin/franchisees/:id/stats'
       },

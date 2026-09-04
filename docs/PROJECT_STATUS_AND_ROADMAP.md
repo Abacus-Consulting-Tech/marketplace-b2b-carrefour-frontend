@@ -1,8 +1,8 @@
 # Estado del Proyecto y Roadmap - Marketplace B2B Carrefour
 
-**Fecha**: 03 de Septiembre de 2026  
-**Última Actualización**: Jueves 03 Septiembre 21:10 UTC - Checkout consume direcciones reales; alta self-service de tiendas bloqueada en DEV  
-**Estado General**: ⚠️ DEV híbrido | Frontend UI ampliamente cubierto | Inventario API: 149 endpoints (78 working, 6 broken, 65 untested)
+**Fecha**: 04 de Septiembre de 2026  
+**Última Actualización**: Viernes 04 Septiembre - sincronizado contrato canónico `/admin/franchisees*`, `Mis tiendas` real por `/franchisee/stores` y dev-tools  
+**Estado General**: ⚠️ DEV híbrido | Frontend UI ampliamente cubierto | Inventario API: 143 endpoints (80 working, 4 broken, 59 untested)
 
 > **📌 FUENTE DE VERDAD (Source of Truth)**  
 > Este documento, junto con la **Especificación Técnica v1.0** (PDF 23 páginas) y [Dev Tools](http://localhost:3000/admin/dev-tools), son las **fuentes oficiales** de verdad del proyecto.  
@@ -11,16 +11,16 @@
 > **⚠️ ACTUALIZACIÓN CRÍTICA (26/08/2026)**  
 > Tras comparar con la Especificación Técnica oficial, hemos identificado **gaps significativos** en integraciones críticas (Stripe, Odoo, liquidaciones). El roadmap ha sido actualizado con las **7 fases + Sprint 0** del spec y las **6 decisiones bloqueantes** que deben resolverse antes de desarrollo backend.
 
-> **🎉 VALIDACIÓN BASE (26/08/2026 17:15 UTC) + SINCRONIZACIÓN 03/09/2026**  
+> **🎉 VALIDACIÓN BASE (26/08/2026 17:15 UTC) + SINCRONIZACIÓN 04/09/2026**  
 > El workflow completo de B2B ha sido validado end-to-end con el backend de Render DEV:
 > ✅ Vendor propone producto → Admin ve en pending → Admin actualiza markup → Vendor ve sus productos  
-> ✅ El inventario actual en `dev-tools` sube a 148 endpoints documentados  
+> ✅ El inventario actual en `dev-tools` queda en 143 endpoints documentados  
 > ✅ Audit trail completo funcionando (proposed_by, updated_by, previous values)  
 > ⚠️ El proyecto sigue en modo híbrido: módulos validados conviven con superficies mock o parciales
 
 **✅ ACTUALIZACIÓN CHECKOUT (03/09/2026)**: La UI del checkout ya no afirma “pedido confirmado” inmediatamente tras pagar. Ahora usa pago con tarjeta como único método, agrupa la revisión por proveedor, lee las direcciones reales del franquiciado desde backend y muestra confirmación asíncrona mientras backend valida el pedido tras webhook Stripe.
 
-**⚠️ BLOQUEO DIRECCIONES/TIENDAS (03/09/2026)**: `GET /store/customers/me` ya permite leer `shipping_addresses` reales para el checkout del franquiciado, pero el alta self-service de nuevas direcciones por `POST /store/customers/me/addresses` devuelve `401 Unauthorized` en DEV. Como consecuencia, el checkout solo puede mostrar tiendas ya existentes en base de datos y la pantalla `Mis tiendas` sigue guardando en local hasta cerrar ese contrato backend.
+**⚠️ BLOQUEO DIRECCIONES CHECKOUT (04/09/2026)**: `GET /store/customers/me` ya permite leer `shipping_addresses` reales para el checkout del franquiciado, pero el alta self-service de nuevas direcciones por `POST /store/customers/me/addresses` devuelve `401 Unauthorized` en DEV. La gestión de `Mis tiendas` ya usa el contrato real `GET/POST/DELETE /franchisee/stores`; el bloqueo pendiente afecta al alta de nuevas direcciones del flujo checkout vía Store API.
 
 ---
 
@@ -42,9 +42,9 @@
 - ✅ **Checkout** - Wizard multi-paso (15 archivos, ~3,366 líneas)
 - ✅ **Openings** - Gestión de aperturas con documentos técnicos
 
-### 🌐 BACKEND INTEGRATION - HYBRID DEV STATUS (03/09/2026):
-- ✅ **78 endpoints marcados como working** en el inventario actual de `dev-tools`
-- ⚠️ **6 endpoints broken** y **65 untested** en el inventario actual
+### 🌐 BACKEND INTEGRATION - HYBRID DEV STATUS (04/09/2026):
+- ✅ **80 endpoints marcados como working** en el inventario actual de `dev-tools`
+- ⚠️ **4 endpoints broken** y **59 untested** en el inventario actual
 - ✅ **Complete workflow validated**: Vendor→Admin→Approval flow working
 - ✅ **Auth Module** (4 endpoints) - JWT admin + vendor working
 - ✅ **Orders Module** (12 endpoints) - Admin + Supplier + Franchisee all working
@@ -52,10 +52,10 @@
 - ✅ **Sellers Module** (7 endpoints) - CRUD + Markup GET/PATCH working
 - ✅ **Excel Import** (8 endpoints) - Bulk upload working
 - ✅ **Quotes Module** (6 endpoints) - Customer + Admin + Seller working
-- ⚠️ **Franchisees Module** - onboarding público ya sale a backend real por defecto; checkout ya consume `shipping_addresses` reales por `GET /store/customers/me`; lista/detalle admin siguen condicionados por RBAC en `/admin/customers` y el alta self-service de nuevas tiendas sigue bloqueada por `POST /store/customers/me/addresses` → `401`
+- ⚠️ **Franchisees Module** - contrato canónico confirmado en `/admin/franchisees*`; `GET /admin/franchisees` y `GET /admin/franchisees/:id/stats` ya quedaron validados en DEV, `Mis tiendas` ya usa `/franchisee/stores`, y el bloqueo abierto queda acotado a `POST /store/customers/me/addresses` → `401`
 - ✅ **Audit Trail** - proposed_by, updated_by, previous values all tracked
 - ✅ **Validation** - Duplicate detection, required fields, proper error handling
-- ⚠️ **Known RBAC Issue**: /admin/customers returns 403 (keep in mock mode)
+- ⚠️ **Known Franchisee Gap**: el alta de nuevas direcciones de checkout por `/store/customers/me/addresses` sigue devolviendo `401` en DEV
 
 ### 🔴 Lo que FALTA (Integraciones Críticas):
 - ❌ **Stripe Billing** - Suscripción anual (M02 del spec) - **BLOQUEANTE**
@@ -72,7 +72,7 @@
 
 ### 📊 Cobertura Real vs Especificación Técnica:
 - **Frontend UI Mock**: 85% completo (13 de 18 módulos del spec)
-- **Integraciones Backend**: inventario actual de 149 endpoints con 78 `working`, 6 `broken` y 65 `untested`
+- **Integraciones Backend**: inventario actual de 143 endpoints con 80 `working`, 4 `broken` y 59 `untested`
 - **MVP Funcional End-to-End**: operativo en modo híbrido, con `auth`, `suppliers`, `pricing`, `orders` y `quotes` usables en DEV
 - **Módulos del Spec Implementados**: 8 de 18 (44%)
 - **Workflow Validation**: ✅ 100% (Vendor→Admin→Approval complete)
@@ -547,7 +547,7 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 **Nota importante**: 
 - ✅ `/admin/products/pricing` está COMPLETO y funcional
 - ✅ `/admin/products` (CRUD general) **AHORA COMPLETO** (24/08/2026)
-- ⏳ `/admin/franchisees` es solo un placeholder
+- ✅ `/admin/franchisees` ya no es placeholder; usa el contrato canónico `/admin/franchisees*`
 
 ---
 
@@ -753,12 +753,11 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 - ~~`/admin/products`~~ - ✅ **COMPLETO** (ver sección 10)
 - ~~`/marketplace` + `/marketplace/cart`~~ - ✅ **COMPLETO** (ver sección 11)
 - `/admin/orders` - Vista previa global de pedidos (botones deshabilitados) - **Fase 2**
-- `/admin/franchisees` - Vista previa con 3 franquiciados mock (botones deshabilitados)
 
 **Propósito:**
 - Mostrar estructura visual futura
 - Placeholder para desarrollo futuro
-- NO son módulos completos (excepto /admin/products que ya está completo)
+- NO son módulos completos (los placeholders pendientes ya no incluyen franchisees)
 
 **Nota importante sobre Admin Orders:**
 - Página: `/admin/orders` existe como placeholder
@@ -1048,20 +1047,20 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 ---
 
 ### 16.1. Franchisee Self-Service — Alta, Invitación y Tiendas (Actualizado 03 Septiembre)
-**Estado**: ✅ Completo (Híbrido) — onboarding real por defecto, administración general aún mock por RBAC
+**Estado**: ✅ Completo (Híbrido) — onboarding real por defecto, contrato admin canónico migrado a `/admin/franchisees*`
 
 **Lo que se hizo:**
 - Flujo de autoregistro público en `/franchisee/register`: 2 pasos obligatorios (datos personales con contraseña, empresa) y un paso opcional de Stripe cuando billing está activado, usando Zustand + react-hook-form + zod
 - Pago con tarjeta vía `stripe.createPaymentMethod` solo cuando billing está activado; el frontend envía exclusivamente `stripePaymentMethodId`
 - Acción ligera "Invitar Franquiciado" en `/admin/franchisees/new` (solo nombre + email), genera un enlace a `/franchisee/register` con token de invitación
 - `POST /franchisee/register` y `POST /admin/franchisees/invitations` ya salen a backend real por defecto, con flags específicos para volver temporalmente a mock si hace falta
+- `GET /admin/franchisees` y `GET /admin/franchisees/:id/stats` validados en DEV como contrato admin canónico; el resto del CRUD/status queda inventariado como `untested` hasta completar smoke real
 - Nuevo estado `pending_approval` en `FranchiseeMetadata.status`, alineado con el enum real confirmado por backend (`pending_approval | active | suspended | inactive`)
 - Metadatos de onboarding/suscripción en mock (`subscription_status`, `stripe_customer_id`, `stripe_subscription_id`, `current_period_end`, `onboarding_status`) para poder probar la aprobación realista cuando billing está activado
 - Botón "Aprobar Franquiciado" y pestaña "Estado y Notas" en el detalle de franquiciado (`/admin/franchisees/:id`), bloqueando la activación por suscripción solo cuando billing está activado e incluyendo la simulación del evento asíncrono de sincronización con Odoo (partner) tras la aprobación
 - Filtro/tarjeta "Pendientes de Aprobación" en la lista de franquiciados
-- Gestión de tiendas del franquiciado: añadir/editar/eliminar tiendas desde `/admin/franchisees/:id` (dialog) y desde `/marketplace/profile` (self-service, persistido en localStorage)
+- Gestión de tiendas del franquiciado: `/marketplace/profile` ya usa `GET/POST/DELETE /franchisee/stores` como contrato real de self-service; la edición/admin-side de tiendas sigue pendiente de ruta backend confirmada
 - Sección "Mis Facturas" en `/marketplace/profile`, hoy mockeada a la espera del endpoint backend
-- Persistencia compartida del mock de franquiciados en localStorage para que, si `/admin/customers` sigue bloqueado, un alta real siga siendo visible en la UI admin durante QA
 - 3 franquiciados `pending_approval` añadidos al mock data para poder probar el flujo de aprobación sin tener que autoregistrarse primero
 
 **Archivos nuevos/modificados principales:**
@@ -1078,8 +1077,8 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 **Pendiente / bloqueado por backend** (ver guía de flujo para detalle):
 - ⚠️ `POST /webhooks/stripe` sigue pendiente de validación real completa en DEV
 - ✅ Pago decidido antes de la aprobación admin cuando billing está habilitado; sigue pendiente la validación real de Stripe Billing/webhooks
-- ❓ Contrato real: `/admin/franchisees*` vs `/admin/customers*` sin confirmar con frontend
 - ❓ Activación de credenciales: falta decidir si sale como efecto de `PATCH /admin/franchisees/:id/status` o si necesita endpoint separado
+- ❓ Ruta canónica para edición/admin de tiendas o direcciones desde backoffice aún no confirmada
 - ❌ Facturación real vía Odoo (solo la sincronización de contacto está confirmada, no la factura)
 
 **Tiempo invertido**: ~1 día
@@ -1376,6 +1375,7 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 - **Supplier Products**: ✅ **COMPLETO** - CRUD completo con 8 archivos (~1,634 líneas), carga masiva incluida
 - **Franchisee Management**: ✅ **COMPLETO** - CRUD completo con 10 archivos (~2,511 líneas), formulario completo + lista + detalle
 - **Franchisee Self-Service (Alta/Invitación/Tiendas)**: ✅ **COMPLETO (Mock)** (02/09/2026) - Autoregistro público, invitación admin, aprobación, gestión de tiendas — sin contrato backend acordado (ver sección 16.1)
+- **Franchisee Self-Service (Alta/Invitación/Tiendas)**: ✅ **COMPLETO (Híbrido)** (04/09/2026) - Autoregistro e invitaciones reales, `Mis tiendas` sobre `/franchisee/stores` y contrato admin migrado a `/admin/franchisees*` (ver sección 16.1)
 
 ---
 
@@ -1727,27 +1727,27 @@ Según la **Especificación Técnica v1.0 - Sección 17**, estas decisiones debe
 
 ## 📦 Entregables por Fase
 
-### Fase 1 - MVP Básico (Semanas 1-4): ✅ 78% COMPLETO
+### Fase 1 - MVP Básico (Semanas 1-4): ✅ Base funcional completada
 - [x] Auth system
 - [x] Openings management ⚠️ (falta vista descarga documentos para franchisee/supplier)
 - [x] Categories management
-- [x] Quotes system (placeholder - falta completar)
+- [x] Quotes system
 - [x] Supplier order management
 - [x] **Product Management (Admin CRUD)** ✅ 24/08
 - [x] **Product catalog (Franchisee)** ✅ 24/08
 - [x] **Shopping cart** ✅ 24/08
 - [x] **Testing manual catalog** ✅ 25/08
-- [ ] Checkout (PRÓXIMO - 2-3 días)
+- [x] Checkout ✅ 25/08
 
-### Fase 2 - Funcionalidad Completa (Semanas 5-8): ⏳ 0% COMPLETO
-- [ ] Supplier product management
-- [ ] Franchisee management (admin)
+### Fase 2 - Funcionalidad Completa (Semanas 5-8): ⚠️ Parcial
+- [x] Supplier product management
+- [x] Franchisee management (admin)
 - [ ] Enhanced dashboards
 - [ ] Invitation system
 - [ ] UX improvements
 - [ ] E2E testing
 
-### Fase 3 - Integración & Polish (Semanas 9-12): ⏳ 0% COMPLETO
+### Fase 3 - Integración & Polish (Semanas 9-12): ⏳ Pendiente
 - [ ] Backend integration (all modules)
 - [ ] Performance optimization
 - [ ] A11y improvements
@@ -2367,14 +2367,14 @@ Según dependencias y prioridad:
 9. **CRUD completo de productos** - Gestión completa con variantes, inventario, validaciones
 10. **Testing exhaustivo** - Guías con 200+ casos de prueba totales
 11. **Honestidad técnica** - Documentación refleja estado real (no inflado)
-12. **Catálogo completo E2E** - Flujo de compra funcionando de inicio a fin (falta solo checkout)
+12. **Catálogo + checkout E2E** - Flujo de compra funcional de inicio a fin en modo híbrido
 13. **Variant-aware cart** - Carrito con patrón Medusa correctamente implementado
 14. **Testing manual completo** - Todas las funcionalidades del catálogo verificadas exitosamente
 
-**Módulos completos**: Auth, Openings, Categories, Supplier Orders, Product Pricing/Approval, **Product Management (Admin)**, **Franchisee Catalog + Cart**, **Franchisee Orders**, **Admin Orders**, **Quotes**  
-**Módulos placeholder**: Franchisee Management (~4 días)  
+**Módulos completos**: Auth, Openings, Categories, Supplier Orders, Product Pricing/Approval, **Product Management (Admin)**, **Franchisee Catalog + Cart**, **Franchisee Orders**, **Admin Orders**, **Quotes**, **Franchisee Management**, **Checkout**  
+**Módulos placeholder**: Admin Dashboard y mejoras UX pendientes  
 **Testing completado**: Product Management, Franchisee Catalog  
-**Próximo objetivo**: Checkout (2-3 días) para completar flujo E2E
+**Próximo objetivo**: validar en DEV el resto de CRUD/status de `/admin/franchisees*` y cerrar el `401` de `/store/customers/me/addresses`
 
 ---
 
@@ -2461,6 +2461,6 @@ docs/
 ---
 
 **Documento mantenido por**: Frontend Team  
-**Última actualización**: 03 Septiembre 2026 - Estado híbrido y onboarding sincronizados  
-**Próxima revisión**: Tras validación real de franchisee onboarding y siguientes cambios de inventario  
+**Última actualización**: 04 Septiembre 2026 - contrato admin de franquiciados y dev-tools sincronizados  
+**Próxima revisión**: Tras validación real del resto de `/admin/franchisees*` y resolución del alta de direcciones checkout  
 **Contacto**: Ver email enviado a backend

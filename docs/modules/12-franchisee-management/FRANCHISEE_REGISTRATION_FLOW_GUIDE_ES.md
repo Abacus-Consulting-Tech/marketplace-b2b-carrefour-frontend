@@ -1,7 +1,7 @@
 # Cómo se da de alta un nuevo franquiciado en la plataforma 🏪
 
-**Versión**: v1.1
-**Última actualización**: 2026-09-03
+**Versión**: v1.3
+**Última actualización**: 2026-09-04
 
 Guía para el equipo de backend, escrita desde el punto de vista de frontend: qué pantallas existen, qué le pedimos a la API en cada paso, y qué esperamos que nos devuelva. Sin detalles internos de implementación, solo el contrato que necesitamos.
 
@@ -151,12 +151,11 @@ La generación y sincronización de la factura es cosa del backend. Frontend sol
 Un admin revisa la solicitud y la aprueba. También puede editar datos, cambiar estado y añadir notas internas.
 
 **Qué llamamos:**
-- `GET /admin/customers?q=&limit=20&offset=0&expand=groups,shipping_addresses` — para listar franquiciados.
+- `GET /admin/franchisees?q=&limit=20&offset=0` — para listar franquiciados.
   - `q`: texto de búsqueda
   - `limit`, `offset`: paginación
-  - `expand`: para traer grupos y tiendas
-  - además nos gustaría filtro backend por `status=pending_approval`
-- `GET /admin/customers/:id?expand=groups,shipping_addresses` — para el detalle.
+  - backend acepta también `search`, `take`, `skip`
+- `GET /admin/franchisees/:id` — para el detalle.
 - `PATCH /admin/franchisees/:id/status` — enviamos:
 ```json
 { "status": "active" }
@@ -171,16 +170,18 @@ Un admin revisa la solicitud y la aprueba. También puede editar datos, cambiar 
 - mover `onboarding_status` a algo tipo `approved_pending_credentials`
 - emitir el evento/outbox para sincronizar el partner en Odoo
 
-- `POST /admin/customers/:id` — para guardar cambios de datos o notas internas, por ejemplo:
+- `PATCH /admin/franchisees/:id` — para guardar cambios de datos del franquiciado usando `snake_case`, por ejemplo:
 ```json
 {
-  "metadata": {
-    "notes": "Cliente premium, revisar límite de crédito"
-  }
+  "company_name": "Carrefour Express Sur SL",
+  "contact_person": "María García",
+  "phone": "+34 600 123 456",
+  "region": "Madrid",
+  "address": "Gran Vía 1"
 }
 ```
 
-> Seguimos usando `/admin/customers/*` para listar, ver detalle y editar, pero también existe `/admin/franchisees/*` en backend. Necesitamos confirmar cuál es el contrato canónico.
+> Confirmado por backend en DEV el 2026-09-04: la familia canónica para la gestión admin B2B es `/admin/franchisees/*`. Frontend ya no debe depender de `/admin/customers/*` para este módulo.
 
 ### 6. El perfil y las tiendas del franquiciado
 
@@ -201,29 +202,27 @@ Un franquiciado aprobado puede tener varias tiendas y quiere gestionarlas desde 
 - `DELETE /franchisee/stores/:id`
 
 **Qué llamamos desde admin en el detalle:**
-- `POST /admin/customers/:id/addresses`
-- `PATCH /admin/customers/:id/addresses/:addressId`
-- `DELETE /admin/customers/:id/addresses/:addressId`
+- Pendiente de contrato explícito backend para edición admin de tiendas o direcciones.
 
-> `GET/POST/DELETE /franchisee/stores*` no existe todavía en backend. Hoy frontend lo persiste solo localmente para pruebas.
+> `GET/POST/DELETE /franchisee/stores*` ya existe como contrato canónico de autoservicio. El frontend ya no debe persistir `Mis tiendas` en localStorage.
 
 ---
 
 ## 📋 Todas las llamadas en un solo sitio
 
-| Paso | Método y ruta | ¿Existe en backend? |
+| Paso | Método y ruta | Estado DEV |
 |---|---|---|
-| Invitar franquiciado | `POST /admin/franchisees/invitations` | ❌ No |
-| Registro público | `POST /franchisee/register` | ❌ No |
+| Invitar franquiciado | `POST /admin/franchisees/invitations` | ⚠️ `untested` |
+| Registro público | `POST /franchisee/register` | ⚠️ `untested` |
 | Pago | *(frontend ya tokeniza tarjeta con Stripe; falta cobro real backend)* | ⚠️ Parcial |
-| Webhook Stripe suscripciones | `POST /webhooks/stripe` | ❌ No |
-| Facturas del franquiciado | `GET /franchisee/:id/invoices` | ❌ No |
-| Listar franquiciados | `GET /admin/customers` | ⚠️ Existe pero sin confirmar si es el contrato correcto |
-| Detalle de franquiciado | `GET /admin/customers/:id` | ⚠️ Igual que arriba |
-| Cambiar estado / aprobar | `PATCH /admin/franchisees/:id/status` | ⚠️ Existe, pero debe validar `subscription_status === active` y disparar email/outbox |
-| Editar datos / notas | `POST /admin/customers/:id` | ⚠️ Sin confirmar |
-| Tiendas (autoservicio franquiciado) | `GET / POST / DELETE /franchisee/stores` | ❌ No |
-| Tiendas (desde admin) | `POST / PATCH / DELETE /admin/customers/:id/addresses` | ⚠️ Sin confirmar |
+| Webhook Stripe suscripciones | `POST /webhooks/stripe` | ⚠️ `untested` |
+| Facturas del franquiciado | `GET /franchisee/:id/invoices` | ⚠️ Pendiente de contrato |
+| Listar franquiciados | `GET /admin/franchisees` | ✅ `working` |
+| Detalle de franquiciado | `GET /admin/franchisees/:id` | ⚠️ `untested` |
+| Cambiar estado / aprobar | `PATCH /admin/franchisees/:id/status` | ⚠️ `untested` y con validación de billing requerida |
+| Editar datos | `PATCH /admin/franchisees/:id` | ⚠️ `untested` |
+| Tiendas (autoservicio franquiciado) | `GET / POST / DELETE /franchisee/stores` | ⚠️ Contrato confirmado; smoke autenticado pendiente |
+| Tiendas (desde admin) | Ruta pendiente | ⚠️ Sin confirmar |
 
 ---
 
@@ -235,14 +234,74 @@ Un franquiciado aprobado puede tener varias tiendas y quiere gestionarlas desde 
 
 ---
 
-## ❓ Lo que necesitamos que confirméis
+## ✅ Lo que ya no está abierto
 
-1. **¿Cuál es el contrato real de admin?** `/admin/customers/*` o `/admin/franchisees/*`.
-2. **¿Vais a construir `POST /franchisee/register` ahora?** Sin él, el registro público seguirá siendo 100% simulado.
-3. **¿Confirmamos `GET /franchisee/:id/invoices`?** Si queréis otro path, necesitamos cerrarlo ya porque la UI ya existe.
-4. **¿Existirá `/franchisee/stores*`?** O preferís que las tiendas se gestionen siempre desde admin y el franquiciado solo las vea.
-5. **¿La activación de credenciales sale como efecto de `PATCH /admin/franchisees/:id/status`?** Si preferís un endpoint separado para eso, hay que acordarlo antes de construir esa UI.
-6. **¿Cómo queréis materializar el cobro real de onboarding?** Ahora mismo frontend ya puede enviar `stripePaymentMethodId`, pero falta decidir e implementar en backend la creación real de cliente/suscripción/cobro antes de activar el flujo end-to-end.
+1. La familia canónica de admin para franquiciados es `/admin/franchisees/*`.
+2. El autoservicio de tiendas del franquiciado vive en `/franchisee/stores*`.
+3. `GET /store/customers/me` queda reservado al flujo Store/checkout para leer `shipping_addresses`; no sustituye el contrato admin ni el de `Mis tiendas`.
+4. Frontend ya no debe volver a `/admin/customers/*` ni a persistencia local de `Mis tiendas`.
+
+## 🧩 Instrucciones concretas para backend
+
+### Prioridad 1: cerrar el flujo que ya existe en frontend
+
+1. Validar end-to-end `POST /admin/franchisees/invitations`.
+2. Validar end-to-end `POST /franchisee/register` con y sin `stripePaymentMethodId`.
+3. Validar `GET /admin/franchisees/:id`, `PATCH /admin/franchisees/:id`, `DELETE /admin/franchisees/:id` y `PATCH /admin/franchisees/:id/status`.
+4. Mantener `GET /admin/franchisees` y `GET /admin/franchisees/:id/stats` con el shape actual, ya consumido por frontend.
+5. Confirmar si `PATCH /admin/franchisees/:id/status` es la acción que también dispara activación de credenciales, o definir un endpoint separado antes de que frontend construya esa acción explícita.
+6. Corregir la política CORS del dominio Render DEV para que las llamadas directas desde navegador a `/admin/franchisees*` no queden bloqueadas pese a responder `200`.
+
+### Prioridad 2: cerrar los huecos que hoy bloquean UX
+
+1. Definir la ruta admin para ver/editar tiendas o direcciones del franquiciado desde backoffice.
+2. Corregir o habilitar `POST /store/customers/me/addresses` para que el checkout pueda dar de alta nuevas direcciones.
+3. Confirmar el contrato final de `GET /franchisee/:id/invoices` para dejar de mockear la sección de facturas.
+4. Confirmar cómo se expone de forma segura la política de billing a la pantalla pública de registro, para no depender indefinidamente de `NEXT_PUBLIC_FRANCHISEE_BILLING_ENABLED`.
+
+## 📌 Comportamientos mínimos que frontend espera
+
+### `POST /franchisee/register`
+
+1. Si `invitationToken` no existe o expiró, responder `400` o `404` con mensaje legible.
+2. Si billing está deshabilitado, ignorar o rechazar de forma consistente `stripePaymentMethodId` no esperado.
+3. Si billing está habilitado y falta `stripePaymentMethodId`, responder `400` con error de validación claro.
+4. Si el alta queda creada pero pendiente de aprobación, devolver el `franchisee` ya persistido con `status: pending_approval`.
+5. Si backend necesita confirmación adicional de Stripe, puede devolver `billing.client_secret`.
+
+### `PATCH /admin/franchisees/:id/status`
+
+1. Si se intenta activar sin suscripción activa cuando billing aplica, responder `409` o `400` con mensaje explícito.
+2. Si la transición es válida, devolver el franquiciado actualizado o una respuesta inequívoca de éxito.
+3. Si la operación dispara efectos secundarios como email, credenciales u Odoo, la respuesta no debe dejar al frontend en duda sobre si el cambio principal quedó aplicado.
+
+### CORS para pruebas directas contra Render
+
+1. Detectamos un caso real donde `OPTIONS` devolvió `204` y `GET /admin/franchisees` devolvió `200`, pero el navegador bloqueó la petición por ausencia de `Access-Control-Allow-Origin`.
+2. Si backend quiere permitir pruebas directas desde frontend o desde DevTools del navegador contra el dominio Render, debe devolver `Access-Control-Allow-Origin` para `http://localhost:3000` y demás orígenes permitidos.
+3. Si la política deliberada es obligar al proxy `/api`, conviene documentarlo explícitamente para evitar falsos negativos en QA.
+
+### `POST /store/customers/me/addresses`
+
+1. Si la ruta no va a soportarse para franquiciados autenticados, necesitamos decisión explícita para retirar esa UX del checkout.
+2. Si sí va a soportarse, debe aceptar un address payload coherente con las `shipping_addresses` que luego devuelve `GET /store/customers/me`.
+
+## 🧪 Smoke test mínimo para backend
+
+1. Crear invitación con un admin JWT y abrir el `registrationUrl` generado.
+2. Registrar un franquiciado desde frontend con billing desactivado.
+3. Verificar que aparece en `GET /admin/franchisees` con `status: pending_approval`.
+4. Verificar `GET /admin/franchisees/:id` y `GET /admin/franchisees/:id/stats`.
+5. Intentar `PATCH /admin/franchisees/:id/status` a `active` con y sin `subscription_status: active`.
+6. Entrar como franquiciado y probar `GET /franchisee/stores`, `POST /franchisee/stores` y `DELETE /franchisee/stores/:id`.
+7. En checkout, probar `GET /store/customers/me` y confirmar si `POST /store/customers/me/addresses` sigue devolviendo `401`.
+
+## ❓ Lo que seguimos necesitando que confirméis
+
+1. ¿Confirmamos definitivamente `GET /franchisee/:id/invoices` o queréis otro path?
+2. ¿Cuál será la ruta admin para editar tiendas o direcciones?
+3. ¿La activación de credenciales sale como efecto de `PATCH /admin/franchisees/:id/status` o necesita endpoint separado?
+4. ¿Cómo queréis materializar el cobro real de onboarding con Stripe antes de aprobar al franquiciado?
 
 ---
 

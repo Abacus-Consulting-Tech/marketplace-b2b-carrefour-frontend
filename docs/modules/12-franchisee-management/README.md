@@ -1,7 +1,7 @@
 # Módulo 12: Franchisee Management (CRUD de Franquiciados - Admin)
 
 ## Estado
-⚠️ **Frontend completado, backend parcial en DEV** - la UI se mantiene en mock (31/08/2026)
+⚠️ **Frontend completado, backend parcial en DEV** - contrato admin migrado a `/admin/franchisees*`, con validación parcial en 04/09/2026
 
 ## Descripción
 Sistema completo de gestión de franquiciados desde el panel de administración. Permite a los administradores crear, editar, activar/desactivar franquiciados, y ver sus estadísticas de compra.
@@ -14,13 +14,14 @@ Sistema completo de gestión de franquiciados desde el panel de administración.
 
 Este módulo ya no puede describirse solo como un CRUD admin clásico.
 
-Situación real a 03/09/2026:
+Situación real a 04/09/2026:
 
-- el frontend admin principal consume `/admin/customers*`
+- el frontend admin principal consume `/admin/franchisees*`
+- `GET /admin/franchisees` y `GET /admin/franchisees/:id/stats` ya se validaron en DEV
 - el cambio de estado sigue saliendo por `/admin/franchisees/:id/status`
 - el onboarding público ya documenta `/admin/franchisees/invitations` y `/franchisee/register`
+- `Mis tiendas` ya usa `/franchisee/stores*`
 - el checkout del franquiciado ya lee direcciones reales por `GET /store/customers/me`
-- `GET /admin/customers` y `GET /admin/customers/:id` siguen bloqueados por `403 RBAC` en DEV
 - `POST /store/customers/me/addresses` sigue bloqueado por `401 Unauthorized` en DEV
 
 ## Resumen Técnico
@@ -91,241 +92,50 @@ src/types/franchisees.ts (333 líneas)
 
 Este README resume el módulo. La referencia canónica de endpoints, bodies y estado validado está ahora en [FRANCHISEE_MANAGEMENT_BACKEND.md](FRANCHISEE_MANAGEMENT_BACKEND.md).
 
-## ⚠️ Realidad validada en DEV (2026-08-31)
+## ⚠️ Realidad validada en DEV (2026-09-04)
 
-- Este README describe el contrato objetivo del módulo.
-- La validación real del frontend hoy no está consumiendo `/admin/franchisees` como contrato backend estable.
-- El alineamiento actual está alrededor de `/admin/customers*`.
-- `GET /admin/customers` y `GET /admin/customers/:id` devuelven `403` en DEV por RBAC.
-- Por ese bloqueo, el módulo de gestión de franquiciados sigue en mock en la configuración híbrida recomendada.
-
-### 1. Listar Franquiciados
-```http
-GET /admin/customers
-Authorization: Bearer {token}
-
-Query Params:
-- status?: 'active' | 'inactive'
-- search?: string
-- page?: number
-- limit?: number
-
-Response 200:
-{
-  "franchisees": [
-    {
-      "id": "fran_xxx",
-      "first_name": "Juan",
-      "last_name": "Pérez",
-      "email": "juan@franquicia.com",
-      "phone": "+34 600 123 456",
-      "company_name": "Carrefour Express Madrid Centro",
-      "tax_id": "B12345678",
-      "status": "active",
-      "address": {
-        "street": "Calle Mayor 1",
-        "city": "Madrid",
-        "postal_code": "28001",
-        "country": "ES"
-      },
-      "user_id": "user_xxx",
-      "created_at": "2026-01-15T10:00:00Z",
-      "stats": {
-        "total_orders": 45,
-        "total_spent": 12500.50,
-        "last_order_date": "2026-08-20T14:30:00Z"
-      }
-    }
-  ],
-  "count": 120,
-  "limit": 20,
-  "offset": 0
-}
-```
-
-### 2. Obtener Detalle de Franquiciado
-```http
-GET /admin/customers/:id
-Authorization: Bearer {token}
-
-Response 200:
-{
-  "franchisee": {
-    ...datos completos del franquiciado,
-    "stores": [
-      {
-        "id": "store_xxx",
-        "name": "Madrid Centro",
-        "address": {...}
-      }
-    ],
-    "recent_orders": [...],
-    "favorite_products": [...]
-  }
-}
-```
-
-### 3. Crear Franquiciado
-```http
-POST /admin/customers
-Authorization: Bearer {token}
-Content-Type: application/json
-
-Body:
-{
-  "first_name": "María",
-  "last_name": "González",
-  "email": "maria@nuevafranquicia.com",
-  "phone": "+34 600 987 654",
-  "company_name": "Carrefour Express Barcelona",
-  "tax_id": "B98765432",
-  "address": {
-    "street": "Paseo de Gracia 100",
-    "city": "Barcelona",
-    "postal_code": "08008",
-    "country": "ES"
-  },
-  "user": {
-    "email": "maria@nuevafranquicia.com",
-    "password": "SecurePass123!"
-  },
-  "status": "active"
-}
-
-Response 201:
-{
-  "franchisee": { ...franquiciado creado },
-  "user": { ...usuario creado }
-}
-```
-
-### 4. Actualizar Franquiciado
-```http
-POST /admin/customers/:id
-Authorization: Bearer {token}
-Content-Type: application/json
-
-Body: (campos a actualizar)
-{
-  "phone": "+34 600 111 222",
-  "company_name": "Nuevo nombre"
-}
-
-Response 200:
-{
-  "franchisee": { ...franquiciado actualizado }
-}
-```
-
-### 5. Cambiar Estado (Activar/Desactivar)
-```http
-PATCH /admin/franchisees/:id/status
-Authorization: Bearer {token}
-Content-Type: application/json
-
-Body:
-{
-  "status": "inactive",
-  "reason": "Suspensión temporal por incumplimiento de pagos"
-}
-
-Response 200:
-{
-  "franchisee": {
-    ...
-    "status": "inactive",
-    "status_updated_at": "2026-08-25T15:30:00Z"
-  }
-}
-```
-
-### 6. Obtener Estadísticas del Franquiciado
-```http
-GET /admin/customers/:id/stats
-Authorization: Bearer {token}
-
-Query Params:
-- from?: ISO date (default: 30 days ago)
-- to?: ISO date (default: now)
-
-Response 200:
-{
-  "stats": {
-    "total_orders": 45,
-    "total_spent": 12500.50,
-    "average_order_value": 277.79,
-    "order_frequency_days": 7,
-    "last_order_date": "2026-08-20T14:30:00Z",
-    "favorite_products": [
-      {
-        "product_id": "prod_xxx",
-        "title": "Polo Corporativo",
-        "times_ordered": 12,
-        "total_spent": 2200.00
-      }
-    ],
-    "orders_by_month": [
-      { "month": "2026-08", "count": 8, "total": 2100.00 },
-      { "month": "2026-07", "count": 12, "total": 3400.00 }
-    ]
-  }
-}
-```
-
-## Mock Data
-- 5-10 franquiciados de prueba con diferentes estados
+- Este README ya no debe usarse como contrato detallado de endpoints.
+- El contrato admin canónico validado para este módulo es `/admin/franchisees*`.
+- La referencia actual para backend es [FRANCHISEE_MANAGEMENT_BACKEND.md](FRANCHISEE_MANAGEMENT_BACKEND.md).
+- La referencia funcional de onboarding y handoff a backend es [FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md](FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md).
+- El principal gap abierto ya no es `/admin/customers`, sino la validación pendiente de varias rutas `untested` y el `401` en `POST /store/customers/me/addresses`.
 
 ## Estado operativo en DEV
 
-- `GET /admin/customers` → `broken` (`403 RBAC`)
-- `GET /admin/customers/:id` → `broken` (`403 RBAC`)
+- `GET /admin/franchisees` → `working`
+- `GET /admin/franchisees/:id/stats` → `working`
+- `GET /admin/franchisees/:id` → `untested`
+- `PATCH /admin/franchisees/:id` → `untested`
+- `PATCH /admin/franchisees/:id/status` → `untested`
+- `GET /franchisee/stores` / `POST /franchisee/stores` / `DELETE /franchisee/stores/:id` → contrato confirmado, smoke autenticado pendiente
 - `GET /store/customers/me` → `working`
 - `POST /store/customers/me/addresses` → `broken` (`401 Unauthorized`)
-- resto del módulo → `untested` o pendiente de contrato final
-- Datos realistas (nombres, empresas, direcciones)
-- Historial de pedidos vinculado
-- Estadísticas calculadas
 
 ## Integración con Otros Módulos
 
-### Con Pedidos (Orders):
+### Con Pedidos (Orders)
 - Vista de historial de pedidos del franquiciado
 - Enlace directo a pedidos desde detalle de franquiciado
 - Estadísticas basadas en pedidos reales
 
-### Con Usuarios (Auth):
+### Con Usuarios (Auth)
 - Cada franquiciado tiene un usuario asociado
-- Crear usuario automáticamente al crear franquiciado
-- Sincronizar estado: franquiciado inactivo → usuario deshabilitado
+- La activación de credenciales sigue pendiente de contrato final backend
+- Franquiciado inactivo no debe poder operar como usuario activo
 
-### Con Tiendas (Stores):
-- Asignar múltiples tiendas a un franquiciado
-- Vista de tiendas en detalle de franquiciado
+### Con Tiendas (Stores)
+- El autoservicio usa `/franchisee/stores*`
+- La edición administrativa de tiendas o direcciones sigue pendiente de ruta backend confirmada
 
 ## Notas para Backend
-1. **Validaciones**:
-   - Email debe ser único
-   - Tax ID (CIF) debe ser único
-   - Validar formato de tax ID español (B12345678)
-   - Validar formato de teléfono español
-
-2. **Creación de Usuario**:
-   - Al crear franquiciado, crear usuario asociado automáticamente
-   - Rol del usuario: 'franchisee'
-   - Email del usuario = email del franquiciado
-   - Enviar email de bienvenida con credenciales
-
-3. **Permisos**:
-   - Solo admins pueden gestionar franquiciados
-   - Franquiciados solo pueden ver su propio perfil (endpoint diferente)
-
-4. **Soft Delete**:
-   - No eliminar físicamente franquiciados
-   - Marcar como `deleted_at` para auditoría
-   - Pedidos históricos deben seguir vinculados
+1. Validaciones mínimas: email único, tax ID único, formato de tax ID y teléfono coherentes.
+2. Mantener `snake_case` y evitar volver a contratos `customers` para este módulo.
+3. Si billing aplica, `PATCH /admin/franchisees/:id/status` no debe activar sin `subscription_status: active`.
+4. Definir el mecanismo final de activación de credenciales y el contrato de facturas.
+5. Para el detalle completo del handoff, usar [FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md](FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md) y [FRANCHISEE_MANAGEMENT_BACKEND.md](FRANCHISEE_MANAGEMENT_BACKEND.md).
 
 ---
 
-**Fecha de Completado**: 25 de Agosto de 2026  
+**Fecha de sincronización**: 04 de Septiembre de 2026  
 **Desarrollador Frontend**: Frontend Team  
-**Estado Backend**: Pendiente de implementación
+**Estado Backend**: Parcial en DEV; contrato admin canónico ya alineado

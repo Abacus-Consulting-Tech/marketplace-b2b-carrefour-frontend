@@ -107,22 +107,35 @@ export default function ProfilePage() {
   const [loadingStores, setLoadingStores] = useState(true);
   const [showAddStore, setShowAddStore] = useState(false);
   const [savingStore, setSavingStore] = useState(false);
-  const [newStore, setNewStore] = useState({ name: '', taxId: '', address: '', city: '', postalCode: '' });
+  const [newStore, setNewStore] = useState({ name: '', taxId: '', address: '', city: '', postalCode: '', countryCode: 'es' });
   const [invoices, setInvoices] = useState<FranchiseeInvoice[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(true);
 
   useEffect(() => {
     if (!user?.id) return;
 
-    franchiseeStoresApi.listStores(user.id).then((response) => {
-      setStores(response.stores);
-      setLoadingStores(false);
-    });
+    franchiseeStoresApi.listStores(user.id)
+      .then((response) => {
+        setStores(response.stores);
+      })
+      .catch((err) => {
+        toast({
+          title: 'No se pudieron cargar las tiendas',
+          description: err instanceof Error ? err.message : 'Error desconocido',
+          variant: 'destructive',
+        });
+      })
+      .finally(() => {
+        setLoadingStores(false);
+      });
 
-    franchiseeInvoicesApi.listInvoices(user.id).then((response) => {
-      setInvoices(response.invoices);
-      setLoadingInvoices(false);
-    });
+    franchiseeInvoicesApi.listInvoices(user.id)
+      .then((response) => {
+        setInvoices(response.invoices);
+      })
+      .finally(() => {
+        setLoadingInvoices(false);
+      });
   }, [user?.id]);
 
   const formatCurrency = (amount: number, currencyCode: string) => {
@@ -150,22 +163,39 @@ export default function ProfilePage() {
       return;
     }
 
-    setSavingStore(true);
-    const response = await franchiseeStoresApi.createStore(user.id, newStore);
-    setStores((prev) => [...prev, response.store]);
-    setNewStore({ name: '', taxId: '', address: '', city: '', postalCode: '' });
-    setShowAddStore(false);
-    setSavingStore(false);
+    try {
+      setSavingStore(true);
+      const response = await franchiseeStoresApi.createStore(user.id, newStore);
+      setStores((prev) => [...prev, response.store]);
+      setNewStore({ name: '', taxId: '', address: '', city: '', postalCode: '', countryCode: 'es' });
+      setShowAddStore(false);
 
-    toast({ title: 'Tienda añadida', description: `${response.store.name} se ha añadido a tu perfil.` });
+      toast({ title: 'Tienda añadida', description: `${response.store.name} se ha añadido a tu perfil.` });
+    } catch (err) {
+      toast({
+        title: 'No se pudo crear la tienda',
+        description: err instanceof Error ? err.message : 'Error desconocido',
+        variant: 'destructive',
+      });
+    } finally {
+      setSavingStore(false);
+    }
   };
 
   const handleDeleteStore = async (storeId: string) => {
     if (!user?.id) return;
 
-    await franchiseeStoresApi.deleteStore(user.id, storeId);
-    setStores((prev) => prev.filter((s) => s.id !== storeId));
-    toast({ title: 'Tienda eliminada' });
+    try {
+      await franchiseeStoresApi.deleteStore(user.id, storeId);
+      setStores((prev) => prev.filter((s) => s.id !== storeId));
+      toast({ title: 'Tienda eliminada' });
+    } catch (err) {
+      toast({
+        title: 'No se pudo eliminar la tienda',
+        description: err instanceof Error ? err.message : 'Error desconocido',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -402,7 +432,7 @@ export default function ProfilePage() {
                       disabled={savingStore}
                       onClick={() => {
                         setShowAddStore(false);
-                        setNewStore({ name: '', taxId: '', address: '', city: '', postalCode: '' });
+                        setNewStore({ name: '', taxId: '', address: '', city: '', postalCode: '', countryCode: 'es' });
                       }}
                     >
                       Cancelar

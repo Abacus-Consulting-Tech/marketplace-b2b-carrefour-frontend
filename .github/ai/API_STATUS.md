@@ -1,16 +1,18 @@
 # API STATUS
 
-**Updated**: 2026-09-03 (from dev-tools)
+**Updated**: 2026-09-04 (from dev-tools)
 **Classification**: 🟢 VOLATILE (update every 3-5 endpoints or weekly)
 **Source of Truth**: `src/app/(backoffice)/admin/dev-tools/page.tsx` (EndpointInfo array)
 **Hierarchy**: See `.github/ai/DOCUMENTATION_HIERARCHY.md` for official data flow
 **Backend**: https://marketplace-b2b-backend-dev.onrender.com
-**Total Endpoint Inventory**: 148
-**Inventory Status**: 77 working, 5 broken, 66 untested
+**Total Endpoint Inventory**: 143
+**Inventory Status**: 80 working, 4 broken, 59 untested
 **Status**: ⚠️ HYBRID DEV MODE
   - 🌐 Real en DEV: `auth`, `suppliers`, `pricing`, `orders`, `quotes`
-  - ⚠️ Híbrido en DEV: `franchisees` (onboarding real por defecto; administración general aún mock por RBAC en `/admin/customers`)
-  - 🎭 Mock en DEV: `openings`, `products`, `catalog`, `checkout`, `categories`
+  - ⚠️ Híbrido en DEV: `franchisees` (contrato admin canónico ya migrado a `/admin/franchisees*`; falta validar el resto del CRUD/status y sigue abierto el `401` de `/store/customers/me/addresses`)
+  - 🎭 Mock en DEV: `openings`, `checkout`, `categories`
+  - ⚠️ Parcial en DEV: `catalog` (rutas reales responden, pero sin datos consistentes para la UI end-to-end)
+  - ✅ Real en DEV: `products`
   - ℹ️ `Real API Config` en `dev-tools` significa "apunta al backend", no "validado"
 
 ---
@@ -83,21 +85,22 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 
 ---
 
-## Kept In Mock In DEV
+## Kept In Mock Or Partial In DEV
 
-### Franchisees (17 endpoints)
-- `GET /admin/customers` — **BROKEN** (403 RBAC)
-- `GET /admin/customers/:id` — **BROKEN** (403 RBAC)
-- 8 endpoints adicionales siguen untested
-- `GET /store/customers/me` está inventariado pero no revalida el módulo completo
-- **Self-service de franquiciados (contrato backend recibido 2026-09-03, sin revalidación end-to-end en DEV)**:
+### Franchisees (canonical admin + self-service)
+- `GET /admin/franchisees` — **WORKING** en DEV (`200` validado con paginación compatible)
+- `GET /admin/franchisees/:id/stats` — **WORKING** en DEV (`200` validado)
+- `GET /admin/franchisees/:id`, `POST /admin/franchisees`, `PATCH /admin/franchisees/:id`, `DELETE /admin/franchisees/:id`, `PATCH /admin/franchisees/:id/status` siguen `untested` en esta ronda documental
+- `GET /store/customers/me` sigue inventariado para checkout, pero no define el contrato admin B2B
+- **Self-service de franquiciados (contrato backend canónico validado 2026-09-04)**:
   - `POST /admin/franchisees/invitations` — Invitar franquiciado (nombre + email, devuelve `registrationUrl` con token)
   - `POST /franchisee/register` — Autoregistro público con `invitationToken` + `password`; crea `status: pending_approval` y solo acepta `stripePaymentMethodId` cuando billing está habilitado
   - `POST /webhooks/stripe` — Webhook backend para altas, renovaciones y fallos de suscripción
   - `GET /franchisee/:id/invoices` — Lectura de facturas del franquiciado para el perfil
-  - `GET /franchisee/stores`, `POST /franchisee/stores`, `DELETE /franchisee/stores/:id` — Gestión de tiendas del franquiciado (mock, persistido en localStorage, sin endpoint real)
-  - `PATCH /admin/franchisees/:id/status` ya inventariado (ver módulo `franchisee-management` más abajo) bloquea activación por suscripción solo cuando billing está habilitado
-- **Status**: ⚠️ PARTIAL EN BACKEND, HÍBRIDO EN DEV — `POST /admin/franchisees/invitations` y `POST /franchisee/register` ya salen a backend real por defecto; el listado/gestión general de franquiciados sigue en mock por el problema RBAC de `/admin/customers` (ver `docs/modules/12-franchisee-management/FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md`)
+  - `GET /franchisee/stores`, `POST /franchisee/stores`, `DELETE /franchisee/stores/:id` — Gestión de tiendas del franquiciado con persistencia real desde la UI de perfil; pendiente smoke end-to-end autenticado completo
+  - `POST /store/customers/me/addresses` — **BROKEN** en DEV para el alta self-service de nuevas direcciones de checkout (`401 Unauthorized`)
+- `PATCH /admin/franchisees/:id/status` bloquea activación por suscripción solo cuando billing está habilitado
+- **Status**: ⚠️ PARTIAL EN BACKEND, ALINEADO EN FRONTEND — CRUD admin ya migrado a `/admin/franchisees*`; siguen pendientes la validación completa del detalle/update/delete y el contrato de edición admin de tiendas
 
 ### Openings (24 endpoints)
 - `GET /admin/openings/projects` — **BROKEN** (404 en DEV)
@@ -107,9 +110,9 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 
 ### Products + Catalog (10 endpoints)
 - Admin products mantiene 8 endpoints inventariados como working
-- `GET /store/products` — **BROKEN** en la práctica de DEV por catálogo vacío/no utilizable
-- Aunque algunas rutas reales responden, la UI de catálogo/producto se mantiene en mock hasta que haya datos válidos
-- **Status**: 🎭 MOCK EN DEV
+- `GET /store/products` sigue siendo la superficie limitante: responde, pero el catálogo de DEV no es utilizable de forma consistente para cerrar el flujo real
+- Aunque algunas rutas reales responden, la UI de catálogo/producto se mantiene en mock/parcial hasta que haya datos válidos
+- **Status**: ⚠️ MIXTO EN DEV — `products` working, `catalog` parcial
 
 ### Cart + Checkout + Store (24 endpoints)
 - `store`: 1 endpoint (`/store/regions`) todavía untested
@@ -139,14 +142,14 @@ Example: If this file says Quotes is ✅ WORKING, PROJECT_STATE.md must say Quot
 
 ## Known Issues
 
-- `/admin/customers` y `/admin/customers/:id` (GET) — `403 Forbidden` por RBAC; `franchisees` sigue en mock en DEV
+- `/admin/customers*` queda desautorizado como contrato de gestión B2B; frontend migrado a `/admin/franchisees*`
 - `/admin/openings/projects` — `404` en DEV; `openings` sigue en mock
 - `/seller/catalog-products` — Mismatch con backend: el seller catalog llega vacío mientras `/vendor/custom/products` sí devuelve datos
 - `/store/products` — Responde sin catálogo utilizable en DEV; `catalog` y `products` siguen en mock para la UI franchisee
 - Checkout real bloqueado por tres gaps: `GET /store/products` devuelve `variant_id` no siempre válido para `/store/carts*`, el catálogo store no permite hoy una compra real coherente end-to-end en DEV y todavía no existe un contrato final para exponer el estado del pedido tras el webhook Stripe
 - `/admin/orders/stats` — marcado como broken en el inventario actual
-- `/webhooks/stripe`, `/franchisee/:id/invoices`, `/franchisee/stores*` — siguen sin validación real completa en DEV dentro del flujo de alta/autoservicio de franquiciados
-- `/admin/customers` y `/admin/customers/:id` siguen bloqueando la retirada total del mock en administración de franquiciados; el onboarding real espeja temporalmente el alta en el store mock para que QA pueda verla en la UI admin
+- `/webhooks/stripe`, `/franchisee/:id/invoices` y la validación completa de `PATCH/DELETE/status` en `/admin/franchisees*` siguen sin smoke real completo en DEV
+- Falta contrato explícito para edición admin de tiendas o direcciones desde backoffice
 - `/admin/suppliers/invitations`, `/supplier/register`, `/admin/suppliers/:id/status` — onboarding de proveedor construido en frontend y validado en mock; siguen sin backend real o sin contrato cerrado
 - `PATCH /admin/sellers/:id`, `DELETE /admin/sellers/:id` — consumidos por el nuevo directorio admin de proveedores, pero no revalidados contra backend DEV en la ronda actual
 
