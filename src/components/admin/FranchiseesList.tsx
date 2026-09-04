@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { franchiseesApi } from '@/lib/api/franchisees-client';
-import type { Franchisee } from '@/types/franchisees';
+import type { Franchisee, ListFranchiseesFilters } from '@/types/franchisees';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -34,6 +34,11 @@ import {
   Phone,
   MapPin,
   TrendingUp,
+  CheckCircle2,
+  Ban,
+  Eye,
+  Clock,
+  Pencil,
 } from 'lucide-react';
 
 export default function FranchiseesList() {
@@ -46,6 +51,7 @@ export default function FranchiseesList() {
   const [totalCount, setTotalCount] = useState(0);
   const [limit] = useState(20);
   const [offset, setOffset] = useState(0);
+  const [processingId, setProcessingId] = useState<string | null>(null);
 
   // Stats
   const [stats, setStats] = useState({
@@ -59,12 +65,12 @@ export default function FranchiseesList() {
     basic: 0,
   });
 
-  const loadFranchisees = async () => {
+  const loadFranchisees = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
-      const filters: any = {
+      const filters: ListFranchiseesFilters = {
         q: searchQuery || undefined,
         limit,
         offset,
@@ -83,10 +89,14 @@ export default function FranchiseesList() {
       const response = await franchiseesApi.listFranchisees(filters);
 
       if (response.data) {
+        const pendingCustomers = response.data.customers.filter(
+          (franchisee) => franchisee.metadata?.status === 'pending_approval'
+        );
+
         // 'pending' isn't backed by the mock filters API yet, so it's applied client-side
         const customers =
           statusFilter === 'pending'
-            ? response.data.customers.filter((f) => f.metadata?.status === 'pending_approval')
+            ? pendingCustomers
             : response.data.customers;
 
         setFranchisees(customers);
@@ -94,6 +104,7 @@ export default function FranchiseesList() {
 
         // Calculate stats
         calculateStats(response.data.customers);
+        setPendingFranchisees(pendingCustomers);
       }
     } catch (err) {
       console.error('Error loading franchisees:', err);
@@ -101,7 +112,7 @@ export default function FranchiseesList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [limit, offset, searchQuery, statusFilter, tierFilter]);
 
   const calculateStats = (data: Franchisee[]) => {
     const active = data.filter((f) => f.metadata?.is_active).length;
@@ -125,9 +136,11 @@ export default function FranchiseesList() {
     });
   };
 
+  const [pendingFranchisees, setPendingFranchisees] = useState<Franchisee[]>([]);
+
   useEffect(() => {
     loadFranchisees();
-  }, [searchQuery, tierFilter, statusFilter, offset]);
+  }, [loadFranchisees]);
 
   const handleSearch = (value: string) => {
     setSearchQuery(value);
@@ -158,6 +171,37 @@ export default function FranchiseesList() {
       month: '2-digit',
       year: 'numeric',
     });
+  };
+
+  const handleApprovePending = async (franchisee: Franchisee) => {
+    if (franchisee.metadata?.subscription_status !== 'active') {
+      alert('No se puede aprobar hasta que la suscripción esté activa.');
+      return;
+    }
+
+    try {
+      setProcessingId(franchisee.id);
+      await franchiseesApi.updateFranchiseeStatus(franchisee.id, 'active');
+      await loadFranchisees();
+    } catch (err) {
+      console.error('Error approving franchisee:', err);
+      alert('Error al aprobar franquiciado: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
+  const handleSuspendPending = async (franchisee: Franchisee) => {
+    try {
+      setProcessingId(franchisee.id);
+      await franchiseesApi.updateFranchiseeStatus(franchisee.id, 'suspended');
+      await loadFranchisees();
+    } catch (err) {
+      console.error('Error suspending franchisee:', err);
+      alert('Error al suspender franquiciado: ' + (err instanceof Error ? err.message : 'Error desconocido'));
+    } finally {
+      setProcessingId(null);
+    }
   };
 
   return (
@@ -255,6 +299,171 @@ export default function FranchiseesList() {
           </CardContent>
         </Card>
       </div>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Solicitudes Pendientes</CardTitle>
+          <CardDescription>
+            Revisa los datos y el estado de suscripcion de cada franquiciado antes de aprobar
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {pendingFranchisees.length === 0 ? (
+            <p className="py-8 text-center text-muted-foreground">
+              No hay solicitudes pendientes
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {pendingFranchisees.map((franchisee) => {
+                const firstAddress = franchisee.shipping_addresses?.[0];
+                const subscriptionActive = franchisee.metadata?.subscription_status === 'active';
+                const isProcessing = processingId === franchisee.id;
+                const companyName = franchisee.metadata?.company_name || `${franchisee.first_name} ${franchisee.last_name}`;
+                const location = [
+                  firstAddress?.address_1,
+                  firstAddress?.city || franchisee.metadata?.city,
+                  firstAddress?.province || franchisee.metadata?.region,
+                  firstAddress?.postal_code,
+                  firstAddress?.country_code || franchisee.metadata?.country,
+                ].filter(Boolean).join(', ');
+
+                return (
+                  <div
+                    key={franchisee.id}
+                    className="rounded-lg border bg-card p-6 transition-shadow hover:shadow-md"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1 space-y-4">
+                        <div>
+                          <div className="mb-2 flex items-center gap-2">
+                            <Building2 className="h-5 w-5 text-muted-foreground" />
+                            <h3 className="text-lg font-semibold">{companyName}</h3>
+                            <FranchiseeStatusBadge
+                              isActive={franchisee.metadata?.is_active || false}
+                              status={franchisee.metadata?.status}
+                            />
+                          </div>
+                          <p className="text-sm text-muted-foreground">
+                            {franchisee.metadata?.tax_id ? `CIF: ${franchisee.metadata.tax_id}` : 'CIF pendiente'}
+                          </p>
+                          {location && (
+                            <p className="text-sm text-muted-foreground">{location}</p>
+                          )}
+                        </div>
+
+                        <div className="grid gap-2 md:grid-cols-2">
+                          <div className="flex items-center gap-2 text-sm">
+                            <Mail className="h-4 w-4 text-muted-foreground" />
+                            <span>{franchisee.email}</span>
+                          </div>
+                          {franchisee.phone && (
+                            <div className="flex items-center gap-2 text-sm">
+                              <Phone className="h-4 w-4 text-muted-foreground" />
+                              <span>{franchisee.phone}</span>
+                            </div>
+                          )}
+                          {(firstAddress?.city || franchisee.metadata?.city) && (
+                            <div className="flex items-center gap-2 text-sm md:col-span-2">
+                              <MapPin className="h-4 w-4 text-muted-foreground" />
+                              <span>
+                                {firstAddress?.city || franchisee.metadata?.city}
+                                {firstAddress?.province || franchisee.metadata?.region
+                                  ? `, ${firstAddress?.province || franchisee.metadata?.region}`
+                                  : ''}
+                                {firstAddress?.country_code || franchisee.metadata?.country
+                                  ? ` · ${firstAddress?.country_code || franchisee.metadata?.country}`
+                                  : ''}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="rounded-md bg-muted/50 p-3">
+                          <div className="mb-1 flex items-center gap-2">
+                            <User className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium">Contacto principal</span>
+                          </div>
+                          <p className="text-sm">
+                            {franchisee.first_name} {franchisee.last_name}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {franchisee.email}
+                            {franchisee.phone ? ` · ${franchisee.phone}` : ''}
+                          </p>
+                          <p className="text-sm text-muted-foreground">
+                            {franchisee.shipping_addresses?.length || 0} tienda{franchisee.shipping_addresses?.length === 1 ? '' : 's'} registrada{franchisee.shipping_addresses?.length === 1 ? '' : 's'} · Alta solicitada el {formatDate(franchisee.created_at)}
+                          </p>
+                        </div>
+
+                        <div className={subscriptionActive ? 'rounded-md bg-blue-50 p-3 text-sm text-blue-900' : 'rounded-md bg-amber-50 p-3 text-sm text-amber-900'}>
+                          <p className="font-medium">Estado de onboarding</p>
+                          <p className="mt-1">
+                            {franchisee.metadata?.onboarding_status || 'pending_approval'}
+                          </p>
+                          <p className="mt-2 flex items-center gap-2">
+                            <Clock className="h-4 w-4" />
+                            Suscripción: {franchisee.metadata?.subscription_status || 'pending'}
+                          </p>
+                          <p className="mt-2">
+                            La activación de credenciales quedara disponible despues de la aprobacion.
+                          </p>
+                          {!subscriptionActive && (
+                            <p className="mt-2">
+                              La aprobacion queda bloqueada hasta que la suscripcion este activa.
+                            </p>
+                          )}
+                        </div>
+
+                        {franchisee.metadata?.notes && (
+                          <div className="rounded-md bg-muted/50 p-3">
+                            <p className="text-sm font-medium">Notas internas</p>
+                            <p className="mt-1 text-sm text-muted-foreground">
+                              {franchisee.metadata.notes}
+                            </p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="ml-4 flex min-w-[170px] flex-col gap-2">
+                        <Button
+                          size="sm"
+                          onClick={() => handleApprovePending(franchisee)}
+                          disabled={isProcessing || !subscriptionActive}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          <CheckCircle2 className="mr-2 h-4 w-4" />
+                          {isProcessing ? 'Procesando...' : 'Aprobar'}
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          onClick={() => handleSuspendPending(franchisee)}
+                          disabled={isProcessing}
+                        >
+                          <Ban className="mr-2 h-4 w-4" />
+                          {isProcessing ? 'Procesando...' : 'Suspender'}
+                        </Button>
+                        <Link href={`/admin/franchisees/${franchisee.id}`}>
+                          <Button size="sm" variant="outline" className="w-full">
+                            <Eye className="mr-2 h-4 w-4" />
+                            Ver detalle
+                          </Button>
+                        </Link>
+                        <Link href={`/admin/franchisees/${franchisee.id}/edit`}>
+                          <Button size="sm" variant="outline" className="w-full">
+                            <Pencil className="mr-2 h-4 w-4" />
+                            Editar
+                          </Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* Filters */}
       <Card>
@@ -421,11 +630,18 @@ export default function FranchiseesList() {
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Link href={`/admin/franchisees/${franchisee.id}`}>
-                          <Button variant="ghost" size="sm">
-                            Ver Detalles
-                          </Button>
-                        </Link>
+                        <div className="flex items-center gap-2">
+                          <Link href={`/admin/franchisees/${franchisee.id}`}>
+                            <Button variant="ghost" size="sm">
+                              Ver detalle
+                            </Button>
+                          </Link>
+                          <Link href={`/admin/franchisees/${franchisee.id}/edit`}>
+                            <Button variant="ghost" size="sm">
+                              Editar
+                            </Button>
+                          </Link>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}

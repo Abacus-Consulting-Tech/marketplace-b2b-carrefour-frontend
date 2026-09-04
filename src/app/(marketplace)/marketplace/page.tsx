@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { mockCategories } from "@/lib/api/products-mock";
 import { ShoppingCart, Package, Users, Megaphone, Signpost, Sparkles } from "lucide-react";
-import { useCartStore } from "@/lib/store/cart";
 
 const ICON_MAP: Record<string, React.ReactNode> = {
   Users: <Users className="w-5 h-5 text-blue-600" />,
@@ -17,13 +15,6 @@ const ICON_MAP: Record<string, React.ReactNode> = {
 };
 
 export default function MarketplaceLandingPage() {
-  const [isLoading, setIsLoading] = useState(false);
-  const cart = useCartStore((state) => state.items);
-
-  useEffect(() => {
-    setIsLoading(false);
-  }, []);
-
   return (
     <div className="min-h-screen bg-gradient-to-b from-slate-50 via-blue-50 to-slate-100">
       {/* Header */}
@@ -34,15 +25,6 @@ export default function MarketplaceLandingPage() {
               <h1 className="text-4xl font-bold text-slate-900">Marketplace Carrefour</h1>
               <p className="text-slate-600 mt-2">Encuentra todo lo que necesita tu tienda</p>
             </div>
-            <Link
-              href="/marketplace/cart"
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
-            >
-              <ShoppingCart className="w-5 h-5" />
-              <span className="font-medium">
-                Carrito {cart.length > 0 && `(${cart.length})`}
-              </span>
-            </Link>
           </div>
         </div>
       </div>
@@ -69,7 +51,6 @@ export default function MarketplaceLandingPage() {
                   {/* Image Container */}
                   <div className="relative h-48 bg-gradient-to-br from-slate-200 to-slate-300 overflow-hidden">
                     {category.imageUrl ? (
-                      // eslint-disable-next-line @next/next/no-image-element
                       <img
                         src={category.imageUrl}
                         alt={category.name}

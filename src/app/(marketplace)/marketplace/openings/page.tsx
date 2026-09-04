@@ -5,9 +5,13 @@
 'use client';
 
 import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useAuthStore } from '@/lib/store/auth';
 import { ProjectListResponse } from '@/types/openings';
+import { FranchiseeStore } from '@/types/franchisees';
 import { openingsApi } from '@/lib/api/openings-client';
+import { franchiseeStoresApi } from '@/lib/api/franchisee-stores-client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -25,8 +29,6 @@ import {
   Save,
   Trash2,
 } from 'lucide-react';
-
-const PROFILE_STORAGE_KEY = 'franchisee-profile-data';
 
 interface StoreData {
   id: string;
@@ -54,35 +56,62 @@ function createEmptyStore(): StoreData {
   };
 }
 
-function loadStoredStores(): StoreData[] {
-  if (typeof window === 'undefined') return [];
+function toEditableStore(store: FranchiseeStore): StoreData {
+  return {
+    id: store.id,
+    name: store.name,
+    sapCode: store.sapCode || '',
+    companyName: store.companyName || '',
+    taxId: store.taxId || '',
+    address: store.address,
+    city: store.city,
+    province: store.province || '',
+    postalCode: store.postalCode || '',
+  };
+}
 
-  const savedData = localStorage.getItem(PROFILE_STORAGE_KEY);
-  if (!savedData) return [];
-
-  try {
-    const parsedData = JSON.parse(savedData);
-    return Array.isArray(parsedData.stores) ? parsedData.stores : [];
-  } catch (error) {
-    console.error('Error loading stores:', error);
-    return [];
-  }
+function toStoredStore(franchiseeId: string, store: StoreData): FranchiseeStore {
+  return {
+    id: store.id,
+    franchiseeId,
+    name: store.name,
+    sapCode: store.sapCode || undefined,
+    companyName: store.companyName || undefined,
+    taxId: store.taxId || undefined,
+    address: store.address,
+    city: store.city,
+    province: store.province || undefined,
+    postalCode: store.postalCode || undefined,
+    createdAt: new Date().toISOString(),
+  };
 }
 
 export default function FranchiseeOpeningsPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { user } = useAuthStore();
   const [projects, setProjects] = useState<ProjectListResponse[]>([]);
   const [stores, setStores] = useState<StoreData[]>([]);
+  const [isStorePanelOpen, setIsStorePanelOpen] = useState(false);
   const [isEditingStores, setIsEditingStores] = useState(false);
   const [isSavingStores, setIsSavingStores] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    setStores(loadStoredStores());
+    async function loadStores() {
+      if (!user?.id) {
+        setStores([]);
+        return;
+      }
+
+      const response = await franchiseeStoresApi.listStores(user.id);
+      setStores(response.stores.map(toEditableStore));
+    }
+
+    loadStores();
     loadProjects();
-  }, []);
+  }, [user?.id]);
 
   async function loadProjects() {
     try {
@@ -168,7 +197,25 @@ export default function FranchiseeOpeningsPage() {
 
   function handleStartEditingStores() {
     setStores((currentStores) => currentStores.length > 0 ? currentStores : [createEmptyStore()]);
+    setIsStorePanelOpen(true);
     setIsEditingStores(true);
+  }
+
+  function handleOpenStorePanel() {
+    setIsStorePanelOpen(true);
+  }
+
+  function handleCloseStorePanel() {
+    if (user?.id) {
+      franchiseeStoresApi.listStores(user.id).then((response) => {
+        setStores(response.stores.map(toEditableStore));
+      });
+    } else {
+      setStores([]);
+    }
+
+    setIsEditingStores(false);
+    setIsStorePanelOpen(false);
   }
 
   function handleStoreChange(index: number, field: keyof StoreData, value: string) {
@@ -188,13 +235,20 @@ export default function FranchiseeOpeningsPage() {
   }
 
   async function handleSaveStores() {
+    if (!user?.id) return;
+
     setIsSavingStores(true);
 
     await new Promise((resolve) => setTimeout(resolve, 500));
 
-    const savedData = localStorage.getItem(PROFILE_STORAGE_KEY);
-    const parsedData = savedData ? JSON.parse(savedData) : {};
-    localStorage.setItem(PROFILE_STORAGE_KEY, JSON.stringify({ ...parsedData, stores }));
+    const existingStores = await franchiseeStoresApi.listStores(user.id);
+    const createdAtById = new Map(existingStores.stores.map((store) => [store.id, store.createdAt]));
+    const nextStores = stores.map((store) => ({
+      ...toStoredStore(user.id, store),
+      createdAt: createdAtById.get(store.id) || new Date().toISOString(),
+    }));
+
+    await franchiseeStoresApi.replaceStores(user.id, nextStores);
 
     toast({
       title: 'Tiendas actualizadas',
@@ -217,20 +271,36 @@ export default function FranchiseeOpeningsPage() {
 
   return (
     <div className="container mx-auto py-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Mis tiendas</h1>
-        <p className="text-gray-600">
-          Da de alta tus tiendas y consulta las aperturas asignadas
-        </p>
+      <div className="mb-8 flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+        <div>
+          <h1 className="text-3xl font-bold mb-2">Mis aperturas</h1>
+          <p className="text-gray-600">
+            Consulta las aperturas asignadas y gestiona los datos de tienda solo cuando necesites preparar una nueva alta.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-3">
+          <Button type="button" asChild>
+            <Link href="/marketplace/openings/new">
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva apertura
+            </Link>
+          </Button>
+          {stores.length > 0 && !isStorePanelOpen && (
+            <Button type="button" variant="outline" onClick={handleOpenStorePanel}>
+              Gestionar tiendas
+            </Button>
+          )}
+        </div>
       </div>
 
+      {isStorePanelOpen && (
       <Card className="mb-8">
         <CardHeader>
           <div className="flex items-center justify-between gap-4">
             <div>
-              <CardTitle>Tiendas dadas de alta</CardTitle>
+              <CardTitle>Datos de tienda para la apertura</CardTitle>
               <CardDescription>
-                Registra cada tienda con su nombre, código SAP, datos fiscales y dirección.
+                Registra o edita las tiendas que necesites asociar a una nueva apertura.
               </CardDescription>
             </div>
             {isEditingStores ? (
@@ -355,10 +425,7 @@ export default function FranchiseeOpeningsPage() {
 
           {isEditingStores && (
             <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => {
-                setStores(loadStoredStores());
-                setIsEditingStores(false);
-              }} disabled={isSavingStores}>
+              <Button type="button" variant="outline" onClick={handleCloseStorePanel} disabled={isSavingStores}>
                 Cancelar
               </Button>
               <Button type="button" onClick={handleSaveStores} disabled={isSavingStores}>
@@ -367,8 +434,17 @@ export default function FranchiseeOpeningsPage() {
               </Button>
             </div>
           )}
+
+          {!isEditingStores && (
+            <div className="flex justify-end pt-2">
+              <Button type="button" variant="outline" onClick={() => setIsStorePanelOpen(false)}>
+                Cerrar
+              </Button>
+            </div>
+          )}
         </CardContent>
       </Card>
+      )}
 
       <div className="mb-4">
         <h2 className="text-xl font-semibold">Aperturas y documentación asignada</h2>
@@ -416,7 +492,9 @@ export default function FranchiseeOpeningsPage() {
         </Card>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredProjects.map((project) => (
+          {[...filteredProjects]
+            .sort((left, right) => new Date(right.created_at).getTime() - new Date(left.created_at).getTime())
+            .map((project) => (
             <Card
               key={project.id}
               className="hover:shadow-lg transition-shadow cursor-pointer"

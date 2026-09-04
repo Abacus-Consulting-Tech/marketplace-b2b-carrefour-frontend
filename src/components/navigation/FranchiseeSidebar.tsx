@@ -57,6 +57,7 @@ function NavSection({ title, children }: NavSectionProps) {
 
 export function FranchiseeSidebar() {
   const pathname = usePathname();
+  const openingsBasePath = pathname.startsWith("/franchisee/openings") ? "/franchisee/openings" : "/marketplace/openings";
 
   const isActive = (path: string) => {
     // Special case for catalog - only exact match
@@ -74,6 +75,9 @@ export function FranchiseeSidebar() {
     // For orders (without tracking), check it starts with /marketplace/orders but not tracking
     if (path === "/marketplace/orders") {
       return pathname.startsWith("/marketplace/orders") && !pathname.includes("/tracking");
+    }
+    if (path === "/franchisee/openings") {
+      return pathname.startsWith("/franchisee/openings");
     }
     // Default: check if pathname starts with the path
     return pathname.startsWith(path);
@@ -93,10 +97,10 @@ export function FranchiseeSidebar() {
         {/* Tiendas */}
         <NavSection title="Tiendas">
           <NavItem
-            href="/marketplace/openings"
+            href={openingsBasePath}
             icon={<Building2 className="h-5 w-5" />}
             label="Mis tiendas"
-            isActive={isActive("/marketplace/openings")}
+            isActive={isActive(openingsBasePath)}
           />
         </NavSection>
 

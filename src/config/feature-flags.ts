@@ -34,8 +34,22 @@ export interface ModuleConfig {
 
 type ModuleName = 'auth' | 'pricing' | 'openings' | 'products' | 'suppliers' | 'categories' | 'quotes' | 'orders' | 'franchisees' | 'catalog' | 'checkout';
 
+const CLIENT_ENV: Record<string, string | undefined> = {
+  NEXT_PUBLIC_MOCK_AUTH: process.env.NEXT_PUBLIC_MOCK_AUTH,
+  NEXT_PUBLIC_MOCK_PRICING: process.env.NEXT_PUBLIC_MOCK_PRICING,
+  NEXT_PUBLIC_MOCK_OPENINGS: process.env.NEXT_PUBLIC_MOCK_OPENINGS,
+  NEXT_PUBLIC_MOCK_PRODUCTS: process.env.NEXT_PUBLIC_MOCK_PRODUCTS,
+  NEXT_PUBLIC_MOCK_SUPPLIERS: process.env.NEXT_PUBLIC_MOCK_SUPPLIERS,
+  NEXT_PUBLIC_MOCK_CATEGORIES: process.env.NEXT_PUBLIC_MOCK_CATEGORIES,
+  NEXT_PUBLIC_MOCK_QUOTES: process.env.NEXT_PUBLIC_MOCK_QUOTES,
+  NEXT_PUBLIC_MOCK_ORDERS: process.env.NEXT_PUBLIC_MOCK_ORDERS,
+  NEXT_PUBLIC_MOCK_FRANCHISEES: process.env.NEXT_PUBLIC_MOCK_FRANCHISEES,
+  NEXT_PUBLIC_MOCK_CATALOG: process.env.NEXT_PUBLIC_MOCK_CATALOG,
+  NEXT_PUBLIC_MOCK_CHECKOUT: process.env.NEXT_PUBLIC_MOCK_CHECKOUT,
+};
+
 function getMockFlag(envVarName: string, defaultValue = false): boolean {
-  const envValue = process.env[envVarName];
+  const envValue = CLIENT_ENV[envVarName];
 
   if (envValue === 'true') {
     return true;

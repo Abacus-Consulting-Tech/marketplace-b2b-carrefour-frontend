@@ -17,6 +17,7 @@ import type {
   CreateFranchiseeStoreResponse,
   ListFranchiseeStoresResponse,
   DeleteFranchiseeStoreResponse,
+  ReplaceFranchiseeStoresResponse,
 } from '@/types/franchisees';
 
 function storageKey(franchiseeId: string): string {
@@ -73,6 +74,15 @@ export const franchiseeStoresApi = {
     writeStores(franchiseeId, stores);
 
     return { id: storeId, deleted: true };
+  },
+
+  /**
+   * Replace all stores for a franchisee
+   * PUT /franchisee/stores (mock until backend confirms this endpoint)
+   */
+  async replaceStores(franchiseeId: string, stores: FranchiseeStore[]): Promise<ReplaceFranchiseeStoresResponse> {
+    writeStores(franchiseeId, stores);
+    return { stores };
   },
 };
 

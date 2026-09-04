@@ -1,6 +1,7 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import Link from 'next/link';
+import { useState, useEffect, useCallback } from 'react';
 import { useAuthStore } from '@/lib/store/auth';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -32,7 +33,21 @@ export default function ProfilePage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  const getInitialData = (): ProfileData => {
+  const quickLinks = {
+    settings:
+      user?.role === 'supplier' ? '/supplier/settings' :
+      user?.role === 'admin' ? '/admin/settings' :
+      '/marketplace/settings',
+    orders:
+      user?.role === 'supplier' ? '/supplier/orders' :
+      user?.role === 'admin' ? '/admin/orders' :
+      '/marketplace/orders',
+    stores:
+      user?.role === 'franchisee' ? '/franchisee/openings' :
+      '/marketplace/openings',
+  };
+
+  const getInitialData = useCallback((): ProfileData => {
     const defaultData: ProfileData = {
       name: user?.name || '',
       email: user?.email || '',
@@ -58,7 +73,7 @@ export default function ProfilePage() {
     }
     
     return defaultData;
-  };
+  }, [user?.email, user?.name, user?.phone]);
 
   const [formData, setFormData] = useState(getInitialData());
 
@@ -66,7 +81,7 @@ export default function ProfilePage() {
   useEffect(() => {
     const savedData = getInitialData();
     setFormData(savedData);
-  }, []);
+  }, [getInitialData]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -533,15 +548,15 @@ export default function ProfilePage() {
               <CardTitle>Enlaces Rápidos</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <a href="/marketplace/settings" className="block text-sm text-blue-600 hover:underline">
+              <Link href={quickLinks.settings} className="block text-sm text-blue-600 hover:underline">
                 Configuración →
-              </a>
-              <a href="/marketplace/orders" className="block text-sm text-blue-600 hover:underline">
+              </Link>
+              <Link href={quickLinks.orders} className="block text-sm text-blue-600 hover:underline">
                 Mis Pedidos →
-              </a>
-              <a href="/marketplace/openings" className="block text-sm text-blue-600 hover:underline">
+              </Link>
+              <Link href={quickLinks.stores} className="block text-sm text-blue-600 hover:underline">
                 Mis tiendas →
-              </a>
+              </Link>
             </CardContent>
           </Card>
         </div>

@@ -7,6 +7,7 @@
 import { Header } from "@/components/navigation/Header";
 import { Footer } from "@/components/navigation/Footer";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { FranchiseeSidebar } from "@/components/navigation/FranchiseeSidebar";
 
 export default function FranchiseeLayout({
   children,
@@ -15,11 +16,14 @@ export default function FranchiseeLayout({
 }) {
   return (
     <ProtectedRoute allowedRoles={["franchisee", "admin"]}>
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <Header />
-        <main className="container mx-auto px-4 py-8 flex-1">
-          {children}
-        </main>
+        <div className="flex">
+          <FranchiseeSidebar />
+          <main className="flex-1 p-8">
+            {children}
+          </main>
+        </div>
         <Footer />
       </div>
     </ProtectedRoute>

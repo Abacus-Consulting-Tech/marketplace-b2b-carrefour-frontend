@@ -3,20 +3,35 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { franchiseesApi } from '@/lib/api/franchisees-client';
-import type { Franchisee, CreateFranchiseeRequest, UpdateFranchiseeRequest } from '@/types/franchisees';
+import type { Franchisee, CreateFranchiseeRequest, UpdateFranchiseeRequest, DiscountTier } from '@/types/franchisees';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
-import { AlertCircle, Save, ArrowLeft } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { FranchiseeStatusBadge, DiscountTierBadge } from './FranchiseeStatusBadge';
+import { AlertCircle, Save, ArrowLeft, Eye } from 'lucide-react';
 import Link from 'next/link';
 
 interface FranchiseeFormProps {
   franchisee?: Franchisee;
   mode: 'create' | 'edit';
 }
+
+type FranchiseeFormData = {
+  first_name: string;
+  last_name: string;
+  email: string;
+  phone: string;
+  password: string;
+  discount_tier: DiscountTier;
+  credit_limit: string;
+  payment_terms: string;
+  is_active: boolean;
+  notes: string;
+};
 
 export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps) {
   const router = useRouter();
@@ -25,9 +40,12 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
   const [success, setSuccess] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const isEditMode = mode === 'edit';
+  const isPendingApproval = franchisee?.metadata?.status === 'pending_approval';
+  const detailHref = franchisee ? `/admin/franchisees/${franchisee.id}` : '/admin/franchisees';
 
   // Form state
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FranchiseeFormData>({
     // Personal Info
     first_name: franchisee?.first_name || '',
     last_name: franchisee?.last_name || '',
@@ -36,9 +54,9 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
     password: '',
     
     // B2B Config
-    discount_tier: franchisee?.metadata?.discount_tier || 'basic',
+    discount_tier: (franchisee?.metadata?.discount_tier as DiscountTier) || 'basic',
     credit_limit: franchisee?.metadata?.credit_limit?.toString() || '5000',
-    payment_terms: franchisee?.metadata?.payment_terms || '30',
+    payment_terms: String(franchisee?.metadata?.payment_terms || '30'),
     
     // Status
     is_active: franchisee?.metadata?.is_active ?? true,
@@ -47,20 +65,22 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
     notes: franchisee?.metadata?.notes || '',
   });
 
-  const validateField = (field: string, value: any): string | null => {
+  const validateField = (field: keyof FranchiseeFormData, value: FranchiseeFormData[keyof FranchiseeFormData]): string | null => {
+    const normalizedValue = typeof value === 'string' ? value : String(value);
+
     switch (field) {
       case 'first_name':
-        return !value?.trim() ? 'El nombre es obligatorio' : null;
+        return !normalizedValue.trim() ? 'El nombre es obligatorio' : null;
       case 'last_name':
-        return !value?.trim() ? 'Los apellidos son obligatorios' : null;
+        return !normalizedValue.trim() ? 'Los apellidos son obligatorios' : null;
       case 'email':
-        if (!value?.trim()) return 'El email es obligatorio';
-        if (!value.includes('@')) return 'El email no es válido';
+        if (!normalizedValue.trim()) return 'El email es obligatorio';
+        if (!normalizedValue.includes('@')) return 'El email no es válido';
         return null;
       case 'password':
         if (mode === 'create') {
-          if (!value) return 'La contraseña es obligatoria';
-          if (value.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
+          if (!normalizedValue) return 'La contraseña es obligatoria';
+          if (normalizedValue.length < 8) return 'La contraseña debe tener al menos 8 caracteres';
         }
         return null;
       default:
@@ -68,7 +88,7 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
     }
   };
 
-  const handleChange = (field: string, value: any) => {
+  const handleChange = <K extends keyof FranchiseeFormData>(field: K, value: FranchiseeFormData[K]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     // Clear general error when user starts typing
     if (error) setError(null);
@@ -82,7 +102,7 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
     }
   };
 
-  const handleBlur = (field: string) => {
+  const handleBlur = (field: keyof FranchiseeFormData) => {
     setTouched((prev) => ({ ...prev, [field]: true }));
     const fieldError = validateField(field, formData[field as keyof typeof formData]);
     setFieldErrors((prev) => ({
@@ -94,7 +114,7 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
   const validateForm = (): string | null => {
     // Validate all fields
     const errors: Record<string, string> = {};
-    Object.keys(formData).forEach((field) => {
+    (Object.keys(formData) as Array<keyof FranchiseeFormData>).forEach((field) => {
       const error = validateField(field, formData[field as keyof typeof formData]);
       if (error) {
         errors[field] = error;
@@ -133,7 +153,7 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
           password: formData.password,
           groups: [{ id: 'cg_b2b_franchisees' }],
           metadata: {
-            discount_tier: formData.discount_tier as any,
+            discount_tier: formData.discount_tier,
             credit_limit: parseFloat(formData.credit_limit),
             payment_terms: parseInt(String(formData.payment_terms)),
             is_active: formData.is_active,
@@ -158,7 +178,7 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
           phone: formData.phone || undefined,
           metadata: {
             ...franchisee?.metadata,
-            discount_tier: formData.discount_tier as any,
+            discount_tier: formData.discount_tier,
             credit_limit: parseFloat(formData.credit_limit),
             payment_terms: parseInt(String(formData.payment_terms)),
             is_active: formData.is_active,
@@ -186,23 +206,59 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* Header */}
-      <div className="flex items-center gap-4">
-        <Link href="/admin/franchisees">
+      <div className="flex items-start justify-between gap-4">
+        <div className="flex items-center gap-4">
+        <Link href={detailHref}>
           <Button type="button" variant="ghost" size="icon">
             <ArrowLeft className="h-4 w-4" />
           </Button>
         </Link>
         <div className="flex-1">
           <h1 className="text-3xl font-bold">
-            {mode === 'create' ? 'Nuevo Franquiciado' : 'Editar Franquiciado'}
+            {mode === 'create'
+              ? 'Nuevo Franquiciado'
+              : isPendingApproval
+                ? 'Revisar Solicitud de Franquiciado'
+                : 'Editar Franquiciado'}
           </h1>
           <p className="text-muted-foreground mt-1">
             {mode === 'create'
               ? 'Crea el acceso inicial para que el franquiciado complete su perfil y tiendas'
-              : 'Actualiza la información del franquiciado'}
+              : isPendingApproval
+                ? 'Ajusta los datos de la solicitud antes de aprobar el acceso al marketplace'
+                : 'Actualiza la información del franquiciado'}
           </p>
         </div>
+        </div>
+        {isEditMode && franchisee && (
+          <Link href={detailHref}>
+            <Button type="button" variant="outline">
+              <Eye className="h-4 w-4 mr-2" />
+              Ver detalle
+            </Button>
+          </Link>
+        )}
       </div>
+
+      {isEditMode && franchisee && (
+        <div className="flex flex-wrap gap-2">
+          <FranchiseeStatusBadge
+            isActive={franchisee.metadata?.is_active || false}
+            status={franchisee.metadata?.status}
+          />
+          <DiscountTierBadge tier={franchisee.metadata?.discount_tier} />
+          <Badge variant="outline">
+            Suscripción: {franchisee.metadata?.subscription_status || 'pending'}
+          </Badge>
+          {franchisee.has_account && <Badge variant="outline">Cuenta activa</Badge>}
+        </div>
+      )}
+
+      {isPendingApproval && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800">
+          Esta es la misma ficha de edición del franquiciado, pero aplicada a una solicitud pendiente. Puedes corregir los datos aquí y luego aprobarla desde el detalle o desde la cola de pendientes.
+        </div>
+      )}
 
       {/* Alerts */}
       {error && (
@@ -362,9 +418,9 @@ export default function FranchiseeForm({ franchisee, mode }: FranchiseeFormProps
 
       {/* Actions */}
       <div className="flex justify-end gap-3">
-        <Link href="/admin/franchisees">
+        <Link href={detailHref}>
           <Button type="button" variant="outline" disabled={loading}>
-            Cancelar
+            {isEditMode ? 'Volver al detalle' : 'Cancelar'}
           </Button>
         </Link>
         <Button type="submit" disabled={loading}>

@@ -309,18 +309,24 @@ export interface FranchiseeStore {
   id: string;
   franchiseeId: string;
   name: string;
+  sapCode?: string;
+  companyName?: string;
   taxId?: string;
   address: string;
   city: string;
+  province?: string;
   postalCode?: string;
   createdAt: string;
 }
 
 export interface CreateFranchiseeStoreRequest {
   name: string;
+  sapCode?: string;
+  companyName?: string;
   taxId?: string;
   address: string;
   city: string;
+  province?: string;
   postalCode?: string;
 }
 
@@ -335,6 +341,10 @@ export interface CreateFranchiseeStoreResponse {
 export interface DeleteFranchiseeStoreResponse {
   id: string;
   deleted: boolean;
+}
+
+export interface ReplaceFranchiseeStoresResponse {
+  stores: FranchiseeStore[];
 }
 
 // ============================================================================

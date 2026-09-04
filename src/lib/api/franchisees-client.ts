@@ -56,6 +56,42 @@ import {
 } from './franchisees-mock';
 import { getBackendBaseUrl } from './api-utils';
 
+type BackendFranchiseeRecord = {
+  id: string;
+  name: string;
+  email: string;
+  user_id?: string;
+  contact_person?: string;
+  phone?: string;
+  company_name?: string;
+  tax_id: string;
+  store_code?: string;
+  region?: string;
+  address?: string;
+  municipality?: string;
+  postal_code?: string;
+  country?: string;
+  subscription_status?: 'not_configured' | 'pending' | 'active' | 'past_due' | 'canceled';
+  current_period_end?: string | null;
+  status: NonNullable<FranchiseeMetadata['status']>;
+  created_at: string;
+  updated_at: string;
+  approval_date?: string | null;
+  approved_by?: string;
+  notes?: string;
+};
+
+type BackendListFranchiseesResponse = {
+  franchisees: BackendFranchiseeRecord[];
+  total: number;
+  offset?: number;
+  limit?: number;
+};
+
+type BackendSingleFranchiseeResponse = {
+  franchisee: BackendFranchiseeRecord;
+};
+
 // ============================================================================
 // Configuration
 // ============================================================================
@@ -76,7 +112,7 @@ if (typeof window !== 'undefined') {
  */
 function getAuthToken(): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem('auth_token') || null;
+  return localStorage.getItem('auth-token') || localStorage.getItem('auth_token') || null;
 }
 
 /**
@@ -123,6 +159,137 @@ async function apiRequest<T>(
     console.error('API Request Error:', error);
     throw error;
   }
+}
+
+function splitPersonName(value?: string): { first_name: string; last_name: string } {
+  const normalized = (value || '').trim();
+  if (!normalized) {
+    return {
+      first_name: 'Franchisee',
+      last_name: '',
+    };
+  }
+
+  const parts = normalized.split(/\s+/);
+  return {
+    first_name: parts[0] || 'Franchisee',
+    last_name: parts.slice(1).join(' '),
+  };
+}
+
+function buildPersonName(firstName?: string, lastName?: string): string | undefined {
+  const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
+  return fullName || undefined;
+}
+
+function normalizeSubscriptionStatus(
+  value?: BackendFranchiseeRecord['subscription_status']
+): FranchiseeMetadata['subscription_status'] | undefined {
+  if (!value || value === 'not_configured') {
+    return undefined;
+  }
+
+  return value;
+}
+
+function normalizeBackendFranchisee(record: BackendFranchiseeRecord): Franchisee {
+  const contactName = record.contact_person || record.name;
+  const { first_name, last_name } = splitPersonName(contactName);
+  const hasPrimaryAddress = Boolean(record.address || record.municipality || record.postal_code || record.country);
+
+  return {
+    id: record.id,
+    email: record.email,
+    first_name,
+    last_name,
+    phone: record.phone,
+    has_account: Boolean(record.user_id),
+    shipping_addresses: hasPrimaryAddress
+      ? [
+          {
+            id: `${record.id}-primary-address`,
+            customer_id: record.id,
+            company: record.company_name || record.name,
+            address_1: record.address || '-',
+            city: record.municipality || '-',
+            province: record.region,
+            postal_code: record.postal_code || '-',
+            country_code: (record.country || 'es').toLowerCase(),
+            phone: record.phone,
+            created_at: record.created_at,
+            updated_at: record.updated_at,
+          },
+        ]
+      : [],
+    groups: [],
+    metadata: {
+      company_name: record.company_name,
+      tax_id: record.tax_id,
+      store_code: record.store_code,
+      city: record.municipality,
+      region: record.region,
+      country: record.country,
+      is_active: record.status === 'active',
+      approved_at: record.approval_date || undefined,
+      approved_by: record.approved_by,
+      status: record.status,
+      subscription_status: normalizeSubscriptionStatus(record.subscription_status),
+      current_period_end: record.current_period_end || undefined,
+      notes: record.notes,
+    },
+    created_at: record.created_at,
+    updated_at: record.updated_at,
+  };
+}
+
+function filterNormalizedFranchisees(customers: Franchisee[], filters?: ListFranchiseesFilters): Franchisee[] {
+  let filtered = customers;
+
+  if (filters?.groups?.length) {
+    filtered = filtered.filter((franchisee) =>
+      filters.groups?.includes(franchisee.metadata?.discount_tier || '')
+    );
+  }
+
+  if (filters?.has_account !== undefined) {
+    filtered = filtered.filter((franchisee) => (franchisee.metadata?.is_active || false) === filters.has_account);
+  }
+
+  return filtered;
+}
+
+function mapCreateRequestToBackend(request: CreateFranchiseeRequest) {
+  const fullName = buildPersonName(request.first_name, request.last_name);
+
+  return {
+    name: fullName || request.metadata.company_name || request.email,
+    email: request.email,
+    tax_id: request.metadata.tax_id || 'PENDING',
+    contact_person: fullName,
+    phone: request.phone,
+    company_name: request.metadata.company_name,
+    store_code: request.metadata.store_code,
+    region: request.metadata.region,
+    country: request.metadata.country,
+    notes: request.metadata.notes,
+  };
+}
+
+function mapUpdateRequestToBackend(request: UpdateFranchiseeRequest) {
+  const fullName = buildPersonName(request.first_name, request.last_name);
+
+  return {
+    name: fullName,
+    email: request.email,
+    tax_id: request.metadata?.tax_id,
+    contact_person: fullName,
+    phone: request.phone,
+    company_name: request.metadata?.company_name,
+    store_code: request.metadata?.store_code,
+    region: request.metadata?.region,
+    country: request.metadata?.country,
+    notes: request.metadata?.notes,
+  };
 }
 
 // ============================================================================
@@ -553,7 +720,7 @@ export const franchiseesApi = {
 
   /**
    * List franchisees
-   * GET /admin/customers
+   * GET /admin/franchisees
    */
   async listFranchisees(filters?: ListFranchiseesFilters): Promise<ApiResponse<ListFranchiseesResponse>> {
     if (isMockMode) {
@@ -564,65 +731,96 @@ export const franchiseesApi = {
     if (filters?.q) params.append('q', filters.q);
     if (filters?.limit) params.append('limit', filters.limit.toString());
     if (filters?.offset) params.append('offset', filters.offset.toString());
-    if (filters?.expand) params.append('expand', filters.expand);
-    if (filters?.has_account !== undefined) params.append('has_account', filters.has_account.toString());
+    if (filters?.has_account === true) params.append('status', 'active');
+    if (filters?.has_account === false) params.append('status', 'inactive');
 
     const queryString = params.toString();
-    const endpoint = `/admin/customers${queryString ? `?${queryString}` : ''}`;
+    const endpoint = `/admin/franchisees${queryString ? `?${queryString}` : ''}`;
 
-    return apiRequest<ListFranchiseesResponse>(endpoint, {
+    const response = await apiRequest<BackendListFranchiseesResponse>(endpoint, {
       method: 'GET',
     });
+
+    const normalizedCustomers = response.franchisees.map(normalizeBackendFranchisee);
+    const filteredCustomers = filterNormalizedFranchisees(normalizedCustomers, filters);
+
+    return {
+      data: {
+        customers: filteredCustomers,
+        count:
+          filteredCustomers.length === normalizedCustomers.length
+            ? response.total
+            : filteredCustomers.length,
+        offset: response.offset ?? filters?.offset ?? 0,
+        limit: response.limit ?? filters?.limit ?? filteredCustomers.length,
+      },
+    };
   },
 
   /**
    * Get franchisee by ID
-   * GET /admin/customers/:id
+   * GET /admin/franchisees/:id
    */
   async getFranchisee(request: GetFranchiseeRequest): Promise<ApiResponse<GetFranchiseeResponse>> {
     if (isMockMode) {
       return mockGetFranchisee(request.id);
     }
 
-    const params = new URLSearchParams();
-    if (request.expand) params.append('expand', request.expand);
+    const endpoint = `/admin/franchisees/${request.id}`;
 
-    const queryString = params.toString();
-    const endpoint = `/admin/customers/${request.id}${queryString ? `?${queryString}` : ''}`;
-
-    return apiRequest<GetFranchiseeResponse>(endpoint, {
+    const response = await apiRequest<BackendSingleFranchiseeResponse>(endpoint, {
       method: 'GET',
     });
+
+    return {
+      data: {
+        customer: normalizeBackendFranchisee(response.franchisee),
+      },
+    };
   },
 
   /**
    * Create franchisee
-   * POST /admin/customers
+   * POST /admin/franchisees
    */
   async createFranchisee(request: CreateFranchiseeRequest): Promise<ApiResponse<CreateFranchiseeResponse>> {
     if (isMockMode) {
       return mockCreateFranchisee(request);
     }
 
-    return apiRequest<CreateFranchiseeResponse>('/admin/customers', {
+    const response = await apiRequest<BackendSingleFranchiseeResponse>('/admin/franchisees', {
       method: 'POST',
-      body: JSON.stringify(request),
+      body: JSON.stringify(mapCreateRequestToBackend(request)),
     });
+
+    return {
+      data: {
+        customer: normalizeBackendFranchisee(response.franchisee),
+      },
+      message: response.message,
+    };
   },
 
   /**
    * Update franchisee
-   * POST /admin/customers/:id
+   * PATCH /admin/franchisees/:id
    */
   async updateFranchisee(id: string, request: UpdateFranchiseeRequest): Promise<ApiResponse<UpdateFranchiseeResponse>> {
     if (isMockMode) {
       return mockUpdateFranchisee(id, request);
     }
 
-    return apiRequest<UpdateFranchiseeResponse>(`/admin/customers/${id}`, {
-      method: 'POST',
-      body: JSON.stringify(request),
+    const response = await apiRequest<BackendSingleFranchiseeResponse>(`/admin/franchisees/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify(mapUpdateRequestToBackend(request)),
     });
+
+    return {
+      data: {
+        customer: normalizeBackendFranchisee(response.franchisee),
+      },
+      message: response.message,
+    };
   },
 
   /**
@@ -639,10 +837,17 @@ export const franchiseesApi = {
       return mockUpdateFranchiseeStatus(id, status);
     }
 
-    return apiRequest<UpdateFranchiseeResponse>(`/admin/franchisees/${id}/status`, {
+    const statusResponse = await apiRequest<{ message?: string }>(`/admin/franchisees/${id}/status`, {
       method: 'PATCH',
       body: JSON.stringify({ status }),
     });
+
+    const refreshed = await this.getFranchisee({ id });
+
+    return {
+      ...refreshed,
+      message: statusResponse.message || refreshed.message,
+    };
   },
 
   /**
@@ -662,16 +867,24 @@ export const franchiseesApi = {
 
   /**
    * Delete franchisee
-   * DELETE /admin/customers/:id
+   * DELETE /admin/franchisees/:id
    */
   async deleteFranchisee(id: string): Promise<ApiResponse<DeleteFranchiseeResponse>> {
     if (isMockMode) {
       return mockDeleteFranchisee(id);
     }
 
-    return apiRequest<DeleteFranchiseeResponse>(`/admin/customers/${id}`, {
+    await apiRequest<{ id: string; status: string }>(`/admin/franchisees/${id}`, {
       method: 'DELETE',
     });
+
+    return {
+      data: {
+        id,
+        object: 'customer',
+        deleted: true,
+      },
+    };
   },
 
   /**
@@ -754,9 +967,13 @@ export const franchiseesApi = {
       return mockGetFranchiseeStats(franchiseeId);
     }
 
-    return apiRequest<GetFranchiseeStatsResponse>(`/admin/customers/${franchiseeId}/stats`, {
+    const response = await apiRequest<GetFranchiseeStatsResponse>(`/admin/franchisees/${franchiseeId}/stats`, {
       method: 'GET',
     });
+
+    return {
+      data: response,
+    };
   },
 
   /**
