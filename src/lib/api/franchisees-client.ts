@@ -46,6 +46,7 @@ import {
   initializeMockFranchiseesStorage,
   persistMockFranchisees,
 } from './franchisees-mock';
+import { getBackendBaseUrl } from './api-utils';
 
 // ============================================================================
 // Configuration
@@ -53,7 +54,7 @@ import {
 
 const isMockMode = featureFlags.shouldUseMock('franchisees');
 const isMockInviteMode = shouldUseMockFranchiseeInvitations;
-const API_BASE_URL = featureFlags.getApiBaseUrl('franchisees') || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
+const API_BASE_URL = featureFlags.getApiBaseUrl('franchisees') || getBackendBaseUrl('/backend');
 
 type BackendSubscriptionStatus = 'not_configured' | 'pending' | 'active' | 'past_due' | 'canceled';
 

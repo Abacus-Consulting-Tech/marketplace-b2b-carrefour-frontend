@@ -14,8 +14,9 @@
  */
 
 import type { User } from '@/types'
+import { getBackendBaseUrl } from './api-utils'
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com'
+const API_BASE_URL = getBackendBaseUrl('/backend')
 
 export interface LoginRequest {
   email: string
