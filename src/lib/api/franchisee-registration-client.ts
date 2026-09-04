@@ -25,6 +25,7 @@ import {
   mockFranchisees,
   persistMockFranchisees,
 } from './franchisees-mock';
+import { getBackendBaseUrl } from './api-utils';
 
 // The real endpoint (POST /franchisee/register) isn't built/agreed with backend yet
 // (see the "Open questions" section of FRANCHISEE_REGISTRATION_FLOW_GUIDE_ES.md).
@@ -32,7 +33,7 @@ import {
 // feature flag isn't reused here on purpose, since this endpoint doesn't exist at all.
 const BACKEND_ENDPOINT_READY = false;
 const isMockMode = shouldUseMockFranchiseeRegistration;
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
+const API_BASE_URL = getBackendBaseUrl('/backend');
 const billingEnabled = isFranchiseeBillingEnabled;
 
 if (typeof window !== 'undefined') {

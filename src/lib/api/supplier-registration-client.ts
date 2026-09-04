@@ -15,10 +15,11 @@ import type {
   UpdateSupplierRequest,
   UpdateSupplierStatusRequest,
 } from '@/types';
+import { getBackendBaseUrl } from './api-utils';
 
 const BACKEND_ENDPOINT_READY = false;
 const isMockMode = !BACKEND_ENDPOINT_READY;
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9000';
+const API_BASE_URL = getBackendBaseUrl('/backend');
 const SUPPLIERS_STORAGE_KEY = 'mock-suppliers-storage';
 const SUPPLIER_INVITATIONS_STORAGE_KEY = 'mock-supplier-invitations-storage';
 

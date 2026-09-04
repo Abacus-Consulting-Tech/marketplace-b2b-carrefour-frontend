@@ -1,7 +1,8 @@
 import axios from 'axios'
+import { getBackendBaseUrl } from './api-utils'
 
 const medusaAuthClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL || 'https://marketplace-b2b-backend-dev.onrender.com',
+  baseURL: getBackendBaseUrl('/backend'),
   timeout: Number(process.env.NEXT_PUBLIC_API_TIMEOUT) || 10000,
   headers: {
     'Content-Type': 'application/json',
